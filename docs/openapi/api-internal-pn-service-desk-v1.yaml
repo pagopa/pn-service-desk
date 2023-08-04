@@ -1,0 +1,446 @@
+openapi: 3.0.3
+info:
+  title: PN Template BE Microservice
+  description: Documentation APIs v1.0 di Service Desk
+  termsOfService: https://termofservice.it
+  x-api-id: api-pn-service-desk
+  x-summary: 'Service Desk: API B2B per Cruscotto'
+  version: '1.0.0'
+  contact:
+    email: pn@pagopa.it
+    name: PagoPA
+  license:
+    name: Licenza di PN
+    url: 'https://da-definire/'
+servers:
+  - url: https://api.pn.pagopa.it
+    description: Generated server url
+paths:
+  '/status':
+    get:
+      summary: healthCheck path
+      description: health check path per verificare lo stato del micro servizio
+      tags:
+        - HealthCheck
+      operationId: status
+      responses:
+        '200':
+          description: Ok
+        '500':
+          description: Internal Server Error
+
+  '/service-desk/notification/unreachable':
+    post:
+      operationId: numberOfUnreachableNotifications
+      summary: Count of all unreachable notifications of reciepientID
+      description: Recupera il numero delle notifiche in stato irreperibile per un certo recipeint
+      tags:
+        - Notification
+      parameters:
+        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationsUnreachableResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+  '/service-desk/operations':
+    post:
+      operationId: createOperation
+      description: Crea una nuova richiesta di invio analogico su un nuovo indirizzo
+      tags:
+        - Operation
+      parameters:
+        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOperationRequest'
+      responses:
+        '201':
+          description: Creazione operazione andata a bon fine
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsResponse'
+        '400':
+          description: Richiesta errata
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Errore lato server
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+
+  '/service-desk/{operationId}/video-upload':
+    post:
+      operationId: presignedUrlVideoUpload
+      description: Recupera la presigned URL di S3 per effettuare il caricamente del video
+      tags:
+        - Operation
+      parameters:
+        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+        - name: operationId
+          description: Indica l'id dell'operazione a cui associare il video
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoUploadRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoUploadResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '404':
+          description: Operation not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+  '/service-desk/operations/search':
+    post:
+      operationId: searchOperationsFromTaxId
+      description: Recupera tutte le operazioni effettuate per un singolo utente
+      summary: API per recuperare tutte le operazioni legate ad un codice fiscale
+      tags:
+        - Operation
+      parameters:
+        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchNotificationRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          description: Richiesta errata
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Errore lato server
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+
+components:
+  schemas:
+    NotificationRequest:
+      description: Request per il recupero del numero di notifiche in stato irreperibile
+      type: object
+      properties:
+        taxId:
+          type: string
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+      additionalProperties: false
+
+    NotificationsUnreachableResponse:
+      description: Reponse che mostra il numero di notifiche in stato irreperibile
+      type: object
+      required:
+        - notificationsCount
+      properties:
+        notificationsCount:
+          type: integer
+          format: int64
+          maximum: 999999
+          minimum: 0
+      additionalProperties: false
+
+    CreateOperationRequest:
+      required:
+        - taxId
+        - address
+        - ticketId
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/AnalogAddress'
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+        ticketId:
+          type: string
+          maxLength: 32
+      additionalProperties: false
+
+    OperationsResponse:
+      description: Reponse della creazione di un'operation
+      type: object
+      properties:
+        operationId:
+          type: string
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 99999
+          description: identificativo dell'operation appena creata
+      additionalProperties: false
+
+    VideoUploadRequest:
+      description: Request per l'upload
+      type: object
+      properties:
+        preloadIdx:
+          title: Id della richiesta di precaricamento di un file
+          description: >-
+            Identificativo univoco all'interno della request HTTP, serve per correlare la risposta.
+          type: string
+        sha256:
+          type: string
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 99999
+          description: SHA256 del contenuto del file.
+        contentType:
+          type: string
+          maxLength: 99999
+          description: Il MIME format del contenuto del file che si intende caricare
+          example: 'application/octet-stream'
+      additionalProperties: false
+
+    VideoUploadResponse:
+      description: Response della richiesta di upload
+      type: object
+      properties:
+        url:
+          type: string
+          maxLength: 99999
+          example: "https://presignedurldemo.s3.eu-west-2.amazonaws.com/image.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=..."
+        fileKey:
+          type: string
+          maxLength: 99999
+          example: "PN_SERVICE_DESK_RECORDING-{UID}"
+        secret:
+          type: string
+          maxLength: 99999
+          example: "alow22ddw"
+      additionalProperties: false
+
+    SearchNotificationRequest:
+      required:
+        - taxId
+      type: object
+      properties:
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+      additionalProperties: false
+
+    SearchResponse:
+      description: Reponse della search
+      type: object
+      properties:
+        operations:
+          type: array
+          minItems: 1
+          maxItems: 999999999
+          items:
+            $ref: '#/components/schemas/OperationResponse'
+      additionalProperties: false
+
+    NotificationStatus:
+      required:
+        - status
+      type: object
+      properties:
+        status:
+          type: string
+          description: >
+            * `CREATING` - Operazione in attesa di caricamento del video
+            * `VALIDATION` - Operazione in fase di validazione di indirizzo e allegati
+            * `PREPARING` - Operazione in fase di preparazione di invio
+            * `PROGRESS` - Operazione in fase di processamento della spedizione
+            * `OK` - Notifica recapitata  
+            * `KO` - Notifica in errore di spedizione o in errore di validazione
+          enum:
+            - CREATING
+            - VALIDATION
+            - PREPARING
+            - PROGRESS
+            - OK
+            - KO
+        statusCode:
+          type: string
+          maxLength: 99999
+          description: codice dello stato dell'operazione
+        statusDescription:
+          type: string
+          maxLength: 99999
+          description: descrizione dello stato dell'operazione
+        lastEventTimestamp:
+          type: string
+          format: date-time
+      additionalProperties: false
+
+    OperationResponse:
+      required:
+        - taxId
+        - notificationStatus
+        - operationCreateTimestamp
+        - operationUpdateTimestamp
+      properties:
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+        iuns:
+          type: array
+          minItems: 1
+          maxItems: 999999999
+          items:
+            type: string
+            maxLength: 99999
+        uncompletedIuns:
+          type: array
+          minItems: 1
+          maxItems: 999999999
+          items:
+            type: string
+            maxLength: 99999
+        notificationStatus:
+          $ref: '#/components/schemas/NotificationStatus'
+        operationCreateTimestamp:
+          type: string
+          format: date-time
+          description: >-
+            Timestamp della richiesta in UTC
+        operationUpdateTimestamp:
+          type: string
+          format: date-time
+          description: >-
+            Timestamp della richiesta in UTC
+
+    AnalogAddress:
+      required:
+        - address
+        - city
+        - fullname
+        - cap
+      properties:
+        fullname:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Cognome e nome o ragione sociale del destinatario
+        nameRow2:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Seconda riga sulla busta.
+        address:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Indirizzo del destinatario.
+        addressRow2:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Specifica dell’indirizzo di residenza del destinatario (seconda
+            riga indirizzo sulla busta).
+        cap:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Cap del destinatario; in caso di invio estero diventa facoltativo.
+        city:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Comune del destinatario.
+        city2:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Frazione del destinatario. Potrebbe essere utile se il chiamante
+            non fornisce il cap.
+        pr:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Provincia del destinatario; in caso di invio estero diventa
+            facoltativo.
+        country:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: "In caso di destinatario estero, diventa obbligatoria l’indicazione\
+            \ della nazione di destinazione,  in standard UPU o altro standard condiviso."
+      description: Indirizzo analogico
+
+  parameters:
+    cxOperatorClientAuthFleet:
+      name: x-pagopa-cx-operator-client
+      in: header
+      description: Operator identify.
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+
+#  securitySchemes:        # ONLY EXTERNAL
+#    ApiKeyAuth:           # ONLY EXTERNAL
+#      type: apiKey        # ONLY EXTERNAL
+#      in: header          # ONLY EXTERNAL
+#      name: x-api-key     # ONLY EXTERNAL
+
+#security:                 # ONLY EXTERNAL
+#  - ApiKeyAuth: [] # use the same name as under securitySchemes    # ONLY EXTERNAL

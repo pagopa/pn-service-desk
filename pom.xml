@@ -132,13 +132,13 @@
 
 					<!-- OPEN API INTERNAL PN-SERVICE_DESK-->
 					<execution>
-						<id>pn-internal-template-private</id>
+						<id>api-internal-pn-service-desk-v1</id>
 						<goals>
 							<goal>generate</goal>
 						</goals>
 						<phase>process-resources</phase>
 						<configuration>
-							<inputSpec>${project.basedir}/docs/openapi/api-internal-pn-service-desk.yaml</inputSpec>
+							<inputSpec>${project.basedir}/docs/openapi/api-internal-pn-service-desk-v1.yaml</inputSpec>
 							<generatorName>spring</generatorName>
 							<library>spring-boot</library>
 							<modelNameSuffix />
