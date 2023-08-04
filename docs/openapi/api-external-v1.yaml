@@ -374,50 +374,41 @@ components:
         - cap
       properties:
         fullname:
-          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Cognome e nome o ragione sociale del destinatario
         nameRow2:
-          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Seconda riga sulla busta.
         address:
-          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Indirizzo del destinatario.
         addressRow2:
-          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Specifica dell’indirizzo di residenza del destinatario (seconda
             riga indirizzo sulla busta).
         cap:
-          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Cap del destinatario; in caso di invio estero diventa facoltativo.
         city:
-          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Comune del destinatario.
         city2:
-          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Frazione del destinatario. Potrebbe essere utile se il chiamante
             non fornisce il cap.
         pr:
-          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Provincia del destinatario; in caso di invio estero diventa
             facoltativo.
         country:
-          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: "In caso di destinatario estero, diventa obbligatoria l’indicazione\
@@ -452,11 +443,11 @@ components:
         minLength: 1
         maxLength: 32
 
-#  securitySchemes:        # ONLY EXTERNAL
-#    ApiKeyAuth:           # ONLY EXTERNAL
-#      type: apiKey        # ONLY EXTERNAL
-#      in: header          # ONLY EXTERNAL
-#      name: x-api-key     # ONLY EXTERNAL
+  securitySchemes:        # ONLY EXTERNAL
+    ApiKeyAuth:           # ONLY EXTERNAL
+      type: apiKey        # ONLY EXTERNAL
+      in: header          # ONLY EXTERNAL
+      name: x-api-key     # ONLY EXTERNAL
 
-#security:                 # ONLY EXTERNAL
-#  - ApiKeyAuth: [] # use the same name as under securitySchemes    # ONLY EXTERNAL
+security:                 # ONLY EXTERNAL
+  - ApiKeyAuth: [] # use the same name as under securitySchemes    # ONLY EXTERNAL
