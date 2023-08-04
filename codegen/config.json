@@ -1,0 +1,16 @@
+{
+    "openapi": [
+        {
+            "intendedUsage": "B2B",
+            "openapiFiles": [
+                "api-internal-pn-service-desk.yaml"
+            ],
+            "servicePath": "pn-service-desk",
+            "generateBundle": true
+        }
+    ],
+    "openapiBundlePresenceCheck": [
+        "api-external-pn-service-desk-bundle.yaml"
+    ]
+}
+    
