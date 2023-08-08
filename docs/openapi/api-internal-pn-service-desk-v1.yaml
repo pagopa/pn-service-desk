@@ -358,15 +358,13 @@ components:
           minItems: 1
           maxItems: 999999999
           items:
-            type: string
-            maxLength: 99999
+            $ref: "#/components/schemas/SDNotificationSummary"
         uncompletedIuns:
           type: array
           minItems: 1
           maxItems: 999999999
           items:
-            type: string
-            maxLength: 99999
+            $ref: "#/components/schemas/SDNotificationSummary"
         notificationStatus:
           $ref: '#/components/schemas/NotificationStatus'
         operationCreateTimestamp:
@@ -437,6 +435,33 @@ components:
           description: "In caso di destinatario estero, diventa obbligatoria l’indicazione\
             \ della nazione di destinazione,  in standard UPU o altro standard condiviso."
       description: Indirizzo analogico
+      
+    SDNotificationSummary:
+      type: object
+      required: 
+        - iun
+        - senderPaInternalId
+        - senderPaDescription
+      properties:
+        iun:
+          type: string
+          maxLength: 99999
+        senderPaInternalId:
+          type: string
+          description: "Identificativo Selfcare della PA mittente"
+          maxLength: 99999
+        senderPaDescription:
+          type: string
+          maxLength: 99999
+          description: "Descrizione breve della PA mittente"
+        senderPaIpaCode:
+          type: string
+          maxLength: 99999
+          description: "Codice IPA della PA mittente"
+        senderPaTaxCode:
+          type: string
+          maxLength: 99999
+          description: "Codice Fiscale della PA mittente"
 
   parameters:
     cxOperatorClientAuthFleet:

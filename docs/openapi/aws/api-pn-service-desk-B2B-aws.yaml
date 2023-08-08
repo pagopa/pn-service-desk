@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: >-
     ${stageVariables.ProjectName}-${stageVariables.MicroServiceUniqueName}-${stageVariables.IntendedUsage}
-  version: vlqXSSyzWdR60GaJpnt3zdGxrw02XHSf2qhnaIOwd1A=
+  version: 1iS8p/avkDsk37RFEhjbAB6OGK/ZG1yvGVWRxCa6wc8=
 servers:
   - url: https://${stageVariables.DnsName}/{basePath}
     variables:
@@ -186,15 +186,13 @@ components:
           minItems: 1
           maxItems: 999999999
           items:
-            type: string
-            maxLength: 99999
+            $ref: '#/components/schemas/SDNotificationSummary'
         uncompletedIuns:
           type: array
           minItems: 1
           maxItems: 999999999
           items:
-            type: string
-            maxLength: 99999
+            $ref: '#/components/schemas/SDNotificationSummary'
         notificationStatus:
           $ref: '#/components/schemas/NotificationStatus'
         operationCreateTimestamp:
@@ -258,6 +256,32 @@ components:
             della nazione di destinazione,  in standard UPU o altro standard
             condiviso.
       description: Indirizzo analogico
+    SDNotificationSummary:
+      type: object
+      required:
+        - iun
+        - senderPaInternalId
+        - senderPaDescription
+      properties:
+        iun:
+          type: string
+          maxLength: 99999
+        senderPaInternalId:
+          type: string
+          description: Identificativo Selfcare della PA mittente
+          maxLength: 99999
+        senderPaDescription:
+          type: string
+          maxLength: 99999
+          description: Descrizione breve della PA mittente
+        senderPaIpaCode:
+          type: string
+          maxLength: 99999
+          description: Codice IPA della PA mittente
+        senderPaTaxCode:
+          type: string
+          maxLength: 99999
+          description: Codice Fiscale della PA mittente
   responses: {}
   securitySchemes:
     api_key_openapi:
