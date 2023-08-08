@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: >-
     ${stageVariables.ProjectName}-${stageVariables.MicroServiceUniqueName}-${stageVariables.IntendedUsage}
-  version: 7ZTU4jlASbBb6nli4Ve/Jc6TjFxhttl0w4oblafy0EM=
+  version: vlqXSSyzWdR60GaJpnt3zdGxrw02XHSf2qhnaIOwd1A=
 servers:
   - url: https://${stageVariables.DnsName}/{basePath}
     variables:
@@ -14,14 +14,15 @@ paths: {}
 components:
   parameters:
     cxOperatorClientAuthFleet:
-      name: x-pagopa-cx-operator-client
+      name: x-pagopa-pn-uid
       in: header
-      description: Operator identify.
+      description: User Identifier
       required: true
       schema:
         type: string
+        pattern: ^[ -~]*$
         minLength: 1
-        maxLength: 32
+        maxLength: 64
   schemas:
     NotificationRequest:
       description: Request per il recupero del numero di notifiche in stato irreperibile
@@ -57,7 +58,12 @@ components:
           maxLength: 32
         ticketId:
           type: string
+          format: /[^A-Za-z0-9]+/
           maxLength: 32
+        ticketOperationId:
+          type: string
+          format: /[^A-Za-z0-9]+/
+          maxLength: 10
       additionalProperties: false
     OperationsResponse:
       description: Reponse della creazione di un'operation
@@ -65,9 +71,13 @@ components:
       properties:
         operationId:
           type: string
-          format: /[^A-Za-z0-9]+/
+          format: /[^A-Za-z0-9~]+/
           maxLength: 99999
-          description: identificativo dell'operation appena creata
+          description: >-
+            identificativo dell'operation appena creata sarà costituito da
+            _ticketId_ e _ticketOperationId_ separati dal carattere "~" se 
+            _ticketOperationId_ non è stato specificato allora l'operationId
+            coinciderà con il _ticketId_
       additionalProperties: false
     VideoUploadRequest:
       description: Request per l'upload

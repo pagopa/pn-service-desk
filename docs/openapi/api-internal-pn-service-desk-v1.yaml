@@ -440,14 +440,16 @@ components:
 
   parameters:
     cxOperatorClientAuthFleet:
-      name: x-pagopa-cx-operator-client
+      name: x-pagopa-pn-uid
       in: header
-      description: Operator identify.
+      description: User Identifier
       required: true
       schema:
         type: string
+        # ASCII printable characters
+        pattern: ^[ -~]*$
         minLength: 1
-        maxLength: 32
+        maxLength: 64
 
 #  securitySchemes:        # ONLY EXTERNAL
 #    ApiKeyAuth:           # ONLY EXTERNAL
