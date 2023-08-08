@@ -66,7 +66,11 @@ paths:
   '/service-desk/operations':
     post:
       operationId: createOperation
-      description: Crea una nuova richiesta di invio analogico su un nuovo indirizzo
+      description: >-
+        Crea una nuova richiesta di invio analogico su un nuovo indirizzo.
+        Se la coppia _ticketId_ e _ticketOperationId_ è ripetuta rispetto 
+        a una precedente richiesta l'operazione non sarà ricreata e sarà
+        restituito '201'
       tags:
         - Operation
       parameters:
@@ -219,7 +223,12 @@ components:
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
         ticketId:
           type: string
+          format: '/[^A-Za-z0-9]+/'
           maxLength: 32
+        ticketOperationId:
+          type: string
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 10
       additionalProperties: false
 
     OperationsResponse:
@@ -228,9 +237,13 @@ components:
       properties:
         operationId:
           type: string
-          format: '/[^A-Za-z0-9]+/'
+          format: '/[^A-Za-z0-9~]+/'
           maxLength: 99999
-          description: identificativo dell'operation appena creata
+          description: >-
+            identificativo dell'operation appena creata sarà costituito da
+            _ticketId_ e _ticketOperationId_ separati dal carattere "~" se 
+            _ticketOperationId_ non è stato specificato allora l'operationId
+            coinciderà con il _ticketId_
       additionalProperties: false
 
     VideoUploadRequest:
