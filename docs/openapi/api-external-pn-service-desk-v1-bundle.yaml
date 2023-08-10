@@ -273,12 +273,12 @@ components:
           maxLength: 32
       additionalProperties: false
     SearchResponse:
-      description: Reponse della search
+      description: Response della search
       type: object
       properties:
         operations:
           type: array
-          minItems: 1
+          minItems: 0
           maxItems: 999999999
           items:
             $ref: '#/components/schemas/OperationResponse'
@@ -313,11 +313,14 @@ components:
       additionalProperties: false
     OperationResponse:
       required:
+        - operationId
         - taxId
         - notificationStatus
         - operationCreateTimestamp
         - operationUpdateTimestamp
       properties:
+        operationId:
+          type: string
         taxId:
           type: string
           maxLength: 32

@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: >-
     ${stageVariables.ProjectName}-${stageVariables.MicroServiceUniqueName}-${stageVariables.IntendedUsage}
-  version: 1iS8p/avkDsk37RFEhjbAB6OGK/ZG1yvGVWRxCa6wc8=
+  version: rBeqVj7DZ3YgpSlwyCwkmjqCDa5YQmXQj4wnOuXWL58=
 servers:
   - url: https://${stageVariables.DnsName}/{basePath}
     variables:
@@ -128,12 +128,12 @@ components:
           maxLength: 32
       additionalProperties: false
     SearchResponse:
-      description: Reponse della search
+      description: Response della search
       type: object
       properties:
         operations:
           type: array
-          minItems: 1
+          minItems: 0
           maxItems: 999999999
           items:
             $ref: '#/components/schemas/OperationResponse'
@@ -173,11 +173,14 @@ components:
       additionalProperties: false
     OperationResponse:
       required:
+        - operationId
         - taxId
         - notificationStatus
         - operationCreateTimestamp
         - operationUpdateTimestamp
       properties:
+        operationId:
+          type: string
         taxId:
           type: string
           maxLength: 32
