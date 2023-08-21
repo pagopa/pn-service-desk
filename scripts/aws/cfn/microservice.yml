@@ -75,6 +75,30 @@ Parameters:
     Type: String
     Description: 'keep track of used projects commitIds'
 
+  ServiceDeskOperationsDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref ServiceDeskOperationsDynamoTable
+
+  ServiceDeskOperationsDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ServiceDeskOperationsDynamoTable.Arn}'
+
+  ServiceDeskAddressDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref ServiceDeskAddressDynamoTable
+
+  ServiceDeskAddressDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ServiceDeskAddressDynamoTable.Arn}'
+
+  ServiceDeskOperationFileKeyDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref ServiceDeskOperationFileKeyDynamoTable
+
+  ServiceDeskOperationFileKeyDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ServiceDeskOperationFileKeyDynamoTable.Arn}'
+
 Resources:
 
   # PN-TemplateBeMs microservice
@@ -83,14 +107,18 @@ Resources:
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/ecs-service.yaml"
       Parameters:
-        ContainerEnvEntry18: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
-        ContainerEnvEntry19: !Sub 'AWS_KMS_REGION=${AWS::Region}'
         MicroServiceUniqueName: !Sub '${ProjectName}-template-ms-be'
         CpuValue: 512
         MemoryAmount: 2GB
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
+        ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}, http://localhost:3000, https://portale-pa.dev.pn.pagopa.it'
+        ContainerEnvEntry3: !Sub 'AWS_DYNAMODBOPERATIONSTABLE=${ServiceDeskOperationsDynamoTableName}'
+        ContainerEnvEntry4: !Sub 'AWS_DYNAMODBADDRESSTABLE=${ServiceDeskAddressDynamoTableName}'
+        ContainerEnvEntry5: !Sub 'AWS_DYNAMODBFILEKEYTABLE=${ServiceDeskOperationFileKeyDynamoTableName}'
+        ContainerEnvEntry18: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
+        ContainerEnvEntry19: !Sub 'AWS_KMS_REGION=${AWS::Region}'
         MappedPaths: '/template-ms-be/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

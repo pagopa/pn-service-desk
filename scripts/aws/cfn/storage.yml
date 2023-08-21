@@ -25,8 +25,78 @@ Parameters:
     Description: 'Where to send CDC'
 
 Resources:
-    NullResource:
-        Type: AWS::CloudFormation::WaitConditionHandle
+
+    ServiceDeskOperationsDynamoTable:
+      Type: AWS::DynamoDB::Table
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain
+      Properties:
+        TableName: !Sub '${ProjectName}-PnServiceDeskOperations'
+        AttributeDefinitions:
+          - AttributeName: "operationId"
+            AttributeType: "S"
+          - AttributeName: "recipientInternalId"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "operationId"
+            KeyType: "HASH"
+        GlobalSecondaryIndexes:
+          - IndexName: "recipientInternalId-index"
+            KeySchema:
+              - AttributeName: "recipientInternalId"
+                KeyType: "HASH"
+            Projection:
+              ProjectionType: "ALL"
+        KinesisStreamSpecification:
+          StreamArn: !Ref CdcKinesisSourceStreamArn
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        BillingMode: "PAY_PER_REQUEST"
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+
+    ServiceDeskAddressDynamoTable:
+      Type: AWS::DynamoDB::Table
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain
+      Properties:
+        TableName: !Sub '${ProjectName}-PnServiceDeskAddress'
+        AttributeDefinitions:
+          - AttributeName: "operationId"
+            AttributeType: "S"
+        TimeToLiveSpecification:
+          AttributeName: "ttl"
+          Enabled: true
+        KeySchema:
+          - AttributeName: "operationId"
+            KeyType: "HASH"
+        KinesisStreamSpecification:
+          StreamArn: !Ref CdcKinesisSourceStreamArn
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        BillingMode: "PAY_PER_REQUEST"
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+
+    ServiceDeskOperationFileKeyDynamoTable:
+      Type: AWS::DynamoDB::Table
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain
+      Properties:
+        TableName: !Sub '${ProjectName}-PnServiceDeskOperationFileKey'
+        AttributeDefinitions:
+          - AttributeName: "fileKey"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "fileKey"
+            KeyType: "HASH"
+        KinesisStreamSpecification:
+          StreamArn: !Ref CdcKinesisSourceStreamArn
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        BillingMode: "PAY_PER_REQUEST"
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
     PCKmsEncDecDynamoDataKey:
       Type: 'AWS::KMS::Key'
       DeletionPolicy: Retain
@@ -51,9 +121,30 @@ Resources:
         TargetKeyId: !Ref PCKmsEncDecDynamoDataKey
 
 Outputs:
-    SampleOutput:
-      Description: A Sample Output
-      Value: 'na'
+
+    ServiceDeskOperationsDynamoTableName:
+      Description: Name of dynamodb table containing request
+      Value: !Ref ServiceDeskOperationsDynamoTable
+
+    ServiceDeskOperationsDynamoTableArn:
+      Description: ARN of dynamodb table containing request
+      Value: !Sub '${ServiceDeskOperationsDynamoTable.Arn}'
+
+    ServiceDeskAddressDynamoTableName:
+      Description: Name of dynamodb table containing request
+      Value: !Ref ServiceDeskAddressDynamoTable
+
+    ServiceDeskAddressDynamoTableArn:
+      Description: ARN of dynamodb table containing request
+      Value: !Sub '${ServiceDeskAddressDynamoTable.Arn}'
+
+    ServiceDeskOperationFileKeyDynamoTableName:
+      Description: Name of dynamodb table containing request
+      Value: !Ref ServiceDeskOperationFileKeyDynamoTable
+
+    ServiceDeskOperationFileKeyDynamoTableArn:
+      Description: ARN of dynamodb table containing request
+      Value: !Sub '${ServiceDeskOperationFileKeyDynamoTable.Arn}'
 
     PCKmsEncDecDynamoDataKeyARN:
       Description: Name of KMS Key for Dynamo encode/decode data
