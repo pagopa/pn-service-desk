@@ -31,6 +31,14 @@ Parameters:
     Type: String
     Description: 'The S3 bucket from which to fetch the templates used by this stack.'
 
+  ScheduledRequestsQueueARN:
+    Type: String
+    Description: 'Send and pull requests in this queue'
+
+  PCKmsEncDecDynamoDataKeyARN:
+    Type: String
+    Description: 'Name of KMS Key for Dynamo encode/decode data'
+
   ECSClusterName:
     Type: String
     Description: 'The name of the ECS cluster where the microservice is going to be deployed'
@@ -75,6 +83,8 @@ Resources:
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/ecs-service.yaml"
       Parameters:
+        ContainerEnvEntry18: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
+        ContainerEnvEntry19: !Sub 'AWS_KMS_REGION=${AWS::Region}'
         MicroServiceUniqueName: !Sub '${ProjectName}-template-ms-be'
         CpuValue: 512
         MemoryAmount: 2GB
@@ -88,4 +98,30 @@ Resources:
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
+        TaskRoleManagedPolicyArn: !Ref TemplateBeMsMicroservicePolicy
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+  TemplateBeMsMicroservicePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    PolicyDocument:
+      Resource:
+        - !Ref ScheduledRequestsQueueARN
+        - Effect: Allow
+          Action:
+            - kms:Encrypt
+            - kms:Decrypt
+            - kms:ReEncrypt*
+          Resource:
+            - !Ref PCKmsEncDecDynamoDataKeyARN
+        - Effect: Allow
+          Action:
+            - dynamodb:BatchGetItem
+            - dynamodb:BatchWriteItem
+            - dynamodb:ExecuteTransaction
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:TransactGetItems
+            - dynamodb:TransactWriteItems
+            - dynamodb:UpdateItem
+

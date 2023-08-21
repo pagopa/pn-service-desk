@@ -27,8 +27,34 @@ Parameters:
 Resources:
     NullResource:
         Type: AWS::CloudFormation::WaitConditionHandle
+    PCKmsEncDecDynamoDataKey:
+      Type: 'AWS::KMS::Key'
+      DeletionPolicy: Retain
+      UpdateReplacePolicy: Retain
+      Properties:
+        Description: A symmetric encryption KMS key AES-256-GCM
+        KeySpec: SYMMETRIC_DEFAULT
+        KeyUsage: ENCRYPT_DECRYPT
+        KeyPolicy:
+          Version: 2012-10-17
+          Statement:
+            - Sid: Enable IAM User Permissions
+              Effect: Allow
+              Principal:
+                AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+              Action: 'kms:*'
+              Resource: '*'
+    PCKmsEncDecDynamoDataKeyAlias:
+      Type: 'AWS::KMS::Alias'
+      Properties:
+        AliasName: !Sub 'alias/${ProjectName}-paper-channel-dynamo'
+        TargetKeyId: !Ref PCKmsEncDecDynamoDataKey
 
 Outputs:
     SampleOutput:
       Description: A Sample Output
       Value: 'na'
+
+    PCKmsEncDecDynamoDataKeyARN:
+      Description: Name of KMS Key for Dynamo encode/decode data
+      Value: !Sub '${PCKmsEncDecDynamoDataKey.Arn}'
