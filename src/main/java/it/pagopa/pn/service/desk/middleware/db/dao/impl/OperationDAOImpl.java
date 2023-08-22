@@ -16,7 +16,7 @@ public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implement
                                DynamoDbAsyncClient dynamoDbAsyncClient,
                                AwsConfigsActivation awsPropertiesConfig) {
         super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
-                awsPropertiesConfig.getDynamodbAddressTable(), PnServiceDeskOperations.class);
+                awsPropertiesConfig.getDynamodbOperationsTable(), PnServiceDeskOperations.class);
     }
 
     @Override

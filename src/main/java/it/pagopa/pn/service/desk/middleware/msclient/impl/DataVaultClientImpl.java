@@ -5,6 +5,7 @@ import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndatavault.v1.api.RecipientsApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndatavault.v1.dto.BaseRecipientDtoDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndatavault.v1.dto.RecipientTypeDto;
 import it.pagopa.pn.service.desk.middleware.msclient.DataVaultClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,15 +31,15 @@ public class DataVaultClientImpl extends BaseClient implements DataVaultClient {
     public Mono<String> anonymized(String data) {
         List<String> toDecode = new ArrayList<>();
         toDecode.add(data);
-        return this.recipientsApi.getRecipientDenominationByInternalId(toDecode)
+
+        return this.recipientsApi.ensureRecipientByExternalId(RecipientTypeDto.PF, data)
                 .retryWhen(
                         Retry.backoff(2, Duration.ofMillis(25))
                                 .filter(throwable ->throwable instanceof TimeoutException || throwable instanceof ConnectException)
                 )
-                .mapNotNull(BaseRecipientDtoDto::getTaxId)
                 .onErrorResume(ex -> {
                     log.error("Error {}", ex.getMessage());
                     return Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR.getMessage()));
-                }).elementAt(0);
+                });
     }
 }

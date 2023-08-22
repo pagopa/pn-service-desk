@@ -25,7 +25,6 @@ public class OperationsServiceImpl implements OperationsService {
     private DataVaultClient dataVaultClient;
     @Autowired
     private OperationDAO operationDAO;
-
     @Autowired
     private AddressDAO addressDAO;
 
@@ -37,17 +36,15 @@ public class OperationsServiceImpl implements OperationsService {
 
         return dataVaultClient.anonymized(createOperationRequest.getTaxId())
                 .zipWith(generateOperationId())
-                .map(recipientIdAndOperationId -> {
-                    return OperationMapper.getInitialOperation(recipientIdAndOperationId.getT2(), recipientIdAndOperationId.getT1(), createOperationRequest.getTicketId());
-                })
-                .zipWhen(pnServiceDeskOperations -> {
-                    return Mono.just(AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId()));
-                })
-                .flatMap(operationAndAddress -> {
-                    return operationDAO.createOperation(operationAndAddress.getT1())
-                                    .doOnNext(operation -> addressDAO.createAddress(operationAndAddress.getT2()))
-                                    .map(operation -> response.operationId(operationAndAddress.getT1().getOperationId()));
-                });
+                .map(recipientIdAndOperationId ->
+                        OperationMapper.getInitialOperation(recipientIdAndOperationId.getT2(), recipientIdAndOperationId.getT1(), createOperationRequest.getTicketId())
+                )
+                .zipWhen(pnServiceDeskOperations ->
+                    Mono.just(AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId()))
+                )
+                .doOnNext(operationAndAddress -> addressDAO.createAddress(operationAndAddress.getT2()))
+                .doOnNext(operationAndAddress -> operationDAO.createOperation(operationAndAddress.getT1()))
+                .map(operationAndAddress -> response.operationId(operationAndAddress.getT1().getOperationId()));
     }
 
     private Mono<String> generateOperationId (){
