@@ -66,6 +66,10 @@ Parameters:
   NetworkLoadBalancerLink:
     Type: String
     Description: 'network load balancer link for API-GW'
+
+  DataVaultBaseUrl:
+    Type: String
+    Description: 'DataVault BaseUrl'
   
   LogsKinesisSourceStreamArn:
     Type: String
@@ -119,6 +123,7 @@ Resources:
         ContainerEnvEntry5: !Sub 'AWS_DYNAMODBFILEKEYTABLE=${ServiceDeskOperationFileKeyDynamoTableName}'
         ContainerEnvEntry18: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
         ContainerEnvEntry19: !Sub 'AWS_KMS_REGION=${AWS::Region}'
+        ContainerEnvEntry20: !Sub 'PN_SERVICEDESK_CLIENTDATAVAULTBASEPATH=${DataVaultBaseUrl}'
         MappedPaths: '/template-ms-be/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
