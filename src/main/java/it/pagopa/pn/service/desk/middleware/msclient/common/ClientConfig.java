@@ -43,7 +43,7 @@ public class ClientConfig  extends CommonBaseClient {
     public RecipientsApi getRecipientsApi(PnServiceDeskConfigs pnServiceDeskConfigs){
         it.pagopa.pn.service.desk.generated.openapi.msclient.pndatavault.v1.ApiClient apiClient =
                 new it.pagopa.pn.service.desk.generated.openapi.msclient.pndatavault.v1.ApiClient(super.initWebClient(it.pagopa.pn.service.desk.generated.openapi.msclient.pndatavault.v1.ApiClient.buildWebClientBuilder()));
-        apiClient.setBasePath(pnServiceDeskConfigs.getClientDataVaultBasePath());
+        apiClient.setBasePath(pnServiceDeskConfigs.getDataVaultBaseUrl());
         return new RecipientsApi(apiClient);
     }
 

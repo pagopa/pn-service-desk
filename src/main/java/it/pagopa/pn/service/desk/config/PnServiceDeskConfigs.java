@@ -14,7 +14,7 @@ public class PnServiceDeskConfigs {
 
 
     private String safeStorageBaseUrl;
-    private String clientDataVaultBasePath;
+    private String dataVaultBaseUrl;
     private Topics topics;
 
 

@@ -17,9 +17,9 @@ public class PnServiceDeskAddress {
 
     public static final String COL_OPERATION_ID = "operationId";
     public static final String COL_FULL_NAME = "fullName";
-    public static final String COL_NAME_RAW_2 = "nameRaw2";
+    public static final String COL_NAME_ROW_2 = "nameRow2";
     public static final String COL_ADDRESS = "address";
-    public static final String COL_ADDRESS_RAW_2 = "addressRaw2";
+    public static final String COL_ADDRESS_ROW_2 = "addressRow2";
     public static final String COL_CAP = "cap";
     public static final String COL_CITY = "city";
     public static final String COL_CITY_2 = "city2";
@@ -33,14 +33,14 @@ public class PnServiceDeskAddress {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FULL_NAME)}))
     private String fullName;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_NAME_RAW_2)}))
-    private String nameRaw2;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_NAME_ROW_2)}))
+    private String nameRow2;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS)}))
     private String address;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS_RAW_2)}))
-    private String addressRaw2;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS_ROW_2)}))
+    private String addressRow2;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CAP)}))
     private String cap;

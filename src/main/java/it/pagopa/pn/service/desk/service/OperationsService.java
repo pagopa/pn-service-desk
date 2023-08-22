@@ -7,5 +7,5 @@ import reactor.core.publisher.Mono;
 
 public interface OperationsService {
 
-    Mono<OperationsResponse> createOperation(String xPagopaPnUid, Mono<CreateOperationRequest> createOperationRequest);
+    Mono<OperationsResponse> createOperation(String xPagopaPnUid, CreateOperationRequest createOperationRequest);
 }

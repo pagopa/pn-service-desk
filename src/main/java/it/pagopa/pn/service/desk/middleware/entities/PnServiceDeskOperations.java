@@ -9,6 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 
+import java.time.Instant;
 import java.util.List;
 
 @DynamoDbBean
@@ -39,10 +40,10 @@ public class PnServiceDeskOperations {
     private String status;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_OPERATION_START_DATE)}))
-    private String operationStartDate;
+    private Instant operationStartDate;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_OPERATION_LAST_UPDATE_DATE)}))
-    private String operationLastUpdateDate;
+    private Instant operationLastUpdateDate;
 
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = RECIPIENT_INTERNAL_INDEX),@DynamoDbAttribute(COL_RECIPIENT_INTERNAL_ID)}))
     private String recipientInternalId;

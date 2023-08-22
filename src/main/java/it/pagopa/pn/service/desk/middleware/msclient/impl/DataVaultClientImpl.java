@@ -27,7 +27,7 @@ public class DataVaultClientImpl extends BaseClient implements DataVaultClient {
 
 
     @Override
-    public String anonymized(String data) {
+    public Mono<String> anonymized(String data) {
         List<String> toDecode = new ArrayList<>();
         toDecode.add(data);
         return this.recipientsApi.getRecipientDenominationByInternalId(toDecode)
@@ -39,7 +39,6 @@ public class DataVaultClientImpl extends BaseClient implements DataVaultClient {
                 .onErrorResume(ex -> {
                     log.error("Error {}", ex.getMessage());
                     return Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR.getMessage()));
-                })
-                .blockFirst();
+                }).elementAt(0);
     }
 }
