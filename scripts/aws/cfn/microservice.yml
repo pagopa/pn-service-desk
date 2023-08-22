@@ -124,6 +124,7 @@ Resources:
         ContainerEnvEntry18: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
         ContainerEnvEntry19: !Sub 'AWS_KMS_REGION=${AWS::Region}'
         ContainerEnvEntry20: !Sub 'PN_SERVICEDESK_CLIENTDATAVAULTBASEPATH=${DataVaultBaseUrl}'
+        ContainerEnvEntry21: !Sub 'PN_SERVICEDESK_QUEUE=${queue}'
         MappedPaths: '/template-ms-be/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

@@ -4,13 +4,15 @@ import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.DecryptResult;
 import com.amazonaws.services.kms.model.EncryptRequest;
-import it.pagopa.pn.service.desk.config.AwsKmsProperties;
+import it.pagopa.pn.service.desk.config.springbootcfg.AwsConfigsActivation;
 import it.pagopa.pn.service.desk.encryption.DataEncryption;
 import it.pagopa.pn.service.desk.encryption.EncryptedUtils;
 import it.pagopa.pn.service.desk.encryption.model.EncryptionModel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -18,23 +20,20 @@ import java.util.Optional;
 
 
 @Slf4j
-@Qualifier("kmsEncryption")
+@Service
 public class KmsEncryptionImpl implements DataEncryption {
 
-    private final AWSKMS kms;
-    private final AwsKmsProperties awsKmsProperties;
-
-    public KmsEncryptionImpl(AWSKMS awskms, AwsKmsProperties awsKmsProperties) {
-        this.kms = awskms;
-        this.awsKmsProperties = awsKmsProperties;
-    }
+    @Autowired
+    private AWSKMS kms;
+    @Autowired
+    private AwsConfigsActivation awsProperties;
 
     @Override
     public String encode(String data) {
         if(StringUtils.isNotEmpty(data)) {
 
             final EncryptRequest encryptRequest = new EncryptRequest()
-                    .withKeyId(this.awsKmsProperties.getKeyId())
+                    .withKeyId(this.awsProperties.getKms().getKeyId())
                     .withPlaintext(ByteBuffer.wrap(data.getBytes(StandardCharsets.UTF_8)));
 
             final ByteBuffer encryptedBytes = kms.encrypt(encryptRequest).getCiphertextBlob();
@@ -55,7 +54,7 @@ public class KmsEncryptionImpl implements DataEncryption {
                     .withEncryptionContext(token.getEncryptionContext());
 
             final EncryptionModel options = token.getModel();
-            final String keyId = Optional.ofNullable(options.getKeyId()).orElse(awsKmsProperties.getKeyId());
+            final String keyId = Optional.ofNullable(options.getKeyId()).orElse(awsProperties.getKms().getKeyId());
             final String algorithm = Optional.ofNullable(options.getAlgorithm()).orElse("SYMMETRIC_DEFAULT");
             decryptRequest.setEncryptionAlgorithm(algorithm);
             decryptRequest.setKeyId(keyId);

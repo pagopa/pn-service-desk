@@ -20,7 +20,7 @@ done
 echo "### CREATE PN-SERVICE-DESK TABLES ###"
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
-    --table-name ServiceDeskOperationsDynamoTable \
+    --table-name ServiceDeskOperations \
     --attribute-definitions \
         AttributeName=operationId,AttributeType=S \
     --key-schema \
