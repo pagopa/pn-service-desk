@@ -32,4 +32,9 @@ public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implement
         QueryConditional conditional = CONDITION_EQUAL_TO.apply(keyBuild(taxId, null));
         return this.getBySecondaryIndex("recipientInternalId-index", taxId, null);
     }
+
+    @Override
+    public Mono<PnServiceDeskOperations> getByOperationId(String operationId) {
+        return Mono.fromFuture(this.get(operationId, null).thenApply(item -> item));
+    }
 }

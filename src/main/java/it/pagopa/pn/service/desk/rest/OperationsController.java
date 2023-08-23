@@ -3,6 +3,8 @@ package it.pagopa.pn.service.desk.rest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.api.OperationApi;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationsResponse;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadRequest;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchResponse;
 import it.pagopa.pn.service.desk.service.OperationsService;
@@ -34,4 +36,11 @@ public class OperationsController implements OperationApi {
                         .map(notificationResponse -> ResponseEntity.status(HttpStatus.OK).body(notificationResponse)));
     }
 
+
+    @Override
+    public Mono<ResponseEntity<VideoUploadResponse>> presignedUrlVideoUpload(String xPagopaPnUid, String operationId, Mono<VideoUploadRequest> videoUploadRequest, ServerWebExchange exchange) {
+        return videoUploadRequest
+                .flatMap(videoUpload -> operationsService.presignedUrlVideoUpload(xPagopaPnUid, operationId, videoUpload)
+                        .map(videoUploadResponse -> ResponseEntity.status(HttpStatus.OK).body(videoUploadResponse)));
+    }
 }
