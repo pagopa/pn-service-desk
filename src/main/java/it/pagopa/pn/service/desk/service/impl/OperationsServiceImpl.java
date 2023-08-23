@@ -1,7 +1,6 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationsResponse;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.mapper.AddressMapper;
 import it.pagopa.pn.service.desk.mapper.OperationMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
@@ -14,8 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -45,6 +47,20 @@ public class OperationsServiceImpl implements OperationsService {
                 .doOnNext(operationAndAddress -> addressDAO.createAddress(operationAndAddress.getT2()))
                 .doOnNext(operationAndAddress -> operationDAO.createOperation(operationAndAddress.getT1()))
                 .map(operationAndAddress -> response.operationId(operationAndAddress.getT1().getOperationId()));
+    }
+
+    @Override
+    public Mono<SearchResponse> searchOperationsFromRecipientInternalId(String xPagopaPnUid, SearchNotificationRequest searchNotificationRequest) {
+        SearchResponse response = new SearchResponse();
+
+        return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
+                .flatMapMany(taxId -> operationDAO.searchOperationsFromRecipientInternalId(taxId))
+                .map(op -> OperationMapper.operationResponseMapper(op))
+                .collectList()
+                .map(operations -> {
+                    response.setOperations(operations);
+                    return response;
+                });
     }
 
     private Mono<String> generateOperationId (){
