@@ -21,7 +21,7 @@ public class PnServiceDeskConfigs {
 
     @Data
     public static class Topics {
-
+        private String internalQueue;
         private String safeStorageEvents;
     }
 
