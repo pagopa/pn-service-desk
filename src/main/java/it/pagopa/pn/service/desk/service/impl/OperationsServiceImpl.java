@@ -6,17 +6,12 @@ import it.pagopa.pn.service.desk.mapper.AddressMapper;
 import it.pagopa.pn.service.desk.mapper.OperationMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
-import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.msclient.DataVaultClient;
-import it.pagopa.pn.service.desk.middleware.msclient.impl.DataVaultClientImpl;
 import it.pagopa.pn.service.desk.service.OperationsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -35,10 +30,7 @@ public class OperationsServiceImpl implements OperationsService {
         OperationsResponse response = new OperationsResponse();
 
         return dataVaultClient.anonymized(createOperationRequest.getTaxId())
-                .zipWith(generateOperationId())
-                .map(recipientIdAndOperationId ->
-                        OperationMapper.getInitialOperation(recipientIdAndOperationId.getT2(), recipientIdAndOperationId.getT1(), createOperationRequest.getTicketId())
-                )
+                .map(recipientId -> OperationMapper.getInitialOperation(createOperationRequest, recipientId))
                 .zipWhen(pnServiceDeskOperations ->
                     Mono.just(AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId()))
                 )
@@ -47,10 +39,7 @@ public class OperationsServiceImpl implements OperationsService {
                 .map(operationAndAddress -> response.operationId(operationAndAddress.getT1().getOperationId()));
     }
 
-    private Mono<String> generateOperationId (){
-        return Mono.just(UUID.randomUUID().toString());
 
-    }
 
 
 }
