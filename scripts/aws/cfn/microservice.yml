@@ -103,6 +103,10 @@ Parameters:
     Description: ARN of dynamodb table containing request
     Value: !Sub '${ServiceDeskOperationFileKeyDynamoTable.Arn}'
 
+  SafeStorageCxId:
+    Type: String
+    Description: 'SafeStorage cx-id'
+
 Resources:
 
   # PN-TemplateBeMs microservice
@@ -121,10 +125,11 @@ Resources:
         ContainerEnvEntry3: !Sub 'AWS_DYNAMODBOPERATIONSTABLE=${ServiceDeskOperationsDynamoTableName}'
         ContainerEnvEntry4: !Sub 'AWS_DYNAMODBADDRESSTABLE=${ServiceDeskAddressDynamoTableName}'
         ContainerEnvEntry5: !Sub 'AWS_DYNAMODBFILEKEYTABLE=${ServiceDeskOperationFileKeyDynamoTableName}'
-        ContainerEnvEntry18: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
-        ContainerEnvEntry19: !Sub 'AWS_KMS_REGION=${AWS::Region}'
-        ContainerEnvEntry20: !Sub 'PN_SERVICEDESK_CLIENTDATAVAULTBASEPATH=${DataVaultBaseUrl}'
-        ContainerEnvEntry21: !Sub 'PN_SERVICEDESK_QUEUE=${queue}'
+        ContainerEnvEntry6: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
+        ContainerEnvEntry7: !Sub 'AWS_KMS_REGION=${AWS::Region}'
+        ContainerEnvEntry8: !Sub 'PN_SERVICEDESK_CLIENTDATAVAULTBASEPATH=${DataVaultBaseUrl}'
+        ContainerEnvEntry9: !Sub 'PN_SERVICEDESK_QUEUE=${queue}'
+        ContainerEnvEntry10: !Sub 'PN_SERVICEDESK_SAFESTORAGECXID=${SafeStorageCxId}'
         MappedPaths: '/template-ms-be/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

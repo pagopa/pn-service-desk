@@ -6,4 +6,6 @@ import reactor.core.publisher.Mono;
 public interface OperationDAO {
 
     Mono<PnServiceDeskOperations> createOperation (PnServiceDeskOperations operations);
+
+    Mono<PnServiceDeskOperations> getByOperationId (String operationId);
 }
