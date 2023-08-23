@@ -25,7 +25,7 @@ public class SafeStorageClientImpl implements SafeStorageClient {
     public SafeStorageClientImpl(PnServiceDeskConfigs cfg,
                                  FileUploadApi fileUploadApi) {
         this.pnServiceDeskConfig = cfg;
-        this.fileUploadApi = fileUploadApi;;
+        this.fileUploadApi = fileUploadApi;
     }
 
 

@@ -264,13 +264,13 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>generate-client-pn-delivery-push</id>
+						<id>generate-client-pn-radd-fsu</id>
 						<goals>
 							<goal>generate</goal>
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/d6227383262579567ae330ef40a9c920b8ddb423/docs/openapi/api-external-pn-delivery-push.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-radd-fsu/2fe7a8e15019575eac083044233e3b7459e93bac/docs/openapi/pn-radd-fsu-v1.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
@@ -282,8 +282,8 @@
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
 							</configOptions>
-							<modelPackage>${project.groupId}.service.desk.generated.openapi.msclient.pndelivery-push.v1.dto</modelPackage>
-							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pndelivery-push.v1.api</apiPackage>
+							<modelPackage>${project.groupId}.service.desk.generated.openapi.pn-radd-fsu.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pn-radd-fsu.v1.api</apiPackage>
 							<modelNameSuffix>Dto</modelNameSuffix>
 						</configuration>
 					</execution>

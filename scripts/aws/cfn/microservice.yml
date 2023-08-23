@@ -70,7 +70,11 @@ Parameters:
   DataVaultBaseUrl:
     Type: String
     Description: 'DataVault BaseUrl'
-  
+
+  RaddFsuBaseUrl:
+    Type: String
+    Description: 'RaddFsu BaseUrl'
+
   LogsKinesisSourceStreamArn:
     Type: String
     Description: 'Kinesis stream that receive logs'
@@ -130,6 +134,7 @@ Resources:
         ContainerEnvEntry8: !Sub 'PN_SERVICEDESK_CLIENTDATAVAULTBASEPATH=${DataVaultBaseUrl}'
         ContainerEnvEntry9: !Sub 'PN_SERVICEDESK_QUEUE=${queue}'
         ContainerEnvEntry10: !Sub 'PN_SERVICEDESK_SAFESTORAGECXID=${SafeStorageCxId}'
+        ContainerEnvEntry11: !Sub 'PN_SERVICEDESK_CLIENTRADDFSUBASEPATH=${RaddFsuBaseUrl}'
         MappedPaths: '/template-ms-be/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
