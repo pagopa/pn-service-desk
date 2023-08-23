@@ -24,4 +24,9 @@ public class OperationsFileKeyDAOImpl extends BaseDAO<PnServiceDeskOperationFile
     public Mono<PnServiceDeskOperationFileKey> updateVideoFileKey(PnServiceDeskOperationFileKey operationFileKey) {
         return Mono.fromFuture(super.put(operationFileKey));
     }
+
+    @Override
+    public Mono<PnServiceDeskOperationFileKey> getOperationFileKey(String key) {
+        return Mono.fromFuture(super.get(key,null).thenApply(item -> item));
+    }
 }

@@ -7,4 +7,6 @@ public interface OperationsFileKeyDAO {
 
     Mono<PnServiceDeskOperationFileKey> updateVideoFileKey(PnServiceDeskOperationFileKey operationFileKey);
 
+    Mono<PnServiceDeskOperationFileKey> getOperationFileKey(String key);
+
 }
