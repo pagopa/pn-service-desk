@@ -4,6 +4,7 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperation
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationsResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadResponse;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.mapper.AddressMapper;
 import it.pagopa.pn.service.desk.mapper.OperationMapper;
 import it.pagopa.pn.service.desk.mapper.OperationsFileKeyMapper;
@@ -16,7 +17,13 @@ import it.pagopa.pn.service.desk.service.OperationsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -49,6 +56,20 @@ public class OperationsServiceImpl implements OperationsService {
     }
 
     @Override
+    public Mono<SearchResponse> searchOperationsFromRecipientInternalId(String xPagopaPnUid, SearchNotificationRequest searchNotificationRequest) {
+        SearchResponse response = new SearchResponse();
+
+        return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
+                .flatMapMany(taxId -> operationDAO.searchOperationsFromRecipientInternalId(taxId))
+                .map(op -> OperationMapper.operationResponseMapper(op))
+                .collectList()
+                .map(operations -> {
+                    response.setOperations(operations);
+                    return response;
+                });
+    }
+
+    @Override
     public Mono<VideoUploadResponse> presignedUrlVideoUpload(String xPagopaPnUid, String operationId, VideoUploadRequest videoUploadRequest) {
 
         return operationDAO.getByOperationId(operationId)
@@ -58,6 +79,7 @@ public class OperationsServiceImpl implements OperationsService {
                     return OperationsFileKeyMapper.getVideoUpload(fileCreationResponse);
                 });
     }
+
 
 
 
