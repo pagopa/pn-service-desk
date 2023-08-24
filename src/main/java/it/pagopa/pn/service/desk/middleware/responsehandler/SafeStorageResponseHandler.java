@@ -32,7 +32,8 @@ public class SafeStorageResponseHandler {
     public void handleSafeStorageResponse(FileDownloadResponse response) {
         operationsFileKeyDAO.getOperationFileKey(response.getKey())
                 .doOnNext(operationFileKey ->
-                        internalQueueMomProducer.push(getInternalEvent(operationFileKey.getOperationId())));
+                        internalQueueMomProducer.push(getInternalEvent(operationFileKey.getOperationId()))
+                ).block();
     }
 
 
