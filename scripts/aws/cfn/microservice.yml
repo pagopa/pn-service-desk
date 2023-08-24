@@ -31,11 +31,15 @@ Parameters:
     Type: String
     Description: 'The S3 bucket from which to fetch the templates used by this stack.'
 
-  ScheduledRequestsQueueARN:
+  ServiceDeskInternalQueueName:
     Type: String
     Description: 'Send and pull requests in this queue'
 
-  PCKmsEncDecDynamoDataKeyARN:
+  ServiceDeskInternalQueueARN:
+    Type: String
+    Description: 'Send and pull requests in this queue'
+
+  ServiceDeskKmsEncDecDynamoDataKeyARN:
     Type: String
     Description: 'Name of KMS Key for Dynamo encode/decode data'
 
@@ -66,14 +70,6 @@ Parameters:
   NetworkLoadBalancerLink:
     Type: String
     Description: 'network load balancer link for API-GW'
-
-  DataVaultBaseUrl:
-    Type: String
-    Description: 'DataVault BaseUrl'
-
-  RaddFsuBaseUrl:
-    Type: String
-    Description: 'RaddFsu BaseUrl'
 
   LogsKinesisSourceStreamArn:
     Type: String
@@ -111,6 +107,14 @@ Parameters:
     Type: String
     Description: 'SafeStorage cx-id'
 
+  SandboxSafeStorageBaseUrl:
+    Type: String
+    Description: 'Url to the SafeStorage microservice'
+
+  DataVaultBaseUrl:
+    Type: String
+    Description: 'DataVault BaseUrl'
+
 Resources:
 
   # PN-TemplateBeMs microservice
@@ -119,7 +123,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/ecs-service.yaml"
       Parameters:
-        MicroServiceUniqueName: !Sub '${ProjectName}-template-ms-be'
+        MicroServiceUniqueName: !Sub '${ProjectName}-service-desk'
         CpuValue: 512
         MemoryAmount: 2GB
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
@@ -129,12 +133,14 @@ Resources:
         ContainerEnvEntry3: !Sub 'AWS_DYNAMODBOPERATIONSTABLE=${ServiceDeskOperationsDynamoTableName}'
         ContainerEnvEntry4: !Sub 'AWS_DYNAMODBADDRESSTABLE=${ServiceDeskAddressDynamoTableName}'
         ContainerEnvEntry5: !Sub 'AWS_DYNAMODBFILEKEYTABLE=${ServiceDeskOperationFileKeyDynamoTableName}'
-        ContainerEnvEntry6: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
+        ContainerEnvEntry6: !Sub 'AWS_KMS_KEYID=${ServiceDeskKmsEncDecDynamoDataKeyARN}'
         ContainerEnvEntry7: !Sub 'AWS_KMS_REGION=${AWS::Region}'
-        ContainerEnvEntry8: !Sub 'PN_SERVICEDESK_CLIENTDATAVAULTBASEPATH=${DataVaultBaseUrl}'
-        ContainerEnvEntry9: !Sub 'PN_SERVICEDESK_QUEUE=${queue}'
-        ContainerEnvEntry10: !Sub 'PN_SERVICEDESK_SAFESTORAGECXID=${SafeStorageCxId}'
-        ContainerEnvEntry11: !Sub 'PN_SERVICEDESK_CLIENTRADDFSUBASEPATH=${RaddFsuBaseUrl}'
+        ContainerEnvEntry8: !Sub 'PN_SERVICEDESK_DATAVAULTBASEPATH=${DataVaultBaseUrl}'
+        ContainerEnvEntry9: !Sub 'PN_SERVICEDESK_RADDFSUBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry10: !Sub 'PN_SERVICEDESK_SAFESTORAGEBASEPATH=${SandboxSafeStorageBaseUrl}'
+        ContainerEnvEntry11: !Sub 'PN_SERVICEDESK_TOPICS_INTERNALQUEUE=${ServiceDeskInternalQueueName}'
+        ContainerEnvEntry12: !Sub 'PN_SERVICEDESK_SAFESTORAGECXID=${SafeStorageCxId}'
+        ContainerEnvEntry13: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ServiceDeskInternalQueueName}'
         MappedPaths: '/template-ms-be/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -148,14 +154,14 @@ Resources:
     Type: AWS::IAM::ManagedPolicy
     PolicyDocument:
       Resource:
-        - !Ref ScheduledRequestsQueueARN
+        - !Ref ServiceDeskInternalQueueARN
         - Effect: Allow
           Action:
             - kms:Encrypt
             - kms:Decrypt
             - kms:ReEncrypt*
           Resource:
-            - !Ref PCKmsEncDecDynamoDataKeyARN
+            - !Ref ServiceDeskKmsEncDecDynamoDataKeyARN
         - Effect: Allow
           Action:
             - dynamodb:BatchGetItem

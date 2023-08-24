@@ -1,7 +1,7 @@
 package it.pagopa.pn.service.desk.middleware.msclient.impl;
 
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pn_radd_fsu.v1.api.AorDocumentInquiryApi;
-import it.pagopa.pn.service.desk.generated.openapi.pn_radd_fsu.v1.dto.AORInquiryResponseDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnraddfsu.v1.api.AorDocumentInquiryApi;
+import it.pagopa.pn.service.desk.generated.openapi.pnraddfsu.v1.dto.AORInquiryResponseDto;
 import it.pagopa.pn.service.desk.middleware.msclient.RaddFsuClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

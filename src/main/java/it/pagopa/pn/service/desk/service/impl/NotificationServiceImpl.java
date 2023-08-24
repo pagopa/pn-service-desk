@@ -1,6 +1,6 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.service.desk.generated.openapi.pn_radd_fsu.v1.dto.ResponseStatusDto;
+import it.pagopa.pn.service.desk.generated.openapi.pnraddfsu.v1.dto.ResponseStatusDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsUnreachableResponse;
 import it.pagopa.pn.service.desk.middleware.msclient.RaddFsuClient;

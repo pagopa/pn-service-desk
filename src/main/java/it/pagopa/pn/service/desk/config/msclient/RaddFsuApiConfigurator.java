@@ -2,8 +2,8 @@ package it.pagopa.pn.service.desk.config.msclient;
 
 import it.pagopa.pn.commons.pnclients.CommonBaseClient;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndatavault.v1.ApiClient;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndatavault.v1.api.RecipientsApi;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnraddfsu.v1.ApiClient;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnraddfsu.v1.api.AorDocumentInquiryApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,10 +11,10 @@ import org.springframework.context.annotation.Configuration;
 public class RaddFsuApiConfigurator extends CommonBaseClient {
 
     @Bean
-    public RecipientsApi getRecipientsApi(PnServiceDeskConfigs pnServiceDeskConfigs){
+    public AorDocumentInquiryApi getRecipientsApi(PnServiceDeskConfigs pnServiceDeskConfigs){
         ApiClient apiClient =
                 new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
         apiClient.setBasePath(pnServiceDeskConfigs.getRaddFsuBaseUrl());
-        return new RecipientsApi(apiClient);
+        return new AorDocumentInquiryApi(apiClient);
     }
 }

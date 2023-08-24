@@ -291,8 +291,8 @@
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
 							</configOptions>
-							<modelPackage>${project.groupId}.service.desk.generated.openapi.pn-radd-fsu.v1.dto</modelPackage>
-							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pn-radd-fsu.v1.api</apiPackage>
+							<modelPackage>${project.groupId}.service.desk.generated.openapi.pnraddfsu.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnraddfsu.v1.api</apiPackage>
 							<modelNameSuffix>Dto</modelNameSuffix>
 						</configuration>
 					</execution>

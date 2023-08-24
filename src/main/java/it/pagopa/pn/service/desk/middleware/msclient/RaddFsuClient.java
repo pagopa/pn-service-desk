@@ -1,6 +1,6 @@
 package it.pagopa.pn.service.desk.middleware.msclient;
 
-import it.pagopa.pn.service.desk.generated.openapi.pn_radd_fsu.v1.dto.AORInquiryResponseDto;
+import it.pagopa.pn.service.desk.generated.openapi.pnraddfsu.v1.dto.AORInquiryResponseDto;
 import reactor.core.publisher.Mono;
 
 public interface RaddFsuClient {

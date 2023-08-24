@@ -97,7 +97,7 @@ Resources:
         BillingMode: "PAY_PER_REQUEST"
         PointInTimeRecoverySpecification:
           PointInTimeRecoveryEnabled: true
-    PCKmsEncDecDynamoDataKey:
+    ServiceDeskKmsEncDecDynamoDataKey:
       Type: 'AWS::KMS::Key'
       DeletionPolicy: Retain
       UpdateReplacePolicy: Retain
@@ -114,38 +114,62 @@ Resources:
                 AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
               Action: 'kms:*'
               Resource: '*'
-    PCKmsEncDecDynamoDataKeyAlias:
+    ServiceDeskKmsEncDecDynamoDataKeyAlias:
       Type: 'AWS::KMS::Alias'
       Properties:
-        AliasName: !Sub 'alias/${ProjectName}-paper-channel-dynamo'
-        TargetKeyId: !Ref PCKmsEncDecDynamoDataKey
+        AliasName: !Sub 'alias/${ProjectName}-service-desk-dynamo'
+        TargetKeyId: !Ref ServiceDeskKmsEncDecDynamoDataKey
+
+    # Internal queues
+    ServiceDeskInternalQueue:
+      Type: AWS::CloudFormation::Stack
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain
+      Properties:
+        TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+        Parameters:
+          QueueName: !Sub '${ProjectName}-service_desk_requests'
+          AlarmSNSTopicName: !Ref AlarmSNSTopicName
+          DelaySeconds: 1
 
 Outputs:
 
-    ServiceDeskOperationsDynamoTableName:
-      Description: Name of dynamodb table containing request
-      Value: !Ref ServiceDeskOperationsDynamoTable
+  ServiceDeskInternalQueueName:
+    Value: !GetAtt ServiceDeskInternalQueue.Outputs.QueueName
+    Description: PN-SERVICE-DESK input queue name
 
-    ServiceDeskOperationsDynamoTableArn:
-      Description: ARN of dynamodb table containing request
-      Value: !Sub '${ServiceDeskOperationsDynamoTable.Arn}'
+  ServiceDeskInternalQueueURL:
+    Value: !GetAtt ServiceDeskInternalQueue.Outputs.QueueURL
+    Description: PN-SERVICE-DESK queue URL
 
-    ServiceDeskAddressDynamoTableName:
-      Description: Name of dynamodb table containing request
-      Value: !Ref ServiceDeskAddressDynamoTable
+  ServiceDeskInternalQueueARN:
+    Value: !GetAtt ServiceDeskInternalQueue.Outputs.QueueARN
+    Description: PN-SERVICE-DESK input queue ARN
 
-    ServiceDeskAddressDynamoTableArn:
-      Description: ARN of dynamodb table containing request
-      Value: !Sub '${ServiceDeskAddressDynamoTable.Arn}'
+  ServiceDeskOperationsDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref ServiceDeskOperationsDynamoTable
 
-    ServiceDeskOperationFileKeyDynamoTableName:
-      Description: Name of dynamodb table containing request
-      Value: !Ref ServiceDeskOperationFileKeyDynamoTable
+  ServiceDeskOperationsDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ServiceDeskOperationsDynamoTable.Arn}'
 
-    ServiceDeskOperationFileKeyDynamoTableArn:
-      Description: ARN of dynamodb table containing request
-      Value: !Sub '${ServiceDeskOperationFileKeyDynamoTable.Arn}'
+  ServiceDeskAddressDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref ServiceDeskAddressDynamoTable
 
-    PCKmsEncDecDynamoDataKeyARN:
-      Description: Name of KMS Key for Dynamo encode/decode data
-      Value: !Sub '${PCKmsEncDecDynamoDataKey.Arn}'
+  ServiceDeskAddressDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ServiceDeskAddressDynamoTable.Arn}'
+
+  ServiceDeskOperationFileKeyDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref ServiceDeskOperationFileKeyDynamoTable
+
+  ServiceDeskOperationFileKeyDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ServiceDeskOperationFileKeyDynamoTable.Arn}'
+
+  ServiceDeskKmsEncDecDynamoDataKeyARN:
+    Description: Name of KMS Key for Dynamo encode/decode data
+    Value: !Sub '${ServiceDeskKmsEncDecDynamoDataKey.Arn}'
