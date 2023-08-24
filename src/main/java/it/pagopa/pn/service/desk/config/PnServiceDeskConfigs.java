@@ -13,11 +13,12 @@ import org.springframework.context.annotation.Import;
 public class PnServiceDeskConfigs {
 
 
-    private String safeStorageBaseUrl;
-    private String dataVaultBaseUrl;
-    private String raddFsuBaseUrl;
+    private String safeStorageBasePath;
+    private String dataVaultBasePath;
+    private String raddFsuBasePath;
     private String safeStorageCxId;
     private Topics topics;
+    private SenderAddress senderAddress;
 
 
     @Data
@@ -26,5 +27,14 @@ public class PnServiceDeskConfigs {
         private String safeStorageEvents;
     }
 
+    @Data
+    public static class SenderAddress {
+        private String fullname;
+        private String address;
+        private String zipcode;
+        private String city;
+        private String pr;
+        private String country;
+    }
 
 }
