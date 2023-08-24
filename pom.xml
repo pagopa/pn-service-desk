@@ -17,6 +17,12 @@
 		<url>${git.url}</url>
 	  <tag>HEAD</tag>
   </scm>
+	<properties>
+		<java.version>17</java.version>
+		<jacoco.min.line.cover.ratio>0.00</jacoco.min.line.cover.ratio>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+	</properties>
 
 	<dependencies>
 
@@ -130,10 +136,6 @@
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<configuration>
 					<excludes>
-						<!--Da rimuovere appena ci saranno i test-->
-						<exclude>it/pagopa/pn/service/*</exclude>
-						<exclude>it/pagopa/pn/service/**</exclude>
-						<!---->
 						<exclude>it/pagopa/pn/service/desk/rest/v1/dto/*</exclude>
 						<exclude>it/pagopa/pn/service/desk/rest/v1/dto/**</exclude>
 						<exclude>it/pagopa/pn/service/desk/rest/v1/api/*</exclude>
