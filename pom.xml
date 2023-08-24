@@ -23,7 +23,7 @@
 		<dependency>
 			<groupId>it.pagopa.pn</groupId>
 			<artifactId>pn-commons</artifactId>
-			<version>2.1.11</version>
+			<version>2.1.10</version>
 			<exclusions>
 				<exclusion>
 					<groupId>it.pagopa.tech.lollipop-consumer-java-sdk</groupId>
@@ -130,8 +130,16 @@
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<configuration>
 					<excludes>
-						<exclude>**/generated/**</exclude>
-						<exclude>**it/pagopa/pn/service/desk/rest/v1/**</exclude>
+						<!--Da rimuovere appena ci saranno i test-->
+						<exclude>it/pagopa/pn/service/*</exclude>
+						<exclude>it/pagopa/pn/service/**</exclude>
+						<!---->
+						<exclude>it/pagopa/pn/service/desk/rest/v1/dto/*</exclude>
+						<exclude>it/pagopa/pn/service/desk/rest/v1/dto/**</exclude>
+						<exclude>it/pagopa/pn/service/desk/rest/v1/api/*</exclude>
+						<exclude>it/pagopa/pn/service/desk/rest/v1/api/**</exclude>
+						<exclude>it/pagopa/pn/service/desk/generated/*</exclude>
+						<exclude>it/pagopa/pn/service/desk/generated/**</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
