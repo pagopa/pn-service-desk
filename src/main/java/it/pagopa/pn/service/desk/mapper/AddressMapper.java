@@ -1,12 +1,11 @@
 package it.pagopa.pn.service.desk.mapper;
 
 
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.service.desk.mapper.common.BaseMapper;
 import it.pagopa.pn.service.desk.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
-import org.apache.commons.lang3.StringUtils;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -26,6 +25,18 @@ public class AddressMapper {
         pnAddress.setTtl(instant.toEpochMilli());
 
         return pnAddress;
+    }
+
+    public static AnalogAddressDto toAnalogAddressManager(PnServiceDeskAddress address){
+        AnalogAddressDto analogAddress = new AnalogAddressDto();
+        analogAddress.setAddressRow(address.getAddress());
+        analogAddress.setAddressRow2(address.getAddressRow2());
+        analogAddress.setCap(address.getCap());
+        analogAddress.setCity(address.getCity());
+        analogAddress.setCity2(address.getCity2());
+        analogAddress.setPr(address.getPr());
+        analogAddress.setCountry(address.getCountry());
+        return analogAddress;
     }
 
 }

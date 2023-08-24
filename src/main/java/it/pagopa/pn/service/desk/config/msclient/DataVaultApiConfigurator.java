@@ -14,7 +14,7 @@ public class DataVaultApiConfigurator extends CommonBaseClient {
     public RecipientsApi getRecipientsApi(PnServiceDeskConfigs pnServiceDeskConfigs){
         ApiClient apiClient =
                 new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
-        apiClient.setBasePath(pnServiceDeskConfigs.getDataVaultBaseUrl());
+        apiClient.setBasePath(pnServiceDeskConfigs.getDataVaultBasePath());
         return new RecipientsApi(apiClient);
     }
 }

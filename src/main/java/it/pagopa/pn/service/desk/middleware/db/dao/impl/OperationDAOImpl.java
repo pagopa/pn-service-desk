@@ -37,4 +37,9 @@ public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implement
     public Mono<PnServiceDeskOperations> getByOperationId(String operationId) {
         return Mono.fromFuture(this.get(operationId, null).thenApply(item -> item));
     }
+
+    @Override
+    public Mono<PnServiceDeskOperations> updateEntity(PnServiceDeskOperations operations) {
+        return Mono.fromFuture(super.update(operations));
+    }
 }

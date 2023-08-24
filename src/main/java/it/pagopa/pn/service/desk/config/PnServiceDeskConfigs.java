@@ -16,9 +16,13 @@ public class PnServiceDeskConfigs {
     private String safeStorageBasePath;
     private String dataVaultBasePath;
     private String raddFsuBasePath;
+    private String addressManagerBasePath;
+    private String deliveryPushBasePath;
     private String safeStorageCxId;
     private Topics topics;
     private SenderAddress senderAddress;
+    private String addressManagerCxId;
+    private String addressManagerApiKey;
 
 
     @Data
