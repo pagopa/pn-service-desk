@@ -115,6 +115,18 @@ Parameters:
     Type: String
     Description: 'DataVault BaseUrl'
 
+  AddressManagerCxId:
+    Type: String
+    Description: 'AddressManager cx-id'
+
+  AddressManagerApiKey:
+    Type: String
+    Description: 'AddressManager api-key'
+
+  AddressManagerBaseUrl:
+    Type: String
+    Description: 'Address Manager BaseUrl'
+
 Resources:
 
   # PN-TemplateBeMs microservice
@@ -141,6 +153,10 @@ Resources:
         ContainerEnvEntry11: !Sub 'PN_SERVICEDESK_TOPICS_INTERNALQUEUE=${ServiceDeskInternalQueueName}'
         ContainerEnvEntry12: !Sub 'PN_SERVICEDESK_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry13: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ServiceDeskInternalQueueName}'
+        ContainerEnvEntry42: !Sub 'PN_PAPERCHANNEL_CLIENTADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
+        ContainerEnvEntry14: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERCXID=${AddressManagerCxId}'
+        ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
+
         MappedPaths: '/template-ms-be/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
