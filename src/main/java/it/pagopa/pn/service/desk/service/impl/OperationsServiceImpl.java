@@ -11,27 +11,21 @@ import it.pagopa.pn.service.desk.mapper.OperationsFileKeyMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
-import it.pagopa.pn.service.desk.middleware.msclient.DataVaultClient;
-import it.pagopa.pn.service.desk.middleware.msclient.SafeStorageClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.service.OperationsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @Service
 public class OperationsServiceImpl implements OperationsService {
     @Autowired
-    private DataVaultClient dataVaultClient;
+    private PnDataVaultClient dataVaultClient;
     @Autowired
-    private SafeStorageClient safeStorageClient;
+    private PnSafeStorageClient safeStorageClient;
     @Autowired
     private OperationDAO operationDAO;
     @Autowired
@@ -61,7 +55,7 @@ public class OperationsServiceImpl implements OperationsService {
 
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
                 .flatMapMany(taxId -> operationDAO.searchOperationsFromRecipientInternalId(taxId))
-                .map(op -> OperationMapper.operationResponseMapper(op))
+                .map(OperationMapper::operationResponseMapper)
                 .collectList()
                 .map(operations -> {
                     response.setOperations(operations);
@@ -74,10 +68,10 @@ public class OperationsServiceImpl implements OperationsService {
 
         return operationDAO.getByOperationId(operationId)
                 .flatMap(operation -> safeStorageClient.getPresignedUrl(videoUploadRequest))
-                .map(fileCreationResponse -> {
-                    operationsFileKeyDAO.updateVideoFileKey(OperationsFileKeyMapper.getOperationFileKey(fileCreationResponse.getKey(), operationId));
-                    return OperationsFileKeyMapper.getVideoUpload(fileCreationResponse);
-                });
+                .doOnNext(fileCreationResponse ->
+                    operationsFileKeyDAO.updateVideoFileKey(OperationsFileKeyMapper.getOperationFileKey(fileCreationResponse.getKey(), operationId))
+                )
+                .map(OperationsFileKeyMapper::getVideoUpload);
     }
 
 

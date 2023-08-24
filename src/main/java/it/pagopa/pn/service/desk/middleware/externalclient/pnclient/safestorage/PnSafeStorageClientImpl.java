@@ -1,11 +1,10 @@
-package it.pagopa.pn.service.desk.middleware.msclient.impl;
+package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage;
 
 
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.api.FileUploadApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.*;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadRequest;
-import it.pagopa.pn.service.desk.middleware.msclient.SafeStorageClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -14,7 +13,7 @@ import reactor.core.publisher.Mono;
 
 @Component
 @Slf4j
-public class SafeStorageClientImpl implements SafeStorageClient {
+public class PnSafeStorageClientImpl implements PnSafeStorageClient {
     private final PnServiceDeskConfigs pnServiceDeskConfig;
     private final FileUploadApi fileUploadApi;
 
@@ -22,8 +21,8 @@ public class SafeStorageClientImpl implements SafeStorageClient {
     private static final String CHECKSUM = "SHA256";
     private static final String STATUS = "PRELOADED";
 
-    public SafeStorageClientImpl(PnServiceDeskConfigs cfg,
-                                 FileUploadApi fileUploadApi) {
+    public PnSafeStorageClientImpl(PnServiceDeskConfigs cfg,
+                                   FileUploadApi fileUploadApi) {
         this.pnServiceDeskConfig = cfg;
         this.fileUploadApi = fileUploadApi;
     }

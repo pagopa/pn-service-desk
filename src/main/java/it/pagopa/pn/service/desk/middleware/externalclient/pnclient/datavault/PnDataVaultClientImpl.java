@@ -1,23 +1,23 @@
-package it.pagopa.pn.service.desk.middleware.msclient.impl;
+package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault;
 
 
 import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndatavault.v1.api.RecipientsApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndatavault.v1.dto.RecipientTypeDto;
-import it.pagopa.pn.service.desk.middleware.msclient.DataVaultClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
+
 import java.net.ConnectException;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Component
-public class DataVaultClientImpl implements DataVaultClient {
+public class PnDataVaultClientImpl implements PnDataVaultClient {
 
     @Autowired
     private RecipientsApi recipientsApi;
