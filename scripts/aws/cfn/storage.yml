@@ -25,10 +25,151 @@ Parameters:
     Description: 'Where to send CDC'
 
 Resources:
-    NullResource:
-        Type: AWS::CloudFormation::WaitConditionHandle
+
+    ServiceDeskOperationsDynamoTable:
+      Type: AWS::DynamoDB::Table
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain
+      Properties:
+        TableName: !Sub '${ProjectName}-PnServiceDeskOperations'
+        AttributeDefinitions:
+          - AttributeName: "operationId"
+            AttributeType: "S"
+          - AttributeName: "recipientInternalId"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "operationId"
+            KeyType: "HASH"
+        GlobalSecondaryIndexes:
+          - IndexName: "recipientInternalId-index"
+            KeySchema:
+              - AttributeName: "recipientInternalId"
+                KeyType: "HASH"
+            Projection:
+              ProjectionType: "ALL"
+        KinesisStreamSpecification:
+          StreamArn: !Ref CdcKinesisSourceStreamArn
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        BillingMode: "PAY_PER_REQUEST"
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+
+    ServiceDeskAddressDynamoTable:
+      Type: AWS::DynamoDB::Table
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain
+      Properties:
+        TableName: !Sub '${ProjectName}-PnServiceDeskAddress'
+        AttributeDefinitions:
+          - AttributeName: "operationId"
+            AttributeType: "S"
+        TimeToLiveSpecification:
+          AttributeName: "ttl"
+          Enabled: true
+        KeySchema:
+          - AttributeName: "operationId"
+            KeyType: "HASH"
+        KinesisStreamSpecification:
+          StreamArn: !Ref CdcKinesisSourceStreamArn
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        BillingMode: "PAY_PER_REQUEST"
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+
+    ServiceDeskOperationFileKeyDynamoTable:
+      Type: AWS::DynamoDB::Table
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain
+      Properties:
+        TableName: !Sub '${ProjectName}-PnServiceDeskOperationFileKey'
+        AttributeDefinitions:
+          - AttributeName: "fileKey"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "fileKey"
+            KeyType: "HASH"
+        KinesisStreamSpecification:
+          StreamArn: !Ref CdcKinesisSourceStreamArn
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        BillingMode: "PAY_PER_REQUEST"
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+    ServiceDeskKmsEncDecDynamoDataKey:
+      Type: 'AWS::KMS::Key'
+      DeletionPolicy: Retain
+      UpdateReplacePolicy: Retain
+      Properties:
+        Description: A symmetric encryption KMS key AES-256-GCM
+        KeySpec: SYMMETRIC_DEFAULT
+        KeyUsage: ENCRYPT_DECRYPT
+        KeyPolicy:
+          Version: 2012-10-17
+          Statement:
+            - Sid: Enable IAM User Permissions
+              Effect: Allow
+              Principal:
+                AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+              Action: 'kms:*'
+              Resource: '*'
+    ServiceDeskKmsEncDecDynamoDataKeyAlias:
+      Type: 'AWS::KMS::Alias'
+      Properties:
+        AliasName: !Sub 'alias/${ProjectName}-service-desk-dynamo'
+        TargetKeyId: !Ref ServiceDeskKmsEncDecDynamoDataKey
+
+    # Internal queues
+    ServiceDeskInternalQueue:
+      Type: AWS::CloudFormation::Stack
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain
+      Properties:
+        TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+        Parameters:
+          QueueName: !Sub '${ProjectName}-service_desk_requests'
+          AlarmSNSTopicName: !Ref AlarmSNSTopicName
+          DelaySeconds: 1
 
 Outputs:
-    SampleOutput:
-      Description: A Sample Output
-      Value: 'na'
+
+  ServiceDeskInternalQueueName:
+    Value: !GetAtt ServiceDeskInternalQueue.Outputs.QueueName
+    Description: PN-SERVICE-DESK input queue name
+
+  ServiceDeskInternalQueueURL:
+    Value: !GetAtt ServiceDeskInternalQueue.Outputs.QueueURL
+    Description: PN-SERVICE-DESK queue URL
+
+  ServiceDeskInternalQueueARN:
+    Value: !GetAtt ServiceDeskInternalQueue.Outputs.QueueARN
+    Description: PN-SERVICE-DESK input queue ARN
+
+  ServiceDeskOperationsDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref ServiceDeskOperationsDynamoTable
+
+  ServiceDeskOperationsDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ServiceDeskOperationsDynamoTable.Arn}'
+
+  ServiceDeskAddressDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref ServiceDeskAddressDynamoTable
+
+  ServiceDeskAddressDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ServiceDeskAddressDynamoTable.Arn}'
+
+  ServiceDeskOperationFileKeyDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref ServiceDeskOperationFileKeyDynamoTable
+
+  ServiceDeskOperationFileKeyDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ServiceDeskOperationFileKeyDynamoTable.Arn}'
+
+  ServiceDeskKmsEncDecDynamoDataKeyARN:
+    Description: Name of KMS Key for Dynamo encode/decode data
+    Value: !Sub '${ServiceDeskKmsEncDecDynamoDataKey.Arn}'

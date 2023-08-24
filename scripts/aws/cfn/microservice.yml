@@ -31,6 +31,18 @@ Parameters:
     Type: String
     Description: 'The S3 bucket from which to fetch the templates used by this stack.'
 
+  ServiceDeskInternalQueueName:
+    Type: String
+    Description: 'Send and pull requests in this queue'
+
+  ServiceDeskInternalQueueARN:
+    Type: String
+    Description: 'Send and pull requests in this queue'
+
+  ServiceDeskKmsEncDecDynamoDataKeyARN:
+    Type: String
+    Description: 'Name of KMS Key for Dynamo encode/decode data'
+
   ECSClusterName:
     Type: String
     Description: 'The name of the ECS cluster where the microservice is going to be deployed'
@@ -58,7 +70,7 @@ Parameters:
   NetworkLoadBalancerLink:
     Type: String
     Description: 'network load balancer link for API-GW'
-  
+
   LogsKinesisSourceStreamArn:
     Type: String
     Description: 'Kinesis stream that receive logs'
@@ -66,6 +78,42 @@ Parameters:
   Version:
     Type: String
     Description: 'keep track of used projects commitIds'
+
+  ServiceDeskOperationsDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref ServiceDeskOperationsDynamoTable
+
+  ServiceDeskOperationsDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ServiceDeskOperationsDynamoTable.Arn}'
+
+  ServiceDeskAddressDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref ServiceDeskAddressDynamoTable
+
+  ServiceDeskAddressDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ServiceDeskAddressDynamoTable.Arn}'
+
+  ServiceDeskOperationFileKeyDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref ServiceDeskOperationFileKeyDynamoTable
+
+  ServiceDeskOperationFileKeyDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ServiceDeskOperationFileKeyDynamoTable.Arn}'
+
+  SafeStorageCxId:
+    Type: String
+    Description: 'SafeStorage cx-id'
+
+  SandboxSafeStorageBaseUrl:
+    Type: String
+    Description: 'Url to the SafeStorage microservice'
+
+  DataVaultBaseUrl:
+    Type: String
+    Description: 'DataVault BaseUrl'
 
 Resources:
 
@@ -75,12 +123,24 @@ Resources:
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/ecs-service.yaml"
       Parameters:
-        MicroServiceUniqueName: !Sub '${ProjectName}-template-ms-be'
+        MicroServiceUniqueName: !Sub '${ProjectName}-service-desk'
         CpuValue: 512
         MemoryAmount: 2GB
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
+        ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}, http://localhost:3000, https://portale-pa.dev.pn.pagopa.it'
+        ContainerEnvEntry3: !Sub 'AWS_DYNAMODBOPERATIONSTABLE=${ServiceDeskOperationsDynamoTableName}'
+        ContainerEnvEntry4: !Sub 'AWS_DYNAMODBADDRESSTABLE=${ServiceDeskAddressDynamoTableName}'
+        ContainerEnvEntry5: !Sub 'AWS_DYNAMODBFILEKEYTABLE=${ServiceDeskOperationFileKeyDynamoTableName}'
+        ContainerEnvEntry6: !Sub 'AWS_KMS_KEYID=${ServiceDeskKmsEncDecDynamoDataKeyARN}'
+        ContainerEnvEntry7: !Sub 'AWS_KMS_REGION=${AWS::Region}'
+        ContainerEnvEntry8: !Sub 'PN_SERVICEDESK_DATAVAULTBASEPATH=${DataVaultBaseUrl}'
+        ContainerEnvEntry9: !Sub 'PN_SERVICEDESK_RADDFSUBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry10: !Sub 'PN_SERVICEDESK_SAFESTORAGEBASEPATH=${SandboxSafeStorageBaseUrl}'
+        ContainerEnvEntry11: !Sub 'PN_SERVICEDESK_TOPICS_INTERNALQUEUE=${ServiceDeskInternalQueueName}'
+        ContainerEnvEntry12: !Sub 'PN_SERVICEDESK_SAFESTORAGECXID=${SafeStorageCxId}'
+        ContainerEnvEntry13: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ServiceDeskInternalQueueName}'
         MappedPaths: '/template-ms-be/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -88,4 +148,30 @@ Resources:
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
+        TaskRoleManagedPolicyArn: !Ref TemplateBeMsMicroservicePolicy
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+  TemplateBeMsMicroservicePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    PolicyDocument:
+      Resource:
+        - !Ref ServiceDeskInternalQueueARN
+        - Effect: Allow
+          Action:
+            - kms:Encrypt
+            - kms:Decrypt
+            - kms:ReEncrypt*
+          Resource:
+            - !Ref ServiceDeskKmsEncDecDynamoDataKeyARN
+        - Effect: Allow
+          Action:
+            - dynamodb:BatchGetItem
+            - dynamodb:BatchWriteItem
+            - dynamodb:ExecuteTransaction
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:TransactGetItems
+            - dynamodb:TransactWriteItems
+            - dynamodb:UpdateItem
+

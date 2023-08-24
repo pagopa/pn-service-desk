@@ -14,13 +14,15 @@ public class PnServiceDeskConfigs {
 
 
     private String safeStorageBaseUrl;
-
+    private String dataVaultBaseUrl;
+    private String raddFsuBaseUrl;
+    private String safeStorageCxId;
     private Topics topics;
 
 
     @Data
     public static class Topics {
-
+        private String internalQueue;
         private String safeStorageEvents;
     }
 
