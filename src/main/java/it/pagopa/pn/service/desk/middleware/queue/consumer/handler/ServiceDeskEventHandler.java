@@ -1,7 +1,5 @@
 package it.pagopa.pn.service.desk.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
-import it.pagopa.pn.service.desk.middleware.queue.model.InternalEvent;
 import it.pagopa.pn.service.desk.middleware.queue.model.InternalEventBody;
 import it.pagopa.pn.service.desk.middleware.responsehandler.InternalEventResponseHandler;
 import lombok.AllArgsConstructor;
