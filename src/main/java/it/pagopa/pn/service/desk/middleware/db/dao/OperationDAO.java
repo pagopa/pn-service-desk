@@ -8,6 +8,6 @@ public interface OperationDAO {
 
     Mono<PnServiceDeskOperations> createOperation (PnServiceDeskOperations operations);
     Flux<PnServiceDeskOperations> searchOperationsFromRecipientInternalId (String taxId);
-
     Mono<PnServiceDeskOperations> getByOperationId (String operationId);
+    Mono<PnServiceDeskOperations> updateEntity (PnServiceDeskOperations operations);
 }

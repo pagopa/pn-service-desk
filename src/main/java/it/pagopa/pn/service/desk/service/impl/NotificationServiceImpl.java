@@ -3,7 +3,8 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.generated.openapi.pnraddfsu.v1.dto.ResponseStatusDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsUnreachableResponse;
-import it.pagopa.pn.service.desk.middleware.msclient.RaddFsuClient;
+
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.raddfsu.PnRaddFsuClient;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,7 @@ import java.util.UUID;
 public class NotificationServiceImpl implements NotificationService {
 
     @Autowired
-    private RaddFsuClient raddFsuClient;
+    private PnRaddFsuClient raddFsuClient;
 
     private static final String RECIPIENT_TYPE = "PF";
 
