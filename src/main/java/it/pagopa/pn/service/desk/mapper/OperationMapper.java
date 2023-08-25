@@ -31,6 +31,16 @@ public class OperationMapper {
         return pnServiceDeskOperations;
     }
 
+    public static PnServiceDeskAttachments getAttachments(String iun, List<String> listKeys, Boolean isAvailable){
+        PnServiceDeskAttachments pnServiceDeskAttachments = new PnServiceDeskAttachments();
+
+        pnServiceDeskAttachments.setIun(iun);
+        pnServiceDeskAttachments.setFilesKey(listKeys);
+        pnServiceDeskAttachments.setIsAvailable(Boolean.TRUE);
+
+        return pnServiceDeskAttachments;
+    }
+
 
 
 

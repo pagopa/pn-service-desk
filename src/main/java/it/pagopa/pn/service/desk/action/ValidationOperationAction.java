@@ -2,13 +2,16 @@ package it.pagopa.pn.service.desk.action;
 
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
+import it.pagopa.pn.service.desk.mapper.OperationMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.addressmanager.PnAddressManagerClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ADDRESS_IS_NOT_VALID;
@@ -37,6 +41,9 @@ public class ValidationOperationAction {
     @Autowired
     private PnDeliveryPushClient pnDeliveryPushClient;
 
+    @Autowired
+    private PnDeliveryClient pnDeliveryClient;
+
     public void validateOperation(String operationId){
         operationDAO.getByOperationId(operationId)
                 .zipWhen(operations ->
@@ -47,7 +54,7 @@ public class ValidationOperationAction {
                             .doOnNext(responsePaperNotificationFailed -> updateStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION))
                             .flatMapMany(Flux::fromIterable)
                             .parallel()
-                            .flatMap(this::getNotificationsAttachments)
+                            .flatMap(iun -> getNotificationsAttachments(operationAndAddress.getT1().getRecipientInternalId(), iun))
                             .sequential()
                             .flatMap(pnServiceDeskAttachments -> Flux.fromIterable(pnServiceDeskAttachments.getFilesKey()))
                             .collectList()
@@ -95,22 +102,33 @@ public class ValidationOperationAction {
 
 
 
-    private Mono<PnServiceDeskAttachments> getNotificationsAttachments(String iun){
+    private Mono<PnServiceDeskAttachments> getNotificationsAttachments(String recipientInternalId, String iun){
+
+        List<String> fileKeys  = new ArrayList<>();
+        PnServiceDeskAttachments pnServiceDeskAttachments = new PnServiceDeskAttachments();
+
+        pnDeliveryPushClient.getNotificationLegalFactsPrivate(recipientInternalId, iun)
+                .flatMap(this::getAttachmentsFromDeliveryPush)
+                .doOnNext(fileKeys::add)
+                .doOnNext(fluxKey -> pnDeliveryClient.getSentNotificationPrivate(iun)
+                        .subscribe(value -> getAttachmentsFromDelivery(value)
+                                .map(list -> fileKeys.add(list)))
+                );
         //TODO chiamata deliveryPush legalfact
         //TODO chiamata delivery getNotification
         // estrarre lista di FileKey = List<String>
-        return Mono.empty();
+        return Mono.just(OperationMapper. getAttachments(iun,fileKeys,Boolean.TRUE));
     }
 
-    private Flux<String> getAttachmentsFromDeliveryPush(/*LegalFacts*/){
+    private Flux<String> getAttachmentsFromDeliveryPush(LegalFactListElementDto legalFactListElementDto){
         //TODO retrive only fileKey
-        return Flux.empty();
+        return Flux.just(legalFactListElementDto.getLegalFactsId().getKey());
     }
 
     private Flux<String> getAttachmentsFromDelivery(SentNotificationDto sentNotificationDto){
         //TODO retrive only fileKey
-        //sentNotificationDto.getDocuments().get(0).getRef().getKey(); da iterare
-        return Flux.empty();
+        return Flux.fromIterable(sentNotificationDto.getDocuments())
+                .map(doc -> doc.getRef().getKey());
     }
 
     private Mono<PnServiceDeskOperations> updateStatus (PnServiceDeskOperations operations, OperationStatusEnum operationStatusEnum){
