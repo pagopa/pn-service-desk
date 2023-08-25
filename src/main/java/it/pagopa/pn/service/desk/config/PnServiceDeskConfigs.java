@@ -19,6 +19,7 @@ public class PnServiceDeskConfigs {
     private String addressManagerBasePath;
     private String deliveryPushBasePath;
     private String deliveryBasePath;
+    private String paperChannelBasePath;
     private String safeStorageCxId;
     private Topics topics;
     private SenderAddress senderAddress;

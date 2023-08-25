@@ -5,6 +5,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.Se
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.mapper.OperationMapper;
+import it.pagopa.pn.service.desk.mapper.PaperRequestMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
@@ -13,6 +14,7 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.addressmanager.PnAddressManagerClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
 import org.apache.commons.lang3.StringUtils;
@@ -43,6 +45,9 @@ public class ValidationOperationAction {
 
     @Autowired
     private PnDeliveryClient pnDeliveryClient;
+
+    @Autowired
+    private PnPaperChannelClient paperChannelClient;
 
     public void validateOperation(String operationId){
         operationDAO.getByOperationId(operationId)
@@ -138,8 +143,8 @@ public class ValidationOperationAction {
 
     private Mono<Void> paperPrepare (PnServiceDeskOperations operations, PnServiceDeskAddress address, List<String> attachments){
         String requestId = Utility.generateRequestId(operations.getOperationId());
-//        TODO mappare tutti i parametri nella prepareRequest, passare al client di paper
-        return null;
+        return paperChannelClient.sendPaperPrepareRequest(requestId, PaperRequestMapper.getPrepareRequest(operations,address, attachments, requestId))
+                .then();
     }
 
 
