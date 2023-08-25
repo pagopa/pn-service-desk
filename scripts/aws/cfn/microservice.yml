@@ -155,6 +155,7 @@ Resources:
         ContainerEnvEntry13: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ServiceDeskInternalQueueName}'
         ContainerEnvEntry42: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
         ContainerEnvEntry43: !Sub 'PN_SERVICEDESK_DELIVERYPUSHBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry44: !Sub 'PN_SERVICEDESK_DELIVERYBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry14: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERCXID=${AddressManagerCxId}'
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
 

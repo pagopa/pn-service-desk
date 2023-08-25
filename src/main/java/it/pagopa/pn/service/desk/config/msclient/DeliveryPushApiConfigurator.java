@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 public class DeliveryPushApiConfigurator extends CommonBaseClient {
 
     @Bean
-    public PaperNotificationFailedApi getRecipientsApiDelivery(PnServiceDeskConfigs pnServiceDeskConfigs){
+    public PaperNotificationFailedApi getPaperNotificationFailedApiDeliveryPush(PnServiceDeskConfigs pnServiceDeskConfigs){
         ApiClient apiClient =
                 new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
         apiClient.setBasePath(pnServiceDeskConfigs.getRaddFsuBasePath());
