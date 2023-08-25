@@ -243,3 +243,12 @@ Resources:
               - !Sub "${ServiceDeskAddressDynamoTableArn}/*"
               - !Sub "${ServiceDeskOperationFileKeyDynamoTableArn}"
               - !Sub "${ServiceDeskOperationFileKeyDynamoTableArn}/*"
+
+  PaperChannelMicroserviceCloudWatchDashboard:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/microservice-cloudwatch-dashboard.yaml"
+      Parameters:
+        DashboardName: !Sub "${ProjectName}-service-desk"
+        AlarmArns: !Join
+          - ','
