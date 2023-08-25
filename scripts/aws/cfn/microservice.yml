@@ -80,28 +80,34 @@ Parameters:
     Description: 'keep track of used projects commitIds'
 
   ServiceDeskOperationsDynamoTableName:
+    Type: String
     Description: Name of dynamodb table containing request
-    Value: !Ref ServiceDeskOperationsDynamoTable
+
 
   ServiceDeskOperationsDynamoTableArn:
+    Type: String
     Description: ARN of dynamodb table containing request
-    Value: !Sub '${ServiceDeskOperationsDynamoTable.Arn}'
+
 
   ServiceDeskAddressDynamoTableName:
+    Type: String
     Description: Name of dynamodb table containing request
-    Value: !Ref ServiceDeskAddressDynamoTable
+
 
   ServiceDeskAddressDynamoTableArn:
+    Type: String
     Description: ARN of dynamodb table containing request
-    Value: !Sub '${ServiceDeskAddressDynamoTable.Arn}'
+
 
   ServiceDeskOperationFileKeyDynamoTableName:
+    Type: String
     Description: Name of dynamodb table containing request
-    Value: !Ref ServiceDeskOperationFileKeyDynamoTable
+
 
   ServiceDeskOperationFileKeyDynamoTableArn:
+    Type: String
     Description: ARN of dynamodb table containing request
-    Value: !Sub '${ServiceDeskOperationFileKeyDynamoTable.Arn}'
+
 
   SafeStorageCxId:
     Type: String
@@ -135,8 +141,9 @@ Resources:
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/ecs-service.yaml"
       Parameters:
+        Type: String
         MicroServiceUniqueName: !Sub '${ProjectName}-service-desk'
-        CpuValue: 512
+        Value: 512
         MemoryAmount: 2GB
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
         ContainerImageURI: !Sub '${ContainerImageUri}'
