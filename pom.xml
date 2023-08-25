@@ -283,6 +283,30 @@
 						</configuration>
 					</execution>
 					<execution>
+						<id>generate-client-pn-delivery-push</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/bc8d0cb9235ef935ca1f5ca9e6e98037871f7e35/docs/openapi/api-private.yaml</inputSpec>
+							<generatorName>java</generatorName>
+							<library>webclient</library>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<generateApiTests>false</generateApiTests>
+							<generateModelTests>false</generateModelTests>
+							<generateSupportingFiles>true</generateSupportingFiles>
+							<templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
+							<configOptions>
+								<swaggerAnnotations>false</swaggerAnnotations>
+								<openApiNullable>false</openApiNullable>
+							</configOptions>
+							<modelPackage>${project.groupId}.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pndeliverypush.v1.api</apiPackage>
+							<modelNameSuffix>Dto</modelNameSuffix>
+						</configuration>
+					</execution>
+					<execution>
 						<id>generate-client-pn-radd-fsu</id>
 						<goals>
 							<goal>generate</goal>
@@ -303,6 +327,54 @@
 							</configOptions>
 							<modelPackage>${project.groupId}.service.desk.generated.openapi.pnraddfsu.v1.dto</modelPackage>
 							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnraddfsu.v1.api</apiPackage>
+							<modelNameSuffix>Dto</modelNameSuffix>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-client-pn-paper-channel</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-paper-channel/ca6d8b2e1efb73105b5f5c0f21d1ca1e8f86a1a3/docs/openapi/api-internal-v1.yaml</inputSpec>
+							<generatorName>java</generatorName>
+							<library>webclient</library>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<generateApiTests>false</generateApiTests>
+							<generateModelTests>false</generateModelTests>
+							<generateSupportingFiles>true</generateSupportingFiles>
+							<templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
+							<configOptions>
+								<swaggerAnnotations>false</swaggerAnnotations>
+								<openApiNullable>false</openApiNullable>
+							</configOptions>
+							<modelPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnpaperchannel.v1.api</apiPackage>
+							<modelNameSuffix>Dto</modelNameSuffix>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-client-pn-address-manager</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-address-manager/fbfd1ec3833ba0e390026901b9e18d17225e7647/docs/openapi/pn-address-manager-v1.yaml</inputSpec>
+							<generatorName>java</generatorName>
+							<library>webclient</library>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<generateApiTests>false</generateApiTests>
+							<generateModelTests>false</generateModelTests>
+							<generateSupportingFiles>true</generateSupportingFiles>
+							<templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
+							<configOptions>
+								<swaggerAnnotations>false</swaggerAnnotations>
+								<openApiNullable>false</openApiNullable>
+							</configOptions>
+							<modelPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.api</apiPackage>
 							<modelNameSuffix>Dto</modelNameSuffix>
 						</configuration>
 					</execution>

@@ -11,10 +11,10 @@ import org.springframework.context.annotation.Configuration;
 public class DataVaultApiConfigurator extends CommonBaseClient {
 
     @Bean
-    public RecipientsApi getRecipientsApi(PnServiceDeskConfigs pnServiceDeskConfigs){
+    public RecipientsApi getRecipientsApiDataVault(PnServiceDeskConfigs pnServiceDeskConfigs){
         ApiClient apiClient =
                 new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
-        apiClient.setBasePath(pnServiceDeskConfigs.getDataVaultBaseUrl());
+        apiClient.setBasePath(pnServiceDeskConfigs.getDataVaultBasePath());
         return new RecipientsApi(apiClient);
     }
 }

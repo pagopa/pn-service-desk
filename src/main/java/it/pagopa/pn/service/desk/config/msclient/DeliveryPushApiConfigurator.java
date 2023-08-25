@@ -2,19 +2,19 @@ package it.pagopa.pn.service.desk.config.msclient;
 
 import it.pagopa.pn.commons.pnclients.CommonBaseClient;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnraddfsu.v1.ApiClient;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnraddfsu.v1.api.AorDocumentInquiryApi;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.ApiClient;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.PaperNotificationFailedApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RaddFsuApiConfigurator extends CommonBaseClient {
+public class DeliveryPushApiConfigurator extends CommonBaseClient {
 
     @Bean
-    public AorDocumentInquiryApi getRecipientsApiRaddFsu(PnServiceDeskConfigs pnServiceDeskConfigs){
+    public PaperNotificationFailedApi getRecipientsApiDelivery(PnServiceDeskConfigs pnServiceDeskConfigs){
         ApiClient apiClient =
                 new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
         apiClient.setBasePath(pnServiceDeskConfigs.getRaddFsuBasePath());
-        return new AorDocumentInquiryApi(apiClient);
+        return new PaperNotificationFailedApi(apiClient);
     }
 }

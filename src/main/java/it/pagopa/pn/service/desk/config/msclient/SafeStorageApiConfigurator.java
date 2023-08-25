@@ -31,7 +31,7 @@ public class SafeStorageApiConfigurator extends CommonBaseClient {
     @NotNull
     private ApiClient getNewApiClient(PnServiceDeskConfigs cfg) {
         ApiClient newApiClient = new ApiClient( initWebClient(ApiClient.buildWebClientBuilder()) );
-        newApiClient.setBasePath( cfg.getSafeStorageBaseUrl() );
+        newApiClient.setBasePath( cfg.getSafeStorageBasePath() );
         return newApiClient;
     }
 }

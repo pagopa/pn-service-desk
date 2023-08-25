@@ -24,4 +24,10 @@ public class AddressDAOImpl extends BaseDAO<PnServiceDeskAddress> implements Add
     public Mono<PnServiceDeskAddress> createAddress(PnServiceDeskAddress address) {
         return Mono.fromFuture(super.put(address));
     }
+
+    @Override
+    public Mono<PnServiceDeskAddress> getAddress(String operationId) {
+        return Mono.fromFuture(super.get(operationId, null).thenApply(item -> item));
+    }
+
 }
