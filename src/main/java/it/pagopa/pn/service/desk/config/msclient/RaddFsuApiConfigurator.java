@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 public class RaddFsuApiConfigurator extends CommonBaseClient {
 
     @Bean
-    public AorDocumentInquiryApi getRecipientsApi(PnServiceDeskConfigs pnServiceDeskConfigs){
+    public AorDocumentInquiryApi getRecipientsApiRaddFsu(PnServiceDeskConfigs pnServiceDeskConfigs){
         ApiClient apiClient =
                 new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
         apiClient.setBasePath(pnServiceDeskConfigs.getRaddFsuBasePath());
