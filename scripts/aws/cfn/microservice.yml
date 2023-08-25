@@ -172,7 +172,7 @@ Resources:
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
-        TaskRoleManagedPolicyArn: !Ref TemplateBeMsMicroservicePolicy
+        TaskRoleManagedPolicyArn: !Ref ServiceDeskMicroserviceTaskPolicy
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
 
   ServiceDeskMicroserviceTaskPolicy:
