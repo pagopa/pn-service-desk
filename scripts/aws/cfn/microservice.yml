@@ -252,3 +252,4 @@ Resources:
         DashboardName: !Sub "${ProjectName}-service-desk"
         AlarmArns: !Join
           - ','
+          - - !GetAtt ServiceDeskMicroservice.Outputs.FatalLogsMetricAlarmArn
