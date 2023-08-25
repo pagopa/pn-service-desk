@@ -21,15 +21,10 @@ import java.util.concurrent.TimeoutException;
 @Component
 public class PnAddressManagerClientImpl implements PnAddressManagerClient{
 
-    private final PnServiceDeskConfigs cnf;
-
+    @Autowired
+    private PnServiceDeskConfigs cnf;
     @Autowired
     private DeduplicatesAddressServiceApi serviceApi;
-
-    public PnAddressManagerClientImpl(PnServiceDeskConfigs cnf, DeduplicatesAddressServiceApi serviceApi) {
-        this.cnf = cnf;
-        this.serviceApi = serviceApi;
-    }
 
 
     @Override

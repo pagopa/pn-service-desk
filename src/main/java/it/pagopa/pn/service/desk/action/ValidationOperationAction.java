@@ -2,6 +2,7 @@ package it.pagopa.pn.service.desk.action;
 
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
@@ -41,16 +42,18 @@ public class ValidationOperationAction {
                 .zipWhen(operations ->
                         getAddressFromOperationId(operationId)
                 ).map(operationAndAddress ->
-                    pnDeliveryPushClient.paperNotificationFailed(operationAndAddress.getT1().getOperationId())
-                            .collectList().doOnSuccess(responsePaperNotificationFailed -> updateStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION))
+                        getIuns(operationAndAddress.getT1().getRecipientInternalId())
+                            .collectList()
+                            .doOnNext(responsePaperNotificationFailed -> updateStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION))
                             .flatMapMany(Flux::fromIterable)
                             .parallel()
-                            .flatMap(notificationFailed -> getNotificationsAttachments(notificationFailed.getIun()))
+                            .flatMap(this::getNotificationsAttachments)
                             .sequential()
                             .flatMap(pnServiceDeskAttachments -> Flux.fromIterable(pnServiceDeskAttachments.getFilesKey()))
                             .collectList()
                             .flatMap(attachments -> paperPrepare(operationAndAddress.getT1(), operationAndAddress.getT2(), attachments))
-                );
+
+                ).block();
 
             // per ogni iun recuperato da deliveryPush ->
             // getNotificationsAttachments(iun);
@@ -67,7 +70,7 @@ public class ValidationOperationAction {
      */
     private Mono<PnServiceDeskAddress> getAddressFromOperationId(String operationId){
         return addressDAO.getAddress(operationId)
-                .doOnNext(this::validationAddress);
+                .doOnSuccess(this::validationAddress);
     }
 
     /**
@@ -119,6 +122,14 @@ public class ValidationOperationAction {
         String requestId = Utility.generateRequestId(operations.getOperationId());
 //        TODO mappare tutti i parametri nella prepareRequest, passare al client di paper
         return null;
+    }
+
+
+    private Flux<String> getIuns(String recipientInternalId){
+        return pnDeliveryPushClient.paperNotificationFailed(recipientInternalId)
+                .parallel()
+                .map(ResponsePaperNotificationFailedDtoDto::getIun)
+                .sequential();
     }
 
 }

@@ -5,8 +5,10 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.api.DeduplicatesAddressServiceApi;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-public class AddressManagerApiConfigarator extends CommonBaseClient {
+@Configuration
+public class AddressManagerApiConfigurator extends CommonBaseClient {
 
     @Bean
     public DeduplicatesAddressServiceApi getRecipientsApi(PnServiceDeskConfigs pnServiceDeskConfigs){
