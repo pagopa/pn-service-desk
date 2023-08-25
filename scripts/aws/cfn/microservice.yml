@@ -136,7 +136,7 @@ Parameters:
 Resources:
 
   # PN-TemplateBeMs microservice
-  TemplateBeMsMicroservice:
+  ServiceDeskMicroservice:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/ecs-service.yaml"
@@ -165,7 +165,7 @@ Resources:
         ContainerEnvEntry14: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERCXID=${AddressManagerCxId}'
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
 
-        MappedPaths: '/template-ms-be/*'
+        MappedPaths: '/service-desk/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
         VpcId: !Ref VpcId
@@ -174,28 +174,53 @@ Resources:
         LoadbalancerRulePriority: !Ref MicroserviceNumber
         TaskRoleManagedPolicyArn: !Ref TemplateBeMsMicroservicePolicy
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
-  TemplateBeMsMicroservicePolicy:
-    Type: AWS::IAM::ManagedPolicy
-    PolicyDocument:
-      Resource:
-        - !Ref ServiceDeskInternalQueueARN
-        - Effect: Allow
-          Action:
-            - kms:Encrypt
-            - kms:Decrypt
-            - kms:ReEncrypt*
-          Resource:
-            - !Ref ServiceDeskKmsEncDecDynamoDataKeyARN
-        - Effect: Allow
-          Action:
-            - dynamodb:BatchGetItem
-            - dynamodb:BatchWriteItem
-            - dynamodb:ExecuteTransaction
-            - dynamodb:GetItem
-            - dynamodb:PutItem
-            - dynamodb:DeleteItem
-            - dynamodb:Query
-            - dynamodb:TransactGetItems
-            - dynamodb:TransactWriteItems
-            - dynamodb:UpdateItem
 
+  ServiceDeskMicroserviceTaskPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      #PolicyName: !Sub '${ProjectName}-service-desk-CustomTaskPolicy'
+      #Roles:
+      #  - !GetAtt ServiceDeskMicroservice.Outputs.TaskRoleName
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:ChangeMessageVisibilityBatch
+              - sqs:DeleteMessage
+              - sqs:DeleteMessageBatch
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:ReceiveMessage
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+            Resource:
+              - !Ref ServiceDeskInternalQueueARN
+              - !Ref ServiceDeskKmsEncDecDynamoDataKeyARN
+          - Effect: Allow
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+            Resource:
+              - !Ref ServiceDeskKmsEncDecDynamoDataKeyARN
+          - Effect: Allow
+            Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:ExecuteTransaction
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:TransactGetItems
+              - dynamodb:TransactWriteItems
+              - dynamodb:UpdateItem
+            Resource:
+              - !Sub "${ServiceDeskOperationsDynamoTableArn}"
+              - !Sub "${ServiceDeskOperationsDynamoTableArn}/*"
+              - !Sub "${ServiceDeskAddressDynamoTableArn}"
+              - !Sub "${ServiceDeskAddressDynamoTableArn}/*"
+              - !Sub "${ServiceDeskOperationFileKeyDynamoTableArn}"
+              - !Sub "${ServiceDeskOperationFileKeyDynamoTableArn}/*"
