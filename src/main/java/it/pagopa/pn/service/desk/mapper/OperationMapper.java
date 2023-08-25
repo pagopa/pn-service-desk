@@ -1,5 +1,6 @@
 package it.pagopa.pn.service.desk.mapper;
 
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationStatus;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SDNotificationSummary;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
@@ -39,18 +40,22 @@ public class OperationMapper {
 
         operationResponse.setOperationId(pnServiceDeskOperations.getOperationId());
         List<PnServiceDeskAttachments> attachments = pnServiceDeskOperations.getAttachments();
-        attachments.forEach(att -> {
-            SDNotificationSummary summary = new SDNotificationSummary();
-            summary.setIun(att.getIun());
-            if (att.getIsAvailable()) {
-                operationResponse.getIuns().add(summary);
-            } else {
-                operationResponse.getUncompletedIuns().add(summary);
-            }
-        });
+        if (attachments != null) {
+            attachments.forEach(att -> {
+                SDNotificationSummary summary = new SDNotificationSummary();
+                summary.setIun(att.getIun());
+                if (att.getIsAvailable()) {
+                    operationResponse.getIuns().add(summary);
+                } else {
+                    operationResponse.getUncompletedIuns().add(summary);
+                }
+            });
+        }
         operationResponse.setOperationCreateTimestamp(OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationStartDate(), ZoneOffset.UTC));
         operationResponse.setOperationUpdateTimestamp( OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationLastUpdateDate(), ZoneOffset.UTC));
-        //operationResponse.setNotificationStatus();
+        NotificationStatus status = new NotificationStatus();
+        status.setStatus(NotificationStatus.StatusEnum.fromValue(pnServiceDeskOperations.getStatus()));
+        operationResponse.setNotificationStatus(status);
         operationResponse.setTaxId(pnServiceDeskOperations.getRecipientInternalId());
 
         return operationResponse;

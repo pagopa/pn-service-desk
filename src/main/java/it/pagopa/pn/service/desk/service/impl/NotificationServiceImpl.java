@@ -32,9 +32,9 @@ public class NotificationServiceImpl implements NotificationService {
                 .map(aorInquiryResponse -> {
                     if (Boolean.TRUE.equals(aorInquiryResponse.getResult())
                             && Objects.equals(Objects.requireNonNull(aorInquiryResponse.getStatus()).getCode(), ResponseStatusDto.CodeEnum.NUMBER_0)){
-                        notificationsUnreachableResponse.setNotificationsCount(0L);
-                    }else{
                         notificationsUnreachableResponse.setNotificationsCount(1L);
+                    }else{
+                        notificationsUnreachableResponse.setNotificationsCount(0L);
                     }
                     return notificationsUnreachableResponse;
                 });
