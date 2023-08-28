@@ -1,7 +1,10 @@
 package it.pagopa.pn.service.desk.action;
 
+import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
+import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
 import it.pagopa.pn.service.desk.mapper.PaperRequestMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
@@ -12,19 +15,26 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.addressmanag
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.dto.FileDownloadResponseDto;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
+import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ADDRESS_IS_NOT_VALID;
 
 @Component
+@CustomLog
 public class ValidationOperationAction {
 
     @Autowired
@@ -45,6 +55,9 @@ public class ValidationOperationAction {
     @Autowired
     private PnPaperChannelClient paperChannelClient;
 
+    @Autowired
+    private PnSafeStorageClient safeStorageClient;
+
     public void validateOperation(String operationId){
         operationDAO.getByOperationId(operationId)
                 .zipWhen(operations ->
@@ -55,7 +68,7 @@ public class ValidationOperationAction {
                             .doOnNext(responsePaperNotificationFailed -> updateStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION))
                             .flatMapMany(Flux::fromIterable)
                             .parallel()
-                            .flatMap(iun -> getNotificationsAttachments(operationAndAddress.getT1().getRecipientInternalId(), iun))
+                            .flatMap(iun -> getNotificationsAttachments(operationAndAddress.getT1(), iun))
                             .sequential()
                             .flatMap(pnServiceDeskAttachments -> Flux.fromIterable(pnServiceDeskAttachments.getFilesKey()))
                             .collectList()
@@ -133,6 +146,7 @@ public class ValidationOperationAction {
         // this.recursive(....)
         // .map(response -> return TRUE)
         // .onErrorResume(ex -> return Mono.just(FALSE)
+        return null;
     }
 
 
@@ -179,6 +193,23 @@ public class ValidationOperationAction {
                 .parallel()
                 .map(ResponsePaperNotificationFailedDtoDto::getIun)
                 .sequential();
+    }
+
+    private Mono<FileDownloadResponse> getFileRecursive(Integer n, String fileKey, BigDecimal millis){
+        if (n<0)
+            return Mono.error(new PnGenericException( ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND, ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND.getMessage() ) );
+        else {
+            return Mono.delay(Duration.ofMillis( millis.longValue() ))
+                    .flatMap(item -> safeStorageClient.getFile(fileKey)
+                            .map(fileDownloadResponseDto -> fileDownloadResponseDto)
+                            .onErrorResume(ex -> {
+                                log.error ("Error with retrieve {}", ex.getMessage());
+                                return Mono.error(ex);
+                            })
+                            .onErrorResume(PnRetryStorageException.class, ex ->
+                                    getFileRecursive(n - 1, fileKey, ex.getRetryAfter())
+                            ));
+        }
     }
 
 }
