@@ -4,8 +4,11 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.ap
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PaperChannelUpdateDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+
+@Component
 public class PnPaperChannelClientImpl implements PnPaperChannelClient{
 
     @Autowired
