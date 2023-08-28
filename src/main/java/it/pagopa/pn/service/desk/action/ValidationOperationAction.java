@@ -116,7 +116,7 @@ public class ValidationOperationAction {
 
 
 
-    private Mono<Void> getNotificationsAttachments(PnServiceDeskOperations operation, String iun){
+    private Mono<PnServiceDeskAttachments> getNotificationsAttachments(PnServiceDeskOperations operation, String iun){
 
         PnServiceDeskAttachments pnServiceDeskAttachments = new PnServiceDeskAttachments();
         pnServiceDeskAttachments.setIun(iun);
@@ -135,18 +135,17 @@ public class ValidationOperationAction {
                                                 });
                                     }
                                 })
-                ).doOnSuccess(entity -> {
+                ).flatMap(entity -> {
                     operation.getAttachments().add(entity);
-                    operationDAO.updateEntity(operation);
-                })
-                .then();
+                    return operationDAO.updateEntity(operation).map(item -> entity);
+                });
     }
 
     private Mono<Boolean> getFile(String fileKey){
         // this.recursive(....)
         // .map(response -> return TRUE)
         // .onErrorResume(ex -> return Mono.just(FALSE)
-        return null;
+        return Mono.empty();
     }
 
 
