@@ -188,7 +188,7 @@ public class ValidationOperationAction {
     private Mono<Void> paperPrepare (PnServiceDeskOperations operations, PnServiceDeskAddress address, List<String> attachments){
         String requestId = Utility.generateRequestId(operations.getOperationId());
         return paperChannelClient.sendPaperPrepareRequest(requestId, PaperRequestMapper.getPrepareRequest(operations,address, attachments, requestId))
-                .map(response -> updateStatus(operations, OperationStatusEnum.PREPARING))
+                .doOnSuccess(response -> updateStatus(operations, OperationStatusEnum.PREPARING))
                 .then();
     }
 
