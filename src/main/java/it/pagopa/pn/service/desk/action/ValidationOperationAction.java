@@ -16,7 +16,6 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnD
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
-import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.dto.FileDownloadResponseDto;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.CustomLog;
@@ -32,6 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ADDRESS_IS_NOT_VALID;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 
 @Component
 @CustomLog
@@ -102,7 +103,7 @@ public class ValidationOperationAction {
     private Mono<Void> validationAddress(PnServiceDeskAddress address){
         return addressManagerClient.deduplicates(address)
                 .flatMap(deduplicateResponse -> {
-                    if (Boolean.FALSE.equals(deduplicateResponse.getEqualityResult())) {
+                    if (FALSE.equals(deduplicateResponse.getEqualityResult())) {
                         return Mono.error(new PnGenericException(ADDRESS_IS_NOT_VALID, ADDRESS_IS_NOT_VALID.getMessage()));
                     }
                     if (StringUtils.isNotBlank(deduplicateResponse.getError())){
@@ -120,20 +121,24 @@ public class ValidationOperationAction {
 
         PnServiceDeskAttachments pnServiceDeskAttachments = new PnServiceDeskAttachments();
         pnServiceDeskAttachments.setIun(iun);
-        pnServiceDeskAttachments.setIsAvailable(Boolean.TRUE);
+        pnServiceDeskAttachments.setIsAvailable(TRUE);
         pnServiceDeskAttachments.setFilesKey(new ArrayList<>());
 
         return Mono.just(pnServiceDeskAttachments)
-                .doOnNext(entity ->
+                .flatMap(entity ->
                         this.getAttachmentsFromDelivery(iun).concatWith(getAttachmentsFromDeliveryPush(operation.getRecipientInternalId(), iun))
                                 .doOnNext(fileKey -> {
-                                    entity.getFilesKey().add(fileKey);
-                                    if (Boolean.TRUE.equals(pnServiceDeskAttachments.getIsAvailable())){
+                                    if (TRUE.equals(pnServiceDeskAttachments.getIsAvailable())){
                                         getFile(fileKey)
-                                                .doOnSuccess(isAvailable -> {
-                                                    pnServiceDeskAttachments.setIsAvailable(pnServiceDeskAttachments.getIsAvailable() && isAvailable);
-                                                });
+                                                .doOnSuccess(isAvailable ->
+                                                    pnServiceDeskAttachments.setIsAvailable(pnServiceDeskAttachments.getIsAvailable() && isAvailable)
+                                                );
                                     }
+                                })
+                                .collectList()
+                                .map(fileKeys -> {
+                                    entity.setFilesKey(fileKeys);
+                                    return entity;
                                 })
                 ).flatMap(entity -> {
                     operation.getAttachments().add(entity);
@@ -142,10 +147,10 @@ public class ValidationOperationAction {
     }
 
     private Mono<Boolean> getFile(String fileKey){
-        // this.recursive(....)
-        // .map(response -> return TRUE)
-        // .onErrorResume(ex -> return Mono.just(FALSE)
-        return Mono.empty();
+        return this.getFileRecursive(5, fileKey, BigDecimal.ZERO)
+                //TODO aggiungere chiamata per il download del documento
+                .map(response -> TRUE)
+                .onErrorResume(ex -> Mono.just(FALSE));
     }
 
 
@@ -183,6 +188,7 @@ public class ValidationOperationAction {
     private Mono<Void> paperPrepare (PnServiceDeskOperations operations, PnServiceDeskAddress address, List<String> attachments){
         String requestId = Utility.generateRequestId(operations.getOperationId());
         return paperChannelClient.sendPaperPrepareRequest(requestId, PaperRequestMapper.getPrepareRequest(operations,address, attachments, requestId))
+                .map(response -> updateStatus(operations, OperationStatusEnum.PREPARING))
                 .then();
     }
 

@@ -4,7 +4,6 @@ import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileCreationResponse;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadRequest;
-import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.dto.FileDownloadResponseDto;
 import reactor.core.publisher.Mono;
 
 public interface PnSafeStorageClient {

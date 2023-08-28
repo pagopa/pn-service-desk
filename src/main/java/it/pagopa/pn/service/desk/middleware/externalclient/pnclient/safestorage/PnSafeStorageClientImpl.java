@@ -1,14 +1,12 @@
 package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage;
 
 
-import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.api.FileDownloadApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.api.FileUploadApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.*;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadRequest;
-import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.dto.FileDownloadResponseDto;
 import lombok.CustomLog;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +34,7 @@ public class PnSafeStorageClientImpl implements PnSafeStorageClient {
     private FileUploadApi fileUploadApi;
     @Autowired
     private FileDownloadApi fileDownloadApi;
-
+    @Autowired
     private PnServiceDeskConfigs pnServiceDeskConfigs;
 
 
@@ -52,11 +50,11 @@ public class PnSafeStorageClientImpl implements PnSafeStorageClient {
 
     @Override
     public Mono<FileDownloadResponse> getFile(String fileKey) {
-        String PN_SAFE_STORAGE_DESCRIPTION = "Safe Storage getFile";
-        //og.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_SAFE_STORAGE, PN_SAFE_STORAGE_DESCRIPTION, null);
+        final String PN_SAFE_STORAGE_DESCRIPTION = "Safe Storage getFile";
+        log.debug(PN_SAFE_STORAGE_DESCRIPTION);
         String reqFileKey = fileKey;
         log.info("Getting file with {} key", fileKey);
-        String BASE_URL = "safestorage://";
+        final String BASE_URL = "safestorage://";
         if (fileKey.contains(BASE_URL)){
             fileKey = fileKey.replace(BASE_URL, "");
         }
