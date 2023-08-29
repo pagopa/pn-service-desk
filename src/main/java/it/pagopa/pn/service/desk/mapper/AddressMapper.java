@@ -18,11 +18,10 @@ public class AddressMapper {
     }
 
     public static PnServiceDeskAddress toEntity(AnalogAddress address, String operationId){
-
         PnServiceDeskAddress pnAddress = mapper.toEntity(address);
         pnAddress.setOperationId(operationId);
         Instant instant = LocalDateTime.now().plusDays(120).toInstant(ZoneOffset.UTC);
-        pnAddress.setTtl(instant.toEpochMilli());
+        pnAddress.setTtl(instant.getEpochSecond());
 
         return pnAddress;
     }

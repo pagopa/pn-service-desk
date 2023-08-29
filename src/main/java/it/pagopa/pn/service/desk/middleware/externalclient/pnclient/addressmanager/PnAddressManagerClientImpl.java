@@ -6,24 +6,17 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.mapper.AddressMapper;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
-
-import java.net.ConnectException;
-import java.time.Duration;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Component
+@AllArgsConstructor
 public class PnAddressManagerClientImpl implements PnAddressManagerClient{
-
-    @Autowired
     private PnServiceDeskConfigs cnf;
-    @Autowired
     private DeduplicatesAddressServiceApi serviceApi;
 
 
@@ -40,10 +33,6 @@ public class PnAddressManagerClientImpl implements PnAddressManagerClient{
                         this.cnf.getAddressManagerCxId(),
                         this.cnf.getAddressManagerApiKey(),
                         requestDto
-                )
-                .retryWhen(
-                        Retry.backoff(2, Duration.ofMillis(500))
-                                .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)
                 );
     }
 }

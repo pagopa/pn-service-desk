@@ -14,16 +14,27 @@ import java.util.function.Consumer;
 @Slf4j
 public class PaperChannelEventHandler {
 
-
-
     @Bean
-    public Consumer<Message<PaperChannelUpdateDto>> pnPaperChannelInboundConsumer(PaperChannelResponseHandler responseHandler) {
+    public Consumer<Message<PaperChannelUpdateDto>> pnPreparePaperChannelInboundConsumer(PaperChannelResponseHandler responseHandler) {
         return message -> {
             try {
-                log.debug("Handle message from PaperChannel with content {}", message);
+                log.debug("Handle message from Prepare Paper Channel with content {}", message);
                 if (message.getPayload().getPrepareEvent() != null){
                     responseHandler.handlePreparePaperChannelEventResponse(message.getPayload().getPrepareEvent());
-                } else if (message.getPayload().getSendEvent() != null) {
+                }
+                log.error("Field of payload is empty");
+            } catch (Exception ex) {
+                throw ex;
+            }
+        };
+    }
+
+    @Bean
+    public Consumer<Message<PaperChannelUpdateDto>> pnSendPaperChannelInboundConsumer(PaperChannelResponseHandler responseHandler) {
+        return message -> {
+            try {
+                log.debug("Handle message from Send Paper Channel with content {}", message);
+                if (message.getPayload().getSendEvent() != null) {
                     responseHandler.handleResultPaperChannelEventResponse(message.getPayload().getSendEvent());
                 } else {
                     log.error("Field of payload is empty");

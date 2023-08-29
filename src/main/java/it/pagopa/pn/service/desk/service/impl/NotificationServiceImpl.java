@@ -6,8 +6,8 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsUn
 
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.raddfsu.PnRaddFsuClient;
 import it.pagopa.pn.service.desk.service.NotificationService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -16,12 +16,13 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
+    private static final String RECIPIENT_TYPE = "PF";
 
-    @Autowired
     private PnRaddFsuClient raddFsuClient;
 
-    private static final String RECIPIENT_TYPE = "PF";
+
 
     @Override
     public Mono<NotificationsUnreachableResponse> getUnreachableNotification(String xPagopaPnUid, NotificationRequest notificationRequest) {
@@ -31,9 +32,9 @@ public class NotificationServiceImpl implements NotificationService {
         return raddFsuClient.aorInquiry(UUID.randomUUID().toString(), notificationRequest.getTaxId(), RECIPIENT_TYPE)
                 .map(aorInquiryResponse -> {
                     if (Boolean.TRUE.equals(aorInquiryResponse.getResult())
-                            && Objects.equals(Objects.requireNonNull(aorInquiryResponse.getStatus()).getCode(), ResponseStatusDto.CodeEnum.NUMBER_0)){
+                            && Objects.equals(Objects.requireNonNull(aorInquiryResponse.getStatus()).getCode(), ResponseStatusDto.CodeEnum.NUMBER_0)) {
                         notificationsUnreachableResponse.setNotificationsCount(1L);
-                    }else{
+                    } else {
                         notificationsUnreachableResponse.setNotificationsCount(0L);
                     }
                     return notificationsUnreachableResponse;
