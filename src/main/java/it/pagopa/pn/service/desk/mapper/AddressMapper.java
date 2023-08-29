@@ -1,7 +1,7 @@
 package it.pagopa.pn.service.desk.mapper;
 
 
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.service.desk.mapper.common.BaseMapper;
 import it.pagopa.pn.service.desk.mapper.common.BaseMapperImpl;
