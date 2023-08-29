@@ -1,5 +1,6 @@
 package it.pagopa.pn.service.desk.action;
 
+import it.pagopa.pn.service.desk.action.common.BaseAction;
 import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
@@ -22,6 +23,7 @@ import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.CustomLog;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -36,9 +38,10 @@ import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
 @Slf4j
+@Qualifier("ValidationAction")
 @Component
 @CustomLog
-public class ValidationOperationAction {
+public class ValidationOperationAction implements BaseAction<String> {
 
     @Autowired
     private OperationDAO operationDAO;
@@ -61,7 +64,8 @@ public class ValidationOperationAction {
     @Autowired
     private PnSafeStorageClient safeStorageClient;
 
-    public void validateOperation(String operationId){
+    @Override
+    public void execute(String operationId){
         operationDAO.getByOperationId(operationId)
                 .zipWhen(operations ->
                         getAddressFromOperationId(operationId)
