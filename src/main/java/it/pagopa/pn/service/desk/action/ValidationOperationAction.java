@@ -5,6 +5,7 @@ import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
+import it.pagopa.pn.service.desk.mapper.AttachmentMapper;
 import it.pagopa.pn.service.desk.mapper.PaperRequestMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
@@ -19,21 +20,22 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.CustomLog;
-import org.apache.commons.lang3.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.utils.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ADDRESS_IS_NOT_VALID;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
+@Slf4j
 @Component
 @CustomLog
 public class ValidationOperationAction {
@@ -66,23 +68,16 @@ public class ValidationOperationAction {
                 ).map(operationAndAddress ->
                         getIuns(operationAndAddress.getT1().getRecipientInternalId())
                             .collectList()
-                            .doOnNext(responsePaperNotificationFailed -> updateStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION))
+                            .doOnNext(responsePaperNotificationFailed -> updateOperationStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION))
                             .flatMapMany(Flux::fromIterable)
                             .parallel()
-                            .flatMap(iun -> getNotificationsAttachments(operationAndAddress.getT1(), iun))
+                            .flatMap(iun -> getAttachmentsFromIun(operationAndAddress.getT1(), iun))
                             .sequential()
                             .flatMap(pnServiceDeskAttachments -> Flux.fromIterable(pnServiceDeskAttachments.getFilesKey()))
                             .collectList()
                             .flatMap(attachments -> paperPrepare(operationAndAddress.getT1(), operationAndAddress.getT2(), attachments))
 
                 ).block();
-
-            // per ogni iun recuperato da deliveryPush ->
-            // getNotificationsAttachments(iun);
-        // update pnServiceDeskOperation aggiungendo la lista dei PnServiceDeskAttachments
-        //Utility.GenerateRequestId(operationId)
-        // chiamare la prepare di PaperChannel -> PnPaperChannelClient.prepare()
-        // se chiamata di prepare ritorna 201 -> update pnServiceDeskOperation con status = PREPARING
     }
 
     /**
@@ -117,22 +112,17 @@ public class ValidationOperationAction {
 
 
 
-    private Mono<PnServiceDeskAttachments> getNotificationsAttachments(PnServiceDeskOperations operation, String iun){
-
-        PnServiceDeskAttachments pnServiceDeskAttachments = new PnServiceDeskAttachments();
-        pnServiceDeskAttachments.setIun(iun);
-        pnServiceDeskAttachments.setIsAvailable(TRUE);
-        pnServiceDeskAttachments.setFilesKey(new ArrayList<>());
-
-        return Mono.just(pnServiceDeskAttachments)
+    private Mono<PnServiceDeskAttachments> getAttachmentsFromIun(PnServiceDeskOperations operation, String iun){
+        return Mono.just(AttachmentMapper.initAttachment(iun))
                 .flatMap(entity ->
                         this.getAttachmentsFromDelivery(iun).concatWith(getAttachmentsFromDeliveryPush(operation.getRecipientInternalId(), iun))
                                 .doOnNext(fileKey -> {
-                                    if (TRUE.equals(pnServiceDeskAttachments.getIsAvailable())){
-                                        getFile(fileKey)
-                                                .doOnSuccess(isAvailable ->
-                                                    pnServiceDeskAttachments.setIsAvailable(pnServiceDeskAttachments.getIsAvailable() && isAvailable)
-                                                );
+                                    if (TRUE.equals(entity.getIsAvailable())){
+                                        isFileAvailable(fileKey)
+                                                .doOnSuccess(isAvailable ->{
+                                                    log.debug("Document is available ? {}", isAvailable);
+                                                    entity.setIsAvailable(entity.getIsAvailable() && isAvailable);
+                                                });
                                     }
                                 })
                                 .collectList()
@@ -146,7 +136,7 @@ public class ValidationOperationAction {
                 });
     }
 
-    private Mono<Boolean> getFile(String fileKey){
+    private Mono<Boolean> isFileAvailable(String fileKey){
         return this.getFileRecursive(5, fileKey, BigDecimal.ZERO)
                 //TODO aggiungere chiamata per il download del documento
                 .map(response -> TRUE)
@@ -180,15 +170,15 @@ public class ValidationOperationAction {
                 .sequential();
     }
 
-    private Mono<PnServiceDeskOperations> updateStatus (PnServiceDeskOperations operations, OperationStatusEnum operationStatusEnum){
+    private Mono<Void> updateOperationStatus(PnServiceDeskOperations operations, OperationStatusEnum operationStatusEnum){
         operations.setStatus(operationStatusEnum.toString());
-        return this.operationDAO.updateEntity(operations);
+        return this.operationDAO.updateEntity(operations).then();
     }
 
-    private Mono<Void> paperPrepare (PnServiceDeskOperations operations, PnServiceDeskAddress address, List<String> attachments){
+    private Mono<Void> paperPrepare(PnServiceDeskOperations operations, PnServiceDeskAddress address, List<String> attachments){
         String requestId = Utility.generateRequestId(operations.getOperationId());
         return paperChannelClient.sendPaperPrepareRequest(requestId, PaperRequestMapper.getPrepareRequest(operations,address, attachments, requestId))
-                .doOnSuccess(response -> updateStatus(operations, OperationStatusEnum.PREPARING))
+                .doOnSuccess(response -> updateOperationStatus(operations, OperationStatusEnum.PREPARING))
                 .then();
     }
 
@@ -208,7 +198,7 @@ public class ValidationOperationAction {
                     .flatMap(item -> safeStorageClient.getFile(fileKey)
                             .map(fileDownloadResponseDto -> fileDownloadResponseDto)
                             .onErrorResume(ex -> {
-                                log.error ("Error with retrieve {}", ex.getMessage());
+                                log.error("Error with retrieve {}", ex.getMessage());
                                 return Mono.error(ex);
                             })
                             .onErrorResume(PnRetryStorageException.class, ex ->
