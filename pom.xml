@@ -373,8 +373,8 @@
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
 							</configOptions>
-							<modelPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto</modelPackage>
-							<apiPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.api</apiPackage>
+							<modelPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnaddressmanager.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnaddressmanager.v1.api</apiPackage>
 							<modelNameSuffix>Dto</modelNameSuffix>
 						</configuration>
 					</execution>
