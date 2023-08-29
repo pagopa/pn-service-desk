@@ -77,7 +77,12 @@ public class ValidationOperationAction implements BaseAction<String> {
                             .parallel()
                             .flatMap(iun -> getAttachmentsFromIun(operationAndAddress.getT1(), iun))
                             .sequential()
-                            .flatMap(pnServiceDeskAttachments -> Flux.fromIterable(pnServiceDeskAttachments.getFilesKey()))
+                            .flatMap(pnServiceDeskAttachments -> {
+                                if (pnServiceDeskAttachments.getIsAvailable()){
+                                    return Flux.fromIterable(pnServiceDeskAttachments.getFilesKey());
+                                }
+                                return Flux.empty();
+                            })
                             .collectList()
                             .flatMap(attachments -> paperPrepare(operationAndAddress.getT1(), operationAndAddress.getT2(), attachments))
 
