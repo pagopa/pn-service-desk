@@ -24,6 +24,10 @@ Parameters:
     Type: String
     Description: 'Where to send CDC'
 
+  AlarmSNSTopicName:
+    Type: String
+    Description: "Topic alarm"
+
 Resources:
 
     ServiceDeskOperationsDynamoTable:
