@@ -31,9 +31,6 @@ public class OperationMapper {
         return pnServiceDeskOperations;
     }
 
-
-
-
     public static OperationResponse operationResponseMapper(PnServiceDeskOperations pnServiceDeskOperations){
 
         OperationResponse operationResponse = new OperationResponse();
@@ -44,7 +41,7 @@ public class OperationMapper {
             attachments.forEach(att -> {
                 SDNotificationSummary summary = new SDNotificationSummary();
                 summary.setIun(att.getIun());
-                if (att.getIsAvailable()) {
+                if (Boolean.TRUE.equals(att.getIsAvailable())) {
                     operationResponse.getIuns().add(summary);
                 } else {
                     operationResponse.getUncompletedIuns().add(summary);

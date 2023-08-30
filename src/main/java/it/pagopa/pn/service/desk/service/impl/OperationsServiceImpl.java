@@ -14,23 +14,19 @@ import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.service.OperationsService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class OperationsServiceImpl implements OperationsService {
-    @Autowired
     private PnDataVaultClient dataVaultClient;
-    @Autowired
     private PnSafeStorageClient safeStorageClient;
-    @Autowired
     private OperationDAO operationDAO;
-    @Autowired
     private AddressDAO addressDAO;
-    @Autowired
     private OperationsFileKeyDAO operationsFileKeyDAO;
 
 

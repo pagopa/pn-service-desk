@@ -20,13 +20,9 @@ import java.util.UUID;
 @CustomLog
 @AllArgsConstructor
 public class SafeStorageResponseHandler {
-
     private static final String PUBLISHER_PREPARE = "service-desk-event";
 
-    @Autowired
     private InternalQueueMomProducer internalQueueMomProducer;
-
-    @Autowired
     private OperationsFileKeyDAO operationsFileKeyDAO;
 
     public void handleSafeStorageResponse(FileDownloadResponse response) {

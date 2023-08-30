@@ -188,6 +188,10 @@ Parameters:
     Type: String
     Description: 'SafeStorage cx-id'
 
+  SafeStorageDocumentType:
+    Type: String
+    Description: 'SafeStorage cx-id'
+
   SandboxSafeStorageBaseUrl:
     Type: String
     Description: 'Url to the SafeStorage microservice'
@@ -244,12 +248,15 @@ Resources:
         ContainerEnvEntry10: !Sub 'PN_SERVICEDESK_SAFESTORAGEBASEPATH=${SandboxSafeStorageBaseUrl}'
         ContainerEnvEntry11: !Sub 'PN_SERVICEDESK_TOPICS_INTERNALQUEUE=${ServiceDeskInternalQueueName}'
         ContainerEnvEntry12: !Sub 'PN_SERVICEDESK_SAFESTORAGECXID=${SafeStorageCxId}'
-        ContainerEnvEntry13: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ServiceDeskInternalQueueName}'
-        ContainerEnvEntry14: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
-        ContainerEnvEntry15: !Sub 'PN_SERVICEDESK_DELIVERYPUSHBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry16: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERCXID=${AddressManagerCxId}'
+        ContainerEnvEntry13: !Sub 'PN_SERVICEDESK_SAFESTORAGEDOCUMENTTYPE=${SafeStorageDocumentType}'
+        ContainerEnvEntry14: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ServiceDeskInternalQueueName}'
+        ContainerEnvEntry15: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
+        ContainerEnvEntry16: !Sub 'PN_SERVICEDESK_DELIVERYPUSHBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry17: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERCXID=${AddressManagerCxId}'
+        ContainerEnvEntry18: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
-        MicroServiceSecretPrefix: pn-PaperChannel-Secrets
+        MicroServiceSecretPrefix: pn-ServiceDesk-Secrets
         MappedPaths: '/service-desk/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
