@@ -19,7 +19,13 @@ public class InternalEventResponseHandler {
 
 
     public void handleInternalEventResponse(InternalEventBody response) {
-        this.validationOperationAction.execute(response.getOperationId());
+        try {
+            log.logStartingProcess("VALIDATION OPERATION");
+            this.validationOperationAction.execute(response.getOperationId());
+            log.logEndingProcess("VALIDATION OPERATION");
+        } catch (Exception ex) {
+            log.logEndingProcess("ENDING WITH EXCEPTION");
+        }
     }
 
 }

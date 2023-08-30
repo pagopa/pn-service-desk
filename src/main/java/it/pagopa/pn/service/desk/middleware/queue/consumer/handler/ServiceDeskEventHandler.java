@@ -15,15 +15,13 @@ import java.util.function.Consumer;
 @AllArgsConstructor
 @Slf4j
 public class ServiceDeskEventHandler {
-
-    @Autowired
     private InternalEventResponseHandler responseHandler;
 
     @Bean
     public Consumer<Message<InternalEventBody>> validationOperationsInboundConsumer(){
         return message -> {
             try {
-                log.debug("Handle message from InternalQueue with content {}", message);
+                log.info("Handle message from InternalQueue with content {}", message);
                 responseHandler.handleInternalEventResponse(message.getPayload());
             } catch (Exception ex) {
                 throw ex;
