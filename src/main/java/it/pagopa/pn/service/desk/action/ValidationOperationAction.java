@@ -67,9 +67,10 @@ public class ValidationOperationAction implements BaseAction<String> {
     @Override
     public void execute(String operationId){
         operationDAO.getByOperationId(operationId)
-                .zipWhen(operations ->
-                        getAddressFromOperationId(operationId)
-                ).map(operationAndAddress ->
+                .doOnNext(operation -> log.debug("Operation retrieved {}", operation))
+                .zipWith(getAddressFromOperationId(operationId))
+                .doOnNext(operationAndAddress -> log.debug("Start retrieve iuns"))
+                .flatMap(operationAndAddress ->
                         getIuns(operationAndAddress.getT1().getRecipientInternalId())
                             .collectList()
                             .doOnNext(responsePaperNotificationFailed -> updateOperationStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION))
@@ -78,15 +79,17 @@ public class ValidationOperationAction implements BaseAction<String> {
                             .flatMap(iun -> getAttachmentsFromIun(operationAndAddress.getT1(), iun))
                             .sequential()
                             .flatMap(pnServiceDeskAttachments -> {
-                                if (pnServiceDeskAttachments.getIsAvailable()){
+                                if (Boolean.TRUE.equals(pnServiceDeskAttachments.getIsAvailable())){
                                     return Flux.fromIterable(pnServiceDeskAttachments.getFilesKey());
                                 }
                                 return Flux.empty();
                             })
                             .collectList()
                             .flatMap(attachments -> paperPrepare(operationAndAddress.getT1(), operationAndAddress.getT2(), attachments))
+                            .doOnError(ex -> log.error("ERROR VALIDATION ", ex))
 
-                ).block();
+                )
+                .block();
     }
 
     /**
@@ -96,7 +99,7 @@ public class ValidationOperationAction implements BaseAction<String> {
      */
     private Mono<PnServiceDeskAddress> getAddressFromOperationId(String operationId){
         return addressDAO.getAddress(operationId)
-                .doOnSuccess(this::validationAddress);
+                .flatMap(response -> validationAddress(response).thenReturn(response));
     }
 
     /**
@@ -194,9 +197,8 @@ public class ValidationOperationAction implements BaseAction<String> {
 
     private Flux<String> getIuns(String recipientInternalId){
         return pnDeliveryPushClient.paperNotificationFailed(recipientInternalId)
-                .parallel()
-                .map(ResponsePaperNotificationFailedDtoDto::getIun)
-                .sequential();
+                .doOnNext(iun -> log.debug("IUN : {}", iun))
+                .map(ResponsePaperNotificationFailedDtoDto::getIun);
     }
 
     private Mono<FileDownloadResponse> getFileRecursive(Integer n, String fileKey, BigDecimal millis){
