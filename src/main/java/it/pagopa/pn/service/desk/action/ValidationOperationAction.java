@@ -99,6 +99,7 @@ public class ValidationOperationAction implements BaseAction<String> {
      */
     private Mono<PnServiceDeskAddress> getAddressFromOperationId(String operationId){
         return addressDAO.getAddress(operationId)
+                .doOnNext(address ->  log.debug("Address retrieved {}", address))
                 .flatMap(response -> validationAddress(response).thenReturn(response));
     }
 
@@ -109,6 +110,7 @@ public class ValidationOperationAction implements BaseAction<String> {
      */
     private Mono<Void> validationAddress(PnServiceDeskAddress address){
         return addressManagerClient.deduplicates(address)
+                .doOnNext( deduplicatesResponseDto ->  log.debug("Address deduplicates {}", deduplicatesResponseDto))
                 .flatMap(deduplicateResponse -> {
                     if (FALSE.equals(deduplicateResponse.getEqualityResult())) {
                         return Mono.error(new PnGenericException(ADDRESS_IS_NOT_VALID, ADDRESS_IS_NOT_VALID.getMessage()));
@@ -144,6 +146,7 @@ public class ValidationOperationAction implements BaseAction<String> {
                                 })
                 ).flatMap(entity -> {
                     operation.getAttachments().add(entity);
+                    log.debug("Added attachments in operation {}", operation.getAttachments());
                     return operationDAO.updateEntity(operation).map(item -> entity);
                 });
     }
@@ -184,13 +187,18 @@ public class ValidationOperationAction implements BaseAction<String> {
 
     private Mono<Void> updateOperationStatus(PnServiceDeskOperations operations, OperationStatusEnum operationStatusEnum){
         operations.setStatus(operationStatusEnum.toString());
-        return this.operationDAO.updateEntity(operations).then();
+        return this.operationDAO.updateEntity(operations)
+                .doOnNext( operation ->  log.debug("Update  operationsStatus {}", operationStatusEnum))
+                .then();
     }
 
     private Mono<Void> paperPrepare(PnServiceDeskOperations operations, PnServiceDeskAddress address, List<String> attachments){
         String requestId = Utility.generateRequestId(operations.getOperationId());
         return paperChannelClient.sendPaperPrepareRequest(requestId, PaperRequestMapper.getPrepareRequest(operations,address, attachments, requestId))
-                .doOnSuccess(response -> updateOperationStatus(operations, OperationStatusEnum.PREPARING))
+                .doOnSuccess(response -> {
+                    updateOperationStatus(operations, OperationStatusEnum.PREPARING);
+                    log.debug("Sent paper prepare  {}", response);
+                })
                 .then();
     }
 
