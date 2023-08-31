@@ -212,6 +212,10 @@ Parameters:
     Type: String
     Description: 'Address Manager BaseUrl'
 
+  TtlReceiverAddress:
+    Type: String
+    Description: 'Time to live for receiver address'
+
 Resources:
 
   # PN-TemplateBeMs microservice
@@ -254,7 +258,8 @@ Resources:
         ContainerEnvEntry16: !Sub 'PN_SERVICEDESK_DELIVERYPUSHBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry17: !Sub 'PN_SERVICEDESK_DELIVERYBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry18: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERCXID=${AddressManagerCxId}'
-        ContainerEnvEntry19: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry19: !Sub 'PN_SERVICEDESK_TTLRECEIVERADDRESS=${TtlReceiverAddress}'
+        ContainerEnvEntry20: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
 
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
