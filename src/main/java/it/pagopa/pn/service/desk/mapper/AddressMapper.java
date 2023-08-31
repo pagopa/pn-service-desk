@@ -1,6 +1,6 @@
 package it.pagopa.pn.service.desk.mapper;
 
-
+import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.service.desk.mapper.common.BaseMapper;
@@ -9,6 +9,7 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+
 
 public class AddressMapper {
     private static final BaseMapper<PnServiceDeskAddress, AnalogAddress> mapper = new BaseMapperImpl<>(PnServiceDeskAddress.class, AnalogAddress.class);
