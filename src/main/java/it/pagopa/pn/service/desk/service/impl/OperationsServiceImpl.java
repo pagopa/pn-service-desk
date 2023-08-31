@@ -1,6 +1,7 @@
 package it.pagopa.pn.service.desk.service.impl;
 
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
+import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationsResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadRequest;
@@ -17,8 +18,11 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.
 import it.pagopa.pn.service.desk.service.OperationsService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_ID_IS_PRESENT;
 
 @Slf4j
 @Service
@@ -43,8 +47,14 @@ public class OperationsServiceImpl implements OperationsService {
                     Mono.just(AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn))
                 )
                 .doOnNext(operationAndAddress -> addressDAO.createAddress(operationAndAddress.getT2()))
-                .doOnNext(operationAndAddress -> operationDAO.createOperation(operationAndAddress.getT1()))
-                .map(operationAndAddress -> response.operationId(operationAndAddress.getT1().getOperationId()));
+                .flatMap(operationAndAddress -> operationDAO.getByOperationId(operationAndAddress.getT1().getOperationId())
+                        .flatMap(operations -> {
+                            if (operations != null){
+                                return Mono.error(new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST));
+                            }
+                            return operationDAO.createOperation(operationAndAddress.getT1());
+                        }))
+                .map(operation -> response.operationId(operation.getOperationId()));
     }
 
     @Override
