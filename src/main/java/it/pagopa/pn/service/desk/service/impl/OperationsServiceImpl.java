@@ -1,5 +1,6 @@
 package it.pagopa.pn.service.desk.service.impl;
 
+import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationsResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadRequest;
@@ -28,6 +29,7 @@ public class OperationsServiceImpl implements OperationsService {
     private OperationDAO operationDAO;
     private AddressDAO addressDAO;
     private OperationsFileKeyDAO operationsFileKeyDAO;
+    private PnServiceDeskConfigs cfn;
 
 
     @Override
@@ -38,7 +40,7 @@ public class OperationsServiceImpl implements OperationsService {
         return dataVaultClient.anonymized(createOperationRequest.getTaxId())
                 .map(recipientId -> OperationMapper.getInitialOperation(createOperationRequest, recipientId))
                 .zipWhen(pnServiceDeskOperations ->
-                    Mono.just(AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId()))
+                    Mono.just(AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn))
                 )
                 .doOnNext(operationAndAddress -> addressDAO.createAddress(operationAndAddress.getT2()))
                 .doOnNext(operationAndAddress -> operationDAO.createOperation(operationAndAddress.getT1()))

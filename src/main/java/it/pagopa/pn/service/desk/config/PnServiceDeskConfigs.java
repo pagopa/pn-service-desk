@@ -26,6 +26,8 @@ public class PnServiceDeskConfigs {
     private SenderAddress senderAddress;
     private String addressManagerCxId;
     private String addressManagerApiKey;
+    private Long ttlReceiverAddress;
+    private String productType;
     private String senderPaId;
 
     @Data
