@@ -1,7 +1,8 @@
 {
   "Parameters" : {
-    "SafeStorageCxId": "pn-servdesk-000",
+    "SafeStorageCxId": "pn-service-desk",
     "SafeStorageDocumentType": "PN_SERVICEDESK_RECORDING",
+    "TtlReceiverAddress": "120",
     "AddressManagerCxId": "pn-service-desk",
     "AddressManagerApiKey": "_",
     "AddressManagerBaseUrl": "http://alb.confidential.pn.internal:8080",
