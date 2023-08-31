@@ -22,7 +22,6 @@ import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,6 +29,7 @@ import software.amazon.awssdk.utils.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ADDRESS_IS_NOT_VALID;
@@ -130,10 +130,16 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                                     entity.setFilesKey(fileKeys);
                                     return entity;
                                 })
-                ).flatMap(entity -> {
-                    operation.getAttachments().add(entity);
-                    log.debug("Added attachments in operation {}", operation.getAttachments());
-                    return operationDAO.updateEntity(operation).map(item -> entity);
+                ).zipWith(Mono.just(operation))
+                .flatMap(attachmentAndOperation -> {
+                    PnServiceDeskOperations deskOperations = attachmentAndOperation.getT2();
+                    if (deskOperations.getAttachments() == null){
+                        deskOperations.setAttachments(new ArrayList<>());
+                    }
+                    deskOperations.getAttachments().add(attachmentAndOperation.getT1());
+                    log.debug("Added attachments in operation {}", deskOperations.getAttachments().size());
+                    return operationDAO.updateEntity(deskOperations)
+                            .thenReturn(attachmentAndOperation.getT1());
                 });
     }
 
