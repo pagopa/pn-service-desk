@@ -216,6 +216,10 @@ Parameters:
     Type: String
     Description: 'Time to live for receiver address'
 
+  ProductType:
+    Type: String
+    Description: 'Product type for notification'
+
 Resources:
 
   # PN-TemplateBeMs microservice
@@ -260,6 +264,7 @@ Resources:
         ContainerEnvEntry18: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERCXID=${AddressManagerCxId}'
         ContainerEnvEntry19: !Sub 'PN_SERVICEDESK_TTLRECEIVERADDRESS=${TtlReceiverAddress}'
         ContainerEnvEntry20: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry21: !Sub 'PN_SERVICEDESK_PRODUCTTYPE=${ProductType}'
 
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets

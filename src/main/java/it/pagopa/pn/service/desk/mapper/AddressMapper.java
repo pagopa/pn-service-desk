@@ -42,4 +42,17 @@ public class AddressMapper {
         return analogAddress;
     }
 
+
+    public static it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.AnalogAddressDto toPreparePaperAddress(PnServiceDeskAddress address){
+        it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.AnalogAddressDto analogAddress = new it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.AnalogAddressDto();
+        analogAddress.setFullname(address.getFullName());
+        analogAddress.setAddress(address.getAddress());
+        analogAddress.setAddressRow2(address.getAddressRow2());
+        analogAddress.setCap(address.getCap());
+        analogAddress.setCity(address.getCity());
+        analogAddress.setCity2(address.getCity2());
+        analogAddress.setPr(address.getPr());
+        analogAddress.setCountry(address.getCountry());
+        return analogAddress;
+    }
 }

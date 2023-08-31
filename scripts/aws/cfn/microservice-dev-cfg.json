@@ -2,6 +2,7 @@
   "Parameters" : {
     "SafeStorageCxId": "pn-service-desk",
     "SafeStorageDocumentType": "PN_SERVICEDESK_RECORDING",
+    "ProductType": "RS",
     "TtlReceiverAddress": "120",
     "AddressManagerCxId": "pn-service-desk",
     "AddressManagerApiKey": "_",
