@@ -1,6 +1,7 @@
 package it.pagopa.pn.service.desk.action.impl;
 
 import it.pagopa.pn.service.desk.action.ValidationOperationAction;
+import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
@@ -49,6 +50,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
     private PnDeliveryClient pnDeliveryClient;
     private PnPaperChannelClient paperChannelClient;
     private PnSafeStorageClient safeStorageClient;
+    private PnServiceDeskConfigs cfn;
 
     @Override
     public void execute(String operationId){
@@ -186,11 +188,11 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
 
     private Mono<Void> paperPrepare(PnServiceDeskOperations operations, PnServiceDeskAddress address, List<String> attachments){
         String requestId = Utility.generateRequestId(operations.getOperationId());
-        return paperChannelClient.sendPaperPrepareRequest(requestId, PaperRequestMapper.getPrepareRequest(operations,address, attachments, requestId))
-                .doOnSuccess(response -> {
-                    updateOperationStatus(operations, OperationStatusEnum.PREPARING);
-                    log.debug("Sent paper prepare  {}", response);
-                })
+        return paperChannelClient.sendPaperPrepareRequest(requestId, PaperRequestMapper.getPrepareRequest(operations,address, attachments, requestId, cfn))
+                .doOnNext(response -> log.debug("Sent paper prepare  {}", response))
+                .doOnSuccess(response ->
+                    updateOperationStatus(operations, OperationStatusEnum.PREPARING)
+                )
                 .then();
     }
 
