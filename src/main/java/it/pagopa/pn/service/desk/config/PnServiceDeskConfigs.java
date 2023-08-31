@@ -26,8 +26,7 @@ public class PnServiceDeskConfigs {
     private SenderAddress senderAddress;
     private String addressManagerCxId;
     private String addressManagerApiKey;
-
-
+    private String senderPaId;
 
     @Data
     public static class Topics {
