@@ -14,7 +14,7 @@ public class DeliveryApiConfigurator extends CommonBaseClient {
     public InternalOnlyApi getInternalOnlyApiDelivery(PnServiceDeskConfigs pnServiceDeskConfigs){
         ApiClient apiClient =
                 new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
-        apiClient.setBasePath(pnServiceDeskConfigs.getDataVaultBasePath());
+        apiClient.setBasePath(pnServiceDeskConfigs.getDeliveryBasePath());
         return new InternalOnlyApi(apiClient);
     }
 }

@@ -9,7 +9,6 @@ import it.pagopa.pn.service.desk.middleware.queue.producer.InternalQueueMomProdu
 import it.pagopa.pn.service.desk.model.EventTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
