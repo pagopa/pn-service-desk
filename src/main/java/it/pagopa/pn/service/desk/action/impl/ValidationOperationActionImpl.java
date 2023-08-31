@@ -8,7 +8,7 @@ import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
 import it.pagopa.pn.service.desk.mapper.AttachmentMapper;
-import it.pagopa.pn.service.desk.mapper.PaperRequestMapper;
+import it.pagopa.pn.service.desk.mapper.PaperChannelMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
@@ -188,7 +188,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
 
     private Mono<Void> paperPrepare(PnServiceDeskOperations operations, PnServiceDeskAddress address, List<String> attachments){
         String requestId = Utility.generateRequestId(operations.getOperationId());
-        return paperChannelClient.sendPaperPrepareRequest(requestId, PaperRequestMapper.getPrepareRequest(operations,address, attachments, requestId, cfn))
+        return paperChannelClient.sendPaperPrepareRequest(requestId, PaperChannelMapper.getPrepareRequest(operations,address, attachments, requestId, cfn))
                 .doOnNext(response -> log.debug("Sent paper prepare  {}", response))
                 .doOnSuccess(response ->
                     updateOperationStatus(operations, OperationStatusEnum.PREPARING)

@@ -21,8 +21,9 @@ public class PaperChannelEventHandler {
                 log.debug("Handle message from Prepare Paper Channel with content {}", message);
                 if (message.getPayload().getPrepareEvent() != null){
                     responseHandler.handlePreparePaperChannelEventResponse(message.getPayload().getPrepareEvent());
+                } else {
+                    log.error("Field of payload is empty");
                 }
-                log.error("Field of payload is empty");
             } catch (Exception ex) {
                 throw ex;
             }

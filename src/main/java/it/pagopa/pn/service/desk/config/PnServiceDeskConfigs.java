@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.config;
 
-import com.amazonaws.services.ec2.model.Address;
 import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -29,8 +28,7 @@ public class PnServiceDeskConfigs {
     private String addressManagerApiKey;
     private Long ttlReceiverAddress;
     private String productType;
-
-
+    private String senderPaId;
 
     @Data
     public static class Topics {
