@@ -13,6 +13,7 @@ import it.pagopa.pn.service.desk.mapper.OperationsFileKeyMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.service.OperationsService;
@@ -43,18 +44,19 @@ public class OperationsServiceImpl implements OperationsService {
 
         return dataVaultClient.anonymized(createOperationRequest.getTaxId())
                 .map(recipientId -> OperationMapper.getInitialOperation(createOperationRequest, recipientId))
-                .zipWhen(pnServiceDeskOperations ->
-                    Mono.just(AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn))
+                .flatMap(this::checkAndSaveOperation)
+                .map(pnServiceDeskOperations ->
+                        AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn)
                 )
-                .doOnNext(operationAndAddress -> addressDAO.createAddress(operationAndAddress.getT2()))
-                .flatMap(operationAndAddress -> operationDAO.getByOperationId(operationAndAddress.getT1().getOperationId())
-                        .flatMap(operations -> {
-                            if (operations != null){
-                                return Mono.error(new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST));
-                            }
-                            return operationDAO.createOperation(operationAndAddress.getT1());
-                        }))
-                .map(operation -> response.operationId(operation.getOperationId()));
+                .flatMap(address -> addressDAO.createAddress(address))
+                .map(address -> response.operationId(address.getOperationId()));
+    }
+
+    private Mono<PnServiceDeskOperations> checkAndSaveOperation(PnServiceDeskOperations operation){
+        return operationDAO.getByOperationId(operation.getOperationId())
+                .flatMap(response -> Mono.error(new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
+                .switchIfEmpty(Mono.defer(() -> operationDAO.createOperation(operation)))
+                .thenReturn(operation);
     }
 
     @Override
