@@ -26,14 +26,16 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
 
     private PnServiceDeskConfigs pnServiceDeskConfigs;
 
+
     @Override
     public void execute(PrepareEventDto eventDto) {
+        //TODO - operation null -> switchIfEmpty
+        //TODO - status code from paperChannel empty -> if on statusCode
         String operationId = Utility.extractOperationId(eventDto.getRequestId());
         operationDAO.getByOperationId(operationId)
-                .map(entityOperation -> {
+                .flatMap(entityOperation -> {
                     if(eventDto.getStatusCode() != null && StringUtils.isNotBlank(eventDto.getStatusCode().getValue())
                             && StringUtils.equals(eventDto.getStatusCode().getValue(), StatusCodeEnumDto.KO.getValue())) {
-                        entityOperation.setStatus(StatusCodeEnumDto.KO.getValue());
                         return updateOperationStatus(entityOperation, OperationStatusEnum.KO, eventDto.getStatusDetail());
                     } else {
                         return paperSendRequest(pnServiceDeskConfigs, entityOperation, eventDto);
