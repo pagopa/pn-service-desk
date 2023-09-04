@@ -29,6 +29,8 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
 
     @Override
     public void execute(PrepareEventDto eventDto) {
+        //TODO - operation null -> switchIfEmpty
+        //TODO - status code from paperChannel empty -> if on statusCode
         String operationId = Utility.extractOperationId(eventDto.getRequestId());
         operationDAO.getByOperationId(operationId)
                 .flatMap(entityOperation -> {

@@ -1,11 +1,7 @@
 package it.pagopa.pn.service.desk.action.impl;
 
 import it.pagopa.pn.service.desk.action.ResultPaperChannelAction;
-import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.SendEventDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
-import it.pagopa.pn.service.desk.mapper.PaperChannelMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
@@ -30,15 +26,16 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
         String operationId = Utility.extractOperationId(sendEventDto.getRequestId());
         operationDAO.getByOperationId(operationId)
                 .flatMap(entityOperation -> {
-                    if(sendEventDto.getStatusCode() != null && StringUtils.isNotBlank(sendEventDto.getStatusCode().getValue())
-                            && StringUtils.equals(sendEventDto.getStatusCode().getValue(), StatusCodeEnumDto.KO.getValue())
-                            && StringUtils.equals(sendEventDto.getStatusCode().getValue(), StatusCodeEnumDto.KOUNREACHABLE.getValue())) {
-                        return updateOperationEventAndStatus(entityOperation, OperationStatusEnum.KO, sendEventDto);
-                    } else {
-                        return updateOperationEventAndStatus(entityOperation, OperationStatusEnum.OK, sendEventDto);
+                    if(sendEventDto.getStatusCode() != null && !StringUtils.isNotBlank(sendEventDto.getStatusCode().getValue())) {
+                        OperationStatusEnum newStatus = Utility.getOperationStatusFrom(sendEventDto.getStatusCode());
+                        return updateOperationEventAndStatus(entityOperation, newStatus, sendEventDto);
                     }
+                   //TODO status code empty
+                    return null;
                 }).block();
     }
+
+
 
     private Mono<Void> updateOperationEventAndStatus(PnServiceDeskOperations entityOperation, OperationStatusEnum operationStatusEnum, SendEventDto sendEventDto){
         //UPDATE EVENT
