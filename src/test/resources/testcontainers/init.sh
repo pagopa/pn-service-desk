@@ -57,9 +57,24 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --table-name ServiceDeskOperationFileKey \
     --attribute-definitions \
         AttributeName=fileKey,AttributeType=S \
+        AttributeName=operationId,AttributeType=S \
     --key-schema \
         AttributeName=fileKey,KeyType=HASH \
     --provisioned-throughput \
         ReadCapacityUnits=10,WriteCapacityUnits=5 \
+    --global-secondary-indexes \
+    "[
+        {
+            \"IndexName\": \"operationId-index\",
+            \"KeySchema\": [{\"AttributeName\":\"operationId\",\"KeyType\":\"HASH\"}],
+            \"Projection\":{
+                \"ProjectionType\":\"ALL\"
+            },
+            \"ProvisionedThroughput\": {
+                \"ReadCapacityUnits\": 10,
+                \"WriteCapacityUnits\": 5
+            }
+        }
+    ]"
 
 echo "Initialization terminated"
