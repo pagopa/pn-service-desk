@@ -25,7 +25,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.SAFE_STORAGE_FILE_LOADING;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_DURING_RECOVERING_FILE;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_ID_IS_PRESENT;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_IS_NOT_PRESENT;
 
 @Slf4j
 @Service
@@ -79,8 +82,8 @@ public class OperationsServiceImpl implements OperationsService {
     public Mono<VideoUploadResponse> presignedUrlVideoUpload(String xPagopaPnUid, String operationId, VideoUploadRequest videoUploadRequest) {
 
         return operationDAO.getByOperationId(operationId)
-                .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
-                .flatMap(operation -> checkLoadedFile(operationId))
+                .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
+                .flatMap(operation -> manageOperationFileKey(operationId))
                 .switchIfEmpty(Mono.just(operationId))
                 .flatMap(operationID -> safeStorageClient.getPresignedUrl(videoUploadRequest))
                 .doOnNext(fileCreationResponse ->
@@ -89,17 +92,14 @@ public class OperationsServiceImpl implements OperationsService {
                 .map(OperationsFileKeyMapper::getVideoUpload);
     }
 
-    private Mono<String> checkLoadedFile(String operationId){
-        //TODO change name method
-        return operationsFileKeyDAO.getOperationFileKey(operationId)
+    private Mono<String> manageOperationFileKey(String operationId){
+        return operationsFileKeyDAO.getFileKeyByOperationId(operationId)
                 .flatMap(operationFileKey -> safeStorageClient.getFile(operationFileKey.getFileKey()))
                 .map(response -> operationId)
-                //TODO change exception message
-                .onErrorResume(PnRetryStorageException.class, ex -> Mono.error(new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
+                .onErrorResume(PnRetryStorageException.class, ex -> Mono.error(new PnGenericException(SAFE_STORAGE_FILE_LOADING, SAFE_STORAGE_FILE_LOADING.getMessage(), HttpStatus.BAD_REQUEST)))
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     if (ex.getStatusCode() == HttpStatus.NOT_FOUND) return Mono.just(operationId);
-                    //TODO change exception message
-                    return Mono.error(new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST));
+                    return Mono.error(new PnGenericException(ERROR_DURING_RECOVERING_FILE, ERROR_DURING_RECOVERING_FILE.getMessage(), HttpStatus.BAD_REQUEST));
                 });
 
     }

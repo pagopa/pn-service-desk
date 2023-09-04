@@ -91,9 +91,18 @@ Resources:
         AttributeDefinitions:
           - AttributeName: "fileKey"
             AttributeType: "S"
+          - AttributeName: "operationId"
+            AttributeType: "S"
         KeySchema:
           - AttributeName: "fileKey"
             KeyType: "HASH"
+        GlobalSecondaryIndexes:
+          - IndexName: "operationId-index"
+            KeySchema:
+              - AttributeName: "operationId"
+                KeyType: "HASH"
+            Projection:
+              ProjectionType: "ALL"
         KinesisStreamSpecification:
           StreamArn: !Ref CdcKinesisSourceStreamArn
         StreamSpecification:

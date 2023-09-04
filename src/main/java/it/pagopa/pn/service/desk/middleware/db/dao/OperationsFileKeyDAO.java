@@ -9,4 +9,6 @@ public interface OperationsFileKeyDAO {
 
     Mono<PnServiceDeskOperationFileKey> getOperationFileKey(String key);
 
+    Mono<PnServiceDeskOperationFileKey> getFileKeyByOperationId(String operationId);
+
 }

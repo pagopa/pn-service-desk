@@ -12,12 +12,12 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 
 @Service
 public class OperationsFileKeyDAOImpl extends BaseDAO<PnServiceDeskOperationFileKey> implements OperationsFileKeyDAO {
-    protected OperationsFileKeyDAOImpl(DataEncryption kmsEncryption,
+    public OperationsFileKeyDAOImpl(DataEncryption kmsEncryption,
                                        DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                        DynamoDbAsyncClient dynamoDbAsyncClient,
                                        AwsConfigsActivation awsPropertiesConfig) {
         super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
-                awsPropertiesConfig.getDynamodbAddressTable(), PnServiceDeskOperationFileKey.class);
+                awsPropertiesConfig.getDynamodbFileKeyTable(), PnServiceDeskOperationFileKey.class);
     }
 
     @Override
@@ -28,5 +28,15 @@ public class OperationsFileKeyDAOImpl extends BaseDAO<PnServiceDeskOperationFile
     @Override
     public Mono<PnServiceDeskOperationFileKey> getOperationFileKey(String key) {
         return Mono.fromFuture(super.get(key,null).thenApply(item -> item));
+    }
+
+    @Override
+    public Mono<PnServiceDeskOperationFileKey> getFileKeyByOperationId(String operationId) {
+        return this.getBySecondaryIndex(PnServiceDeskOperationFileKey.OPERATION_ID_INDEX, operationId, null)
+                .collectList()
+                .flatMap(item -> {
+                    if (item.isEmpty()) return Mono.empty();
+                    return Mono.just(item.get(0));
+                });
     }
 }
