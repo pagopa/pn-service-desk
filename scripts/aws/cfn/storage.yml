@@ -24,6 +24,10 @@ Parameters:
     Type: String
     Description: 'Where to send CDC'
 
+  AlarmSNSTopicName:
+    Type: String
+    Description: "Topic alarm"
+
 Resources:
 
     ServiceDeskOperationsDynamoTable:
@@ -87,9 +91,18 @@ Resources:
         AttributeDefinitions:
           - AttributeName: "fileKey"
             AttributeType: "S"
+          - AttributeName: "operationId"
+            AttributeType: "S"
         KeySchema:
           - AttributeName: "fileKey"
             KeyType: "HASH"
+        GlobalSecondaryIndexes:
+          - IndexName: "operationId-index"
+            KeySchema:
+              - AttributeName: "operationId"
+                KeyType: "HASH"
+            Projection:
+              ProjectionType: "ALL"
         KinesisStreamSpecification:
           StreamArn: !Ref CdcKinesisSourceStreamArn
         StreamSpecification:
@@ -120,7 +133,7 @@ Resources:
         AliasName: !Sub 'alias/${ProjectName}-service-desk-dynamo'
         TargetKeyId: !Ref ServiceDeskKmsEncDecDynamoDataKey
 
-    # Internal queues
+    # Internal queue
     ServiceDeskInternalQueue:
       Type: AWS::CloudFormation::Stack
       UpdateReplacePolicy: Retain
@@ -132,6 +145,17 @@ Resources:
           AlarmSNSTopicName: !Ref AlarmSNSTopicName
           DelaySeconds: 1
 
+    # Paperchannel-ServiceDesk queue
+      ServiceDeskPaperchannelQueue:
+        Type: AWS::CloudFormation::Stack
+        UpdateReplacePolicy: Retain
+        DeletionPolicy: Retain
+        Properties:
+          TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+          Parameters:
+            QueueName: !Sub '${ProjectName}paperchannel_to_servicedesk'
+            AlarmSNSTopicName: !Ref AlarmSNSTopicName
+            DelaySeconds: 1
 Outputs:
 
   ServiceDeskInternalQueueName:
@@ -144,6 +168,18 @@ Outputs:
 
   ServiceDeskInternalQueueARN:
     Value: !GetAtt ServiceDeskInternalQueue.Outputs.QueueARN
+    Description: PN-SERVICE-DESK input queue ARN
+
+  ServiceDeskPaperchannelQueueName:
+    Value: !GetAtt ServiceDeskPaperchannelQueue.Outputs.QueueName
+    Description: PN-SERVICE-DESK input queue name
+
+  ServiceDeskPaperchannelQueueURL:
+    Value: !GetAtt ServiceDeskPaperchannelQueue.Outputs.QueueURL
+    Description: PN-SERVICE-DESK queue URL
+
+  ServiceDeskPaperchannelQueueARN:
+    Value: !GetAtt ServiceDeskPaperchannelQueue.Outputs.QueueARN
     Description: PN-SERVICE-DESK input queue ARN
 
   ServiceDeskOperationsDynamoTableName:

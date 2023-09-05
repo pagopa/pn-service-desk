@@ -1,5 +1,8 @@
 package it.pagopa.pn.service.desk.service.impl;
 
+import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
+import it.pagopa.pn.service.desk.exception.PnGenericException;
+import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationsResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadRequest;
@@ -11,27 +14,32 @@ import it.pagopa.pn.service.desk.mapper.OperationsFileKeyMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.service.OperationsService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.SAFE_STORAGE_FILE_LOADING;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_DURING_RECOVERING_FILE;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_ID_IS_PRESENT;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_IS_NOT_PRESENT;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class OperationsServiceImpl implements OperationsService {
-    @Autowired
     private PnDataVaultClient dataVaultClient;
-    @Autowired
     private PnSafeStorageClient safeStorageClient;
-    @Autowired
     private OperationDAO operationDAO;
-    @Autowired
     private AddressDAO addressDAO;
-    @Autowired
     private OperationsFileKeyDAO operationsFileKeyDAO;
+    private PnServiceDeskConfigs cfn;
 
 
     @Override
@@ -41,12 +49,19 @@ public class OperationsServiceImpl implements OperationsService {
 
         return dataVaultClient.anonymized(createOperationRequest.getTaxId())
                 .map(recipientId -> OperationMapper.getInitialOperation(createOperationRequest, recipientId))
-                .zipWhen(pnServiceDeskOperations ->
-                    Mono.just(AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId()))
+                .flatMap(this::checkAndSaveOperation)
+                .map(pnServiceDeskOperations ->
+                        AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn)
                 )
-                .doOnNext(operationAndAddress -> addressDAO.createAddress(operationAndAddress.getT2()))
-                .doOnNext(operationAndAddress -> operationDAO.createOperation(operationAndAddress.getT1()))
-                .map(operationAndAddress -> response.operationId(operationAndAddress.getT1().getOperationId()));
+                .flatMap(address -> addressDAO.createAddress(address))
+                .map(address -> response.operationId(address.getOperationId()));
+    }
+
+    private Mono<PnServiceDeskOperations> checkAndSaveOperation(PnServiceDeskOperations operation){
+        return operationDAO.getByOperationId(operation.getOperationId())
+                .flatMap(response -> Mono.error(new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
+                .switchIfEmpty(Mono.defer(() -> operationDAO.createOperation(operation)))
+                .thenReturn(operation);
     }
 
     @Override
@@ -67,11 +82,26 @@ public class OperationsServiceImpl implements OperationsService {
     public Mono<VideoUploadResponse> presignedUrlVideoUpload(String xPagopaPnUid, String operationId, VideoUploadRequest videoUploadRequest) {
 
         return operationDAO.getByOperationId(operationId)
-                .flatMap(operation -> safeStorageClient.getPresignedUrl(videoUploadRequest))
+                .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
+                .flatMap(operation -> manageOperationFileKey(operationId))
+                .switchIfEmpty(Mono.just(operationId))
+                .flatMap(operationID -> safeStorageClient.getPresignedUrl(videoUploadRequest))
                 .doOnNext(fileCreationResponse ->
                     operationsFileKeyDAO.updateVideoFileKey(OperationsFileKeyMapper.getOperationFileKey(fileCreationResponse.getKey(), operationId))
                 )
                 .map(OperationsFileKeyMapper::getVideoUpload);
+    }
+
+    private Mono<String> manageOperationFileKey(String operationId){
+        return operationsFileKeyDAO.getFileKeyByOperationId(operationId)
+                .flatMap(operationFileKey -> safeStorageClient.getFile(operationFileKey.getFileKey()))
+                .map(response -> operationId)
+                .onErrorResume(PnRetryStorageException.class, ex -> Mono.error(new PnGenericException(SAFE_STORAGE_FILE_LOADING, SAFE_STORAGE_FILE_LOADING.getMessage(), HttpStatus.BAD_REQUEST)))
+                .onErrorResume(WebClientResponseException.class, ex -> {
+                    if (ex.getStatusCode() == HttpStatus.NOT_FOUND) return Mono.just(operationId);
+                    return Mono.error(new PnGenericException(ERROR_DURING_RECOVERING_FILE, ERROR_DURING_RECOVERING_FILE.getMessage(), HttpStatus.BAD_REQUEST));
+                });
+
     }
 
 

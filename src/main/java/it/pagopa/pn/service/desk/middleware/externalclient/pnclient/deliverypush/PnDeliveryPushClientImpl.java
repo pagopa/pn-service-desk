@@ -2,23 +2,17 @@ package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypus
 
 
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.PaperNotificationFailedApi;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.CxTypeAuthFleetDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.LegalFactsPrivateApi;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
-import java.util.List;
-
 @Component
+@AllArgsConstructor
 public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
-
-    @Autowired
     private PaperNotificationFailedApi notificationFailedApi;
-
-    @Autowired
     private LegalFactsPrivateApi legalFactsPrivateApi;
 
 
