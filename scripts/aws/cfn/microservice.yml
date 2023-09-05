@@ -114,6 +114,14 @@ Parameters:
     Type: String
     Description: 'Send and pull requests in this queue'
 
+  ServiceDeskPaperchannelQueueName:
+    Type: String
+    Description: 'Send and pull requests in this queue between ServiceDesk and Paperchannel'
+
+  ServiceDeskPaperchannelQueueARN:
+    Type: String
+    Description: 'Send and pull requests in this queue between ServiceDesk and Paperchannel'
+
   ServiceDeskKmsEncDecDynamoDataKeyARN:
     Type: String
     Description: 'Name of KMS Key for Dynamo encode/decode data'
@@ -257,7 +265,7 @@ Resources:
         ContainerEnvEntry11: !Sub 'PN_SERVICEDESK_TOPICS_INTERNALQUEUE=${ServiceDeskInternalQueueName}'
         ContainerEnvEntry12: !Sub 'PN_SERVICEDESK_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry13: !Sub 'PN_SERVICEDESK_SAFESTORAGEDOCUMENTTYPE=${SafeStorageDocumentType}'
-        ContainerEnvEntry14: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ServiceDeskInternalQueueName}'
+        ContainerEnvEntry14: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ServiceDeskInternalQueueName},${ServiceDeskPaperchannelQueueName}'
         ContainerEnvEntry15: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
         ContainerEnvEntry16: !Sub 'PN_SERVICEDESK_DELIVERYPUSHBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry17: !Sub 'PN_SERVICEDESK_DELIVERYBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
@@ -297,6 +305,7 @@ Resources:
               - sqs:SendMessageBatch
             Resource:
               - !Ref ServiceDeskInternalQueueARN
+              - !Ref ServiceDeskPaperchannelQueueARN
           - Effect: Allow
             Action:
               - kms:Encrypt
