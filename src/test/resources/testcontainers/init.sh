@@ -23,6 +23,7 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --table-name ServiceDeskOperations \
     --attribute-definitions \
         AttributeName=operationId,AttributeType=S \
+        AttributeName=recipientInternalId,AttributeType=S \
     --key-schema \
         AttributeName=operationId,KeyType=HASH \
     --provisioned-throughput \
