@@ -67,7 +67,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
         operationDAO.getByOperationId(operationId)
                 .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
                 .doOnNext(operation -> log.debug("Operation retrieved {}", operation))
-                .zipWith(getAddressFromOperationId(operationId))
+                .zipWhen(operation -> getAddressFromOperationId(operationId))
                 .doOnNext(operationAndAddress -> log.debug("Start retrieve iuns"))
                 .flatMap(operationAndAddress ->
                         getIuns(operationAndAddress.getT1().getRecipientInternalId())
@@ -216,9 +216,9 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
 
     private Flux<String> getIuns(String recipientInternalId){
         return pnDeliveryPushClient.paperNotificationFailed(recipientInternalId)
+                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ex.getMessage(), HttpStatus.BAD_REQUEST)))
                 .doOnNext(iun -> log.debug("IUN : {}", iun))
-                .map(ResponsePaperNotificationFailedDtoDto::getIun)
-                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ex.getMessage(), HttpStatus.BAD_REQUEST)));
+                .map(ResponsePaperNotificationFailedDtoDto::getIun);
     }
 
     private Mono<FileDownloadResponse> getFileRecursive(Integer n, String fileKey, BigDecimal millis){
