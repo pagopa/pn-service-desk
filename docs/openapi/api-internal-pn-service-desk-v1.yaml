@@ -32,8 +32,8 @@ paths:
   '/service-desk/notification/unreachable':
     post:
       operationId: numberOfUnreachableNotifications
-      summary: Count of all unreachable notifications of reciepientID
-      description: Recupera il numero delle notifiche in stato irreperibile per un certo recipeint
+      summary: Check all unreachable notifications of reciepientID
+      description: Verifica la presenza delle notifiche in stato irreperibile per un certo recipeint
       tags:
         - Notification
       parameters:
