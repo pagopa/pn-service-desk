@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.action.impl;
 
-import it.pagopa.pn.service.desk.action.ValidationOperationAction;
 
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
@@ -36,20 +35,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.services.sqs.endpoints.internal.Value;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
-public class ValidationOperationActionImplTest {
+class ValidationOperationActionImplTest {
 
     @InjectMocks
     private ValidationOperationActionImpl validationOperationAction;
@@ -78,21 +72,22 @@ public class ValidationOperationActionImplTest {
     @Mock
     private PnServiceDeskConfigs cfn;
 
-    PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
-    ResponsePaperNotificationFailedDtoDto responsePaperNotificationFailedDtoDto = new ResponsePaperNotificationFailedDtoDto();
-    SentNotificationDto sentNotificationDto = new SentNotificationDto();
-    NotificationDocumentDto notificationDocumentDto = new NotificationDocumentDto();
-    List<NotificationDocumentDto> notifications = new ArrayList<>();
-    NotificationAttachmentBodyRefDto notificationAttachmentBodyRefDto = new NotificationAttachmentBodyRefDto();
-    LegalFactListElementDto legalFactListElementDto = new LegalFactListElementDto();
-    LegalFactsIdDto legalFactsIdDto = new LegalFactsIdDto();
-    PnServiceDeskAttachments pnServiceDeskAttachments = new PnServiceDeskAttachments();
-    List<PnServiceDeskAttachments> pnServiceDeskAttachmentsList  = new ArrayList<>();
-    List<String> fileKeys = new ArrayList<>();
-    PaperChannelUpdateDto paperChannelUpdateDto = new PaperChannelUpdateDto();
-    PrepareEventDto prepareEventDto = new PrepareEventDto();
-    DeduplicatesResponseDto deduplicatesResponseDto = new DeduplicatesResponseDto();
-    FileDownloadResponse fileDownloadResponse = new FileDownloadResponse();
+    private final PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
+    private final ResponsePaperNotificationFailedDtoDto responsePaperNotificationFailedDtoDto = new ResponsePaperNotificationFailedDtoDto();
+    private final SentNotificationDto sentNotificationDto = new SentNotificationDto();
+    private final NotificationDocumentDto notificationDocumentDto = new NotificationDocumentDto();
+    private final List<NotificationDocumentDto> notifications = new ArrayList<>();
+    private final NotificationAttachmentBodyRefDto notificationAttachmentBodyRefDto = new NotificationAttachmentBodyRefDto();
+    private final LegalFactListElementDto legalFactListElementDto = new LegalFactListElementDto();
+    private final LegalFactsIdDto legalFactsIdDto = new LegalFactsIdDto();
+    private final PnServiceDeskAttachments pnServiceDeskAttachments = new PnServiceDeskAttachments();
+    private final List<PnServiceDeskAttachments> pnServiceDeskAttachmentsList  = new ArrayList<>();
+    private final List<String> fileKeys = new ArrayList<>();
+    private final PaperChannelUpdateDto paperChannelUpdateDto = new PaperChannelUpdateDto();
+    private final PrepareEventDto prepareEventDto = new PrepareEventDto();
+    private final DeduplicatesResponseDto deduplicatesResponseDto = new DeduplicatesResponseDto();
+    private final FileDownloadResponse fileDownloadResponse = new FileDownloadResponse();
+
 
     @BeforeEach
     public void init(){
@@ -161,11 +156,9 @@ public class ValidationOperationActionImplTest {
 
     @Test
     void executeAddressManagerClientEqualityResultFalse(){
-        String errorMessage = "Error message";
-        PnGenericException exception = new PnGenericException(null,null);
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
-        Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(deduplicatesResponseDto));
+        Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(deduplicatesResponseDto));
         Assertions.assertThrows(PnGenericException.class, () -> {
             this.validationOperationAction.execute("opId1234");
         });
@@ -175,10 +168,9 @@ public class ValidationOperationActionImplTest {
     void executeAddressManagerClientErrorNotBlank(){
         deduplicatesResponseDto.setError("error message");
         deduplicatesResponseDto.setEqualityResult(Boolean.TRUE);
-        PnGenericException exception = new PnGenericException(null,null);
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
-        Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(deduplicatesResponseDto));
+        Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(deduplicatesResponseDto));
         Assertions.assertThrows(PnGenericException.class, () -> {
             this.validationOperationAction.execute("opId1234");
         });
@@ -189,7 +181,7 @@ public class ValidationOperationActionImplTest {
     void executeUpdateOperationStatusEmpty(){
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
-        Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
+        Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.empty());
@@ -204,7 +196,7 @@ public class ValidationOperationActionImplTest {
         PnGenericException exception = new PnGenericException(null,null);
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
-        Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
+        Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
@@ -220,7 +212,7 @@ public class ValidationOperationActionImplTest {
         PnGenericException exception = new PnGenericException(null,null);
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
-        Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
+        Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
@@ -232,10 +224,9 @@ public class ValidationOperationActionImplTest {
 
     @Test
     void executeGetNotificationLegalFactsPrivate(){
-        PnGenericException exception = new PnGenericException(null,null);
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
-        Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
+        Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
@@ -249,10 +240,10 @@ public class ValidationOperationActionImplTest {
 
         Assertions.assertNotNull(capturePrepareRequest.getValue().getRequestId());
         Assertions.assertNotNull(capturePrepareRequest.getValue().getIun());
-        Assertions.assertEquals(capturePrepareRequest.getValue().getIun(), "opId1234");
-        Assertions.assertEquals(capturePrepareRequest.getValue().getReceiverType(), "PF");
-        Assertions.assertEquals(capturePrepareRequest.getValue().getRequestId(), "SERVICE_DESK_OPID-opId1234");
-        Assertions.assertEquals(capturePrepareRequest.getValue().getProposalProductType(), ProposalTypeEnumDto.RS);
+        Assertions.assertEquals("opId1234", capturePrepareRequest.getValue().getIun());
+        Assertions.assertEquals("PF", capturePrepareRequest.getValue().getReceiverType());
+        Assertions.assertEquals("SERVICE_DESK_OPID-opId1234", capturePrepareRequest.getValue().getRequestId());
+        Assertions.assertEquals(ProposalTypeEnumDto.RS, capturePrepareRequest.getValue().getProposalProductType());
 
     }
 
