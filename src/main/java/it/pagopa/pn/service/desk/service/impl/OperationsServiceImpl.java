@@ -11,9 +11,9 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.mapper.AddressMapper;
 import it.pagopa.pn.service.desk.mapper.OperationMapper;
 import it.pagopa.pn.service.desk.mapper.OperationsFileKeyMapper;
-import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.SAFE_STORAGE_FILE_LOADING;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_DURING_RECOVERING_FILE;
@@ -37,7 +38,6 @@ public class OperationsServiceImpl implements OperationsService {
     private PnDataVaultClient dataVaultClient;
     private PnSafeStorageClient safeStorageClient;
     private OperationDAO operationDAO;
-    private AddressDAO addressDAO;
     private OperationsFileKeyDAO operationsFileKeyDAO;
     private PnServiceDeskConfigs cfn;
 
@@ -49,18 +49,20 @@ public class OperationsServiceImpl implements OperationsService {
 
         return dataVaultClient.anonymized(createOperationRequest.getTaxId())
                 .map(recipientId -> OperationMapper.getInitialOperation(createOperationRequest, recipientId))
+                .zipWhen(pnServiceDeskOperations -> {
+                    PnServiceDeskAddress address = AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn);
+                    return Mono.just(address);
+                })
                 .flatMap(this::checkAndSaveOperation)
-                .map(pnServiceDeskOperations ->
-                        AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn)
-                )
-                .flatMap(address -> addressDAO.createAddress(address))
-                .map(address -> response.operationId(address.getOperationId()));
+                .map(operation -> response.operationId(operation.getOperationId()));
     }
 
-    private Mono<PnServiceDeskOperations> checkAndSaveOperation(PnServiceDeskOperations operation){
+    private Mono<PnServiceDeskOperations> checkAndSaveOperation(Tuple2<PnServiceDeskOperations, PnServiceDeskAddress> operationAndAddress){
+        PnServiceDeskOperations operation = operationAndAddress.getT1();
+        PnServiceDeskAddress address = operationAndAddress.getT2();
         return operationDAO.getByOperationId(operation.getOperationId())
                 .flatMap(response -> Mono.error(new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
-                .switchIfEmpty(Mono.defer(() -> operationDAO.createOperation(operation)))
+                .switchIfEmpty(Mono.defer(() -> operationDAO.createOperationAndAddress(operation, address)))
                 .thenReturn(operation);
     }
 
@@ -86,8 +88,9 @@ public class OperationsServiceImpl implements OperationsService {
                 .flatMap(operation -> manageOperationFileKey(operationId))
                 .switchIfEmpty(Mono.just(operationId))
                 .flatMap(operationID -> safeStorageClient.getPresignedUrl(videoUploadRequest))
-                .doOnNext(fileCreationResponse ->
+                .flatMap(fileCreationResponse ->
                     operationsFileKeyDAO.updateVideoFileKey(OperationsFileKeyMapper.getOperationFileKey(fileCreationResponse.getKey(), operationId))
+                            .thenReturn(fileCreationResponse)
                 )
                 .map(OperationsFileKeyMapper::getVideoUpload);
     }
