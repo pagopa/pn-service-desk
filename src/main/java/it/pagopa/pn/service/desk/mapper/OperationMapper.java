@@ -12,6 +12,7 @@ import it.pagopa.pn.service.desk.utility.Utility;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
 public class OperationMapper {
@@ -34,8 +35,13 @@ public class OperationMapper {
     public static OperationResponse operationResponseMapper(PnServiceDeskOperations pnServiceDeskOperations){
 
         OperationResponse operationResponse = new OperationResponse();
-
         operationResponse.setOperationId(pnServiceDeskOperations.getOperationId());
+
+        List<SDNotificationSummary> iunsList = new ArrayList<>();
+        List<SDNotificationSummary> uncompletedIunsList = new ArrayList<>();
+        operationResponse.setIuns(iunsList);
+        operationResponse.setUncompletedIuns(uncompletedIunsList);
+
         List<PnServiceDeskAttachments> attachments = pnServiceDeskOperations.getAttachments();
         if (attachments != null) {
             attachments.forEach(att -> {
