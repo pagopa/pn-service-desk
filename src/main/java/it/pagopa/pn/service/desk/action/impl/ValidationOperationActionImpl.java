@@ -3,6 +3,7 @@ package it.pagopa.pn.service.desk.action.impl;
 import it.pagopa.pn.service.desk.action.ValidationOperationAction;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
+import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
@@ -44,7 +45,6 @@ import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_UPD
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_PUSH_CLIENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_ADDRESS_MANAGER_CLIENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_SEND_PAPER_CHANNEL_CLIENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_IS_NOT_PRESENT;
 
 
 
@@ -65,7 +65,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
     @Override
     public void execute(String operationId){
         operationDAO.getByOperationId(operationId)
-                .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
+                .switchIfEmpty(Mono.error(new PnEntityNotFoundException()))
                 .doOnNext(operation -> log.debug("Operation retrieved {}", operation))
                 .zipWhen(operation -> getAddressFromOperationId(operationId))
                 .doOnNext(operationAndAddress -> log.debug("Start retrieve iuns"))
@@ -88,6 +88,13 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                                 .doOnError(ex -> log.error("ERROR VALIDATION ", ex))
 
                 )
+                .doOnError(PnEntityNotFoundException.class, error -> log.error("The operation entity was not found with this operationId: {}", operationId))
+                .onErrorResume(ex -> {
+                    if (ex instanceof PnEntityNotFoundException) {
+                        return Mono.error(ex);
+                    }
+                    return traceErrorOnDB(operationId, ex);
+                })
                 .block();
     }
 
@@ -236,6 +243,15 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                                     getFileRecursive(n - 1, fileKey, ex.getRetryAfter())
                             ));
         }
+    }
+
+    private Mono<Void> traceErrorOnDB(String operationId, Throwable ex) {
+        log.error("Error on validation flow {}", ex.getMessage(), ex);
+        return operationDAO.getByOperationId(operationId)
+                .flatMap(operation -> {
+                    operation.setErrorReason(ex.getMessage());
+                    return updateOperationStatus(operation, OperationStatusEnum.KO);
+                });
     }
 
 
