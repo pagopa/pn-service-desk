@@ -15,6 +15,8 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dt
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PaperChannelUpdateDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareRequestDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.ProposalTypeEnumDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
@@ -40,6 +42,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.services.sqs.endpoints.internal.Value;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -88,9 +91,17 @@ public class ValidationOperationActionImplTest {
     List<String> fileKeys = new ArrayList<>();
     PaperChannelUpdateDto paperChannelUpdateDto = new PaperChannelUpdateDto();
     PrepareEventDto prepareEventDto = new PrepareEventDto();
+    DeduplicatesResponseDto deduplicatesResponseDto = new DeduplicatesResponseDto();
+    FileDownloadResponse fileDownloadResponse = new FileDownloadResponse();
 
     @BeforeEach
     public void init(){
+        fileDownloadResponse.setKey("key1234");
+        fileDownloadResponse.setChecksum("checkSum");
+        fileDownloadResponse.setContentType("contentType");
+        fileDownloadResponse.setRetentionUntil(null);
+        fileDownloadResponse.setDocumentType("documentType");
+        deduplicatesResponseDto.setEqualityResult(Boolean.FALSE);
         paperChannelUpdateDto.setPrepareEvent(prepareEventDto);
         pnServiceDeskAttachments.setIsAvailable(Boolean.TRUE);
         fileKeys.add("fileKeyAttachment");
@@ -147,6 +158,32 @@ public class ValidationOperationActionImplTest {
             this.validationOperationAction.execute("opId1234");
         });
     }
+
+    @Test
+    void executeAddressManagerClientEqualityResultFalse(){
+        String errorMessage = "Error message";
+        PnGenericException exception = new PnGenericException(null,null);
+        Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
+        Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
+        Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(deduplicatesResponseDto));
+        Assertions.assertThrows(PnGenericException.class, () -> {
+            this.validationOperationAction.execute("opId1234");
+        });
+    }
+
+    @Test
+    void executeAddressManagerClientErrorNotBlank(){
+        deduplicatesResponseDto.setError("error message");
+        deduplicatesResponseDto.setEqualityResult(Boolean.TRUE);
+        PnGenericException exception = new PnGenericException(null,null);
+        Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
+        Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
+        Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(deduplicatesResponseDto));
+        Assertions.assertThrows(PnGenericException.class, () -> {
+            this.validationOperationAction.execute("opId1234");
+        });
+    }
+
 
     @Test
     void executeUpdateOperationStatusEmpty(){
@@ -215,6 +252,7 @@ public class ValidationOperationActionImplTest {
         Assertions.assertEquals(capturePrepareRequest.getValue().getIun(), "opId1234");
         Assertions.assertEquals(capturePrepareRequest.getValue().getReceiverType(), "PF");
         Assertions.assertEquals(capturePrepareRequest.getValue().getRequestId(), "SERVICE_DESK_OPID-opId1234");
+        Assertions.assertEquals(capturePrepareRequest.getValue().getProposalProductType(), ProposalTypeEnumDto.RS);
 
     }
 
