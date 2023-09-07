@@ -114,13 +114,21 @@ Parameters:
     Type: String
     Description: 'Send and pull requests in this queue'
 
-  ServiceDeskPaperchannelQueueName:
+  PaperChannelToServiceDeskQueueName:
     Type: String
     Description: 'Send and pull requests in this queue between ServiceDesk and Paperchannel'
 
-  ServiceDeskPaperchannelQueueARN:
+  PaperChannelToServiceDeskQueueARN:
     Type: String
     Description: 'Send and pull requests in this queue between ServiceDesk and Paperchannel'
+
+  SafeStorageToServiceDeskQueueName:
+    Type: String
+    Description: 'Send and pull requests in this queue between ServiceDesk and Paperchannel'
+
+  SafeStorageToServiceDeskQueueARN:
+    Type: String
+    Description: 'Send and pull requests in this queue between ServiceDesk and SafeStorage'
 
   ServiceDeskKmsEncDecDynamoDataKeyARN:
     Type: String
@@ -263,19 +271,21 @@ Resources:
         ContainerEnvEntry9: !Sub 'PN_SERVICEDESK_RADDFSUBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry10: !Sub 'PN_SERVICEDESK_SAFESTORAGEBASEPATH=${SandboxSafeStorageBaseUrl}'
         ContainerEnvEntry11: !Sub 'PN_SERVICEDESK_TOPICS_INTERNALQUEUE=${ServiceDeskInternalQueueName}'
-        ContainerEnvEntry12: !Sub 'PN_SERVICEDESK_SAFESTORAGECXID=${SafeStorageCxId}'
-        ContainerEnvEntry13: !Sub 'PN_SERVICEDESK_SAFESTORAGEDOCUMENTTYPE=${SafeStorageDocumentType}'
-        ContainerEnvEntry14: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ServiceDeskInternalQueueName},${ServiceDeskPaperchannelQueueName}'
-        ContainerEnvEntry15: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
-        ContainerEnvEntry16: !Sub 'PN_SERVICEDESK_DELIVERYPUSHBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry17: !Sub 'PN_SERVICEDESK_DELIVERYBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry18: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERCXID=${AddressManagerCxId}'
-        ContainerEnvEntry19: !Sub 'PN_SERVICEDESK_TTLRECEIVERADDRESS=${TtlReceiverAddress}'
-        ContainerEnvEntry20: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry21: !Sub 'PN_SERVICEDESK_PRODUCTTYPE=${ProductType}'
+        ContainerEnvEntry12: !Sub 'PN_SERVICEDESK_TOPICS_PAPERCHANNELQUEUE=${PaperChannelToServiceDeskQueueName}'
+        ContainerEnvEntry13: !Sub 'PN_SERVICEDESK_TOPICS_SAFESTORAGEEVENTS=${SafeStorageToServiceDeskQueueName}'
+        ContainerEnvEntry14: !Sub 'PN_SERVICEDESK_SAFESTORAGECXID=${SafeStorageCxId}'
+        ContainerEnvEntry15: !Sub 'PN_SERVICEDESK_SAFESTORAGEDOCUMENTTYPE=${SafeStorageDocumentType}'
+        ContainerEnvEntry16: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${SafeStorageToServiceDeskQueueName},${ServiceDeskInternalQueueName},${PaperChannelToServiceDeskQueueName}'
+        ContainerEnvEntry17: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
+        ContainerEnvEntry18: !Sub 'PN_SERVICEDESK_DELIVERYPUSHBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry19: !Sub 'PN_SERVICEDESK_DELIVERYBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry20: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERCXID=${AddressManagerCxId}'
+        ContainerEnvEntry21: !Sub 'PN_SERVICEDESK_TTLRECEIVERADDRESS=${TtlReceiverAddress}'
+        ContainerEnvEntry22: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry23: !Sub 'PN_SERVICEDESK_PRODUCTTYPE=${ProductType}'
 
-        ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
-        MicroServiceSecretPrefix: pn-PaperChannel-Secrets
+        ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
+        MicroServiceSecretPrefix: pn-ServiceDesk-Secrets
         MappedPaths: '/service-desk/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -305,7 +315,8 @@ Resources:
               - sqs:SendMessageBatch
             Resource:
               - !Ref ServiceDeskInternalQueueARN
-              - !Ref ServiceDeskPaperchannelQueueARN
+              - !Ref SafeStorageToServiceDeskQueueARN
+              - !Ref PaperChannelToServiceDeskQueueARN
           - Effect: Allow
             Action:
               - kms:Encrypt
