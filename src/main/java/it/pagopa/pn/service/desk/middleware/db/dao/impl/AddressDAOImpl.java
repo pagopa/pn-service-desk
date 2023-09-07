@@ -9,7 +9,11 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactPutItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+
+
 @Service
 public class AddressDAOImpl extends BaseDAO<PnServiceDeskAddress> implements AddressDAO {
     public AddressDAOImpl(DataEncryption kmsEncryption,
@@ -21,13 +25,17 @@ public class AddressDAOImpl extends BaseDAO<PnServiceDeskAddress> implements Add
     }
 
     @Override
-    public Mono<PnServiceDeskAddress> createAddress(PnServiceDeskAddress address) {
-        return Mono.fromFuture(super.put(address));
+    public Mono<PnServiceDeskAddress> getAddress(String operationId) {
+        return Mono.fromFuture(super.get(operationId, null).thenApply(item -> item));
     }
 
     @Override
-    public Mono<PnServiceDeskAddress> getAddress(String operationId) {
-        return Mono.fromFuture(super.get(operationId, null).thenApply(item -> item));
+    public void createWithTransaction(TransactWriteItemsEnhancedRequest.Builder builder, PnServiceDeskAddress pnAddress) {
+        TransactPutItemEnhancedRequest<PnServiceDeskAddress> addressRequest =
+                TransactPutItemEnhancedRequest.builder(PnServiceDeskAddress.class)
+                        .item(encode(pnAddress))
+                        .build();
+        builder.addPutItem(this.dynamoTable, addressRequest );
     }
 
 }

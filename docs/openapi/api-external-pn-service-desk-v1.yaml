@@ -32,8 +32,8 @@ paths:
   '/service-desk/notification/unreachable':
     post:
       operationId: numberOfUnreachableNotifications
-      summary: Count of all unreachable notifications of reciepientID
-      description: Recupera il numero delle notifiche in stato irreperibile per un certo recipeint
+      summary: Check all unreachable notifications of reciepientID
+      description: Verifica la presenza delle notifiche in stato irreperibile per un certo recipeint
       tags:
         - Notification
       parameters:
@@ -185,7 +185,7 @@ paths:
 components:
   schemas:
     NotificationRequest:
-      description: Request per il recupero del numero di notifiche in stato irreperibile
+      description: Request per la verifica della presenza di notifiche in stato irreperibile
       type: object
       properties:
         taxId:
@@ -195,7 +195,7 @@ components:
       additionalProperties: false
 
     NotificationsUnreachableResponse:
-      description: Reponse che mostra il numero di notifiche in stato irreperibile
+      description: Reponse che ritorna 1 in caso di presenza di notifiche in stato irreperibile, altrimenti 0
       type: object
       required:
         - notificationsCount
@@ -203,7 +203,7 @@ components:
         notificationsCount:
           type: integer
           format: int64
-          maximum: 999999
+          maximum: 1
           minimum: 0
       additionalProperties: false
 

@@ -146,16 +146,16 @@ Resources:
           DelaySeconds: 1
 
     # Paperchannel-ServiceDesk queue
-      ServiceDeskPaperchannelQueue:
-        Type: AWS::CloudFormation::Stack
-        UpdateReplacePolicy: Retain
-        DeletionPolicy: Retain
-        Properties:
-          TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
-          Parameters:
-            QueueName: !Sub '${ProjectName}paperchannel_to_servicedesk'
-            AlarmSNSTopicName: !Ref AlarmSNSTopicName
-            DelaySeconds: 1
+    ServiceDeskPaperchannelQueue:
+      Type: AWS::CloudFormation::Stack
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain
+      Properties:
+        TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+        Parameters:
+          QueueName: !Sub '${ProjectName}paperchannel_to_servicedesk'
+          AlarmSNSTopicName: !Ref AlarmSNSTopicName
+          DelaySeconds: 1
 Outputs:
 
   ServiceDeskInternalQueueName:
