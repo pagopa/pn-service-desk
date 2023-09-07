@@ -72,6 +72,19 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.mock-server</groupId>
+			<artifactId>mockserver-junit-jupiter</artifactId>
+			<version>5.15.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mock-server</groupId>
+			<artifactId>mockserver-netty</artifactId>
+			<version>5.15.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-kms</artifactId>
 			<version>1.12.266</version>
