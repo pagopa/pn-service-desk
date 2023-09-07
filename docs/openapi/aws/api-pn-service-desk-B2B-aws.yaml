@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: >-
     ${stageVariables.ProjectName}-${stageVariables.MicroServiceUniqueName}-${stageVariables.IntendedUsage}
-  version: rBeqVj7DZ3YgpSlwyCwkmjqCDa5YQmXQj4wnOuXWL58=
+  version: QyolE2YwAD1hNpM8EfR1X6SovtQRM/5f2PHifD7Cl/k=
 servers:
   - url: https://${stageVariables.DnsName}/{basePath}
     variables:
@@ -25,7 +25,9 @@ components:
         maxLength: 64
   schemas:
     NotificationRequest:
-      description: Request per il recupero del numero di notifiche in stato irreperibile
+      description: >-
+        Request per la verifica della presenza di notifiche in stato
+        irreperibile
       type: object
       properties:
         taxId:
@@ -34,14 +36,16 @@ components:
           maxLength: 32
       additionalProperties: false
     NotificationsUnreachableResponse:
-      description: Reponse che mostra il numero di notifiche in stato irreperibile
+      description: >-
+        Reponse che ritorna 1 in caso di presenza di notifiche in stato
+        irreperibile, altrimenti 0
       type: object
       required:
         - notificationsCount
       properties:
         notificationsCount:
           type: number
-          maximum: 999999
+          maximum: 1
           minimum: 0
       additionalProperties: false
     CreateOperationRequest:
