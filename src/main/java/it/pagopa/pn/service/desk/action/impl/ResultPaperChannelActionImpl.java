@@ -66,9 +66,8 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
             pnServiceDeskEvents.setStatusDescription(sendEventDto.getStatusDescription());
             entityOperation.getEvents().add(pnServiceDeskEvents);
         }
-        if(StringUtils.isNotBlank(errorReason)) {
-            entityOperation.setErrorReason(errorReason);
-        }
+        entityOperation.setErrorReason(errorReason);
+
         entityOperation.setStatus(operationStatusEnum.toString());
 
         return this.operationDAO.updateEntity(entityOperation).then();
