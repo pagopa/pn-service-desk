@@ -7,6 +7,7 @@ import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PaperChannelUpdateDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
@@ -222,12 +223,13 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
         return this.pnDataVaultClient.deAnonymized(operations.getRecipientInternalId())
                 .map(fiscalCode -> PaperChannelMapper.getPrepareRequest(operations, address, attachments, requestId, fiscalCode, cfn))
                 .flatMap(prepareRequestDto -> this.paperChannelClient.sendPaperPrepareRequest(requestId, prepareRequestDto))
-                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_SEND_PAPER_CHANNEL_CLIENT, ex.getMessage(), HttpStatus.BAD_REQUEST)))
-                .doOnNext(response -> log.debug("Sent paper prepare  {}", response))
+                .switchIfEmpty(Mono.just(new PaperChannelUpdateDto()))
+                .doOnNext(response -> log.debug("Sent paper prepare"))
                 .flatMap(response -> {
                     operations.setErrorReason(null);
                     return updateOperationStatus(operations, OperationStatusEnum.PREPARING);
                 })
+                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_SEND_PAPER_CHANNEL_CLIENT, ex.getMessage(), HttpStatus.BAD_REQUEST)))
                 .then();
     }
 
