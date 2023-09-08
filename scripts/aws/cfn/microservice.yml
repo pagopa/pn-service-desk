@@ -220,6 +220,10 @@ Parameters:
     Type: String
     Description: 'AddressManager cx-id'
 
+  PaperChannelCxId:
+    Type: String
+    Description: 'PaperChannel cx-id'
+
   AddressManagerApiKey:
     Type: String
     Description: 'AddressManager api-key'
