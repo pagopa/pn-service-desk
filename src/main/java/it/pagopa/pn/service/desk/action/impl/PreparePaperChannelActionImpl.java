@@ -83,7 +83,7 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
                                              @NotNull PnServiceDeskOperations entityOperation,
                                              @NotNull OperationStatusEnum operationStatusEnum,
                                              String errorReason){
-        log.debug("Update operation entity and event with new status: {}", operationStatusEnum.toString());
+        log.debug("Update operation entity and event with new status: {}", operationStatusEnum);
         if(prepareEventDto != null) {
             PnServiceDeskEvents pnServiceDeskEvents = new PnServiceDeskEvents();
             pnServiceDeskEvents.setStatusCode(prepareEventDto.getStatusDetail());
@@ -94,9 +94,7 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
             }
             entityOperation.getEvents().add(pnServiceDeskEvents);
         }
-        if(StringUtils.isNotBlank(errorReason)) {
-            entityOperation.setErrorReason(errorReason);
-        }
+        entityOperation.setErrorReason(errorReason);
         entityOperation.setStatus(operationStatusEnum.toString());
 
         return this.operationDAO.updateEntity(entityOperation).then();

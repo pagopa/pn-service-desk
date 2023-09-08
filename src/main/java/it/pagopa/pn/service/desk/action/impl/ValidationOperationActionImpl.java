@@ -72,7 +72,10 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                 .flatMap(operationAndAddress ->
                         getIuns(operationAndAddress.getT1().getRecipientInternalId())
                                 .collectList()
-                                .doOnNext(responsePaperNotificationFailed -> updateOperationStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION))
+                                .doOnNext(responsePaperNotificationFailed -> {
+                                    operationAndAddress.getT1().setErrorReason(null);
+                                    updateOperationStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION);
+                                })
                                 .flatMapMany(Flux::fromIterable)
                                 .parallel()
                                 .flatMap(iun -> getAttachmentsFromIun(operationAndAddress.getT1(), iun))
@@ -215,9 +218,11 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
         return paperChannelClient.sendPaperPrepareRequest(requestId, PaperChannelMapper.getPrepareRequest(operations,address, attachments, requestId, cfn))
                 .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_SEND_PAPER_CHANNEL_CLIENT, ex.getMessage(), HttpStatus.BAD_REQUEST)))
                 .doOnNext(response -> log.debug("Sent paper prepare  {}", response))
-                .doOnSuccess(response ->
-                    updateOperationStatus(operations, OperationStatusEnum.PREPARING)
-                ).then();
+                .flatMap(response -> {
+                    operations.setErrorReason(null);
+                    return updateOperationStatus(operations, OperationStatusEnum.PREPARING);
+                })
+                .then();
     }
 
 
