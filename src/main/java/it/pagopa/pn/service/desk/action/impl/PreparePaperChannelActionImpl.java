@@ -10,6 +10,7 @@ import it.pagopa.pn.service.desk.mapper.PaperChannelMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
@@ -36,6 +37,7 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
     private PnPaperChannelClient paperChannelClient;
 
     private PnServiceDeskConfigs pnServiceDeskConfigs;
+    private PnDataVaultClient pnDataVaultClient;
 
 
     @Override
@@ -75,9 +77,10 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
     private Mono<PnServiceDeskOperations> paperSendRequest(PnServiceDeskConfigs pnServiceDeskConfigs, PnServiceDeskOperations entityOperation, PrepareEventDto prepareEventDto) {
         String requestId = Utility.generateRequestId(entityOperation.getOperationId());
         log.debug("Executing paperchannel send with requestId: {}", requestId);
-        return paperChannelClient
-            .sendPaperSendRequest(requestId, PaperChannelMapper.getPaperSendRequest(pnServiceDeskConfigs, entityOperation, prepareEventDto))
-                .thenReturn(entityOperation);
+        return this.pnDataVaultClient.deAnonymized(entityOperation.getRecipientInternalId())
+                        .map(fiscalCode -> PaperChannelMapper.getPaperSendRequest(pnServiceDeskConfigs, entityOperation, prepareEventDto, fiscalCode))
+                        .flatMap(sendRequestDto -> paperChannelClient.sendPaperSendRequest(requestId, sendRequestDto))
+                        .thenReturn(entityOperation);
     }
 
     private Mono<Void> updateOperationStatus(PrepareEventDto prepareEventDto,

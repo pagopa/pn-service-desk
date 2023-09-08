@@ -26,6 +26,7 @@ public class PaperChannelMapper {
                                                        PnServiceDeskAddress address,
                                                        List<String> attachments,
                                                        String requestId,
+                                                       String fiscalCode,
                                                        PnServiceDeskConfigs cfn){
         PrepareRequestDto requestDto = new PrepareRequestDto();
         requestDto.setReceiverAddress(AddressMapper.toPreparePaperAddress(address));
@@ -39,13 +40,13 @@ public class PaperChannelMapper {
         requestDto.setProposalProductType(proposalProductType);
         requestDto.setRequestId(requestId);
         requestDto.setPrintType(PRINT_TYPE);
-        requestDto.setReceiverFiscalCode(operations.getRecipientInternalId());
+        requestDto.setReceiverFiscalCode(fiscalCode);
         requestDto.setReceiverType(RECEIVER_TYPE);
         requestDto.setAttachmentUrls(attachments);
         return requestDto;
     }
 
-    public static SendRequestDto getPaperSendRequest (PnServiceDeskConfigs pnServiceDeskConfigs, PnServiceDeskOperations operations, PrepareEventDto prepareEventDto) {
+    public static SendRequestDto getPaperSendRequest (PnServiceDeskConfigs pnServiceDeskConfigs, PnServiceDeskOperations operations, PrepareEventDto prepareEventDto, String fiscalCode) {
         SendRequestDto sendRequestDto = new SendRequestDto();
         sendRequestDto.setRequestPaId(pnServiceDeskConfigs.getSenderPaId());
         sendRequestDto.setReceiverAddress(prepareEventDto.getReceiverAddress());
@@ -53,6 +54,8 @@ public class PaperChannelMapper {
         sendRequestDto.setProductType(ProductTypeEnumDto.fromValue(prepareEventDto.getProductType()));
         sendRequestDto.setRequestId(prepareEventDto.getRequestId());
         sendRequestDto.setPrintType(PRINT_TYPE);
+        sendRequestDto.setReceiverType(RECEIVER_TYPE);
+        sendRequestDto.setReceiverFiscalCode(fiscalCode);
         sendRequestDto.setClientRequestTimeStamp(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
         sendRequestDto.setAttachmentUrls(toListStringAttachments(operations));
         sendRequestDto.setSenderAddress(AddressMapper.toAnalogAddressDto(pnServiceDeskConfigs.getSenderAddress()));
