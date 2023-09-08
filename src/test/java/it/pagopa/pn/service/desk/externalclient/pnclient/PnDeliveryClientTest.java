@@ -18,5 +18,6 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
 
         Assertions.assertNotNull(sentNotificationDto);
 
+
     }
 }

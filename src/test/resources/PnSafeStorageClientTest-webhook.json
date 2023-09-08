@@ -11,7 +11,10 @@
     {
         "httpRequest": {
             "path": "/delivery-push-private/PF-4fc75df3-0913-407e-bdaa-e50329708b7d/paper-notification-failed",
-            "method": "GET"
+            "method": "GET",
+            "queryStringParameters": {
+                "getAAR": "true"
+            }
         },
         "httpResponse": {
             "statusCode": 200,
@@ -41,6 +44,40 @@
     },
     {
         "httpRequest": {
+            "path": "/delivery-push-private/PF-4fc75df3-0913-407e-bdaa-e50329708b78/legal-facts",
+            "method": "GET",
+            "queryStringParameters": {
+                "recipientInternalId": "4fc75df3-0913-407e-bdaa-e50329708b7d"
+            }
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": [
+                {
+                    "iun": "ABC-IUN-34221110000",
+                    "taxId": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                    "legalFactsId": null
+                },
+                {
+                    "iun": "ABC-IUN-3422155777",
+                    "taxId": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                    "legalFactsId": null
+                },
+                {
+                    "iun": "ABC-IUN-1112223333",
+                    "taxId": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                    "legalFactsId": null
+                }
+            ]
+        }
+    },
+    {
+        "httpRequest": {
             "path": "/radd-private/api/v1/aor/inquiry",
             "method": "GET"
         },
@@ -53,18 +90,14 @@
             },
             "body": {
                 "result": true,
-                "status": {
-                    "code": "1",
-                    "message": "OK"
-                }
+                "status": {}
             }
         }
     },
     {
         "httpRequest": {
             "path": "/delivery-private/notifications/1234",
-            "method": "GET",
-            "body": "1234"
+            "method": "GET"
         },
         "httpResponse": {
             "statusCode": 200,
@@ -146,10 +179,43 @@
     {
         "httpRequest": {
             "path": "/safe-storage/v1/files/FILE-KEY-ATTACHMENTS",
-            "method": "GET"
+            "method": "GET",
+            "queryStringParameters": {
+                "metadataOnly": "false"
+            }
         },
         "httpResponse": {
-            "statusCode": 500,
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "key": "/safe-storage/v1/files/FILE-KEY",
+                "versionId": "3Z9SdhZ50PBeIj617KEMrztNKDMJj8FZ",
+                "contentType": "application/pdf",
+                "contentLength": 3028.0,
+                "checksum": "jezIVxlG1M1woCSUngM6KipUN3/p8cG5RMIPnuEanlE=",
+                "retentionUntil": "2032-04-12T12:32:04.000Z",
+                "documentType": "PN_LEGALFACT",
+                "download": {
+                    "url": "https://www.google.it",
+                    "retryAfter": 1234.5678
+                }
+            }
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/safe-storage/v1/files/FILE-KEY-ATTACHMENT",
+            "method": "GET",
+            "queryStringParameters": {
+                "metadataOnly": "false"
+            }
+        },
+        "httpResponse": {
+            "statusCode": 200,
             "headers": {
                 "content-type": [
                     "application/json"
@@ -162,12 +228,7 @@
                 "contentLength": "3028",
                 "checksum": "jezIVxlG1M1woCSUngM6KipUN3/p8cG5RMIPnuEanlE=",
                 "retentionUntil": "2032-04-12T12:32:04.000Z",
-                "documentType": "PN_LEGALFACT",
-                "status": "PRELOADED",
-                "download": {
-                    "url": "https://www.google.it",
-					"retryAfter" : 1234.5678
-                }
+                "documentType": "PN_LEGALFACT"
             }
         }
     },
@@ -182,6 +243,40 @@
                 "content-type": [
                     "application/json"
                 ]
+            }
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/paper-channel-private/v1/b2b/paper-deliveries-send/4321",
+            "method": "POST",
+            "body": {
+                "relatedRequestId": "relatedRequestId",
+                "discoveredAddress": {},
+                "proposalProductType": "proposalProductType",
+                "iun": "iun",
+                "requestId": "requestId",
+                "receiverFiscalCode": "receiverFiscalCode",
+                "receiverType": "receiverType",
+                "receiverAddress": {},
+                "printType": "printType",
+                "attachmentUrls": [
+                    "url1",
+                    "url2",
+                    "url3"
+                ]
+            }
+        },
+        "httpResponse": {
+            "statusCode": 204,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "prepareEvent": {},
+                "sendEvent": {}
             }
         }
     },
