@@ -2,6 +2,7 @@ package it.pagopa.pn.service.desk.mapper;
 
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -9,12 +10,34 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class AddressMapperTest {
 
     AddressMapper addressMapper;
+
+    @Test
+    void toEntityTest() {
+        PnServiceDeskConfigs pnServiceDeskConfigs= new PnServiceDeskConfigs();
+        pnServiceDeskConfigs.setTtlReceiverAddress(Long.valueOf("1"));
+        Instant instant = LocalDateTime.now().plusDays(pnServiceDeskConfigs.getTtlReceiverAddress()).toInstant(ZoneOffset.UTC);
+        AnalogAddress analogAddress= getAnalogAddress();
+        PnServiceDeskAddress pnServiceDeskAddress= addressMapper.toEntity(analogAddress, "1234",  pnServiceDeskConfigs);
+        assertEquals(pnServiceDeskAddress.getFullName(), analogAddress.getFullname());
+        assertEquals(pnServiceDeskAddress.getAddress(), analogAddress.getAddress());
+        assertEquals(pnServiceDeskAddress.getAddressRow2(), analogAddress.getAddressRow2());
+        assertEquals(pnServiceDeskAddress.getCap(), analogAddress.getCap());
+        assertEquals(pnServiceDeskAddress.getCity(), analogAddress.getCity());
+        assertEquals(pnServiceDeskAddress.getCity2(), analogAddress.getCity2());
+        assertEquals(pnServiceDeskAddress.getPr(), analogAddress.getPr());
+        assertEquals(pnServiceDeskAddress.getCountry(), analogAddress.getCountry());
+        assertEquals(pnServiceDeskAddress.getTtl(), instant.getEpochSecond());
+
+    }
 
     @Test
     void exceptionConstructorTest() throws  NoSuchMethodException {
@@ -56,6 +79,19 @@ class AddressMapperTest {
         return pnServiceDeskAddress;
     }
 
+    AnalogAddress getAnalogAddress() {
+        AnalogAddress analogAddress= new AnalogAddress();
+        analogAddress.setFullname("Mario Rossi");
+        analogAddress.setAddress("Via Roma");
+        analogAddress.setAddressRow2("Via Napoli");
+        analogAddress.setCap("10800");
+        analogAddress.setCity("Napoli");
+        analogAddress.setCity2("Roma");
+        analogAddress.setPr("NA");
+        analogAddress.setCountry("Italia");
+        return analogAddress;
+    }
+
     PnServiceDeskConfigs.SenderAddress getSenderAddress() {
         PnServiceDeskConfigs.SenderAddress senderAddress= new PnServiceDeskConfigs.SenderAddress();
         senderAddress.setFullname("Mario Rossi");
@@ -65,5 +101,7 @@ class AddressMapperTest {
         senderAddress.setCountry("Italia");
         return senderAddress;
     }
+
+
 
 }

@@ -22,6 +22,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -130,18 +131,29 @@ class OperationsServiceImplTest extends BaseTest {
                 }).verify();
     }
 
-//    @Test
-//    void whenCallpresignedUrlVideoUploadAndErrorDuringRecoveringFileReturnErrortest() {
-//
-//        Mockito.when(safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.error(new WebClientResponseException(1, "test", new HttpHeaders(), new byte[1], Charset.defaultCharset())));
-//
-//        StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()))
-//                .expectErrorMatches((ex) -> {
-//                    assertTrue(ex instanceof PnGenericException);
-//                    assertEquals(ERROR_DURING_RECOVERING_FILE, ((PnGenericException) ex).getExceptionType());
-//                    return true;
-//                }).verify();
-//    }
+    @Test
+    void whenCallpresignedUrlVideoUploadAndErrorDuringRecoveringFileReturnErrortest() {
+
+        Mockito.when(safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.error(new WebClientResponseException("Errore durante il recupero del file", HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null)));
+
+        StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()))
+                .expectErrorMatches((ex) -> {
+                    assertTrue(ex instanceof PnGenericException);
+                    assertEquals(ERROR_DURING_RECOVERING_FILE, ((PnGenericException) ex).getExceptionType());
+                    return true;
+                }).verify();
+    }
+
+    @Test
+    void whenCallpresignedUrlVideoUploadAndHttpStatusIsNotFound() {
+
+        Mockito.when(safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.error(new WebClientResponseException("Errore durante il recupero del file", HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), null, null, null)));
+        Mockito.when(safeStorageClient.getPresignedUrl(Mockito.any())).thenReturn(Mono.just(fileCreationResponse));
+        Mockito.when(operationsFileKeyDAO.updateVideoFileKey(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperationFileKey));
+
+        assertNotNull(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()).block());
+
+    }
 
     @Test
     void whenCallpresignedUrlVideoUploadReturnVideoUploadResponseTest() {
