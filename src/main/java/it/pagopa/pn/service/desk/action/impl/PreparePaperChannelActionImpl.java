@@ -62,6 +62,7 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
                 if(error instanceof PnEntityNotFoundException) {
                     return Mono.empty();
                 }
+                log.error("The operation paper send was gone on error: {}", error.getMessage());
                 OperationStatusEnum newStatus = Utility.getOperationStatusFrom(StatusCodeEnumDto.KO);
                 return operationDAO
                         .getByOperationId(operationId)
