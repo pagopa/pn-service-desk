@@ -1,7 +1,6 @@
 package it.pagopa.pn.service.desk.externalclient.pnclient;
 
 import it.pagopa.pn.service.desk.config.BaseTest;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnaddressmanager.v1.api.DeduplicatesAddressServiceApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
@@ -9,21 +8,16 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.addressmanag
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import reactor.core.publisher.Mono;
 
-class PnAddressManagerClientTest extends BaseTest.WithMockServer {
+
+
+class PnAddressManagerClientTest extends BaseTest.WithMockServer{
 
     @Autowired
     private PnAddressManagerClient pnAddressManagerClient;
 
-    @MockBean
-    private DeduplicatesAddressServiceApi serviceApi;
-
     private DeduplicatesResponseDto deduplicatesResponseDto = new DeduplicatesResponseDto();
-    private PnServiceDeskAddress pnServiceDeskAddress = new PnServiceDeskAddress();
     private AnalogAddressDto normalizedAddress = new AnalogAddressDto();
 
     @BeforeEach
@@ -45,7 +39,6 @@ class PnAddressManagerClientTest extends BaseTest.WithMockServer {
 
     @Test
     public void deduplicates() {
-        Mockito.when(this.serviceApi.deduplicates(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(deduplicatesResponseDto));
         DeduplicatesResponseDto deduplicate = this.pnAddressManagerClient.deduplicates(new PnServiceDeskAddress()).block();
 
         Assertions.assertNotNull(deduplicate);
@@ -65,4 +58,5 @@ class PnAddressManagerClientTest extends BaseTest.WithMockServer {
         Assertions.assertEquals(deduplicateNormalizedAddress.getCountry(), responseNormalizedAddress.getCountry());
 
     }
+
 }
