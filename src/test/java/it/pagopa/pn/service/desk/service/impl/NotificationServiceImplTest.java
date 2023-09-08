@@ -6,6 +6,7 @@ import it.pagopa.pn.service.desk.generated.openapi.pnraddfsu.v1.dto.ResponseStat
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsUnreachableResponse;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.raddfsu.PnRaddFsuClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +24,16 @@ class NotificationServiceImplTest extends BaseTest {
     @Autowired
     private NotificationServiceImpl service;
 
+    private final NotificationRequest notificationRequest = new NotificationRequest();;
+
+    @BeforeEach
+    public void inizialize(){
+        notificationRequest.setTaxId("1234");
+    }
 
 
     @Test
-    void getUnreachableNotification() {
+    void getUnreachableNotificationWhenAorInquiryResponseResultIsTrue() {
         NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
         notificationsUnreachableResponse.setNotificationsCount(1L);
 
@@ -35,12 +42,24 @@ class NotificationServiceImplTest extends BaseTest {
         aorInquiryResponseDto.setStatus(new ResponseStatusDto());
         aorInquiryResponseDto.getStatus().setCode(ResponseStatusDto.CodeEnum.NUMBER_0);
 
-        NotificationRequest notificationRequest = new NotificationRequest();
-        notificationRequest.setTaxId("1234");
+        Mockito.when(raddFsuClient.aorInquiry(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(aorInquiryResponseDto));
+        NotificationsUnreachableResponse response =service.getUnreachableNotification("1234", notificationRequest).block();
+        assertEquals(response.getNotificationsCount(), notificationsUnreachableResponse.getNotificationsCount());
+
+    }
+
+    @Test
+    void getUnreachableNotificationWhenAorInquiryResponseResultIsFalse() {
+        NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
+        notificationsUnreachableResponse.setNotificationsCount(0L);
+
+        AORInquiryResponseDto aorInquiryResponseDto= new AORInquiryResponseDto();
+        aorInquiryResponseDto.setResult(false);
+        aorInquiryResponseDto.setStatus(new ResponseStatusDto());
+        aorInquiryResponseDto.getStatus().setCode(ResponseStatusDto.CodeEnum.NUMBER_99);
 
         Mockito.when(raddFsuClient.aorInquiry(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(aorInquiryResponseDto));
-        assertEquals(service.getUnreachableNotification("1234", notificationRequest).block(), notificationsUnreachableResponse);
-
-
+        NotificationsUnreachableResponse response =service.getUnreachableNotification("1234", notificationRequest).block();
+        assertEquals(response.getNotificationsCount(), notificationsUnreachableResponse.getNotificationsCount());
     }
 }

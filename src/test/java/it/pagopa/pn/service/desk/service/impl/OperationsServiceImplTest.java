@@ -14,6 +14,7 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperationFileK
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,10 +26,14 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
+import java.sql.Array;
 import java.time.Instant;
+import java.util.ArrayList;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,25 +55,22 @@ class OperationsServiceImplTest extends BaseTest {
     private OperationsServiceImpl service;
 
 
-    PnServiceDeskOperations pnServiceDeskOperations;
-    PnServiceDeskOperationFileKey pnServiceDeskOperationFileKey;
-    FileCreationResponse fileCreationResponse;
+    private final PnServiceDeskOperations pnServiceDeskOperations =new PnServiceDeskOperations();
+    private final PnServiceDeskOperationFileKey pnServiceDeskOperationFileKey= new PnServiceDeskOperationFileKey();
+    private final FileCreationResponse fileCreationResponse=new FileCreationResponse();
 
 
     @BeforeEach
     void inizialize(){
-        pnServiceDeskOperations = new PnServiceDeskOperations();
         pnServiceDeskOperations.setOperationId("123");
         pnServiceDeskOperations.setOperationStartDate(Instant.now());
         pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
         pnServiceDeskOperations.setStatus("OK");
         pnServiceDeskOperations.setRecipientInternalId("1234");
 
-        pnServiceDeskOperationFileKey = new PnServiceDeskOperationFileKey();
         pnServiceDeskOperationFileKey.setOperationId("1234");
         pnServiceDeskOperationFileKey.setFileKey("1234");
 
-        fileCreationResponse= new FileCreationResponse();
         fileCreationResponse.setKey("123");
         fileCreationResponse.setUploadUrl("test");
         fileCreationResponse.setSecret("secret");
@@ -80,16 +82,14 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void createOperationTest() {
-        Mockito.when(addressDAO.createAddress(Mockito.any())).thenReturn(Mono.just(new PnServiceDeskAddress()));
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
-        Mockito.when(operationDAO.createOperation(Mockito.any())).thenReturn(Mono.just(new PnServiceDeskOperations()));
+        Mockito.when(operationDAO.createOperationAndAddress(Mockito.any(), Mockito.any())).thenReturn(Mono.just(Tuples.of(pnServiceDeskOperations, new PnServiceDeskAddress())));
         assertNotNull(service.createOperation("1234", getCreateOperationRequest()).block());
     }
 
     @Test
     void whenCallcreateOperationAndOperationIdAlreadyExistReturnErrorTest() {
-        Mockito.when(addressDAO.createAddress(Mockito.any())).thenReturn(Mono.just(new PnServiceDeskAddress()));
-        Mockito.when(operationDAO.createOperation(Mockito.any())).thenReturn(Mono.just(new PnServiceDeskOperations()));
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
         StepVerifier.create(service.createOperation("1234", getCreateOperationRequest()))
                 .expectErrorMatches((ex) -> {
                     assertTrue(ex instanceof PnGenericException);

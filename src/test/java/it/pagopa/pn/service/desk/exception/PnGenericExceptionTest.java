@@ -7,12 +7,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PnGenericExceptionTest {
 
-    private final
-
-    @Test
-    void getExceptionType() {
-    }
-
     @Test
     void getMessage() {
         assertDoesNotThrow(() -> new PnGenericException(ExceptionTypeEnum.ADDRESS_IS_NOT_PRESENT, "message"));
