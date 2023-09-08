@@ -17,6 +17,9 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.PAPERCHANNEL_STATUS_CODE_EMPTY;
 
 
@@ -64,6 +67,10 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
             PnServiceDeskEvents pnServiceDeskEvents = new PnServiceDeskEvents();
             pnServiceDeskEvents.setStatusCode(sendEventDto.getStatusDetail());
             pnServiceDeskEvents.setStatusDescription(sendEventDto.getStatusDescription());
+            if(entityOperation.getEvents() == null) {
+                List<PnServiceDeskEvents> eventsList = new ArrayList<>();
+                entityOperation.setEvents(eventsList);
+            }
             entityOperation.getEvents().add(pnServiceDeskEvents);
         }
         entityOperation.setErrorReason(errorReason);

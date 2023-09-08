@@ -5,7 +5,6 @@ import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareEventDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.SendResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
 import it.pagopa.pn.service.desk.mapper.PaperChannelMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
@@ -21,7 +20,9 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_DURING_PAPER_SEND;
+import java.util.ArrayList;
+import java.util.List;
+
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.PAPERCHANNEL_STATUS_CODE_EMPTY;
 
 
@@ -87,6 +88,10 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
             PnServiceDeskEvents pnServiceDeskEvents = new PnServiceDeskEvents();
             pnServiceDeskEvents.setStatusCode(prepareEventDto.getStatusDetail());
             pnServiceDeskEvents.setStatusDescription(prepareEventDto.getStatusCode().getValue().concat(" - ").concat(prepareEventDto.getStatusDetail()));
+            if(entityOperation.getEvents() == null) {
+                List<PnServiceDeskEvents> eventsList = new ArrayList<>();
+                entityOperation.setEvents(eventsList);
+            }
             entityOperation.getEvents().add(pnServiceDeskEvents);
         }
         entityOperation.setErrorReason(errorReason);
