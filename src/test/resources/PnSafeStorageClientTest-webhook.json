@@ -234,6 +234,32 @@
     },
     {
         "httpRequest": {
+            "path": "/safe-storage/v1/files/FILE-KEY-ERROR",
+            "method": "GET",
+            "queryStringParameters": {
+                "metadataOnly": "false"
+            }
+        },
+        "httpResponse": {
+            "statusCode": 500,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "key": "/safe-storage/v1/files/FILE-KEY",
+                "versionId": "3Z9SdhZ50PBeIj617KEMrztNKDMJj8FZ",
+                "contentType": "application/pdf",
+                "contentLength": "3028",
+                "checksum": "jezIVxlG1M1woCSUngM6KipUN3/p8cG5RMIPnuEanlE=",
+                "retentionUntil": "2032-04-12T12:32:04.000Z",
+                "documentType": "PN_LEGALFACT"
+            }
+        }
+    },
+    {
+        "httpRequest": {
             "path": "/paper-channel-private/v1/b2b/paper-deliveries-prepare/12345",
             "method": "POST"
         },

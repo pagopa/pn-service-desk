@@ -9,6 +9,7 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -47,5 +48,11 @@ class PnSafeStorageClientTest extends BaseTest.WithMockServer{
     void getFileError(){
         Assertions.assertThrows(PnRetryStorageException.class, () ->
                 pnSafeStorageClient.getFile("FILE-KEY-ATTACHMENTS").block());
+    }
+
+    @Test
+    void getFileErrorResume(){
+        Assertions.assertThrows(WebClientResponseException.class, () ->
+                pnSafeStorageClient.getFile("FILE-KEY-ERROR").block());
     }
 }
