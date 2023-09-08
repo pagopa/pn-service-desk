@@ -17,6 +17,22 @@
     },
     {
         "httpRequest": {
+            "path": "/datavault-private/v1/recipients/external/PF",
+            "method": "POST",
+            "body": "FRMTTR76M06B715F"
+        },
+        "httpResponse": {
+            "statusCode": 500,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d"
+        }
+    },
+    {
+        "httpRequest": {
             "path": "/delivery-push-private/PF-4fc75df3-0913-407e-bdaa-e50329708b7d/paper-notification-failed",
             "method": "GET"
         },

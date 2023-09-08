@@ -55,4 +55,17 @@ class PnSafeStorageClientTest extends BaseTest.WithMockServer{
         Assertions.assertThrows(WebClientResponseException.class, () ->
                 pnSafeStorageClient.getFile("FILE-KEY-ERROR").block());
     }
+
+    @Test
+    void getFileWithBaseUrl(){
+        FileDownloadResponse fileDownloadResponse = this.pnSafeStorageClient.getFile("safestorage://FILE-KEY-ATTACHMENT").block();
+
+        Assertions.assertEquals("safestorage://FILE-KEY-ATTACHMENT", fileDownloadResponse.getKey());
+        Assertions.assertEquals("3Z9SdhZ50PBeIj617KEMrztNKDMJj8FZ", fileDownloadResponse.getVersionId());
+        Assertions.assertEquals("application/pdf", fileDownloadResponse.getContentType());
+        Assertions.assertEquals("jezIVxlG1M1woCSUngM6KipUN3/p8cG5RMIPnuEanlE=", fileDownloadResponse.getChecksum());
+        Assertions.assertEquals(OffsetDateTime.parse("2032-04-12T12:32:04Z"), fileDownloadResponse.getRetentionUntil());
+        Assertions.assertEquals("PN_LEGALFACT", fileDownloadResponse.getDocumentType());
+    }
+
 }
