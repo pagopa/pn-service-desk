@@ -24,6 +24,7 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.addressmanager.PnAddressManagerClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
@@ -73,6 +74,8 @@ class ValidationOperationActionImplTest {
 
     @Mock
     private PnSafeStorageClient safeStorageClient;
+    @Mock
+    private PnDataVaultClient pnDataVaultClient;
 
     @Mock
     private PnServiceDeskConfigs cfn;
@@ -279,6 +282,8 @@ class ValidationOperationActionImplTest {
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(),Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
         Mockito.when(this.paperChannelClient.sendPaperPrepareRequest(Mockito.any(),Mockito.any())).thenReturn(Mono.just(paperChannelUpdateDto));
+        Mockito.when(this.paperChannelClient.sendPaperPrepareRequest(Mockito.any(),Mockito.any())).thenReturn(Mono.just(paperChannelUpdateDto));
+        Mockito.when(this.pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("MDDLOP3333-e"));
 
         this.validationOperationAction.execute("opId1234");
 
