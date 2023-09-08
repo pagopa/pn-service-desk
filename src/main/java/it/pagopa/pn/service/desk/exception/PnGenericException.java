@@ -3,6 +3,7 @@ package it.pagopa.pn.service.desk.exception;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+
 @Getter
 public class PnGenericException extends RuntimeException {
     private final ExceptionTypeEnum exceptionType;
@@ -22,6 +23,13 @@ public class PnGenericException extends RuntimeException {
         this.exceptionType = exceptionType;
         this.message = message;
         this.httpStatus = status;
+    }
+
+    public PnGenericException(ExceptionTypeEnum exceptionType, String message, Throwable throwable){
+        super(message, throwable);
+        this.exceptionType = exceptionType;
+        this.message = message;
+        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
     }
 
 }

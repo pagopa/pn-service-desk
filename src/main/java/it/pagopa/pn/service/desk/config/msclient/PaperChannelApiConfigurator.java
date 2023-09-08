@@ -15,6 +15,7 @@ public class PaperChannelApiConfigurator extends CommonBaseClient {
         ApiClient apiClient =
                 new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
         apiClient.setBasePath(pnServiceDeskConfigs.getPaperChannelBasePath());
+        apiClient.addDefaultHeader("x-pagopa-paperchannel-cx-id", pnServiceDeskConfigs.getPaperChannelCxId());
         return new PaperMessagesApi(apiClient);
     }
 }

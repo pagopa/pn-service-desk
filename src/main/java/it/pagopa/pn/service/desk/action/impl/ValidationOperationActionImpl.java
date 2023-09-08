@@ -8,8 +8,6 @@ import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PaperChannelUpdateDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareEventDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
 import it.pagopa.pn.service.desk.mapper.AttachmentMapper;
 import it.pagopa.pn.service.desk.mapper.PaperChannelMapper;
@@ -113,7 +111,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
      */
     private Mono<PnServiceDeskAddress> getAddressFromOperationId(String operationId){
         return addressDAO.getAddress(operationId)
-                .switchIfEmpty(Mono.error(new PnGenericException(ADDRESS_IS_NOT_PRESENT, ADDRESS_IS_NOT_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
+                .switchIfEmpty(Mono.error(new PnGenericException(ADDRESS_IS_NOT_PRESENT, ADDRESS_IS_NOT_PRESENT.getMessage())))
                 .doOnNext(address ->  log.debug("Address retrieved {}", address))
                 .flatMap(response -> validationAddress(response).thenReturn(response));
     }
@@ -125,7 +123,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
      */
     private Mono<Void> validationAddress(PnServiceDeskAddress address){
         return addressManagerClient.deduplicates(address)
-                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_ADDRESS_MANAGER_CLIENT,  ex.getMessage(), HttpStatus.BAD_REQUEST)))
+                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_ADDRESS_MANAGER_CLIENT,  ex.getMessage(), ex)))
                 .doOnNext( deduplicatesResponseDto ->  log.debug("Address deduplicates {}", deduplicatesResponseDto))
                 .flatMap(deduplicateResponse -> {
                     if (FALSE.equals(deduplicateResponse.getEqualityResult())) {
@@ -169,7 +167,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     deskOperations.getAttachments().add(attachmentAndOperation.getT1());
                     log.debug("Added attachments in operation {}", deskOperations.getAttachments().size());
                     return operationDAO.updateEntity(deskOperations)
-                            .switchIfEmpty(Mono.error(new PnGenericException(ERROR_ON_UPDATE_ETITY, ERROR_ON_UPDATE_ETITY.getMessage(), HttpStatus.BAD_REQUEST)))
+                            .switchIfEmpty(Mono.error(new PnGenericException(ERROR_ON_UPDATE_ETITY, ERROR_ON_UPDATE_ETITY.getMessage())))
                             .thenReturn(attachmentAndOperation.getT1());
                 });
     }
@@ -203,7 +201,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
      */
     private Flux<String> getAttachmentsFromDelivery(String iun){
         return pnDeliveryClient.getSentNotificationPrivate(iun)
-                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, ex.getMessage(), HttpStatus.BAD_REQUEST)))
+                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, ex.getMessage(), ex)))
                 .flatMapMany(doc -> Flux.fromIterable(doc.getDocuments()))
                 .parallel()
                 .map(item -> item.getRef().getKey())
@@ -213,7 +211,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
     private Mono<Void> updateOperationStatus(PnServiceDeskOperations operations, OperationStatusEnum operationStatusEnum){
         operations.setStatus(operationStatusEnum.toString());
         return this.operationDAO.updateEntity(operations)
-                .switchIfEmpty(Mono.error(new PnGenericException(ERROR_ON_UPDATE_ETITY, ERROR_ON_UPDATE_ETITY.getMessage(), HttpStatus.BAD_REQUEST)))
+                .switchIfEmpty(Mono.error(new PnGenericException(ERROR_ON_UPDATE_ETITY, ERROR_ON_UPDATE_ETITY.getMessage())))
                 .doOnNext( operation ->  log.debug("Update  operationsStatus {}", operationStatusEnum))
                 .then();
     }
@@ -229,14 +227,14 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     operations.setErrorReason(null);
                     return updateOperationStatus(operations, OperationStatusEnum.PREPARING);
                 })
-                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_SEND_PAPER_CHANNEL_CLIENT, ex.getMessage(), HttpStatus.BAD_REQUEST)))
+                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_SEND_PAPER_CHANNEL_CLIENT, ex.getMessage(), ex)))
                 .then();
     }
 
 
     private Flux<String> getIuns(String recipientInternalId){
         return pnDeliveryPushClient.paperNotificationFailed(recipientInternalId)
-                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ex.getMessage(), HttpStatus.BAD_REQUEST)))
+                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ex.getMessage(), ex)))
                 .doOnNext(iun -> log.debug("IUN : {}", iun))
                 .map(ResponsePaperNotificationFailedDtoDto::getIun);
     }
