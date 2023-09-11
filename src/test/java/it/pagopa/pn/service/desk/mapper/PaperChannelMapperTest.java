@@ -7,13 +7,9 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dt
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,12 +34,12 @@ class PaperChannelMapperTest  {
 
     @Test
     void getPrepareRequest() {
-        assertNotNull(PaperChannelMapper.getPrepareRequest(pnServiceDeskOperations(), pnServiceDeskAddress(), new ArrayList<>(), "1234", pnServiceDeskConfigs() ));
+        assertNotNull(PaperChannelMapper.getPrepareRequest(pnServiceDeskOperations(), pnServiceDeskAddress(), new ArrayList<>(), "1234", "",pnServiceDeskConfigs() ));
     }
 
     @Test
     void getPaperSendRequest() {
-        assertNotNull(PaperChannelMapper.getPaperSendRequest(pnServiceDeskConfigs(), pnServiceDeskOperations(), prepareEventDto()));
+        assertNotNull(PaperChannelMapper.getPaperSendRequest(pnServiceDeskConfigs(), pnServiceDeskOperations(), prepareEventDto(), ""));
     }
 
     @Test
@@ -55,7 +51,7 @@ class PaperChannelMapperTest  {
 
         pnServiceDeskOperations.setAttachments(attachments);
 
-        SendRequestDto sendRequestDto= PaperChannelMapper.getPaperSendRequest(pnServiceDeskConfigs(), pnServiceDeskOperations, prepareEventDto());
+        SendRequestDto sendRequestDto= PaperChannelMapper.getPaperSendRequest(pnServiceDeskConfigs(), pnServiceDeskOperations, prepareEventDto(), "");
 
         assertNotNull(sendRequestDto);
         assertNotNull(sendRequestDto.getAttachmentUrls());
