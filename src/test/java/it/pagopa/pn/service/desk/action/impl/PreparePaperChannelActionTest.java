@@ -7,6 +7,7 @@ import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,6 +44,8 @@ class PreparePaperChannelActionTest {
 
     @Mock
     private PnServiceDeskConfigs pnServiceDeskConfigs;
+    @Mock
+    private PnDataVaultClient pnDataVaultClient;
 
 
     @Test
@@ -110,6 +113,8 @@ class PreparePaperChannelActionTest {
                 .thenReturn(Mono.just(entity));
         Mockito.when(operationDAO.updateEntity(entity).then())
                 .thenReturn(Mono.empty());
+        Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any()))
+                .thenReturn(Mono.just("MCCLLSS332423"));
 
         assertDoesNotThrow(() -> preparePaperChannelAction.execute(prepareEventDto));
 
@@ -154,6 +159,8 @@ class PreparePaperChannelActionTest {
                 .thenReturn(Mono.just(entity));
         Mockito.when(operationDAO.updateEntity(entity).then())
                 .thenReturn(Mono.empty());
+        Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any()))
+                .thenReturn(Mono.just("MCCLLSS332423"));
 
         assertDoesNotThrow(() -> preparePaperChannelAction.execute(prepareEventDto));
     }

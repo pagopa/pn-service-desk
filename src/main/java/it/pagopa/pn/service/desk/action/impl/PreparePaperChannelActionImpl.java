@@ -5,12 +5,12 @@ import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareEventDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.SendResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
 import it.pagopa.pn.service.desk.mapper.PaperChannelMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
@@ -21,7 +21,9 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_DURING_PAPER_SEND;
+import java.util.ArrayList;
+import java.util.List;
+
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.PAPERCHANNEL_STATUS_CODE_EMPTY;
 
 
@@ -35,6 +37,7 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
     private PnPaperChannelClient paperChannelClient;
 
     private PnServiceDeskConfigs pnServiceDeskConfigs;
+    private PnDataVaultClient pnDataVaultClient;
 
 
     @Override
@@ -61,6 +64,7 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
                 if(error instanceof PnEntityNotFoundException) {
                     return Mono.empty();
                 }
+                log.error("The operation paper send was gone on error: {}", error.getMessage());
                 OperationStatusEnum newStatus = Utility.getOperationStatusFrom(StatusCodeEnumDto.KO);
                 return operationDAO
                         .getByOperationId(operationId)
@@ -73,9 +77,10 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
     private Mono<PnServiceDeskOperations> paperSendRequest(PnServiceDeskConfigs pnServiceDeskConfigs, PnServiceDeskOperations entityOperation, PrepareEventDto prepareEventDto) {
         String requestId = Utility.generateRequestId(entityOperation.getOperationId());
         log.debug("Executing paperchannel send with requestId: {}", requestId);
-        return paperChannelClient
-            .sendPaperSendRequest(requestId, PaperChannelMapper.getPaperSendRequest(pnServiceDeskConfigs, entityOperation, prepareEventDto))
-                .thenReturn(entityOperation);
+        return this.pnDataVaultClient.deAnonymized(entityOperation.getRecipientInternalId())
+                        .map(fiscalCode -> PaperChannelMapper.getPaperSendRequest(pnServiceDeskConfigs, entityOperation, prepareEventDto, fiscalCode))
+                        .flatMap(sendRequestDto -> paperChannelClient.sendPaperSendRequest(requestId, sendRequestDto))
+                        .thenReturn(entityOperation);
     }
 
     private Mono<Void> updateOperationStatus(PrepareEventDto prepareEventDto,
@@ -87,6 +92,10 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
             PnServiceDeskEvents pnServiceDeskEvents = new PnServiceDeskEvents();
             pnServiceDeskEvents.setStatusCode(prepareEventDto.getStatusDetail());
             pnServiceDeskEvents.setStatusDescription(prepareEventDto.getStatusCode().getValue().concat(" - ").concat(prepareEventDto.getStatusDetail()));
+            if(entityOperation.getEvents() == null) {
+                List<PnServiceDeskEvents> eventsList = new ArrayList<>();
+                entityOperation.setEvents(eventsList);
+            }
             entityOperation.getEvents().add(pnServiceDeskEvents);
         }
         entityOperation.setErrorReason(errorReason);
