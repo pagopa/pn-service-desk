@@ -220,6 +220,10 @@ Parameters:
     Type: String
     Description: 'AddressManager cx-id'
 
+  PaperChannelCxId:
+    Type: String
+    Description: 'PaperChannel cx-id'
+
   AddressManagerApiKey:
     Type: String
     Description: 'AddressManager api-key'
@@ -280,9 +284,10 @@ Resources:
         ContainerEnvEntry18: !Sub 'PN_SERVICEDESK_DELIVERYPUSHBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry19: !Sub 'PN_SERVICEDESK_DELIVERYBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry20: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERCXID=${AddressManagerCxId}'
-        ContainerEnvEntry21: !Sub 'PN_SERVICEDESK_TTLRECEIVERADDRESS=${TtlReceiverAddress}'
-        ContainerEnvEntry22: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry23: !Sub 'PN_SERVICEDESK_PRODUCTTYPE=${ProductType}'
+        ContainerEnvEntry21: !Sub 'PN_SERVICEDESK_PAPERCHANNELCXID=${PaperChannelCxId}'
+        ContainerEnvEntry22: !Sub 'PN_SERVICEDESK_TTLRECEIVERADDRESS=${TtlReceiverAddress}'
+        ContainerEnvEntry23: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry24: !Sub 'PN_SERVICEDESK_PRODUCTTYPE=${ProductType}'
 
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-ServiceDesk-Secrets
