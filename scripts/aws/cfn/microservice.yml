@@ -378,7 +378,7 @@ Resources:
           - - !Sub '/aws/ecs/${ProjectName}-service-desk'
 
   # Expose PN-ServiceDesk microservice public API with API-GW for ServiceDesk Backend usage
-  DeliveryMicroservicePublicIoAPI:
+  ServiceDeskMicroservicePublicSDAPI:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service-openapi.yaml"

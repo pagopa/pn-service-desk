@@ -15,6 +15,17 @@ info:
 servers:
   - url: https://api.pn.pagopa.it
     description: Generated server url
+tags:
+  - name: HealthCheck
+    description: >-
+      Invocazioni per sapere lo stato del microservizio
+  - name: Notification
+    description: >-
+      Invocazioni per effettuare il recupero di una notifica in caso di destinatario irreperibile
+  - name: Operation
+    description: >-
+      Invocazioni per eseguire azioni di Ops come il caricamento del video
+
 paths:
   '/status':
     get:

@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: >-
     ${stageVariables.ProjectName}-${stageVariables.MicroServiceUniqueName}-${stageVariables.IntendedUsage}
-  version: zSfYTCXir4RHqH99u/lDQfEUgTMac1GNMHMLf2fxQAU=
+  version: ScaxMku+9bAABmzApyUCJCr++mhWuwD0gq4CH0q2Jb4=
 servers:
   - url: https://${stageVariables.DnsName}/{basePath}
     variables:
@@ -656,7 +656,14 @@ components:
         identitySource: method.request.header.x-api-key
         type: request
 tags:
-  - null
+  - name: HealthCheck
+    description: Invocazioni per sapere lo stato del microservizio
+  - name: Notification
+    description: >-
+      Invocazioni per effettuare il recupero di una notifica in caso di
+      destinatario irreperibile
+  - name: Operation
+    description: Invocazioni per eseguire azioni di Ops come il caricamento del video
 x-amazon-apigateway-gateway-responses:
   DEFAULT_5XX:
     responseParameters:
