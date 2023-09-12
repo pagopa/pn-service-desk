@@ -240,21 +240,6 @@ Parameters:
     Type: String
     Description: 'Product type for notification'
 
-  ServicedeskApiDnsName:
-    Type: String
-    Description: Service Desk API 
-
-  # OpenApi Bucket params
-  MicroserviceBucketName:
-    Type: String
-    Default: ''
-    Description: 'Name of the bucket where the microservice files are copied during deploy'
-
-  MicroserviceBucketBaseKey:
-    Type: String
-    Default: ''
-    Description: 'Base key of the microservice in the s3 bucket'
-
 Resources:
 
   # PN-TemplateBeMs microservice
@@ -375,33 +360,4 @@ Resources:
           - - !GetAtt ServiceDeskMicroservice.Outputs.FatalLogsMetricAlarmArn
         LogGroupsNames: !Join
           - ','
-          - - !Sub '/aws/ecs/${ProjectName}-service-desk'
-
-  # Expose PN-ServiceDesk microservice public API with API-GW for ServiceDesk Backend usage
-  ServiceDeskMicroservicePublicSDAPI:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service-openapi.yaml"
-      Parameters:
-        MicroServiceUniqueName: !Sub '${ProjectName}-service-desk'
-        IntendedUsage: SERVICEDESK
-        DnsName: !Ref ServicedeskApiDnsName
-        ProjectName: !Ref ProjectName
-        ServiceApiPath: 'service-desk'
-        NetworkLoadBalancerLink: !Ref NetworkLoadBalancerLink
-        ApplicationLoadBalancerDomain: !Ref ApplicationLoadBalancerDomain
-        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
-        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
-        OpenApiBucketName: !Ref MicroserviceBucketName
-        OpenApiBucketKey: !Sub ${MicroserviceBucketBaseKey}/docs/openapi/aws/api-service-desk-SERVICEDESK-aws.yaml
-
-  ServiceDeskMicroservicePublicSDAPIWaf:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-waf-acl.yaml"
-      Parameters:
-        WAFName: !Sub '${ProjectName}-service-desk'
-        IntendedUsage: SERVICEDESK
-        APIGatewayARNs: !GetAtt ServiceDeskMicroservicePublicSDAPI.Outputs.APIGatewayARN
-        Limit: 0 # disable IP limit based rule
-        # AllowedCidrs: !Ref ServicedeskBackendCidrs        
+          - - !Sub '/aws/ecs/${ProjectName}-service-desk'      
