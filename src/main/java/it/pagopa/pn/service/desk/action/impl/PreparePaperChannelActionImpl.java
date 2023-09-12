@@ -50,13 +50,16 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
                     log.error("The status code is null or empty");
                     return Mono.error(new PnGenericException(PAPERCHANNEL_STATUS_CODE_EMPTY, PAPERCHANNEL_STATUS_CODE_EMPTY.getMessage()));
                 }
-                if(prepareEventDto.getStatusCode() == StatusCodeEnumDto.PROGRESS) {
+                if(prepareEventDto.getStatusCode() == StatusCodeEnumDto.OK) {
                     return paperSendRequest(pnServiceDeskConfigs, entityOperation, prepareEventDto);
                 }
                 return Mono.just(entityOperation);
             })
             .flatMap(entityOperation -> {
-                OperationStatusEnum newStatus = Utility.getOperationStatusFrom(prepareEventDto.getStatusCode());
+                OperationStatusEnum newStatus = OperationStatusEnum.PROGRESS;
+                if (prepareEventDto.getStatusCode() != StatusCodeEnumDto.OK) {
+                    newStatus = Utility.getOperationStatusFrom(prepareEventDto.getStatusCode());
+                }
                 return updateOperationStatus(prepareEventDto, entityOperation, newStatus, null);
             })
             .doOnError(PnEntityNotFoundException.class, error -> log.error("The operation entity was not found with this operationId: {}", operationId))
