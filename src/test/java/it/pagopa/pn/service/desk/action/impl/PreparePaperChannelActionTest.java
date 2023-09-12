@@ -85,7 +85,7 @@ class PreparePaperChannelActionTest {
     void executeCaseStatusCodeProgress() {
         PnServiceDeskConfigs pnsdc = getPnServiceDeskConfigs();
         PrepareEventDto prepareEventDto = getPrepareEventDto();
-        prepareEventDto.setStatusCode(StatusCodeEnumDto.PROGRESS);
+        prepareEventDto.setStatusCode(StatusCodeEnumDto.OK);
 
         PnServiceDeskOperations entity = new PnServiceDeskOperations();
         List<PnServiceDeskEvents> serviceDeskEvents = new ArrayList<>();
@@ -93,7 +93,7 @@ class PreparePaperChannelActionTest {
         entity.setEvents(serviceDeskEvents);
 
         entity.setOperationId("QWERTY");
-        entity.setStatus(StatusCodeEnumDto.PROGRESS.toString());
+        entity.setStatus(StatusCodeEnumDto.OK.toString());
 
         List<PnServiceDeskAttachments> attachmentsList = new ArrayList<>();
         attachmentsList.add(new PnServiceDeskAttachments());
@@ -134,14 +134,14 @@ class PreparePaperChannelActionTest {
     void executeCaseStatusCodePaperSendError() {
         PnServiceDeskConfigs pnsdc = getPnServiceDeskConfigs();
         PrepareEventDto prepareEventDto = getPrepareEventDto();
-        prepareEventDto.setStatusCode(StatusCodeEnumDto.PROGRESS);
+        prepareEventDto.setStatusCode(StatusCodeEnumDto.OK);
 
         PnServiceDeskOperations entity = new PnServiceDeskOperations();
         List<PnServiceDeskEvents> serviceDeskEvents = new ArrayList<>();
         serviceDeskEvents.add(new PnServiceDeskEvents());
         entity.setEvents(serviceDeskEvents);
         entity.setOperationId("QWERTY");
-        entity.setStatus(StatusCodeEnumDto.PROGRESS.toString());
+        entity.setStatus(StatusCodeEnumDto.OK.toString());
 
         List<PnServiceDeskAttachments> attachmentsList = new ArrayList<>();
         attachmentsList.add(new PnServiceDeskAttachments());
