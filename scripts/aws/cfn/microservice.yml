@@ -394,3 +394,14 @@ Resources:
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
         OpenApiBucketName: !Ref MicroserviceBucketName
         OpenApiBucketKey: !Sub ${MicroserviceBucketBaseKey}/docs/openapi/aws/api-service-desk-SERVICEDESK-aws.yaml
+
+  ServiceDeskMicroservicePublicSDAPIWaf:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-waf-acl.yaml"
+      Parameters:
+        WAFName: !Sub '${ProjectName}-service-desk'
+        IntendedUsage: SERVICEDESK
+        APIGatewayARNs: !GetAtt ServiceDeskMicroservicePublicSDAPI.Outputs.APIGatewayARN
+        Limit: 0 # disable IP limit based rule
+        # AllowedCidrs: !Ref ServicedeskBackendCidrs        
