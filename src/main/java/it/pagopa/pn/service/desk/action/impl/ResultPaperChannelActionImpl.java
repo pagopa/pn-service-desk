@@ -34,26 +34,29 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
     @Override
     public void execute(SendEventDto sendEventDto) {
         String operationId = Utility.extractOperationId(sendEventDto.getRequestId());
+        log.debug("sendEventDto = {}, ResultPaperChannelAction - Execute received input", sendEventDto);
+
         operationDAO.getByOperationId(operationId)
             .switchIfEmpty(Mono.error(new PnEntityNotFoundException()))
             .flatMap(entityOperation -> {
+                log.debug("entityOperation = {}, operationId = {}, Is sendEventDto null or blank?", entityOperation, operationId);
                 if(sendEventDto.getStatusCode() == null || StringUtils.isBlank(sendEventDto.getStatusCode().getValue())) {
-                    log.error("The status code is null or empty");
+                    log.error("entityOperation = {}, operationId = {}, Status code is null or blank", entityOperation, operationId);
                     return Mono.error(new PnGenericException(PAPERCHANNEL_STATUS_CODE_EMPTY, PAPERCHANNEL_STATUS_CODE_EMPTY.getMessage()));
                 }
                 OperationStatusEnum newStatus = Utility.getOperationStatusFrom(sendEventDto.getStatusCode());
                 return updateOperationEventAndStatus(sendEventDto, entityOperation, newStatus, null);
             })
-            .doOnError(PnEntityNotFoundException.class, error -> log.error("The operation entity was not found with this operationId: {}", operationId))
-            .onErrorResume(error -> {
-                if(error instanceof PnEntityNotFoundException) {
+            .doOnError(PnEntityNotFoundException.class, error -> log.error("operationId = {}, EntityOperation was not found", operationId))
+            .onErrorResume(exception -> {
+                if(exception instanceof PnEntityNotFoundException) {
                     return Mono.empty();
                 }
                 OperationStatusEnum newStatus = Utility.getOperationStatusFrom(StatusCodeEnumDto.KO);
                 return operationDAO
                     .getByOperationId(operationId)
                     .flatMap(entityOperation ->
-                            updateOperationEventAndStatus(null, entityOperation, newStatus, error.getMessage()));
+                            updateOperationEventAndStatus(null, entityOperation, newStatus, exception.getMessage()));
             })
             .block();
     }
@@ -62,21 +65,29 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
                                                      @NotNull PnServiceDeskOperations entityOperation,
                                                      @NotNull OperationStatusEnum operationStatusEnum,
                                                      String errorReason){
-        log.debug("Update operation entity and event with new status: {}", operationStatusEnum.toString());
+        log.debug("operationId = {}, operationStatus = {}, erroReason = {}, updateOperationEventAndStatus received input", entityOperation.getOperationId(), operationStatusEnum, errorReason);
+
+        log.debug("operationId = {}, operationStatus = {}, Is sendEventDto null?", entityOperation.getOperationId(), operationStatusEnum);
         if(sendEventDto != null) {
+            String operationId = Utility.extractOperationId(sendEventDto.getRequestId());
+            log.debug("operationId = {}, requestId = {}, operationStatus = {}, SendEventDto is not null", operationId, sendEventDto.getRequestId(), operationStatusEnum);
             PnServiceDeskEvents pnServiceDeskEvents = new PnServiceDeskEvents();
             pnServiceDeskEvents.setStatusCode(sendEventDto.getStatusDetail());
             pnServiceDeskEvents.setStatusDescription(sendEventDto.getStatusDescription());
+
+            log.debug("operationId = {}, requestId = {}, operationStatus = {}, Is entityOperation's list's events not null?", operationId, sendEventDto.getRequestId(), operationStatusEnum);
             if(entityOperation.getEvents() == null) {
+                log.debug("operationId = {}, requestId = {}, operationStatus = {}, A new list's events was created and new event has been added", operationId, sendEventDto.getRequestId(), operationStatusEnum);
                 List<PnServiceDeskEvents> eventsList = new ArrayList<>();
                 entityOperation.setEvents(eventsList);
             }
+            log.debug("operationId = {}, requestId = {}, operationStatus = {}, EntityOperation's list's events was not null and new event has been added", operationId, sendEventDto.getRequestId(), operationStatusEnum);
             entityOperation.getEvents().add(pnServiceDeskEvents);
         }
         entityOperation.setErrorReason(errorReason);
-
         entityOperation.setStatus(operationStatusEnum.toString());
 
+        log.debug("operationId = {}, operationStatus = {}, Update entityOperation and event with new status", entityOperation.getOperationId(), operationStatusEnum);
         return this.operationDAO.updateEntity(entityOperation).then();
     }
 
