@@ -37,17 +37,9 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ADDRESS_IS_NOT_VALID;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
-
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ADDRESS_IS_NOT_PRESENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_UPDATE_ENTITY;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_PUSH_CLIENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_ADDRESS_MANAGER_CLIENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_SEND_PAPER_CHANNEL_CLIENT;
-
 
 
 @Component
@@ -296,10 +288,22 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
     }
 
     private Mono<Void> paperPrepare(PnServiceDeskOperations entityOperation, PnServiceDeskAddress address, List<String> attachments) {
-        log.debug("entityOperation = {}, entityAddress = {}, attachments = {}, PaperPrepare received input", entityOperation, address, attachments);
+        log.debug("entityOperation = {}, entityAddress = {}, PaperPrepare received input", entityOperation, address);
 
         String requestId = Utility.generateRequestId(entityOperation.getOperationId());
         log.debug("requestId = {}, Generated a new requestId", requestId);
+
+        log.debug("entityOperation = {}, Is attachments null or empty?", entityOperation);
+        if (attachments == null || attachments.isEmpty()) {
+            log.error("entityOperation = {}, Attachments list is null, there are no attachments available for this operation", entityOperation);
+
+            String errorMessage = NO_ATTACHMENT_AVAILABLE.getMessage()
+                    .concat(entityOperation.getOperationId())
+                    .concat(" - ")
+                    .concat(requestId);
+            log.debug(errorMessage);
+            throw new PnGenericException(NO_ATTACHMENT_AVAILABLE, errorMessage);
+        }
 
         log.debug("recipientInternalId = {}, Calling service for deanonymizing this recipientInternalId", entityOperation.getRecipientInternalId());
         return this.pnDataVaultClient.deAnonymized(entityOperation.getRecipientInternalId())
