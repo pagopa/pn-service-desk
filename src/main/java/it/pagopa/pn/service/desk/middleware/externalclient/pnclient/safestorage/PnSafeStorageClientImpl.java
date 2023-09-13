@@ -2,6 +2,7 @@ package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage
 
 
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
+import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.api.FileDownloadApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.api.FileUploadApi;
@@ -13,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_SAFE_STORAGE_BODY_NULL;
 
 
 @Component
@@ -51,6 +54,7 @@ public class PnSafeStorageClientImpl implements PnSafeStorageClient {
         log.debug("Req params : {}", fileKey);
 
         return fileDownloadApi.getFile(fileKey, this.pnServiceDeskConfig.getSafeStorageCxId(), false)
+                .switchIfEmpty(Mono.error(new PnGenericException(ERROR_SAFE_STORAGE_BODY_NULL, ERROR_SAFE_STORAGE_BODY_NULL.getMessage().concat(fileKey))))
                 .map(response -> {
                     if(response.getDownload() != null && response.getDownload().getRetryAfter() != null) {
                         throw new PnRetryStorageException(response.getDownload().getRetryAfter());
