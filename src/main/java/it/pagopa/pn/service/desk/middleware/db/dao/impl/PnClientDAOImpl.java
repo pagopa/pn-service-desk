@@ -23,15 +23,4 @@ public class PnClientDAOImpl extends BaseDAO<PnClientID> implements PnClientDAO 
         return Mono.fromFuture(super.get(apiKey, null).thenApply(item -> item));
     }
 
-    @Override
-    public Mono<PnClientID> getByPrefix(String prefixValue) {
-        return super.getBySecondaryIndex(PnClientID.INDEX_CLIENT_ID, prefixValue, null)
-                .collectList()
-                .flatMap(item -> {
-                    if (item == null || item.isEmpty()){
-                        return Mono.empty();
-                    }
-                    return Mono.just(item.get(0));
-                });
-    }
 }

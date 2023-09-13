@@ -199,6 +199,14 @@ Parameters:
     Type: String
     Description: ARN of dynamodb table containing request
 
+  ClientDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing clientid and relative value'
+
+  ClientDynamoTableArn:
+    Type: String
+    Description: ARN of dynamodb table containing request
+
 
   SafeStorageCxId:
     Type: String
@@ -240,9 +248,7 @@ Parameters:
     Type: String
     Description: 'Product type for notification'
 
-  ClientDynamoTableName:
-    Type: String
-    Description: 'Name of dynamodb table containing clientid and relative value'
+
 Resources:
 
   # PN-TemplateBeMs microservice
@@ -352,6 +358,8 @@ Resources:
               - !Sub "${ServiceDeskAddressDynamoTableArn}/*"
               - !Sub "${ServiceDeskOperationFileKeyDynamoTableArn}"
               - !Sub "${ServiceDeskOperationFileKeyDynamoTableArn}/*"
+              - !Sub "${ClientDynamoTableArn}"
+              - !Sub "${ClientDynamoTableArn}/*"
 
   ServiceDeskMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack

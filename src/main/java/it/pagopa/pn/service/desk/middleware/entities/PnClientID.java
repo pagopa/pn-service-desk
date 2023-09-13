@@ -16,14 +16,13 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecon
 @ToString
 @NoArgsConstructor
 public class PnClientID {
-    public static final String COL_CLIENT_ID = "clientId"; //clientId
-    public static final String COL_API_KEY = "apiKkey";//api key (zen-desk)
-    public static final String INDEX_CLIENT_ID = "client-id-index";
+    public static final String COL_CLIENT_ID = "clientId";
+    public static final String COL_API_KEY = "apiKey";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_API_KEY)}))
-    private String apiKkey;
+    private String apiKey;
 
-    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = INDEX_CLIENT_ID), @DynamoDbAttribute(COL_CLIENT_ID)}))
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_CLIENT_ID)}))
     private String clientId;
 
 }

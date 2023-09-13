@@ -30,34 +30,25 @@ Parameters:
 
 Resources:
 
-  ClientDynamoTable:
-    Type: AWS::DynamoDB::Table
-    UpdateReplacePolicy: Retain
-    DeletionPolicy: Retain
-    Properties:
-      TableName: !Sub '${ProjectName}-PnServiceDeskOperations'
-      AttributeDefinitions:
-        - AttributeName: "apiKey"
-          AttributeType: "S"
-        - AttributeName: "clientId"
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: "apiKey"
-          KeyType: "HASH"
-      GlobalSecondaryIndexes:
-        - IndexName: "client-id-index"
-          KeySchema:
-            - AttributeName: "client-id-index"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-      KinesisStreamSpecification:
-        StreamArn: !Ref CdcKinesisSourceStreamArn
-      StreamSpecification:
-        StreamViewType: NEW_IMAGE
-      BillingMode: "PAY_PER_REQUEST"
-      PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: true
+    ClientDynamoTable:
+      Type: AWS::DynamoDB::Table
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain
+      Properties:
+        TableName: !Sub '${ProjectName}-PnServiceDeskClient'
+        AttributeDefinitions:
+          - AttributeName: "apiKey"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "apiKey"
+            KeyType: "HASH"
+        KinesisStreamSpecification:
+          StreamArn: !Ref CdcKinesisSourceStreamArn
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        BillingMode: "PAY_PER_REQUEST"
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
 
     ServiceDeskOperationsDynamoTable:
       Type: AWS::DynamoDB::Table

@@ -8,6 +8,4 @@ public interface PnClientDAO {
 
     Mono<PnClientID> getByApiKey(String apiKey);
 
-    Mono<PnClientID> getByPrefix(String prefixValue);
-
 }

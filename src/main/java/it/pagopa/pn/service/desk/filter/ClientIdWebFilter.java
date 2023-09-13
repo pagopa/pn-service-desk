@@ -41,14 +41,17 @@ public class ClientIdWebFilter implements WebFilter {
             throw new PnFilterClientIdException(API_KEY_EMPTY.getTitle(), API_KEY_EMPTY.getMessage(), HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.toString());
         }
 
-        pnClientDAO.getByApiKey(apiKey)
+        return pnClientDAO.getByApiKey(apiKey)
                 .switchIfEmpty(Mono.error(new PnFilterClientIdException(API_KEY_NOT_PRESENT.getTitle(),
                         API_KEY_NOT_PRESENT.getMessage().concat(" ApiKey = ").concat(apiKey),
                                                                 HttpStatus.UNAUTHORIZED.value(),
                                                                 HttpStatus.UNAUTHORIZED.toString()))
                 )
+                .doOnSuccess(key ->{
+                    log.info("ApiKey:  {}", key);
+                })
+                .then(chain.filter(exchange))
                 .doFinally(ignored -> log.logEndingProcess("ENDING PROCESS FROM WEB FILTER"));
-        return Mono.empty();
     }
 
 
