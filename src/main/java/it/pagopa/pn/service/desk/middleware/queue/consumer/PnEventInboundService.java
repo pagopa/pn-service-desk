@@ -23,10 +23,12 @@ import static it.pagopa.pn.service.desk.exception.PnServiceDeskExceptionCodes.*;
 public class PnEventInboundService {
     private final EventHandler eventHandler;
     private final String safeStorageEventQueueName;
+    private final String paperChannelEventQueueName;
 
     public PnEventInboundService(EventHandler eventHandler, PnServiceDeskConfigs cfg) {
         this.eventHandler = eventHandler;
         this.safeStorageEventQueueName = cfg.getTopics().getSafeStorageEvents();
+        this.paperChannelEventQueueName = cfg.getTopics().getPaperChannelQueue();
     }
 
     @Bean
@@ -90,6 +92,9 @@ public class PnEventInboundService {
 
             if (Objects.equals(queueName, safeStorageEventQueueName)) {
                 return  "SAFE_STORAGE_EVENTS";
+            }
+            if (Objects.equals(queueName, paperChannelEventQueueName)){
+                return "PAPER_CHANNEL_EVENTS";
             }
             else {
                 log.error("eventType not present, cannot start scheduled action headers={} payload={}", message.getHeaders(), message.getPayload());
