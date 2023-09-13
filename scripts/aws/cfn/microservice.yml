@@ -360,4 +360,4 @@ Resources:
           - - !GetAtt ServiceDeskMicroservice.Outputs.FatalLogsMetricAlarmArn
         LogGroupsNames: !Join
           - ','
-          - - !Sub '/aws/ecs/${ProjectName}-service-desk'
+          - - !Sub '/aws/ecs/${ProjectName}-service-desk'      

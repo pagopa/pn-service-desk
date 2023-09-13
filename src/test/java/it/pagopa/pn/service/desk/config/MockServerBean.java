@@ -1,9 +1,12 @@
 package it.pagopa.pn.service.desk.config;
 
 
+
+
 import lombok.extern.slf4j.Slf4j;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -12,6 +15,7 @@ import java.io.IOException;
 @Slf4j
 public class MockServerBean {
     private ClientAndServer mockServer;
+    @Value("${mockserver.bean.port}")
     private final int port;
 
     public MockServerBean(int port){
