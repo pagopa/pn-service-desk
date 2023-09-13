@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.NO_ATTACHMENT_AVAILABLE;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
