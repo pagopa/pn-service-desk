@@ -78,5 +78,30 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
         }
     ]"
 
+aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb create-table \
+    --table-name ClientDynamoTable \
+    --attribute-definitions \
+        AttributeName=apiKey,AttributeType=S \
+        AttributeName=clientId,AttributeType=S \
+    --key-schema \
+        AttributeName=apiKey,KeyType=HASH \
+    --provisioned-throughput \
+        ReadCapacityUnits=10,WriteCapacityUnits=5 \
+    --global-secondary-indexes \
+    "[
+        {
+            \"IndexName\": \"client-id-index\",
+            \"KeySchema\": [{\"AttributeName\":\"clientId\",\"KeyType\":\"HASH\"}],
+            \"Projection\":{
+                \"ProjectionType\":\"ALL\"
+            },
+            \"ProvisionedThroughput\": {
+                \"ReadCapacityUnits\": 10,
+                \"WriteCapacityUnits\": 5
+            }
+        }
+    ]"
+
 
 echo "Initialization terminated"

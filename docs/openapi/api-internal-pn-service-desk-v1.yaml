@@ -478,7 +478,11 @@ components:
         pattern: ^[ -~]*$
         minLength: 1
         maxLength: 64
-
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
 #  securitySchemes:        # ONLY EXTERNAL
 #    ApiKeyAuth:           # ONLY EXTERNAL
 #      type: apiKey        # ONLY EXTERNAL

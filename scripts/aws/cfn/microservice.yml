@@ -240,6 +240,9 @@ Parameters:
     Type: String
     Description: 'Product type for notification'
 
+  ClientDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing clientid and relative value'
 Resources:
 
   # PN-TemplateBeMs microservice
@@ -288,6 +291,7 @@ Resources:
         ContainerEnvEntry22: !Sub 'PN_SERVICEDESK_TTLRECEIVERADDRESS=${TtlReceiverAddress}'
         ContainerEnvEntry23: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry24: !Sub 'PN_SERVICEDESK_PRODUCTTYPE=${ProductType}'
+        ContainerEnvEntry25: !Sub 'AWS_DYNAMODBCLIENTTABLE=${ClientDynamoTableName}'
 
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-ServiceDesk-Secrets
