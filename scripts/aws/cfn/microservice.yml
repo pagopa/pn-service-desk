@@ -169,11 +169,13 @@ Parameters:
   Version:
     Type: String
     Description: 'keep track of used projects commitIds'
+  
+  EcsLogGroup:
+    Type: String
 
   ServiceDeskOperationsDynamoTableName:
     Type: String
     Description: Name of dynamodb table containing request
-
 
   ServiceDeskOperationsDynamoTableArn:
     Type: String
@@ -240,6 +242,28 @@ Parameters:
     Type: String
     Description: 'Product type for notification'
 
+  LogAlarmStrategy:
+    Type: String
+    Default: 'FATAL'
+
+  ServiceDeskInternalQueueDLQAlarmARN:
+    Type: String
+
+  ServiceDeskInternalQueueAgeAlarmARN:
+    Type: String
+
+  SafeStorageToServiceDeskQueueAlarmARN:
+    Type: String
+
+  SafeStorageToServiceDeskQueueAgeAlarmARN:
+    Type: String
+
+  PaperChannelToServiceDeskQueueAlarmARN:
+    Type: String
+
+  PaperChannelToServiceDeskQueueAgeAlarmARN:
+    Type: String
+
 Resources:
 
   # PN-TemplateBeMs microservice
@@ -288,7 +312,6 @@ Resources:
         ContainerEnvEntry22: !Sub 'PN_SERVICEDESK_TTLRECEIVERADDRESS=${TtlReceiverAddress}'
         ContainerEnvEntry23: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry24: !Sub 'PN_SERVICEDESK_PRODUCTTYPE=${ProductType}'
-
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-ServiceDesk-Secrets
         MappedPaths: '/service-desk/*'
@@ -300,6 +323,8 @@ Resources:
         LoadbalancerRulePriority: !Ref MicroserviceNumber
         TaskRoleManagedPolicyArn: !Ref ServiceDeskMicroserviceTaskPolicy
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+        EcsLogGroup: !Ref EcsLogGroup
+        LogAlarmStrategyV1: !Ref LogAlarmStrategy
 
   ServiceDeskMicroserviceTaskPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -355,9 +380,25 @@ Resources:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/microservice-cloudwatch-dashboard.yaml"
       Parameters:
         DashboardName: !Sub "${ProjectName}-service-desk"
+        DynamoDBTableNames: !Join
+          - ','
+          - - !Ref ServiceDeskAddressDynamoTableName
+            - !Ref ServiceDeskAddressDynamoTableName
+            - !Ref ServiceDeskOperationFileKeyDynamoTableName       
+        QueueArns: !Join
+          - ','
+          - - !Ref PaperChannelToServiceDeskQueueARN
+            - !Ref SafeStorageToServiceDeskQueueARN
+            - !Ref ServiceDeskInternalQueueARN     
         AlarmArns: !Join
           - ','
           - - !GetAtt ServiceDeskMicroservice.Outputs.FatalLogsMetricAlarmArn
+            - !Ref ServiceDeskInternalQueueDLQAlarmARN
+            - !Ref ServiceDeskInternalQueueAgeAlarmARN
+            - !Ref SafeStorageToServiceDeskQueueAlarmARN
+            - !Ref SafeStorageToServiceDeskQueueAgeAlarmARN
+            - !Ref PaperChannelToServiceDeskQueueAlarmARN
+            - !Ref PaperChannelToServiceDeskQueueAgeAlarmARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-service-desk'      
