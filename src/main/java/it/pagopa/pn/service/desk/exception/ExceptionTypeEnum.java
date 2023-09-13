@@ -21,6 +21,7 @@ public enum ExceptionTypeEnum {
     ENTITY_NOT_FOUND("ENTITY_NOT_FOUND", "L'entità ricercata non è presente nel Database"),
     PAPERCHANNEL_STATUS_CODE_EMPTY("PAPERCHANNEL_STATUS_CODE_EMPTY", "Lo status code inviato dal microservizio Paperchannel è mancante"),
     ADDRESS_IS_NOT_PRESENT("ADDRESS_IS_NOT_PRESENT", "L'indirizzo non è presente"),
+    ERROR_SAFE_STORAGE_BODY_NULL("ERROR_SAFE_STORAGE_BODY_NULL", "Safe Storage response is full for this file key "),
     ERROR_ON_UPDATE_ETITY("ERROR_ON_UPDATE_ETITY", "Errore durante l'update"),
     ERROR_ON_DELIVERY_CLIENT("ERROR_ON_DELIVERY_CLIENT", "ERROR_ON_DELIVERY_CLIENT"),
     ERROR_ON_SEND_PAPER_CHANNEL_CLIENT("ERROR_ON_SEND_PAPER_CHANNEL_CLIENT", "ERROR_ON_SEND_PAPER_CHANNEL_CLIENT"),

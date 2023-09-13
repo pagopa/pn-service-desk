@@ -15,9 +15,6 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
     @Test
     void getSentNotificationPrivate(){
         SentNotificationDto sentNotificationDto = this.pnDeliveryClient.getSentNotificationPrivate("1234").block();
-
         Assertions.assertNotNull(sentNotificationDto);
-
-
     }
 }

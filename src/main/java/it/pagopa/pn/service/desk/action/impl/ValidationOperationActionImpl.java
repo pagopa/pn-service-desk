@@ -143,15 +143,18 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
     private Mono<PnServiceDeskAttachments> getAttachmentsFromIun(PnServiceDeskOperations operation, String iun){
         return Mono.just(AttachmentMapper.initAttachment(iun))
                 .flatMap(entity ->
-                        this.getAttachmentsFromDelivery(iun).concatWith(getAttachmentsFromDeliveryPush(operation.getRecipientInternalId(), iun))
-                                .doOnNext(fileKey -> {
+                        this.getAttachmentsFromDelivery(iun)
+                                .concatWith(getAttachmentsFromDeliveryPush(operation.getRecipientInternalId(), iun))
+                                .flatMap(fileKey -> {
                                     if (TRUE.equals(entity.getIsAvailable())){
-                                        isFileAvailable(fileKey)
-                                                .doOnSuccess(isAvailable ->{
-                                                    log.debug("Document is available ? {}", isAvailable);
+                                        return isFileAvailable(fileKey)
+                                                .map(isAvailable ->{
+                                                    log.info("Document is available ? {}", isAvailable);
                                                     entity.setIsAvailable(entity.getIsAvailable() && isAvailable);
+                                                    return fileKey;
                                                 });
                                     }
+                                    return Mono.just(fileKey);
                                 })
                                 .collectList()
                                 .map(fileKeys -> {
