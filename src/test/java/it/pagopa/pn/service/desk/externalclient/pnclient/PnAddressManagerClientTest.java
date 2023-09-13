@@ -38,7 +38,7 @@ class PnAddressManagerClientTest extends BaseTest.WithMockServer{
     }
 
     @Test
-    public void deduplicates() {
+    void deduplicates() {
         DeduplicatesResponseDto deduplicate = this.pnAddressManagerClient.deduplicates(new PnServiceDeskAddress()).block();
 
         Assertions.assertNotNull(deduplicate);

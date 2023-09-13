@@ -10,20 +10,23 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-class PnPaperChannelClientTest extends BaseTest.WithMockServer{
+class PnPaperChannelClientTest extends BaseTest.WithMockServer {
+    private static final String REQUEST_ID = "SERVICE_DESK-123FFFF";
 
     @Autowired
     private PnPaperChannelClient pnPaperChannelClient;
 
     @Test
     void sendPaperPrepareRequest(){
-        PaperChannelUpdateDto paperChannelUpdateDto = this.pnPaperChannelClient.sendPaperPrepareRequest("12345", new PrepareRequestDto()).block();
+        PaperChannelUpdateDto paperChannelUpdateDto = this.pnPaperChannelClient
+                .sendPaperPrepareRequest(REQUEST_ID, new PrepareRequestDto()).block();
         Assertions.assertNotNull(paperChannelUpdateDto);
     }
 
     @Test
     void sendPaperSendRequest(){
-        SendResponseDto sendResponseDto = this.pnPaperChannelClient.sendPaperSendRequest("4321", new SendRequestDto()).block();
+        SendResponseDto sendResponseDto = this.pnPaperChannelClient
+                .sendPaperSendRequest(REQUEST_ID, new SendRequestDto()).block();
         Assertions.assertNotNull(sendResponseDto);
     }
 }
