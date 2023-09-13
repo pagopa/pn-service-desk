@@ -86,6 +86,9 @@ Parameters:
     Type: String
     Description: ARN of alarm topic
 
+  AlarmSNSTopicName:
+    Type: String
+
   WebApiDnsName:
     Type: String
     Description: 'The DNS name used for WEB rest API.'
@@ -264,6 +267,14 @@ Parameters:
   PaperChannelToServiceDeskQueueAgeAlarmARN:
     Type: String
 
+  ApplicationLoadBalancerMetricsDimensionName:
+    Type: String
+    Description: 'ALB name (used by alarm metrics)'
+    Default: ''
+
+Conditions:
+  HasAlbDimensionName: !Not [ !Equals [ !Ref ApplicationLoadBalancerMetricsDimensionName, '' ] ]
+
 Resources:
 
   # PN-TemplateBeMs microservice
@@ -402,3 +413,83 @@ Resources:
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-service-desk'      
+
+  ########### METRICS AND ALARMS - MICROSERVICE ###########
+  ApplicationLoadBalancerOnCallAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlbDimensionName
+    Properties:
+      AlarmName: !Sub "oncall-${ProjectName}-service-desk-alb-alarm"
+      AlarmDescription: "CloudWatch alarm when an application load balancer respond with a HTTP status 500."
+      AlarmActions:
+        - !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${AlarmSNSTopicName}'
+      OKActions:
+        - !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${AlarmSNSTopicName}'
+      DatapointsToAlarm: 2
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 6
+      Threshold: 1
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: m1
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: LoadBalancer
+                  Value: !Ref ApplicationLoadBalancerMetricsDimensionName
+                - Name: TargetGroup
+                  Value: !GetAtt ServiceDeskMicroservice.Outputs.TargetGroupName
+              MetricName: HTTPCode_Target_4XX_Count
+              Namespace: AWS/ApplicationELB
+            Period: 300
+            Stat: Sum
+          ReturnData: False
+        - Id: m2
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: LoadBalancer
+                  Value: !Ref ApplicationLoadBalancerMetricsDimensionName
+                - Name: TargetGroup
+                  Value: !GetAtt ServiceDeskMicroservice.Outputs.TargetGroupName
+              MetricName: HTTPCode_Target_5XX_Count
+              Namespace: AWS/ApplicationELB
+            Period: 300
+            Stat: Sum
+          ReturnData: False
+        - Id: m3
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: TargetGroup
+                  Value: !GetAtt ServiceDeskMicroservice.Outputs.TargetGroupName
+              MetricName: RequestCountPerTarget
+              Namespace: AWS/ApplicationELB
+            Period: 300
+            Stat: Sum
+          ReturnData: False
+        - Id: m4
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: LoadBalancer
+                  Value: !Ref ApplicationLoadBalancerMetricsDimensionName
+              MetricName: HTTPCode_ELB_5XX_Count
+              Namespace: AWS/ApplicationELB
+            Period: 300
+            Stat: Sum
+          ReturnData: False       
+        - Id: m5
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: LoadBalancer
+                  Value: !Ref ApplicationLoadBalancerMetricsDimensionName
+              MetricName: RequestCount
+              Namespace: AWS/ApplicationELB
+            Period: 300
+            Stat: Sum
+          ReturnData: False                       
+        - Id: e1
+          Expression: IF((m5>=10 AND m4/m5>=0.1) OR (m3>=10 AND (m1/m3>=0.9 OR m2/m3>=0.1)), 1, 0)
+          Label: !Sub "${ProjectName}-service-desk-ALBAlarm-oncall-metric"
