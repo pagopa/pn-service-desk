@@ -16,7 +16,9 @@ import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.raddfsu.PnRaddFsuClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
+import it.pagopa.pn.service.desk.service.NotificationService;
 import it.pagopa.pn.service.desk.service.OperationsService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,15 +28,15 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.SAFE_STORAGE_FILE_LOADING;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_DURING_RECOVERING_FILE;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_ID_IS_PRESENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_IS_NOT_PRESENT;
+import java.util.UUID;
+
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 
 @Slf4j
 @Service
 @AllArgsConstructor
 public class OperationsServiceImpl implements OperationsService {
+    private NotificationService notificationService;
     private PnDataVaultClient dataVaultClient;
     private PnSafeStorageClient safeStorageClient;
     private OperationDAO operationDAO;
@@ -44,26 +46,48 @@ public class OperationsServiceImpl implements OperationsService {
 
     @Override
     public Mono<OperationsResponse> createOperation(String xPagopaPnUid, CreateOperationRequest createOperationRequest) {
+        log.debug("xPagopaPnUid = {}, createOperationRequest = {}, CreateOperation received input", xPagopaPnUid, createOperationRequest);
 
         OperationsResponse response = new OperationsResponse();
+        NotificationRequest notificationRequest = new NotificationRequest();
+        notificationRequest.setTaxId(createOperationRequest.getTaxId());
+        String randomUUID = UUID.randomUUID().toString();
 
-        return dataVaultClient.anonymized(createOperationRequest.getTaxId())
-                .map(recipientId -> OperationMapper.getInitialOperation(createOperationRequest, recipientId))
-                .zipWhen(pnServiceDeskOperations -> {
-                    PnServiceDeskAddress address = AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn);
-                    return Mono.just(address);
-                })
-                .flatMap(this::checkAndSaveOperation)
-                .map(operation -> response.operationId(operation.getOperationId()));
+        return notificationService.getUnreachableNotification(randomUUID, notificationRequest)
+                .flatMap(notificationsUnreachableResponse -> {
+                    log.debug("notificationsUnreachableResponse = {}, Are there unreachable notification?", notificationsUnreachableResponse);
+                    if(notificationsUnreachableResponse.getNotificationsCount().equals(1L)) {
+                        log.debug("notificationsUnreachableCount = {}, There are unreachable notification?", notificationsUnreachableResponse.getNotificationsCount());
+                        return dataVaultClient.anonymized(createOperationRequest.getTaxId())
+                                .map(recipientId -> OperationMapper.getInitialOperation(createOperationRequest, recipientId))
+                                .zipWhen(pnServiceDeskOperations -> {
+                                    PnServiceDeskAddress address = AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn);
+                                    return Mono.just(address);
+                                })
+                                .flatMap(this::checkAndSaveOperation)
+                                .map(operation -> response.operationId(operation.getOperationId()));
+                    }
+                    log.error("notificationsUnreachableCount = {}, There are not unreachable notification", notificationsUnreachableResponse.getNotificationsCount());
+                    return Mono.error(new PnGenericException(NO_UNREACHABLE_NOTIFICATION,NO_UNREACHABLE_NOTIFICATION.getMessage()));
+                });
     }
 
     private Mono<PnServiceDeskOperations> checkAndSaveOperation(Tuple2<PnServiceDeskOperations, PnServiceDeskAddress> operationAndAddress){
-        PnServiceDeskOperations operation = operationAndAddress.getT1();
-        PnServiceDeskAddress address = operationAndAddress.getT2();
-        return operationDAO.getByOperationId(operation.getOperationId())
-                .flatMap(response -> Mono.error(new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
-                .switchIfEmpty(Mono.defer(() -> operationDAO.createOperationAndAddress(operation, address)))
-                .thenReturn(operation);
+        log.debug("entityOperation = {}, entityAddress = {}, CheckAndSaveOperation received input", operationAndAddress.getT1(), operationAndAddress.getT2());
+
+        PnServiceDeskOperations entityOperation = operationAndAddress.getT1();
+        PnServiceDeskAddress entityAddress = operationAndAddress.getT2();
+
+        return operationDAO.getByOperationId(entityOperation.getOperationId())
+                .flatMap(entityresponse -> {
+                    log.error("response = {}, The operation id is already present for the ticket id", entityresponse);
+                    return Mono.error(new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST));
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.debug("entityOperation = {}, entityAddress = {}, Creating operation and address", operationAndAddress.getT1(), operationAndAddress.getT2());
+                    return operationDAO.createOperationAndAddress(entityOperation, entityAddress);
+                }))
+                .thenReturn(entityOperation);
     }
 
     @Override
