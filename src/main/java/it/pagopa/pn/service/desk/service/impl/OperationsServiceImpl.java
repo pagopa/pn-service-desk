@@ -86,7 +86,7 @@ public class OperationsServiceImpl implements OperationsService {
         }
 
         return operationDAO.getByOperationId(operationId)
-                .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
+                .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.NOT_FOUND)))
                 .flatMap(operation -> manageOperationFileKey(operationId))
                 .switchIfEmpty(Mono.just(operationId))
                 .flatMap(operationID -> safeStorageClient.getPresignedUrl(videoUploadRequest))

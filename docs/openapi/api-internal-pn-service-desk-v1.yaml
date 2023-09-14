@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: PN Template BE Microservice
+  title: PN Service-Desk BE Microservice
   description: Documentation APIs v1.0 di Service Desk
   termsOfService: https://termofservice.it
   x-api-id: api-pn-service-desk
@@ -263,6 +263,7 @@ components:
       required:
         - sha256
         - preloadIdx
+        - contentType
       properties:
         preloadIdx:
           title: Id della richiesta di precaricamento di un file

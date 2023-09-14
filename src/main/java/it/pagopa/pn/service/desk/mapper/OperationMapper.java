@@ -58,6 +58,7 @@ public class OperationMapper {
         operationResponse.setOperationUpdateTimestamp( OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationLastUpdateDate(), ZoneOffset.UTC));
         NotificationStatus status = new NotificationStatus();
         status.setStatus(NotificationStatus.StatusEnum.fromValue(pnServiceDeskOperations.getStatus()));
+        status.setStatusDescription(pnServiceDeskOperations.getErrorReason());
         operationResponse.setNotificationStatus(status);
         operationResponse.setTaxId(pnServiceDeskOperations.getRecipientInternalId());
 
