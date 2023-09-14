@@ -14,6 +14,7 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperationFileK
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
+import it.pagopa.pn.service.desk.service.NotificationService;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,12 +41,10 @@ import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OperationsServiceImplTest extends BaseTest {
-
-
+    @MockBean
+    private NotificationService notificationService;
     @MockBean
     private PnDataVaultClient dataVaultClient;
-    @MockBean
-    private AddressDAO addressDAO;
     @MockBean
     private PnSafeStorageClient safeStorageClient;
     @MockBean
@@ -82,14 +81,44 @@ class OperationsServiceImplTest extends BaseTest {
     }
 
     @Test
-    void createOperationTest() {
-        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
-        Mockito.when(operationDAO.createOperationAndAddress(Mockito.any(), Mockito.any())).thenReturn(Mono.just(Tuples.of(pnServiceDeskOperations, new PnServiceDeskAddress())));
+    void createOperationTestCaseWithNotification() {
+        NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
+        notificationsUnreachableResponse.setNotificationsCount(1L);
+
+        Mockito.when(notificationService.getUnreachableNotification(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(notificationsUnreachableResponse));
+        Mockito.when(operationDAO.getByOperationId(Mockito.any()))
+                .thenReturn(Mono.empty());
+        Mockito.when(operationDAO.createOperationAndAddress(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(Tuples.of(pnServiceDeskOperations, new PnServiceDeskAddress())));
+
         assertNotNull(service.createOperation("1234", getCreateOperationRequest()).block());
     }
 
     @Test
+    void createOperationTestCaseWithoutNotification() {
+        NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
+        notificationsUnreachableResponse.setNotificationsCount(0L);
+
+        Mockito.when(notificationService.getUnreachableNotification(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(notificationsUnreachableResponse));
+        Mockito.when(operationDAO.getByOperationId(Mockito.any()))
+                .thenReturn(Mono.empty());
+        Mockito.when(operationDAO.createOperationAndAddress(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(Tuples.of(pnServiceDeskOperations, new PnServiceDeskAddress())));
+
+        StepVerifier.create(service.createOperation("1234", getCreateOperationRequest()))
+                .expectError(PnGenericException.class)
+                .verify();
+    }
+
+    @Test
     void whenCallcreateOperationAndOperationIdAlreadyExistReturnErrorTest() {
+        NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
+        notificationsUnreachableResponse.setNotificationsCount(1L);
+
+        Mockito.when(notificationService.getUnreachableNotification(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(notificationsUnreachableResponse));
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
         StepVerifier.create(service.createOperation("1234", getCreateOperationRequest()))
                 .expectErrorMatches((ex) -> {
