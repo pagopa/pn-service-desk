@@ -10,6 +10,7 @@ import java.util.Map;
 
 public class Utility {
     private static final String REQUEST_ID_TEMPLATE = "SERVICE_DESK_OPID-";
+    public static final String CONTENT_TYPE_VALUE = "application/octet-stream";
 
     private Utility(){}
 

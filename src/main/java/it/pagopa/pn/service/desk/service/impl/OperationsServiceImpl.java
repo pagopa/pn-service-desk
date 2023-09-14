@@ -20,16 +20,15 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.
 import it.pagopa.pn.service.desk.service.OperationsService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.SAFE_STORAGE_FILE_LOADING;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_DURING_RECOVERING_FILE;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_ID_IS_PRESENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_IS_NOT_PRESENT;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.service.desk.utility.Utility.CONTENT_TYPE_VALUE;
 
 @Slf4j
 @Service
@@ -82,6 +81,9 @@ public class OperationsServiceImpl implements OperationsService {
 
     @Override
     public Mono<VideoUploadResponse> presignedUrlVideoUpload(String xPagopaPnUid, String operationId, VideoUploadRequest videoUploadRequest) {
+        if (!StringUtils.equalsIgnoreCase(CONTENT_TYPE_VALUE, videoUploadRequest.getContentType())) {
+            return Mono.error(new PnGenericException(ERROR_CONTENT_TYPE, ERROR_CONTENT_TYPE.getMessage()));
+        }
 
         return operationDAO.getByOperationId(operationId)
                 .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
@@ -89,8 +91,8 @@ public class OperationsServiceImpl implements OperationsService {
                 .switchIfEmpty(Mono.just(operationId))
                 .flatMap(operationID -> safeStorageClient.getPresignedUrl(videoUploadRequest))
                 .flatMap(fileCreationResponse ->
-                    operationsFileKeyDAO.updateVideoFileKey(OperationsFileKeyMapper.getOperationFileKey(fileCreationResponse.getKey(), operationId))
-                            .thenReturn(fileCreationResponse)
+                        operationsFileKeyDAO.updateVideoFileKey(OperationsFileKeyMapper.getOperationFileKey(fileCreationResponse.getKey(), operationId))
+                                .thenReturn(fileCreationResponse)
                 )
                 .map(OperationsFileKeyMapper::getVideoUpload);
     }

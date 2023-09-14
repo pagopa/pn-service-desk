@@ -260,6 +260,9 @@ components:
     VideoUploadRequest:
       description: Request per l'upload
       type: object
+      required:
+        - sha256
+        - preloadIdx
       properties:
         preloadIdx:
           title: Id della richiesta di precaricamento di un file
@@ -449,10 +452,10 @@ components:
           description: "In caso di destinatario estero, diventa obbligatoria l’indicazione\
             \ della nazione di destinazione,  in standard UPU o altro standard condiviso."
       description: Indirizzo analogico
-      
+
     SDNotificationSummary:
       type: object
-      required: 
+      required:
         - iun
         - senderPaInternalId
         - senderPaDescription
