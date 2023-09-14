@@ -7,6 +7,7 @@ import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
 import it.pagopa.pn.service.desk.mapper.PaperChannelMapper;
+import it.pagopa.pn.service.desk.mapper.ServiceDeskEventsMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
@@ -112,9 +113,8 @@ public class PreparePaperChannelActionImpl implements PreparePaperChannelAction 
         if(prepareEventDto != null) {
             String operationId = Utility.extractOperationId(prepareEventDto.getRequestId());
             log.debug("operationId = {}, requestId = {}, operationStatus = {}, PrepareEventDto is not null", operationId, prepareEventDto.getRequestId(), operationStatusEnum);
-            PnServiceDeskEvents pnServiceDeskEvents = new PnServiceDeskEvents();
-            pnServiceDeskEvents.setStatusCode(prepareEventDto.getStatusDetail());
-            pnServiceDeskEvents.setStatusDescription(prepareEventDto.getStatusCode().getValue().concat(" - ").concat(prepareEventDto.getStatusDetail()));
+            String statusDescription = prepareEventDto.getStatusCode().getValue().concat(" - ").concat(prepareEventDto.getStatusDetail());
+            PnServiceDeskEvents pnServiceDeskEvents = ServiceDeskEventsMapper.toEntity(prepareEventDto.getStatusDetail(), statusDescription);
 
             log.debug("operationId = {}, requestId = {}, operationStatus = {}, Is entityOperation's list's events not null?", operationId, prepareEventDto.getRequestId(), operationStatusEnum);
             if(entityOperation.getEvents() == null) {

@@ -5,6 +5,7 @@ import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.SendEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
+import it.pagopa.pn.service.desk.mapper.ServiceDeskEventsMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
@@ -71,9 +72,7 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
         if(sendEventDto != null) {
             String operationId = Utility.extractOperationId(sendEventDto.getRequestId());
             log.debug("operationId = {}, requestId = {}, operationStatus = {}, SendEventDto is not null", operationId, sendEventDto.getRequestId(), operationStatusEnum);
-            PnServiceDeskEvents pnServiceDeskEvents = new PnServiceDeskEvents();
-            pnServiceDeskEvents.setStatusCode(sendEventDto.getStatusDetail());
-            pnServiceDeskEvents.setStatusDescription(sendEventDto.getStatusDescription());
+            PnServiceDeskEvents pnServiceDeskEvents = ServiceDeskEventsMapper.toEntity(sendEventDto.getStatusDetail(), sendEventDto.getStatusDescription());
 
             log.debug("operationId = {}, requestId = {}, operationStatus = {}, Is entityOperation's list's events not null?", operationId, sendEventDto.getRequestId(), operationStatusEnum);
             if(entityOperation.getEvents() == null) {
