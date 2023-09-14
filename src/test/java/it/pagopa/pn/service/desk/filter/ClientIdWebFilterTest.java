@@ -94,9 +94,10 @@ class ClientIdWebFilterTest extends BaseTest {
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder.path(DEFAULT_URL_TEST).build())
                 .header(Const.HEADER_API_KEY, PN_API_KEY)
+                .header("x-pagopa-pn-uid", "R4aVh+7IyP")
                 .bodyValue(getNotificationRequest())
                 .exchange()
-                .expectStatus().isBadRequest();
+                .expectStatus().isOk();
     }
 
     private NotificationRequest getNotificationRequest(){
