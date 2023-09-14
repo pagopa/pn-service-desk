@@ -1,0 +1,299 @@
+[
+    {
+        "httpRequest": {
+            "path": "/datavault-private/v1/recipients/external/PF",
+            "method": "POST"
+        },
+        "httpResponse": {
+            "body": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d"
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/delivery-push-private/PF-4fc75df3-0913-407e-bdaa-e50329708b7d/paper-notification-failed",
+            "method": "GET",
+            "queryStringParameters": {
+                "getAAR": "true"
+            }
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": [
+                {
+                    "iun": "ABC-IUN-34221110000",
+                    "recipientInternalId": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                    "aarUrl": ""
+                },
+                {
+                    "iun": "ABC-IUN-3422155777",
+                    "recipientInternalId": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                    "aarUrl": ""
+                },
+                {
+                    "iun": "ABC-IUN-1112223333",
+                    "recipientInternalId": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                    "aarUrl": ""
+                }
+            ]
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/delivery-push-private/taxId/paper-notification-failed",
+            "method": "GET",
+            "queryStringParameters": {
+                "getAAR": "true"
+            }
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": [
+                {
+                    "iun": "ABC-IUN-34221110000",
+                    "recipientInternalId": "taxId",
+                    "aarUrl": ""
+                },
+            ]
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/delivery-push-private/PF-4fc75df3-0913-407e-bdaa-e50329708b78/legal-facts",
+            "method": "GET",
+            "queryStringParameters": {
+                "recipientInternalId": "4fc75df3-0913-407e-bdaa-e50329708b7d"
+            }
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": [
+                {
+                    "iun": "ABC-IUN-34221110000",
+                    "taxId": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                    "legalFactsId": null
+                },
+                {
+                    "iun": "ABC-IUN-3422155777",
+                    "taxId": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                    "legalFactsId": null
+                },
+                {
+                    "iun": "ABC-IUN-1112223333",
+                    "taxId": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                    "legalFactsId": null
+                }
+            ]
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/radd-private/api/v1/aor/inquiry",
+            "method": "GET"
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "result": true,
+                "status": {}
+            }
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/delivery-private/notifications/1234",
+            "method": "GET"
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "idempotenceToken": "idenpotence123",
+                "paProtocolNumber": "paProtocolNumber1234",
+                "subject": "Subject432",
+                "abstract": "abstract121",
+                "recipients": [],
+                "documents": [
+                    {
+                        "digests": null,
+                        "contentType": "ContentType",
+                        "ref": {
+                            "key": "1234567",
+                            "versionToken": "versionToken6"
+                        },
+                        "title": "title34",
+                        "docIdx": "docIdx98"
+                    },
+                    {
+                        "digests": null,
+                        "contentType": "ContentType",
+                        "ref": {
+                            "key": "7654321",
+                            "versionToken": "versionToken1"
+                        },
+                        "title": "title34",
+                        "docIdx": "docIdx98"
+                    },
+                    {
+                        "digests": null,
+                        "contentType": "ContentType",
+                        "ref": {
+                            "key": "981234",
+                            "versionToken": "versionToken2"
+                        },
+                        "title": "title34",
+                        "docIdx": "docIdx98"
+                    }
+                ],
+                "notificationFeePolicy": null,
+                "cancelledIun": "cancelledIun354"
+            }
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/address-private/deduplicates",
+            "method": "POST"
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "correlationId": "1234",
+                "equalityResult": true,
+                "error": null,
+                "normalizedAddress": {
+                    "addressRow": "Via Milano",
+                    "cap": "20089",
+                    "city": "Milano",
+                    "city2": "",
+                    "pr": "MI",
+                    "country": "Italia"
+                }
+            }
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/safe-storage/v1/files/FILE-KEY-ATTACHMENTS",
+            "method": "GET"
+        },
+        "httpResponse": {
+            "statusCode": 500,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "key": "/safe-storage/v1/files/FILE-KEY",
+                "versionId": "3Z9SdhZ50PBeIj617KEMrztNKDMJj8FZ",
+                "contentType": "application/pdf",
+                "contentLength": "3028",
+                "checksum": "jezIVxlG1M1woCSUngM6KipUN3/p8cG5RMIPnuEanlE=",
+                "retentionUntil": "2032-04-12T12:32:04.000Z",
+                "documentType": "PN_LEGALFACT",
+                "status": "PRELOADED",
+                "download": {
+                    "url": "https://www.google.it",
+					"retryAfter" : 1234.5678
+                }
+            }
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/paper-channel-private/v1/b2b/paper-deliveries-prepare/12345",
+            "method": "POST"
+        },
+        "httpResponse": {
+            "statusCode": 204,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            }
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/paper-channel-private/v1/b2b/paper-deliveries-send/4321",
+            "method": "POST",
+            "body": {
+                "relatedRequestId": "relatedRequestId",
+                "discoveredAddress": {},
+                "proposalProductType": "proposalProductType",
+                "iun": "iun",
+                "requestId": "requestId",
+                "receiverFiscalCode": "receiverFiscalCode",
+                "receiverType": "receiverType",
+                "receiverAddress": {},
+                "printType": "printType",
+                "attachmentUrls": [
+                    "url1",
+                    "url2",
+                    "url3"
+                ]
+            }
+        },
+        "httpResponse": {
+            "statusCode": 204,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "prepareEvent": {},
+                "sendEvent": {}
+            }
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/safe-storage/v1/files",
+            "method": "POST"
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "uploadMethod": "POST",
+                "uploadUrl": "http://localhost:4566/local-doc-bucket/PN_SERVCDESK_012?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20230628T141853Z&X-Amz-SignedHeaders=host&X-Amz-Expires=359999&X-Amz-Credential=PN-TEST%2F20230628%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=f1a8ae1918ee03bfb8cc0e01f6783e5a47ca34a945211ea726792e98c45a442f",
+                "secret": "jezIVxlG1M1woCSUngM6KipUN3/p8cG5RMIPnuEanlE=",
+                "key": "FILE-KEY-ATTACHMENTS"
+            }
+        }
+    }
+]
