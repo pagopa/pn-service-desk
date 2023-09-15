@@ -2,18 +2,20 @@ package it.pagopa.pn.service.desk.mapper;
 
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationResponse;
-import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class OperationMapperTest {
 
@@ -81,6 +83,36 @@ class OperationMapperTest {
         OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations);
         assertNotNull(operationResponse);
         assertEquals(operationResponse.getUncompletedIuns().size(), 1);
+    }
+
+    //@Test
+    void whenCalloperationResponseMapperAndEvents() {
+        Instant i = Instant.now();
+
+        PnServiceDeskEvents pnServiceDeskEvents1 = new PnServiceDeskEvents();
+        pnServiceDeskEvents1.setStatusDescription("Status 1");
+        pnServiceDeskEvents1.setStatusCode("001");
+        pnServiceDeskEvents1.setTimestamp(i.minus(2, ChronoUnit.HOURS));
+
+        PnServiceDeskEvents pnServiceDeskEvents2= new PnServiceDeskEvents();
+        pnServiceDeskEvents2.setStatusDescription("Status 2");
+        pnServiceDeskEvents2.setStatusCode("002");
+        pnServiceDeskEvents2.setTimestamp(i.minus(1, ChronoUnit.HOURS));
+
+        PnServiceDeskEvents pnServiceDeskEvents3= new PnServiceDeskEvents();
+        pnServiceDeskEvents3.setStatusDescription("Status 3");
+        pnServiceDeskEvents3.setStatusCode("003");
+        pnServiceDeskEvents3.setTimestamp(i);
+
+        List<PnServiceDeskEvents> events = new ArrayList<>();
+        events.addAll(List.of(pnServiceDeskEvents1, pnServiceDeskEvents2, pnServiceDeskEvents3));
+        pnServiceDeskOperations.setEvents(events);
+
+        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations);
+        assertNotNull(operationResponse.getNotificationStatus());
+        assertEquals(operationResponse.getNotificationStatus().getLastEventTimestamp().toInstant(), i);
+        assertEquals(operationResponse.getNotificationStatus().getStatusCode(), "003");
+
     }
 
 }

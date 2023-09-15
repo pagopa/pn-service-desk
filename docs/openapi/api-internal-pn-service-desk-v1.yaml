@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: PN Template BE Microservice
+  title: PN Service-Desk BE Microservice
   description: Documentation APIs v1.0 di Service Desk
   termsOfService: https://termofservice.it
   x-api-id: api-pn-service-desk
@@ -260,6 +260,10 @@ components:
     VideoUploadRequest:
       description: Request per l'upload
       type: object
+      required:
+        - sha256
+        - preloadIdx
+        - contentType
       properties:
         preloadIdx:
           title: Id della richiesta di precaricamento di un file
@@ -449,10 +453,10 @@ components:
           description: "In caso di destinatario estero, diventa obbligatoria l’indicazione\
             \ della nazione di destinazione,  in standard UPU o altro standard condiviso."
       description: Indirizzo analogico
-      
+
     SDNotificationSummary:
       type: object
-      required: 
+      required:
         - iun
         - senderPaInternalId
         - senderPaDescription

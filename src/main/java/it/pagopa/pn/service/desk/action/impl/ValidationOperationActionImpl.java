@@ -182,7 +182,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                                             .map(isAvailable ->{
                                                 log.debug("fileKey = {}, isAvailable = {}, The file received is available", fileKey, isAvailable);
                                                 entity.setIsAvailable(entity.getIsAvailable() && isAvailable);
-                                                return fileKey;
+                                                return fileKey.contains(Utility.SAFESTORAGE_BASE_URL) ? fileKey : Utility.SAFESTORAGE_BASE_URL.concat(fileKey);
                                             });
                                 }
                                 return Mono.just(fileKey);
@@ -329,14 +329,14 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
 
 
     private Flux<String> getIuns(String recipientInternalId) {
-        log.debug("recipientInteralId = {}, GetIuns received input", recipientInternalId);
+        log.debug("recipientInternalId = {}, GetIuns received input", recipientInternalId);
 
         return pnDeliveryPushClient.paperNotificationFailed(recipientInternalId)
                 .onErrorResume(ex -> {
-                    log.error("recipientInteralId = {}, errorReason = {}, Error on delivery push client", recipientInternalId, ex.getMessage());
+                    log.error("recipientInternalId = {}, errorReason = {}, Error on delivery push client", recipientInternalId, ex.getMessage());
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ex.getMessage()));
                 })
-                .doOnNext(iun -> log.debug("recipientInteralId = {}, iun = {}, Iun retrievied", iun, recipientInternalId))
+                .doOnNext(iun -> log.debug("recipientInternalId = {}, iun = {}, Iun retrievied", iun, recipientInternalId))
                 .map(ResponsePaperNotificationFailedDtoDto::getIun);
     }
 
@@ -370,7 +370,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
     }
     private Mono<Void> traceErrorOnDB(String operationId, Throwable exception) {
         log.debug("operationId = {}, exception = {},TraceErrorOnDB received input", operationId, exception);
-        log.debug("errorReason = {}, error = {}, Error during the validation flow", exception.getMessage(), exception);
+        log.error("errorReason = {}, error = {}, Error during the validation flow", exception.getMessage(), exception);
         log.debug("operationId = {}, Retrieving entityOperation from Database", operationId);
         return operationDAO.getByOperationId(operationId)
                 .flatMap(operation -> {
@@ -379,4 +379,5 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     return updateOperationStatus(operation, OperationStatusEnum.KO);
                 });
     }
+
 }

@@ -1,0 +1,203 @@
+{
+	"info": {
+		"_postman_id": "11798d4e-389e-4f28-85bf-5b3976b43fdb",
+		"name": "Pn-Service-Desk",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "15464798"
+	},
+	"item": [
+		{
+			"name": "Notification",
+			"item": [
+				{
+					"name": "Unreachable notifications",
+					"item": [
+						{
+							"name": "Unreachable",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-pagopa-pn-uid",
+										"value": "X2",
+										"description": "(Required) User Identifier",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"taxId\": \"XXXYYY12A34B567C\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8888/service-desk/notification/unreachable",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8888",
+									"path": [
+										"service-desk",
+										"notification",
+										"unreachable"
+									]
+								},
+								"description": "Provides the count of all unreachable notifications for a specific reciepientID"
+							},
+							"response": []
+						}
+					],
+					"description": "Check for unreachable notifications for a certain taxId."
+				}
+			],
+			"description": "API - Notification"
+		},
+		{
+			"name": "Operations",
+			"item": [
+				{
+					"name": "Create operation",
+					"item": [
+						{
+							"name": "Operations",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-pagopa-pn-uid",
+										"value": "X2",
+										"description": "(Required) User Identifier",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"taxId\": \"XXXYYY12A34B567C\",\r\n  \"address\": {\r\n    \"address\": \"Via Giolitti\",\r\n    \"city\": \"Roma\",\r\n    \"fullname\": \"Ettore Fieramosca\",\r\n    \"cap\": \"00185\",\r\n    \"nameRow2\": \"\",\r\n    \"addressRow2\": \"\",\r\n    \"city2\": \"\",\r\n    \"pr\": \"RM\",\r\n    \"country\": \"Italia\"\r\n  },\r\n  \"ticketId\": \"ABC1\",\r\n  \"ticketOperationId\": \"DEF2\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8888/service-desk/operations",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8888",
+									"path": [
+										"service-desk",
+										"operations"
+									]
+								},
+								"description": "Create a new operation for a specific taxID"
+							},
+							"response": []
+						}
+					],
+					"description": "Create a new analog send request to a new address. If the _ticketId_ and _ticketOperationId_ pair is repeated compared to a previous request, the operation will not be recreated and '201' will be returned."
+				},
+				{
+					"name": "Search operation",
+					"item": [
+						{
+							"name": "Search",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-pagopa-pn-uid",
+										"value": "X2",
+										"description": "(Required) User Identifier",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"taxId\": \"XXXYYY12A34B567C\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8888/service-desk/operations/search",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8888",
+									"path": [
+										"service-desk",
+										"operations",
+										"search"
+									]
+								},
+								"description": "Provides all operations linked to a tax code"
+							},
+							"response": []
+						}
+					],
+					"description": "Retrieves all operations performed for a single user."
+				},
+				{
+					"name": "Video upload",
+					"item": [
+						{
+							"name": "Video-upload",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-pagopa-pn-uid",
+										"value": "X2",
+										"description": "(Required) User Identifier",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"preloadIdx\": \"<string>\",\r\n  \"sha256\": \"openssl-base-64\",\r\n  \"contentType\": \"video/mp4\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8888/service-desk/:operationId/video-upload",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8888",
+									"path": [
+										"service-desk",
+										":operationId",
+										"video-upload"
+									],
+									"variable": [
+										{
+											"key": "operationId",
+											"value": ""
+										}
+									]
+								},
+								"description": "Provides a presigned Url for upload video"
+							},
+							"response": []
+						}
+					],
+					"description": "Retrieve the presigned URL of S3 to upload the video."
+				}
+			],
+			"description": "API - Operations"
+		}
+	]
+}

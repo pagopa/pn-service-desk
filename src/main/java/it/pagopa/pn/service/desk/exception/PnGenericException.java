@@ -11,7 +11,7 @@ public class PnGenericException extends RuntimeException {
     private final String message;
 
 
-        public PnGenericException(ExceptionTypeEnum exceptionType, String message){
+    public PnGenericException(ExceptionTypeEnum exceptionType, String message){
         super(message);
         this.exceptionType = exceptionType;
         this.message = message;
