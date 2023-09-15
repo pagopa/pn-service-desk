@@ -1,10 +1,12 @@
 package it.pagopa.pn.service.desk.service;
 
 import it.pagopa.pn.service.desk.config.BaseTest;
+import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsUnreachableResponse;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
@@ -31,12 +33,14 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
     private OperationDAO operationDAO;
 
 
-    List<ResponsePaperNotificationFailedDtoDto> listNotification = new ArrayList<>();
-    ResponsePaperNotificationFailedDtoDto responsePaperNotificationFailedDtoDto = new ResponsePaperNotificationFailedDtoDto();
     PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
     PnServiceDeskOperations pnServiceDeskOperations2 = new PnServiceDeskOperations();
     PnServiceDeskOperations pnServiceDeskOperations3 = new PnServiceDeskOperations();
     PnServiceDeskOperations pnServiceDeskOperations4 = new PnServiceDeskOperations();
+    PnServiceDeskAttachments pnServiceDeskAttachments = new PnServiceDeskAttachments();
+    PnServiceDeskAttachments pnServiceDeskAttachments2 = new PnServiceDeskAttachments();
+    PnServiceDeskAttachments pnServiceDeskAttachments3 = new PnServiceDeskAttachments();
+    PnServiceDeskAttachments pnServiceDeskAttachments4 = new PnServiceDeskAttachments();
 
 
 
@@ -67,14 +71,29 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
 
     private List<PnServiceDeskOperations> getOperations(){
 
+        pnServiceDeskAttachments.setIun("iun123");
+        pnServiceDeskAttachments2.setIun("iun124");
+        pnServiceDeskAttachments3.setIun("iun122");
+        pnServiceDeskAttachments4.setIun("iun125");
+
+        List<PnServiceDeskAttachments> attachments = new ArrayList<>();
+        attachments.add(pnServiceDeskAttachments);
+        attachments.add(pnServiceDeskAttachments2);
+        attachments.add(pnServiceDeskAttachments3);
+        attachments.add(pnServiceDeskAttachments4);
+
         pnServiceDeskOperations.setOperationId("123");
-        pnServiceDeskOperations.setStatus("PREPARING");
+        pnServiceDeskOperations.setStatus("KO");
+        pnServiceDeskOperations.setAttachments(attachments);
         pnServiceDeskOperations2.setOperationId("1235");
-        pnServiceDeskOperations2.setStatus("PREPARING");
+        pnServiceDeskOperations2.setStatus("KO");
+        pnServiceDeskOperations2.setAttachments(attachments);
         pnServiceDeskOperations3.setOperationId("1234");
-        pnServiceDeskOperations3.setStatus("PREPARING");
-        pnServiceDeskOperations3.setOperationId("1234");
-        pnServiceDeskOperations3.setStatus("OK");
+        pnServiceDeskOperations3.setStatus("KO");
+        pnServiceDeskOperations3.setAttachments(attachments);
+        pnServiceDeskOperations4.setOperationId("1234");
+        pnServiceDeskOperations4.setStatus("OK");
+        pnServiceDeskOperations4.setAttachments(attachments);
 
         List<PnServiceDeskOperations> operations = new ArrayList<>();
 
@@ -88,14 +107,29 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
 
     private List<PnServiceDeskOperations> getOperationsNoUnreachable(){
 
+        pnServiceDeskAttachments.setIun("iun123");
+        pnServiceDeskAttachments2.setIun("iun124");
+        pnServiceDeskAttachments3.setIun("iun122");
+        pnServiceDeskAttachments4.setIun("iun125");
+
+        List<PnServiceDeskAttachments> attachments = new ArrayList<>();
+        attachments.add(pnServiceDeskAttachments);
+        attachments.add(pnServiceDeskAttachments2);
+        attachments.add(pnServiceDeskAttachments3);
+        attachments.add(pnServiceDeskAttachments4);
+
         pnServiceDeskOperations.setOperationId("123");
         pnServiceDeskOperations.setStatus("OK");
+        pnServiceDeskOperations.setAttachments(attachments);
         pnServiceDeskOperations2.setOperationId("1235");
         pnServiceDeskOperations2.setStatus("OK");
+        pnServiceDeskOperations2.setAttachments(attachments);
         pnServiceDeskOperations3.setOperationId("1234");
         pnServiceDeskOperations3.setStatus("OK");
-        pnServiceDeskOperations4.setOperationId("1234");
+        pnServiceDeskOperations3.setAttachments(attachments);
+        pnServiceDeskOperations4.setOperationId("12346");
         pnServiceDeskOperations4.setStatus("OK");
+        pnServiceDeskOperations4.setAttachments(attachments);
 
         List<PnServiceDeskOperations> operations = new ArrayList<>();
 
@@ -103,6 +137,7 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
         operations.add(pnServiceDeskOperations2);
         operations.add(pnServiceDeskOperations3);
         operations.add(pnServiceDeskOperations4);
+
 
         return operations;
     }
