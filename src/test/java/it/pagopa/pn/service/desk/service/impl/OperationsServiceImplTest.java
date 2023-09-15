@@ -107,6 +107,20 @@ class OperationsServiceImplTest extends BaseTest {
     }
 
     @Test
+    void whenCallpresignedUrlVideoUploadAndContentTypeIsNotValid() {
+        VideoUploadRequest videoUploadRequest= getVideoUploadRequest();
+        videoUploadRequest.setContentType("test");
+
+        StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", videoUploadRequest))
+                .expectErrorMatches((ex) -> {
+                    assertTrue(ex instanceof PnGenericException);
+                    assertEquals(ERROR_CONTENT_TYPE, ((PnGenericException) ex).getExceptionType());
+                    return true;
+                }).verify();
+    }
+
+
+    @Test
     void whenCallpresignedUrlVideoUploadAndOperationidIsNullReturnErrorTest() {
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
 
@@ -184,7 +198,7 @@ class OperationsServiceImplTest extends BaseTest {
     private VideoUploadRequest getVideoUploadRequest(){
         VideoUploadRequest request = new VideoUploadRequest();
         request.setPreloadIdx("123");
-        request.setContentType("test");
+        request.setContentType("application/octet-stream");
         request.setSha256("1234");
         return request;
     }
