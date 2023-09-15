@@ -65,7 +65,7 @@ public class OperationMapper {
                     .max(Comparator.comparing(PnServiceDeskEvents::getTimestamp))
                     .orElse(new PnServiceDeskEvents());
             status.setStatusCode(e.getStatusCode());
-            status.setLastEventTimestamp(Utility.getOffsetDateTimeFromDate(e.getTimestamp()));
+            if (e.getTimestamp() != null) status.setLastEventTimestamp(Utility.getOffsetDateTimeFromDate(e.getTimestamp()));
         }
 
         operationResponse.setNotificationStatus(status);
