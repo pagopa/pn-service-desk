@@ -5,6 +5,7 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationRespon
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SDNotificationSummary;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
@@ -13,6 +14,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class OperationMapper {
@@ -33,7 +35,6 @@ public class OperationMapper {
     }
 
     public static OperationResponse operationResponseMapper(PnServiceDeskOperations pnServiceDeskOperations){
-
         OperationResponse operationResponse = new OperationResponse();
         operationResponse.setOperationId(pnServiceDeskOperations.getOperationId());
 
@@ -59,6 +60,14 @@ public class OperationMapper {
         NotificationStatus status = new NotificationStatus();
         status.setStatus(NotificationStatus.StatusEnum.fromValue(pnServiceDeskOperations.getStatus()));
         status.setStatusDescription(pnServiceDeskOperations.getErrorReason());
+        if (pnServiceDeskOperations.getEvents() != null && !pnServiceDeskOperations.getEvents().isEmpty()) {
+            PnServiceDeskEvents e = pnServiceDeskOperations.getEvents().stream()
+                    .max(Comparator.comparing(PnServiceDeskEvents::getTimestamp))
+                    .orElse(new PnServiceDeskEvents());
+            status.setStatusCode(e.getStatusCode());
+            status.setLastEventTimestamp(Utility.getOffsetDateTimeFromDate(e.getTimestamp()));
+        }
+
         operationResponse.setNotificationStatus(status);
         operationResponse.setTaxId(pnServiceDeskOperations.getRecipientInternalId());
 
