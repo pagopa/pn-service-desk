@@ -86,6 +86,9 @@ Parameters:
     Type: String
     Description: ARN of alarm topic
 
+  AlarmSNSTopicName:
+    Type: String
+
   WebApiDnsName:
     Type: String
     Description: 'The DNS name used for WEB rest API.'
@@ -169,11 +172,13 @@ Parameters:
   Version:
     Type: String
     Description: 'keep track of used projects commitIds'
+  
+  EcsLogGroup:
+    Type: String
 
   ServiceDeskOperationsDynamoTableName:
     Type: String
     Description: Name of dynamodb table containing request
-
 
   ServiceDeskOperationsDynamoTableArn:
     Type: String
@@ -240,6 +245,36 @@ Parameters:
     Type: String
     Description: 'Product type for notification'
 
+  LogAlarmStrategy:
+    Type: String
+    Default: 'FATAL'
+
+  ServiceDeskInternalQueueDLQAlarmARN:
+    Type: String
+
+  ServiceDeskInternalQueueAgeAlarmARN:
+    Type: String
+
+  SafeStorageToServiceDeskQueueAlarmARN:
+    Type: String
+
+  SafeStorageToServiceDeskQueueAgeAlarmARN:
+    Type: String
+
+  PaperChannelToServiceDeskQueueAlarmARN:
+    Type: String
+
+  PaperChannelToServiceDeskQueueAgeAlarmARN:
+    Type: String
+
+  ApplicationLoadBalancerMetricsDimensionName:
+    Type: String
+    Description: 'ALB name (used by alarm metrics)'
+    Default: ''
+
+Conditions:
+  HasAlbDimensionName: !Not [ !Equals [ !Ref ApplicationLoadBalancerMetricsDimensionName, '' ] ]
+
 Resources:
 
   # PN-TemplateBeMs microservice
@@ -288,7 +323,6 @@ Resources:
         ContainerEnvEntry22: !Sub 'PN_SERVICEDESK_TTLRECEIVERADDRESS=${TtlReceiverAddress}'
         ContainerEnvEntry23: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry24: !Sub 'PN_SERVICEDESK_PRODUCTTYPE=${ProductType}'
-
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-ServiceDesk-Secrets
         MappedPaths: '/service-desk/*'
@@ -300,6 +334,8 @@ Resources:
         LoadbalancerRulePriority: !Ref MicroserviceNumber
         TaskRoleManagedPolicyArn: !Ref ServiceDeskMicroserviceTaskPolicy
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+        EcsLogGroup: !Ref EcsLogGroup
+        LogAlarmStrategyV1: !Ref LogAlarmStrategy
 
   ServiceDeskMicroserviceTaskPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -355,9 +391,83 @@ Resources:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/microservice-cloudwatch-dashboard.yaml"
       Parameters:
         DashboardName: !Sub "${ProjectName}-service-desk"
+        DynamoDBTableNames: !Join
+          - ','
+          - - !Ref ServiceDeskAddressDynamoTableName
+            - !Ref ServiceDeskAddressDynamoTableName
+            - !Ref ServiceDeskOperationFileKeyDynamoTableName       
+        QueueArns: !Join
+          - ','
+          - - !Ref PaperChannelToServiceDeskQueueARN
+            - !Ref SafeStorageToServiceDeskQueueARN
+            - !Ref ServiceDeskInternalQueueARN     
         AlarmArns: !Join
           - ','
           - - !GetAtt ServiceDeskMicroservice.Outputs.FatalLogsMetricAlarmArn
+            - !Ref ServiceDeskInternalQueueDLQAlarmARN
+            - !Ref ServiceDeskInternalQueueAgeAlarmARN
+            - !Ref SafeStorageToServiceDeskQueueAlarmARN
+            - !Ref SafeStorageToServiceDeskQueueAgeAlarmARN
+            - !Ref PaperChannelToServiceDeskQueueAlarmARN
+            - !Ref PaperChannelToServiceDeskQueueAgeAlarmARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-service-desk'      
+
+  ########### METRICS AND ALARMS - MICROSERVICE ###########
+  ApplicationLoadBalancerOnCallAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlbDimensionName
+    Properties:
+      AlarmName: !Sub "oncall-${ProjectName}-service-desk-alb-alarm"
+      AlarmDescription: "CloudWatch alarm when an application load balancer respond with a HTTP status 500."
+      AlarmActions:
+        - !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${AlarmSNSTopicName}'
+      OKActions:
+        - !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${AlarmSNSTopicName}'
+      DatapointsToAlarm: 2
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 6
+      Threshold: 1
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: m1
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: LoadBalancer
+                  Value: !Ref ApplicationLoadBalancerMetricsDimensionName
+                - Name: TargetGroup
+                  Value: !GetAtt ServiceDeskMicroservice.Outputs.TargetGroupName
+              MetricName: HTTPCode_Target_4XX_Count
+              Namespace: AWS/ApplicationELB
+            Period: 300
+            Stat: Sum
+          ReturnData: False
+        - Id: m2
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: LoadBalancer
+                  Value: !Ref ApplicationLoadBalancerMetricsDimensionName
+                - Name: TargetGroup
+                  Value: !GetAtt ServiceDeskMicroservice.Outputs.TargetGroupName
+              MetricName: HTTPCode_Target_5XX_Count
+              Namespace: AWS/ApplicationELB
+            Period: 300
+            Stat: Sum
+          ReturnData: False
+        - Id: m3
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: TargetGroup
+                  Value: !GetAtt ServiceDeskMicroservice.Outputs.TargetGroupName
+              MetricName: RequestCountPerTarget
+              Namespace: AWS/ApplicationELB
+            Period: 300
+            Stat: Sum
+          ReturnData: False          
+        - Id: e1
+          Expression: IF(m3>=10 AND (m1/m3>=0.9 OR m2/m3>=0.1), 1, 0)
+          Label: !Sub "${ProjectName}-service-desk-ALBAlarm-oncall-metric"
