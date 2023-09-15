@@ -9,6 +9,7 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 public class OperationMapper {
 
     private OperationMapper(){}
@@ -61,12 +63,13 @@ public class OperationMapper {
         status.setStatus(NotificationStatus.StatusEnum.fromValue(pnServiceDeskOperations.getStatus()));
         status.setStatusDescription(pnServiceDeskOperations.getErrorReason());
         if (pnServiceDeskOperations.getEvents() != null && !pnServiceDeskOperations.getEvents().isEmpty()) {
-
-//            PnServiceDeskEvents e = pnServiceDeskOperations.getEvents().stream()
-//                    .max(Comparator.comparing(PnServiceDeskEvents::getTimestamp))
-//                    .orElse(new PnServiceDeskEvents());
-//            status.setStatusCode(e.getStatusCode());
-//            if (e.getTimestamp() != null) status.setLastEventTimestamp(Utility.getOffsetDateTimeFromDate(e.getTimestamp()));
+            pnServiceDeskOperations.getEvents().stream().forEach(e -> log.info("statusCode {}", e.getTimestamp()!= null ? e.getTimestamp() : "is null"));
+            PnServiceDeskEvents e = pnServiceDeskOperations.getEvents().stream()
+                    .filter(events -> events.getTimestamp() != null)
+                    .max(Comparator.comparing(PnServiceDeskEvents::getTimestamp))
+                    .orElse(new PnServiceDeskEvents());
+            status.setStatusCode(e.getStatusCode());
+            if (e.getTimestamp() != null) status.setLastEventTimestamp(Utility.getOffsetDateTimeFromDate(e.getTimestamp()));
         }
 
         operationResponse.setNotificationStatus(status);
