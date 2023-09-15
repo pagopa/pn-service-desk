@@ -61,12 +61,12 @@ public class OperationMapper {
         status.setStatus(NotificationStatus.StatusEnum.fromValue(pnServiceDeskOperations.getStatus()));
         status.setStatusDescription(pnServiceDeskOperations.getErrorReason());
         if (pnServiceDeskOperations.getEvents() != null && !pnServiceDeskOperations.getEvents().isEmpty()) {
-
-//            PnServiceDeskEvents e = pnServiceDeskOperations.getEvents().stream()
-//                    .max(Comparator.comparing(PnServiceDeskEvents::getTimestamp))
-//                    .orElse(new PnServiceDeskEvents());
-//            status.setStatusCode(e.getStatusCode());
-//            if (e.getTimestamp() != null) status.setLastEventTimestamp(Utility.getOffsetDateTimeFromDate(e.getTimestamp()));
+            PnServiceDeskEvents e = pnServiceDeskOperations.getEvents().stream()
+                    .filter(events -> events.getTimestamp() != null)
+                    .max(Comparator.comparing(PnServiceDeskEvents::getTimestamp))
+                    .orElse(new PnServiceDeskEvents());
+            status.setStatusCode(e.getStatusCode());
+            if (e.getTimestamp() != null) status.setLastEventTimestamp(Utility.getOffsetDateTimeFromDate(e.getTimestamp()));
         }
 
         operationResponse.setNotificationStatus(status);
