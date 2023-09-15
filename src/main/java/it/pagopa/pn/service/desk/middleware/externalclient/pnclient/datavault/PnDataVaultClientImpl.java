@@ -28,14 +28,21 @@ public class PnDataVaultClientImpl implements PnDataVaultClient {
 
     @Override
     public Mono<String> anonymized(String data) {
+        log.debug("data = {}, Anonymized received input", data);
+
+        String PN_DATA_VAULT_DESCRIPTION = "Data Vault encode";
+        log.logInvokingExternalService(PnLogger.EXTERNAL_SERVICES.PN_DATA_VAULT, PN_DATA_VAULT_DESCRIPTION);
         return this.recipientsApi.ensureRecipientByExternalId(RecipientTypeDto.PF, data)
-                .onErrorResume(ex ->
-                        Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR.getMessage()))
-                );
+                .onErrorResume(exception -> {
+                    log.error("errorReason = {}, An error occurred while calling the service inquiry api", exception.getMessage());
+                    return Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR.getMessage()));
+                });
     }
 
     @Override
     public Mono<String> deAnonymized(String recipientInternalId) {
+        log.debug("recipientInternalId = {}, DeAnonymized received input", recipientInternalId);
+
         List<String> toDecode = new ArrayList<>();
         toDecode.add(recipientInternalId);
         String PN_DATA_VAULT_DESCRIPTION = "Data Vault decode";
@@ -49,9 +56,8 @@ public class PnDataVaultClientImpl implements PnDataVaultClient {
                 .collectList()
                 .map(fiscalCodes -> fiscalCodes.get(0))
                 .onErrorResume(ex -> {
-                    log.error("Error {}", ex.getMessage());
+                    log.error("errorReason = {}, Anonymization service not available", ex.getMessage());
                     return Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR.getMessage()));
                 });
     }
-
 }

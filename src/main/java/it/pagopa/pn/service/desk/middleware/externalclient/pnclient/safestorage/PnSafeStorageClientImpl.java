@@ -8,6 +8,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.api.File
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.api.FileUploadApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.*;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadRequest;
+import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +48,7 @@ public class PnSafeStorageClientImpl implements PnSafeStorageClient {
         log.debug(PN_SAFE_STORAGE_DESCRIPTION);
         String reqFileKey = fileKey;
         log.info("Getting file with {} key", fileKey);
-        final String BASE_URL = "safestorage://";
+        final String BASE_URL = Utility.SAFESTORAGE_BASE_URL;
         if (fileKey.contains(BASE_URL)){
             fileKey = fileKey.replace(BASE_URL, "");
         }
