@@ -182,7 +182,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                                             .map(isAvailable ->{
                                                 log.debug("fileKey = {}, isAvailable = {}, The file received is available", fileKey, isAvailable);
                                                 entity.setIsAvailable(entity.getIsAvailable() && isAvailable);
-                                                return fileKey;
+                                                return fileKey.contains(Utility.SAFESTORAGE_BASE_URL) ? fileKey : Utility.SAFESTORAGE_BASE_URL.concat(fileKey);
                                             });
                                 }
                                 return Mono.just(fileKey);

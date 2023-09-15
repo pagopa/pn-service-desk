@@ -31,6 +31,8 @@ import reactor.util.function.Tuple2;
 import java.util.UUID;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.service.desk.utility.Utility.CONTENT_TYPE_VALUE;
 
 @Slf4j
 @Service
@@ -106,15 +108,18 @@ public class OperationsServiceImpl implements OperationsService {
 
     @Override
     public Mono<VideoUploadResponse> presignedUrlVideoUpload(String xPagopaPnUid, String operationId, VideoUploadRequest videoUploadRequest) {
+        if (!StringUtils.equalsIgnoreCase(CONTENT_TYPE_VALUE, videoUploadRequest.getContentType())) {
+            return Mono.error(new PnGenericException(ERROR_CONTENT_TYPE, ERROR_CONTENT_TYPE.getMessage()));
+        }
 
         return operationDAO.getByOperationId(operationId)
-                .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.BAD_REQUEST)))
+                .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.NOT_FOUND)))
                 .flatMap(operation -> manageOperationFileKey(operationId))
                 .switchIfEmpty(Mono.just(operationId))
                 .flatMap(operationID -> safeStorageClient.getPresignedUrl(videoUploadRequest))
                 .flatMap(fileCreationResponse ->
-                    operationsFileKeyDAO.updateVideoFileKey(OperationsFileKeyMapper.getOperationFileKey(fileCreationResponse.getKey(), operationId))
-                            .thenReturn(fileCreationResponse)
+                        operationsFileKeyDAO.updateVideoFileKey(OperationsFileKeyMapper.getOperationFileKey(fileCreationResponse.getKey(), operationId))
+                                .thenReturn(fileCreationResponse)
                 )
                 .map(OperationsFileKeyMapper::getVideoUpload);
     }

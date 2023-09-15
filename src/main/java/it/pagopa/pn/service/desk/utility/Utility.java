@@ -5,11 +5,16 @@ import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.constraints.NotNull;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.EnumMap;
 import java.util.Map;
 
 public class Utility {
     private static final String REQUEST_ID_TEMPLATE = "SERVICE_DESK_OPID-";
+    public static final String CONTENT_TYPE_VALUE = "application/octet-stream";
+    public static final String SAFESTORAGE_BASE_URL = "safestorage://";
 
     private Utility(){}
 
@@ -41,6 +46,10 @@ public class Utility {
         status.put(StatusCodeEnumDto.OK, OperationStatusEnum.OK);
         status.put(StatusCodeEnumDto.PROGRESS, OperationStatusEnum.PROGRESS);
         return status;
+    }
+
+    public static OffsetDateTime getOffsetDateTimeFromDate(Instant date) {
+        return OffsetDateTime.ofInstant(date, ZoneOffset.UTC);
     }
 
 }
