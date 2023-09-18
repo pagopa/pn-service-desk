@@ -2,7 +2,10 @@ package it.pagopa.pn.service.desk.rest;
 
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsUnreachableResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationRequest;
+import it.pagopa.pn.service.desk.middleware.db.dao.PnClientDAO;
+import it.pagopa.pn.service.desk.middleware.entities.PnClientID;
 import it.pagopa.pn.service.desk.service.NotificationService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,14 @@ class NotificationControllerTest {
     private WebTestClient webTestClient;
     @MockBean
     private NotificationService notificationService;
+    @MockBean
+    private PnClientDAO pnClientDAO;
+
+    @BeforeEach
+    void setup() {
+        Mockito.when(pnClientDAO.getByApiKey(Mockito.anyString()))
+                .thenReturn(Mono.just(new PnClientID()));
+    }
 
     @Test
     void numberOfUnreachableNotifications() {
@@ -32,6 +43,7 @@ class NotificationControllerTest {
                 .uri(uriBuilder -> uriBuilder.path(path)
                         .build())
                 .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
                 .bodyValue(getNotificationRequest())
                 .exchange()
                 .expectStatus().isOk();
