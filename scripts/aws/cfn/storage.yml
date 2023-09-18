@@ -34,6 +34,26 @@ Parameters:
 
 Resources:
 
+    ClientDynamoTable:
+      Type: AWS::DynamoDB::Table
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain
+      Properties:
+        TableName: !Sub '${ProjectName}-PnServiceDeskClient'
+        AttributeDefinitions:
+          - AttributeName: "apiKey"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "apiKey"
+            KeyType: "HASH"
+        KinesisStreamSpecification:
+          StreamArn: !Ref CdcKinesisSourceStreamArn
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        BillingMode: "PAY_PER_REQUEST"
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+
     ServiceDeskOperationsDynamoTable:
       Type: AWS::DynamoDB::Table
       UpdateReplacePolicy: Retain
@@ -163,6 +183,14 @@ Resources:
 
 Outputs:
 
+  ClientDynamoTableName:
+    Description: Name of dynamodb table containing clientid and relative value
+    Value: !Ref ClientDynamoTable
+
+  ClientDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ClientDynamoTable.Arn}'
+
   EcsLogGroup:
     Value: !GetAtt PnServiceDeskLogGroup.Outputs.LogGroupName
 
@@ -183,7 +211,7 @@ Outputs:
     Description: pn-service_desk_requests-DLQ alarm ARN
 
   ServiceDeskInternalQueueAgeAlarmARN:
-    Value: !GetAtt ServiceDeskInternalQueue.Outputs.SqsAgeAlarmArn  
+    Value: !GetAtt ServiceDeskInternalQueue.Outputs.SqsAgeAlarmArn
     Description: pn-service_desk_requests age alarm ARN
 
   ServiceDeskOperationsDynamoTableName:
