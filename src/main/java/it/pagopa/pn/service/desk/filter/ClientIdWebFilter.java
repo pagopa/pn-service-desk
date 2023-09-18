@@ -44,9 +44,7 @@ public class ClientIdWebFilter implements WebFilter {
                 .switchIfEmpty(Mono.error(new PnFilterClientIdException(API_KEY_NOT_PRESENT.getTitle(),
                         API_KEY_NOT_PRESENT.getMessage().concat(" ApiKey = ").concat(apiKey)))
                 )
-                .doOnSuccess(key ->{
-                    log.info("ApiKey:  {}", key);
-                })
+                .doOnSuccess(key ->log.info("ApiKey:  {}", key))
                 .then(chain.filter(exchange))
                 .doFinally(ignored -> log.logEndingProcess("ENDING PROCESS FROM WEB FILTER"));
     }
