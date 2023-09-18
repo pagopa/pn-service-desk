@@ -1,6 +1,8 @@
 package it.pagopa.pn.service.desk.service.impl;
 
+import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsUnreachableResponse;
 
@@ -13,13 +15,14 @@ import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_IS_NOT_PRESENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_GET_UNREACHABLE_NOTIFICATION;
@@ -30,11 +33,11 @@ import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_GET_UN
 @AllArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
     private static final String RECIPIENT_TYPE = "PF";
+    private static final Boolean IS_KO= false;
 
     private PnDataVaultClient dataVaultClient;
     private OperationDAO operationDAO;
     private PnDeliveryPushClient pnDeliveryPushClient;
-
 
 
     @Override
@@ -44,36 +47,46 @@ public class NotificationServiceImpl implements NotificationService {
 
         return dataVaultClient.anonymized(notificationRequest.getTaxId())
                 .flatMap(taxId -> this.pnDeliveryPushClient.paperNotificationFailed(taxId)
-                        .flatMap(notificationFailed -> checkNotificationFailed(notificationFailed.getRecipientInternalId(), notificationFailed.getIun()))
                         .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_GET_UNREACHABLE_NOTIFICATION,ex.getMessage())))
-                        .distinct(PnServiceDeskOperations::getOperationId)
-                        .doOnNext(op -> log.info("Operations: {}",op))
                         .collectList()
-                        .map(operations -> {
-                            notificationsUnreachableResponse.setNotificationsCount(Long.valueOf(operations.size()));
-                            log.info("Notifiche effettive in errore: {} ",notificationsUnreachableResponse);
+                        .flatMap(notifications -> checkNotificationFailed(taxId, notifications,notificationsUnreachableResponse))
+                        .doOnNext(op -> log.info("Operations: {}",op))
+                        .map(result -> {
+                            if(result)
+                                notificationsUnreachableResponse.setNotificationsCount(1L);
+                            else
+                                notificationsUnreachableResponse.setNotificationsCount(0L);
+                            log.info("Risultato notifiche in errore: {} ",notificationsUnreachableResponse);
                             return notificationsUnreachableResponse;
                         })
                 );
     }
 
-    private Flux<PnServiceDeskOperations> checkNotificationFailed(String taxId, String iun) {
+    private Mono<Boolean> checkNotificationFailed(String taxId, List<ResponsePaperNotificationFailedDtoDto> notifications, NotificationsUnreachableResponse notificationResponse) {
+
+
         return this.operationDAO.searchOperationsFromRecipientInternalId(taxId)
-                .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage())))
-                .flatMap(operations -> operationContainsIun(operations,iun))
-                .filter(operation -> operation.getStatus().equals(OperationStatusEnum.KO.toString()))
+                .switchIfEmpty(ex -> Mono.just(true))
                 .collectList()
-                .flatMapMany(Flux::fromIterable);
+                .flatMap(operations -> operationContainsIun(operations, notifications));
     }
 
-    private Flux<PnServiceDeskOperations> operationContainsIun(PnServiceDeskOperations operation,String iun){
-        Set<PnServiceDeskOperations> listOperation = new HashSet<>();
-        if(operation.getAttachments()!=null){
-            for(PnServiceDeskAttachments attachments : operation.getAttachments()){
-                if(attachments.getIun().equals(iun))
-                    listOperation.add(operation);
+
+    private Mono<Boolean> operationContainsIun(List<PnServiceDeskOperations> operation, List<ResponsePaperNotificationFailedDtoDto> notifications){
+        List<String> iuns = new ArrayList<>();
+        notifications.forEach(notification -> iuns.add(notification.getIun()));
+
+        if(operation!=null){
+            for(PnServiceDeskOperations op : operation){
+                for(PnServiceDeskAttachments attachments : op.getAttachments()){
+                    for(String iun : iuns){
+                        if(attachments.getIun().equals(iun) && op.getStatus().equals(OperationStatusEnum.KO.toString())){
+                             return Mono.just(true);
+                    }
+                }
+                }
             }
         }
-        return Flux.fromIterable(listOperation);
+        return Mono.just(false);
     }
 }

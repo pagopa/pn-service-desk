@@ -83,6 +83,45 @@
     },
     {
         "httpRequest": {
+            "path": "/delivery-push-private/taxId2/paper-notification-failed",
+            "method": "GET",
+            "queryStringParameters": {
+                "getAAR": "false"
+            }
+        },
+        "httpResponse": {
+            "statusCode": 500,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": [
+                {
+                    "iun": "iun122",
+                    "recipientInternalId": "taxId",
+                    "aarUrl": ""
+                },
+                {
+                    "iun": "iun123",
+                    "recipientInternalId": "taxId",
+                    "aarUrl": ""
+                },
+                {
+                    "iun": "iun124",
+                    "recipientInternalId": "taxId",
+                    "aarUrl": ""
+                },
+                {
+                    "iun": "iun125",
+                    "recipientInternalId": "taxId",
+                    "aarUrl": ""
+                }
+            ]
+        }
+    },
+    {
+        "httpRequest": {
             "path": "/delivery-push-private/PF-4fc75df3-0913-407e-bdaa-e50329708b78/legal-facts",
             "method": "GET",
             "queryStringParameters": {

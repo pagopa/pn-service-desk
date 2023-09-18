@@ -1,6 +1,7 @@
 package it.pagopa.pn.service.desk.service;
 
 import it.pagopa.pn.service.desk.config.BaseTest;
+import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationRequest;
@@ -53,7 +54,7 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
         NotificationsUnreachableResponse notificationsUnreachableResponse = this.notificationService.getUnreachableNotification("fkdokm", new NotificationRequest()).block();
 
         Assertions.assertNotNull(notificationsUnreachableResponse);
-        Assertions.assertEquals(3L,notificationsUnreachableResponse.getNotificationsCount());
+        Assertions.assertEquals(1L,notificationsUnreachableResponse.getNotificationsCount());
 
     }
 
@@ -67,6 +68,30 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
         Assertions.assertNotNull(notificationsUnreachableResponse);
         Assertions.assertEquals(0L,notificationsUnreachableResponse.getNotificationsCount());
 
+    }
+
+    @Test
+    void getUnreachableNotification_No_Operation_Found(){
+        Mockito.when(this.dataVaultClient.anonymized(Mockito.any())).thenReturn(Mono.just("taxId"));
+        Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.any())).thenReturn(Flux.empty());
+
+
+        NotificationsUnreachableResponse notificationsUnreachableResponse = this.notificationService.getUnreachableNotification("fkdokm", new NotificationRequest()).block();
+
+        Assertions.assertNotNull(notificationsUnreachableResponse);
+        Assertions.assertEquals(0L,notificationsUnreachableResponse.getNotificationsCount());
+    }
+
+    @Test
+    void getUnreachableNotification_PnDeliveryPush_error(){
+        Mockito.when(this.dataVaultClient.anonymized(Mockito.any())).thenReturn(Mono.just("taxId2"));
+        Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.any())).thenReturn(Flux.empty());
+
+
+        PnGenericException exception = Assertions.assertThrows(PnGenericException.class, () -> {
+            this.notificationService.getUnreachableNotification("fkdokm", new NotificationRequest()).block();
+        });
+        Assertions.assertEquals(exception.getExceptionType(), ExceptionTypeEnum.ERROR_GET_UNREACHABLE_NOTIFICATION);
     }
 
     private List<PnServiceDeskOperations> getOperations(){
