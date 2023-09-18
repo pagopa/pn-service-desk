@@ -22,7 +22,7 @@ public enum ExceptionTypeEnum {
     PAPERCHANNEL_STATUS_CODE_EMPTY("PAPERCHANNEL_STATUS_CODE_EMPTY", "Lo status code inviato dal microservizio Paperchannel è mancante"),
     ADDRESS_IS_NOT_PRESENT("ADDRESS_IS_NOT_PRESENT", "L'indirizzo non è presente"),
     ERROR_ON_UPDATE_ETITY("ERROR_ON_UPDATE_ETITY", "Errore durante l'update"),
-    API_KEY_EMPTY("API_KEY_EMPTY", "Non è stato inserito alcun valore per l'header apiKey"),
+    API_KEY_EMPTY("API_KEY_EMPTY", "Non è stato inserito alcun valore per l'header x-api-key"),
     API_KEY_NOT_PRESENT("API_KEY_NOT_PRESENT", "ApiKey non censito."),
     ERROR_ON_DELIVERY_CLIENT("ERROR_ON_DELIVERY_CLIENT", "ERROR_ON_DELIVERY_CLIENT"),
     ERROR_ON_SEND_PAPER_CHANNEL_CLIENT("ERROR_ON_SEND_PAPER_CHANNEL_CLIENT", "ERROR_ON_SEND_PAPER_CHANNEL_CLIENT"),
