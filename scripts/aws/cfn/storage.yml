@@ -182,15 +182,6 @@ Resources:
           LogGroupPrefix: '/aws/ecs'
 
 Outputs:
-
-  ClientDynamoTableName:
-    Description: Name of dynamodb table containing clientid and relative value
-    Value: !Ref ClientDynamoTable
-
-  ClientDynamoTableArn:
-    Description: ARN of dynamodb table containing request
-    Value: !Sub '${ClientDynamoTable.Arn}'
-
   EcsLogGroup:
     Value: !GetAtt PnServiceDeskLogGroup.Outputs.LogGroupName
 
@@ -237,6 +228,14 @@ Outputs:
   ServiceDeskOperationFileKeyDynamoTableArn:
     Description: ARN of dynamodb table containing request
     Value: !Sub '${ServiceDeskOperationFileKeyDynamoTable.Arn}'
+
+  ClientDynamoTableName:
+    Description: Name of dynamodb table containing clientid and relative value
+    Value: !Ref ClientDynamoTable
+
+  ClientDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ClientDynamoTable.Arn}'
 
   ServiceDeskKmsEncDecDynamoDataKeyARN:
     Description: Name of KMS Key for Dynamo encode/decode data

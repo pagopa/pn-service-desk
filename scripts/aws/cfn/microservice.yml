@@ -213,7 +213,6 @@ Parameters:
     Type: String
     Description: ARN of dynamodb table containing request
 
-
   SafeStorageCxId:
     Type: String
     Description: 'SafeStorage cx-id'
@@ -333,7 +332,6 @@ Resources:
         ContainerEnvEntry23: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry24: !Sub 'PN_SERVICEDESK_PRODUCTTYPE=${ProductType}'
         ContainerEnvEntry25: !Sub 'AWS_DYNAMODBCLIENTTABLE=${ClientDynamoTableName}'
-
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-ServiceDesk-Secrets
         MappedPaths: '/service-desk/*'
@@ -409,6 +407,7 @@ Resources:
           - - !Ref ServiceDeskAddressDynamoTableName
             - !Ref ServiceDeskAddressDynamoTableName
             - !Ref ServiceDeskOperationFileKeyDynamoTableName
+            - !Ref ClientDynamoTableName
         QueueArns: !Join
           - ','
           - - !Ref PaperChannelToServiceDeskQueueARN
