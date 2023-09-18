@@ -49,7 +49,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .flatMap(taxId -> this.pnDeliveryPushClient.paperNotificationFailed(taxId)
                         .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_GET_UNREACHABLE_NOTIFICATION,ex.getMessage())))
                         .collectList()
-                        .flatMap(notifications -> checkNotificationFailed(taxId, notifications,notificationsUnreachableResponse))
+                        .flatMap(notifications -> checkNotificationFailed(taxId, notifications))
                         .doOnNext(op -> log.info("Operations: {}",op))
                         .map(result -> {
                             if(result)
@@ -62,7 +62,7 @@ public class NotificationServiceImpl implements NotificationService {
                 );
     }
 
-    private Mono<Boolean> checkNotificationFailed(String taxId, List<ResponsePaperNotificationFailedDtoDto> notifications, NotificationsUnreachableResponse notificationResponse) {
+    private Mono<Boolean> checkNotificationFailed(String taxId, List<ResponsePaperNotificationFailedDtoDto> notifications ) {
 
 
         return this.operationDAO.searchOperationsFromRecipientInternalId(taxId)
