@@ -36,7 +36,7 @@ public class OperationMapper {
         return pnServiceDeskOperations;
     }
 
-    public static OperationResponse operationResponseMapper(PnServiceDeskOperations pnServiceDeskOperations){
+    public static OperationResponse operationResponseMapper(PnServiceDeskOperations pnServiceDeskOperations, String taxId){
         OperationResponse operationResponse = new OperationResponse();
         operationResponse.setOperationId(pnServiceDeskOperations.getOperationId());
 
@@ -63,7 +63,6 @@ public class OperationMapper {
         status.setStatus(NotificationStatus.StatusEnum.fromValue(pnServiceDeskOperations.getStatus()));
         status.setStatusDescription(pnServiceDeskOperations.getErrorReason());
         if (pnServiceDeskOperations.getEvents() != null && !pnServiceDeskOperations.getEvents().isEmpty()) {
-            pnServiceDeskOperations.getEvents().stream().forEach(e -> log.info("statusCode {}", e.getTimestamp()!= null ? e.getTimestamp() : "is null"));
             PnServiceDeskEvents e = pnServiceDeskOperations.getEvents().stream()
                     .filter(events -> events.getTimestamp() != null)
                     .max(Comparator.comparing(PnServiceDeskEvents::getTimestamp))
@@ -73,7 +72,7 @@ public class OperationMapper {
         }
 
         operationResponse.setNotificationStatus(status);
-        operationResponse.setTaxId(pnServiceDeskOperations.getRecipientInternalId());
+        operationResponse.setTaxId(taxId);
 
         return operationResponse;
     }

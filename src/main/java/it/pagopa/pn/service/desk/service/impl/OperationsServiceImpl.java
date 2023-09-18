@@ -93,7 +93,7 @@ public class OperationsServiceImpl implements OperationsService {
 
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
                 .flatMapMany(taxId -> operationDAO.searchOperationsFromRecipientInternalId(taxId))
-                .map(OperationMapper::operationResponseMapper)
+                .map(operationResponseMapper -> OperationMapper.operationResponseMapper(operationResponseMapper, searchNotificationRequest.getTaxId()))
                 .collectList()
                 .map(operations -> {
                     response.setOperations(operations);
