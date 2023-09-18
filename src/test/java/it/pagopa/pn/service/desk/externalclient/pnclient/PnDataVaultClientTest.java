@@ -16,7 +16,7 @@ class PnDataVaultClientTest extends BaseTest.WithMockServer {
     String data = "FRMTTR76M06B715E";
 
     @Test
-    public void anonymized(){
+    void anonymized(){
 
         String string = this.pnDataVaultClient.anonymized(data).block();
 
@@ -25,7 +25,7 @@ class PnDataVaultClientTest extends BaseTest.WithMockServer {
     }
 
     @Test
-    public void anonymizedError(){
+    void anonymizedError(){
         Assertions.assertThrows(PnGenericException.class, () ->
                 this.pnDataVaultClient.anonymized("FRMTTR76M06B715F").block());
     }

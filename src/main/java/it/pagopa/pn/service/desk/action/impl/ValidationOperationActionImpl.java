@@ -37,17 +37,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ADDRESS_IS_NOT_VALID;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.NO_ATTACHMENT_AVAILABLE;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
-
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ADDRESS_IS_NOT_PRESENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_UPDATE_ETITY;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_PUSH_CLIENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_ADDRESS_MANAGER_CLIENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_SEND_PAPER_CHANNEL_CLIENT;
-
 
 
 @Component
@@ -66,35 +59,52 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
     private PnDataVaultClient pnDataVaultClient;
 
     @Override
-    public void execute(String operationId){
+    public void execute(String operationId) {
+        log.debug("operationId = {}, ValidationOperationAction - Execute received input", operationId);
+
+        log.debug("operationId = {}, Retrieving entityOperation from Database", operationId);
         operationDAO.getByOperationId(operationId)
                 .switchIfEmpty(Mono.error(new PnEntityNotFoundException()))
-                .doOnNext(operation -> log.debug("Operation retrieved {}", operation))
-                .zipWhen(operation -> getAddressFromOperationId(operationId))
-                .doOnNext(operationAndAddress -> log.debug("Start retrieve iuns"))
+                .doOnNext(operation -> log.debug("operationId = {}, operation = {}, EntityOperation retrieved", operationId, operation))
+                .zipWhen(operation -> {
+                    log.debug("operationId = {}, operation = {}, Retrieving address from operationId", operationId, operation);
+                    return getAddressFromOperationId(operationId);
+                })
+                .doOnNext(operationAndAddress ->
+                        log.debug("operation = {}, address = {} Address retrivied", operationAndAddress.getT1(), operationAndAddress.getT2()))
                 .flatMap(operationAndAddress ->
-                        getIuns(operationAndAddress.getT1().getRecipientInternalId())
-                                .collectList()
-                                .doOnNext(responsePaperNotificationFailed -> {
-                                    operationAndAddress.getT1().setErrorReason(null);
-                                    updateOperationStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION);
-                                })
-                                .flatMapMany(Flux::fromIterable)
-                                .parallel()
-                                .flatMap(iun -> getAttachmentsFromIun(operationAndAddress.getT1(), iun))
-                                .sequential()
-                                .flatMap(pnServiceDeskAttachments -> {
-                                    if (Boolean.TRUE.equals(pnServiceDeskAttachments.getIsAvailable())){
-                                        return Flux.fromIterable(pnServiceDeskAttachments.getFilesKey());
-                                    }
-                                    return Flux.empty();
-                                })
-                                .collectList()
-                                .flatMap(attachments -> paperPrepare(operationAndAddress.getT1(), operationAndAddress.getT2(), attachments))
-                                .doOnError(ex -> log.error("ERROR VALIDATION ", ex))
-
+                    getIuns(operationAndAddress.getT1().getRecipientInternalId())
+                        .collectList()
+                        .doOnNext(responsePaperNotificationFailed -> {
+                            log.debug("listOfIuns = {}, List of iuns retrivied", responsePaperNotificationFailed);
+                            operationAndAddress.getT1().setErrorReason(null);
+                            log.error("errorReason = {}, Setting to null errorReason into entityOperation", operationAndAddress.getT1());
+                            updateOperationStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION);
+                        })
+                        .flatMapMany(Flux::fromIterable)
+                        .parallel()
+                        .flatMap(iun -> {
+                            log.debug("iun = {}, Get attachment from iun", iun);
+                            return getAttachmentsFromIun(operationAndAddress.getT1(), iun);
+                        })
+                        .sequential()
+                        .flatMap(pnServiceDeskAttachments -> {
+                            log.debug("entityAttachments = {}, iun = {}, Are attachments available for this iun?", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
+                            if (Boolean.TRUE.equals(pnServiceDeskAttachments.getIsAvailable())){
+                                log.debug("entityAttachments = {}, iun = {}, Attachments are available for this iun", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
+                                return Flux.fromIterable(pnServiceDeskAttachments.getFilesKey());
+                            }
+                            log.debug("entityAttachments = {}, iun = {}, Attachments are not available for this iun", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
+                            return Flux.empty();
+                        })
+                        .collectList()
+                        .flatMap(attachments -> {
+                            log.debug("entityOperation = {}, entityAddress = {}, attachments = {}, All data requirements are available to make the call to prepare", operationAndAddress.getT1(), operationAndAddress.getT2(), attachments);
+                            return paperPrepare(operationAndAddress.getT1(), operationAndAddress.getT2(), attachments);
+                        })
+                        .doOnError(exception -> log.error("errorReason = {}, Error during the validation flow", exception.getMessage()))
                 )
-                .doOnError(PnEntityNotFoundException.class, error -> log.error("The operation entity was not found with this operationId: {}", operationId))
+                .doOnError(PnEntityNotFoundException.class, error -> log.error("operationId = {}, Operation entity was not found", operationId))
                 .onErrorResume(ex -> {
                     if (ex instanceof PnEntityNotFoundException) {
                         return Mono.error(ex);
@@ -109,11 +119,21 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
      * @param operationId id of operation
      * @return Address from DB
      */
-    private Mono<PnServiceDeskAddress> getAddressFromOperationId(String operationId){
+    private Mono<PnServiceDeskAddress> getAddressFromOperationId(String operationId) {
+        log.debug("operationId: {}, GetAddressFromOperationId received input", operationId);
+
+        log.debug("operationId: {}, Retrieving address associated to operationId", operationId);
         return addressDAO.getAddress(operationId)
-                .switchIfEmpty(Mono.error(new PnGenericException(ADDRESS_IS_NOT_PRESENT, ADDRESS_IS_NOT_PRESENT.getMessage())))
-                .doOnNext(address ->  log.debug("Address retrieved {}", address))
-                .flatMap(response -> validationAddress(response).thenReturn(response));
+                .switchIfEmpty(Mono.defer(() -> {
+                        log.error("operationId = {}, EntityAddress was not found", operationId);
+                        return Mono.error(new PnGenericException(ADDRESS_IS_NOT_PRESENT, ADDRESS_IS_NOT_PRESENT.getMessage()));
+                }))
+                .doOnNext(address -> log.debug("operationId = {}, Address retrieved with success {}", operationId, address))
+                .flatMap(response -> {
+                    log.debug("operationId = {}, Ready for validation the retrieved address", operationId);
+                    return validationAddress(response).thenReturn(response);
+                })
+                .doOnError(PnGenericException.class, exception -> log.error("operationId = {}, errorReason = {}, Address associated with the operation was not recovered", operationId, exception.getMessage()));
     }
 
     /**
@@ -121,62 +141,90 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
      * @param address  address's operation
      * @throws it.pagopa.pn.service.desk.exception.PnGenericException only if address is not valid
      */
-    private Mono<Void> validationAddress(PnServiceDeskAddress address){
+    private Mono<Void> validationAddress(PnServiceDeskAddress address) {
+        log.debug("address: {}, ValidationAddress received input", address);
+
+        log.debug("address = {}, Calling address service", address);
         return addressManagerClient.deduplicates(address)
-                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_ADDRESS_MANAGER_CLIENT,  ex.getMessage(), ex)))
-                .doOnNext( deduplicatesResponseDto ->  log.debug("Address deduplicates {}", deduplicatesResponseDto))
+                .onErrorResume(exception -> {
+                    log.error("errorReason = {}, Error during ", exception.getMessage());
+                    return Mono.error(new PnGenericException(ERROR_ON_ADDRESS_MANAGER_CLIENT,  exception.getMessage()));
+                })
+                .doOnNext(deduplicatesResponseDto ->  log.debug("deduplicatesResponseDto = {}, Address is validated by Address manager service", deduplicatesResponseDto))
                 .flatMap(deduplicateResponse -> {
+                    log.debug("deduplicateResponse = {}, Address response", deduplicateResponse);
+                    log.debug("equalityResult = {}, Is Equality result false?", deduplicateResponse.getEqualityResult());
                     if (FALSE.equals(deduplicateResponse.getEqualityResult())) {
+                        log.error("deduplicateResponse = {}, Address response", deduplicateResponse);
                         return Mono.error(new PnGenericException(ADDRESS_IS_NOT_VALID, ADDRESS_IS_NOT_VALID.getMessage()));
                     }
+                    log.debug("equalityError = {}, Is a valid address?", deduplicateResponse.getError());
                     if (StringUtils.isNotBlank(deduplicateResponse.getError())){
+                        log.error("errorReason = {}, The address is not valid", deduplicateResponse);
                         return Mono.error(new PnGenericException(ADDRESS_IS_NOT_VALID, ADDRESS_IS_NOT_VALID.getMessage()));
                     }
+                    log.debug("deduplicateResponse = {}, The address is valid", deduplicateResponse);
                     return Mono.just(deduplicateResponse);
                 }).then();
     }
 
+    private Mono<PnServiceDeskAttachments> getAttachmentsFromIun(PnServiceDeskOperations entityOperation, String iun) {
+        log.debug("entityOperation: {}, iun: {}, GetAttachmentsFromIun received input", entityOperation, iun);
 
-
-
-
-    private Mono<PnServiceDeskAttachments> getAttachmentsFromIun(PnServiceDeskOperations operation, String iun){
         return Mono.just(AttachmentMapper.initAttachment(iun))
                 .flatMap(entity ->
-                        this.getAttachmentsFromDelivery(iun).concatWith(getAttachmentsFromDeliveryPush(operation.getRecipientInternalId(), iun))
-                                .doOnNext(fileKey -> {
-                                    if (TRUE.equals(entity.getIsAvailable())){
-                                        isFileAvailable(fileKey)
-                                                .doOnSuccess(isAvailable ->{
-                                                    log.debug("Document is available ? {}", isAvailable);
-                                                    entity.setIsAvailable(entity.getIsAvailable() && isAvailable);
-                                                });
-                                    }
-                                })
-                                .collectList()
-                                .map(fileKeys -> {
-                                    entity.setFilesKey(fileKeys);
-                                    return entity;
-                                })
-                ).zipWith(Mono.just(operation))
+                    this.getAttachmentsFromDelivery(iun)
+                            .concatWith(getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
+                            .flatMap(fileKey -> {
+                                log.debug("fileKey = {}, Is the file received on available?", fileKey);
+                                if (TRUE.equals(entity.getIsAvailable())){
+                                    return isFileAvailable(fileKey)
+                                            .map(isAvailable ->{
+                                                log.debug("fileKey = {}, isAvailable = {}, The file received is available", fileKey, isAvailable);
+                                                entity.setIsAvailable(entity.getIsAvailable() && isAvailable);
+                                                return fileKey.contains(Utility.SAFESTORAGE_BASE_URL) ? fileKey : Utility.SAFESTORAGE_BASE_URL.concat(fileKey);
+                                            });
+                                }
+                                return Mono.just(fileKey);
+                            })
+                            .collectList()
+                            .map(fileKeys -> {
+                                entity.setFilesKey(fileKeys);
+                                log.debug("fileKeys = {}, entityAttachment = {}, EntityAttachment's list of filesKey has been setted", fileKeys, entity);
+                                return entity;
+                            })
+                ).zipWith(Mono.just(entityOperation))
                 .flatMap(attachmentAndOperation -> {
-                    PnServiceDeskOperations deskOperations = attachmentAndOperation.getT2();
-                    if (deskOperations.getAttachments() == null){
-                        deskOperations.setAttachments(new ArrayList<>());
+                    PnServiceDeskOperations entityOperationToUpdate = attachmentAndOperation.getT2();
+                    log.debug("entityOperation = {}, Is entityOperation's attachments null?", entityOperationToUpdate);
+                    if (entityOperationToUpdate.getAttachments() == null){
+                        log.debug("entityOperation = {}, A new entityOperation's attachments list has been created", entityOperationToUpdate);
+                        entityOperationToUpdate.setAttachments(new ArrayList<>());
                     }
-                    deskOperations.getAttachments().add(attachmentAndOperation.getT1());
-                    log.debug("Added attachments in operation {}", deskOperations.getAttachments().size());
-                    return operationDAO.updateEntity(deskOperations)
-                            .switchIfEmpty(Mono.error(new PnGenericException(ERROR_ON_UPDATE_ETITY, ERROR_ON_UPDATE_ETITY.getMessage())))
+                    entityOperationToUpdate.getAttachments().add(attachmentAndOperation.getT1());
+                    log.debug("entityOperation = {}, entityAttachment = {}, Entity's attachment list has been added", entityOperationToUpdate, attachmentAndOperation.getT1());
+                    return operationDAO.updateEntity(entityOperationToUpdate)
+                            .switchIfEmpty(Mono.defer(() -> {
+                                log.error("entityOperation = {}, Error on update entityOperation", entityOperationToUpdate);
+                                return Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()));
+                            }))
                             .thenReturn(attachmentAndOperation.getT1());
                 });
     }
 
-    private Mono<Boolean> isFileAvailable(String fileKey){
+    private Mono<Boolean> isFileAvailable(String fileKey) {
+        log.debug("fileKey: {}, IsFileAvailable received input", fileKey);
+
         return this.getFileRecursive(5, fileKey, BigDecimal.ZERO)
                 //TODO aggiungere chiamata per il download del documento
-                .map(response -> TRUE)
-                .onErrorResume(ex -> Mono.just(FALSE));
+                .map(response -> {
+                    log.debug("response: {}, The file was recovered successfully", response);
+                    return TRUE;
+                })
+                .onErrorResume(exception -> {
+                    log.debug("errorReason = {}, An error occurred while retrieving the file", exception.getMessage());
+                    return Mono.just(FALSE);
+                });
     }
 
 
@@ -186,11 +234,20 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
      * @param iun
      * @return only fileKeys
      */
-    private Flux<String> getAttachmentsFromDeliveryPush(String recipientInternalId, String iun){
+    private Flux<String> getAttachmentsFromDeliveryPush(String recipientInternalId, String iun) {
+        log.debug("recipientInternalId: {}, iun: {}, GetAttachmentsFromDeliveryPush received input", recipientInternalId, iun);
+
+        log.debug("iun = {}, recipientInternalId = {}, Calling DeliveryPush's legalFacts service", iun, recipientInternalId);
         return  pnDeliveryPushClient.getNotificationLegalFactsPrivate(recipientInternalId, iun)
-                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ex.getMessage(), HttpStatus.BAD_REQUEST)))
+                .onErrorResume(exception -> {
+                    log.error("errorReason = {}, An error occurred while call service legalFacts", exception.getMessage());
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
+                })
                 .parallel()
-                .map(legalFact -> legalFact.getLegalFactsId().getKey())
+                .map(legalFactList -> {
+                    log.debug("legalFactList = {}, Call to DeliveryPush's legalFacts service went successfully", legalFactList);
+                    return legalFactList.getLegalFactsId().getKey();
+                })
                 .sequential();
     }
 
@@ -199,71 +256,128 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
      * @param iun
      * @return only fileKeys
      */
-    private Flux<String> getAttachmentsFromDelivery(String iun){
+    private Flux<String> getAttachmentsFromDelivery(String iun) {
+        log.debug("iun: {}, GetAttachmentsFromDelivery received input", iun);
+
+        log.debug("iun = {}, Calling service to obtain notification sent", iun);
         return pnDeliveryClient.getSentNotificationPrivate(iun)
-                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, ex.getMessage(), ex)))
+                .onErrorResume(exception -> {
+                    log.error("errorReason = {}, An error occurred while call service for obtain notification sent", exception.getMessage());
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                })
                 .flatMapMany(doc -> Flux.fromIterable(doc.getDocuments()))
                 .parallel()
-                .map(item -> item.getRef().getKey())
+                .map(notificationDocument -> {
+                    log.debug("notificationDocument = {}, Notification received with success", notificationDocument);
+                    return notificationDocument.getRef().getKey();
+                })
                 .sequential();
     }
 
-    private Mono<Void> updateOperationStatus(PnServiceDeskOperations operations, OperationStatusEnum operationStatusEnum){
-        operations.setStatus(operationStatusEnum.toString());
-        return this.operationDAO.updateEntity(operations)
-                .switchIfEmpty(Mono.error(new PnGenericException(ERROR_ON_UPDATE_ETITY, ERROR_ON_UPDATE_ETITY.getMessage())))
-                .doOnNext( operation ->  log.debug("Update  operationsStatus {}", operationStatusEnum))
+    private Mono<Void> updateOperationStatus(PnServiceDeskOperations entityOperation, OperationStatusEnum operationStatusEnum) {
+        log.debug("entityOperation = {}, operationStatus = {}, UpdateOperationStatus received input", entityOperation, operationStatusEnum);
+
+        log.debug("entityOperation = {}, operationStatus = {}, Update entityOperation with new status", entityOperation, operationStatusEnum.toString());
+        entityOperation.setStatus(operationStatusEnum.toString());
+        return this.operationDAO.updateEntity(entityOperation)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.error("entityOperation = {}, operationStatus = {}, Error on update entityOperation", entityOperation, operationStatusEnum);
+                    return Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()));
+                }))
+                .doOnNext(operation ->  log.debug("entityOperation = {}, operationsStatus {}, EntityOperation updated with new status", entityOperation, operationStatusEnum))
                 .then();
     }
 
-    private Mono<Void> paperPrepare(PnServiceDeskOperations operations, PnServiceDeskAddress address, List<String> attachments){
-        String requestId = Utility.generateRequestId(operations.getOperationId());
-        return this.pnDataVaultClient.deAnonymized(operations.getRecipientInternalId())
-                .map(fiscalCode -> PaperChannelMapper.getPrepareRequest(operations, address, attachments, requestId, fiscalCode, cfn))
-                .flatMap(prepareRequestDto -> this.paperChannelClient.sendPaperPrepareRequest(requestId, prepareRequestDto))
-                .switchIfEmpty(Mono.just(new PaperChannelUpdateDto()))
-                .doOnNext(response -> log.debug("Sent paper prepare"))
-                .flatMap(response -> {
-                    operations.setErrorReason(null);
-                    return updateOperationStatus(operations, OperationStatusEnum.PREPARING);
+    private Mono<Void> paperPrepare(PnServiceDeskOperations entityOperation, PnServiceDeskAddress address, List<String> attachments) {
+        log.debug("entityOperation = {}, entityAddress = {}, PaperPrepare received input", entityOperation, address);
+
+        String requestId = Utility.generateRequestId(entityOperation.getOperationId());
+        log.debug("requestId = {}, Generated a new requestId", requestId);
+
+        log.debug("entityOperation = {}, Is attachments null or empty?", entityOperation);
+        if (attachments == null || attachments.isEmpty()) {
+            log.error("entityOperation = {}, Attachments list is null, there are no attachments available for this operation", entityOperation);
+
+            String errorMessage = NO_ATTACHMENT_AVAILABLE.getMessage()
+                    .concat(entityOperation.getOperationId())
+                    .concat(" - ")
+                    .concat(requestId);
+            log.debug(errorMessage);
+            throw new PnGenericException(NO_ATTACHMENT_AVAILABLE, errorMessage);
+        }
+
+        log.debug("recipientInternalId = {}, Calling service for deanonymizing this recipientInternalId", entityOperation.getRecipientInternalId());
+        return this.pnDataVaultClient.deAnonymized(entityOperation.getRecipientInternalId())
+                .map(fiscalCode -> PaperChannelMapper.getPrepareRequest(entityOperation, address, attachments, requestId, fiscalCode, cfn))
+                .flatMap(prepareRequestDto -> {
+                    log.debug("requestId = {}, prepareRequestDto = {}, Calling prepare api with this requestId and request", requestId, prepareRequestDto);
+                    return this.paperChannelClient.sendPaperPrepareRequest(requestId, prepareRequestDto);
                 })
-                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_SEND_PAPER_CHANNEL_CLIENT, ex.getMessage(), ex)))
+                .switchIfEmpty(Mono.just(new PaperChannelUpdateDto()))
+                .doOnNext(response -> log.debug("response = {}, Paper prepare request has been sent", response))
+                .flatMap(response -> {
+                    entityOperation.setErrorReason(null);
+                    log.error("errorReason = {}, Setting to null errorReason into entityOperation", entityOperation);
+                    return updateOperationStatus(entityOperation, OperationStatusEnum.PREPARING);
+                })
+                .onErrorResume(exception -> {
+                    log.error("requestId = {}, errorReason = {}, Error during call paperchannel prepare", requestId, exception.getMessage());
+                    return Mono.error(new PnGenericException(ERROR_ON_SEND_PAPER_CHANNEL_CLIENT, exception.getMessage()));
+                })
                 .then();
     }
 
 
-    private Flux<String> getIuns(String recipientInternalId){
+    private Flux<String> getIuns(String recipientInternalId) {
+        log.debug("recipientInternalId = {}, GetIuns received input", recipientInternalId);
+
         return pnDeliveryPushClient.paperNotificationFailed(recipientInternalId)
-                .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ex.getMessage(), ex)))
-                .doOnNext(iun -> log.debug("IUN : {}", iun))
+                .onErrorResume(ex -> {
+                    log.error("recipientInternalId = {}, errorReason = {}, Error on delivery push client", recipientInternalId, ex.getMessage());
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ex.getMessage()));
+                })
+                .doOnNext(iun -> log.debug("recipientInternalId = {}, iun = {}, Iun retrievied", iun, recipientInternalId))
                 .map(ResponsePaperNotificationFailedDtoDto::getIun);
     }
 
-    private Mono<FileDownloadResponse> getFileRecursive(Integer n, String fileKey, BigDecimal millis){
-        if (n<0)
-            return Mono.error(new PnGenericException( ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND, ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND.getMessage() ) );
-        else {
+    private Mono<FileDownloadResponse> getFileRecursive(Integer n, String fileKey, BigDecimal millis) {
+        log.debug("n = {}, fileKey = {}, millis = {}, GetFileRecursive received input", n, fileKey, millis);
+
+        log.debug("n = {}, Are attempts to recover the file ended?", n);
+        if (n<0) {
+            log.error("errorReason = {}, The file you are trying to recover is not available", ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND.getMessage());
+            return Mono.error(new PnGenericException( ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND, ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND.getMessage()));
+        } else {
+            log.debug("n = {}, There are some other attempts to recover the file", n);
             return Mono.delay(Duration.ofMillis( millis.longValue() ))
-                    .flatMap(item -> safeStorageClient.getFile(fileKey)
-                            .map(fileDownloadResponseDto -> fileDownloadResponseDto)
-                            .onErrorResume(ex -> {
-                                log.error("Error with retrieve {}", ex.getMessage());
-                                return Mono.error(ex);
-                            })
-                            .onErrorResume(PnRetryStorageException.class, ex ->
-                                    getFileRecursive(n - 1, fileKey, ex.getRetryAfter())
-                            ));
+                .flatMap(item -> {
+                    log.debug("fileKey = {}, Trying to retrieve the file with this filekey", fileKey);
+                    return safeStorageClient.getFile(fileKey)
+                        .map(fileDownloadResponseDto -> {
+                            log.debug("fileKey = {}, fileDownloadResponseDto = {}, The file with this fileKey has been recovered",fileKey, fileDownloadResponseDto);
+                            return fileDownloadResponseDto;
+                        })
+                        .onErrorResume(exception -> {
+                            log.error("errorReason = {}, error = {}, Error during retrieving", exception.getMessage(), exception);
+                            return Mono.error(exception);
+                        })
+                        .onErrorResume(PnRetryStorageException.class, exception -> {
+                            log.error("errorReason = {}, error = {}, Error during retrieving file", exception.getMessage(), exception);
+                            return getFileRecursive(n - 1, fileKey, exception.getRetryAfter());
+                        });
+            });
         }
     }
-
-    private Mono<Void> traceErrorOnDB(String operationId, Throwable ex) {
-        log.error("Error on validation flow {}", ex.getMessage(), ex);
+    private Mono<Void> traceErrorOnDB(String operationId, Throwable exception) {
+        log.debug("operationId = {}, exception = {},TraceErrorOnDB received input", operationId, exception);
+        log.error("errorReason = {}, error = {}, Error during the validation flow", exception.getMessage(), exception);
+        log.debug("operationId = {}, Retrieving entityOperation from Database", operationId);
         return operationDAO.getByOperationId(operationId)
                 .flatMap(operation -> {
-                    operation.setErrorReason(ex.getMessage());
+                    operation.setErrorReason(exception.getMessage());
+                    log.error("errorReason = {}, error = {}, Setting errorReason into entityOperation", exception.getMessage(), exception);
                     return updateOperationStatus(operation, OperationStatusEnum.KO);
                 });
     }
-
 
 }

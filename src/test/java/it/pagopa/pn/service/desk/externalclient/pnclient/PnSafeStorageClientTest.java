@@ -10,11 +10,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.test.StepVerifier;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
-class PnSafeStorageClientTest extends BaseTest.WithMockServer{
+class PnSafeStorageClientTest extends BaseTest.WithMockServer {
+    private static final String FILE_KEY = "FILE-KEY-ATTACHMENTS";
+    private static final String FILE_KEY_RETRY = "FILE-KEY-ATTACHMENTS-RETRY";
+    private static final String FILE_KEY_ERROR = "FILE-KEY-ERROR";
+
 
     @Autowired
     private PnSafeStorageClient pnSafeStorageClient;
@@ -34,9 +38,9 @@ class PnSafeStorageClientTest extends BaseTest.WithMockServer{
 
     @Test
     void getFile(){
-        FileDownloadResponse fileDownloadResponse = this.pnSafeStorageClient.getFile("FILE-KEY-ATTACHMENT").block();
+        FileDownloadResponse fileDownloadResponse = this.pnSafeStorageClient.getFile(FILE_KEY).block();
 
-        Assertions.assertEquals("FILE-KEY-ATTACHMENT", fileDownloadResponse.getKey());
+        Assertions.assertEquals(FILE_KEY, fileDownloadResponse.getKey());
         Assertions.assertEquals("3Z9SdhZ50PBeIj617KEMrztNKDMJj8FZ", fileDownloadResponse.getVersionId());
         Assertions.assertEquals("application/pdf", fileDownloadResponse.getContentType());
         Assertions.assertEquals("jezIVxlG1M1woCSUngM6KipUN3/p8cG5RMIPnuEanlE=", fileDownloadResponse.getChecksum());
@@ -45,15 +49,17 @@ class PnSafeStorageClientTest extends BaseTest.WithMockServer{
     }
 
     @Test
-    void getFileError(){
-        Assertions.assertThrows(PnRetryStorageException.class, () ->
-                pnSafeStorageClient.getFile("FILE-KEY-ATTACHMENTS").block());
+    void getFileWithRetryAfter(){
+        StepVerifier.create(pnSafeStorageClient.getFile(FILE_KEY_RETRY))
+                        .expectError(PnRetryStorageException.class)
+                        .verify();
     }
 
     @Test
     void getFileErrorResume(){
-        Assertions.assertThrows(WebClientResponseException.class, () ->
-                pnSafeStorageClient.getFile("FILE-KEY-ERROR").block());
+        StepVerifier.create(pnSafeStorageClient.getFile(FILE_KEY_ERROR))
+                .expectError(WebClientResponseException.class)
+                .verify();
     }
 
     @Test
