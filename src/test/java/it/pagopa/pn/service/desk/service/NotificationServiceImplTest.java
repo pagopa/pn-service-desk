@@ -79,7 +79,7 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
         NotificationsUnreachableResponse notificationsUnreachableResponse = this.notificationService.getUnreachableNotification("fkdokm", new NotificationRequest()).block();
 
         Assertions.assertNotNull(notificationsUnreachableResponse);
-        Assertions.assertEquals(0L,notificationsUnreachableResponse.getNotificationsCount());
+        Assertions.assertEquals(1L,notificationsUnreachableResponse.getNotificationsCount());
     }
 
     @Test

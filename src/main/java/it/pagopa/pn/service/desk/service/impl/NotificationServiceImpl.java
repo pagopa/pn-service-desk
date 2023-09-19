@@ -13,6 +13,7 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.Pn
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.service.NotificationService;
+import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -62,31 +63,15 @@ public class NotificationServiceImpl implements NotificationService {
                 );
     }
 
-    private Mono<Boolean> checkNotificationFailed(String taxId, List<ResponsePaperNotificationFailedDtoDto> notifications ) {
-
-
+    private Mono<Boolean> checkNotificationFailed(String taxId, List<ResponsePaperNotificationFailedDtoDto> notifications) {
         return this.operationDAO.searchOperationsFromRecipientInternalId(taxId)
-                .switchIfEmpty(ex -> Mono.just(true))
                 .collectList()
-                .flatMap(operations -> operationContainsIun(operations, notifications));
-    }
-
-
-    private Mono<Boolean> operationContainsIun(List<PnServiceDeskOperations> operation, List<ResponsePaperNotificationFailedDtoDto> notifications){
-        List<String> iuns = new ArrayList<>();
-        notifications.forEach(notification -> iuns.add(notification.getIun()));
-
-        if(operation!=null){
-            for(PnServiceDeskOperations op : operation){
-                for(PnServiceDeskAttachments attachments : op.getAttachments()){
-                    for(String iun : iuns){
-                        if(attachments.getIun().equals(iun) && op.getStatus().equals(OperationStatusEnum.KO.toString())){
-                             return Mono.just(true);
+                .flatMap(operations -> {
+                    if (operations.isEmpty()) {
+                        return Mono.just(true);
+                    } else {
+                        return Utility.operationContainsIun(operations, notifications);
                     }
-                }
-                }
-            }
-        }
-        return Mono.just(false);
+                });
     }
 }

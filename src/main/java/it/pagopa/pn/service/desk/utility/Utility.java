@@ -1,11 +1,17 @@
 package it.pagopa.pn.service.desk.utility;
 
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import org.apache.commons.lang3.StringUtils;
+import reactor.core.publisher.Mono;
 
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 public class Utility {
@@ -41,6 +47,24 @@ public class Utility {
         status.put(StatusCodeEnumDto.OK, OperationStatusEnum.OK);
         status.put(StatusCodeEnumDto.PROGRESS, OperationStatusEnum.PROGRESS);
         return status;
+    }
+
+    public static Mono<Boolean> operationContainsIun(List<PnServiceDeskOperations> operation, List<ResponsePaperNotificationFailedDtoDto> notifications){
+        List<String> iuns = new ArrayList<>();
+        notifications.forEach(notification -> iuns.add(notification.getIun()));
+
+        if(operation!=null){
+            for(PnServiceDeskOperations op : operation){
+                for(PnServiceDeskAttachments attachments : op.getAttachments()){
+                    for(String iun : iuns){
+                        if(attachments.getIun().equals(iun) && op.getStatus().equals(OperationStatusEnum.KO.toString())){
+                            return Mono.just(true);
+                        }
+                    }
+                }
+            }
+        }
+        return Mono.just(false);
     }
 
 }
