@@ -5,6 +5,7 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import lombok.CustomLog;
 import org.springframework.beans.factory.annotation.Autowired;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
@@ -23,11 +24,18 @@ public class BaseService {
                 .collectList()
                 .flatMap(operation -> {
                     if (operation.isEmpty()) return Mono.just(1L);
-                    else return operationContainsIuns(operation, iuns);
+                    else {
+                        return operationContainsIuns(operation, iuns)
+                                .collectList()
+                                .flatMap(iunsToSend -> {
+                                    if (iunsToSend.isEmpty()) return Mono.just(1L);
+                                    else return Mono.just(1L);
+                                });
+                    }
                 });
     }
 
-    protected Mono<Long> operationContainsIuns(List<PnServiceDeskOperations> operations, List<String> iuns){
+    protected Flux<String> operationContainsIuns(List<PnServiceDeskOperations> operations, List<String> iuns){
         Map<String, String> iunAndStatus = new HashMap<>();
 
         operations.parallelStream().forEach(operation -> {
@@ -57,15 +65,13 @@ public class BaseService {
         return checkIunsToSend(iunAndStatus);
     }
 
-    private Mono<Long> checkIunsToSend(Map<String, String> iunAndStatus) {
-        List<String> iunToSend =  iunAndStatus.entrySet().stream()
+    private Flux<String> checkIunsToSend(Map<String, String> iunAndStatus) {
+        return Flux.fromStream(iunAndStatus.entrySet().stream()
                 .filter(w -> w.getValue().equals(OperationStatusEnum.KO.toString()))
                 .map(s -> {
                     log.info("iun to send {} ", s.getKey());
                     return s.getKey();
-                })
-                .collect(Collectors.toList());
-        return iunToSend.isEmpty() ? Mono.just(0L) : Mono.just(1L);
+                }).collect(Collectors.toList()).stream());
     }
 
 }
