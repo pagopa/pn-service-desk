@@ -16,6 +16,7 @@ public class AwsConfigsActivation extends AwsConfigs {
     private String dynamodbOperationsTable;
     private String dynamodbAddressTable;
     private String dynamodbFileKeyTable;
+    private String dynamodbClientTable;
     private Kms kms;
     @Data
     public static class Kms {

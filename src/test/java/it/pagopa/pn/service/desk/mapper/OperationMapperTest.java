@@ -66,7 +66,7 @@ class OperationMapperTest {
 
         pnServiceDeskOperations.setAttachments(attachments);
 
-        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations);
+        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse);
         assertEquals(operationResponse.getIuns().size(), 1);
     }
@@ -80,12 +80,12 @@ class OperationMapperTest {
 
         pnServiceDeskOperations.setAttachments(attachments);
 
-        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations);
+        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse);
         assertEquals(operationResponse.getUncompletedIuns().size(), 1);
     }
 
-    //@Test
+    @Test
     void whenCalloperationResponseMapperAndEvents() {
         Instant i = Instant.now();
 
@@ -96,8 +96,8 @@ class OperationMapperTest {
 
         PnServiceDeskEvents pnServiceDeskEvents2= new PnServiceDeskEvents();
         pnServiceDeskEvents2.setStatusDescription("Status 2");
-        pnServiceDeskEvents2.setStatusCode("002");
-        pnServiceDeskEvents2.setTimestamp(i.minus(1, ChronoUnit.HOURS));
+        pnServiceDeskEvents2.setStatusCode(null);
+        pnServiceDeskEvents2.setTimestamp(null);
 
         PnServiceDeskEvents pnServiceDeskEvents3= new PnServiceDeskEvents();
         pnServiceDeskEvents3.setStatusDescription("Status 3");
@@ -108,7 +108,7 @@ class OperationMapperTest {
         events.addAll(List.of(pnServiceDeskEvents1, pnServiceDeskEvents2, pnServiceDeskEvents3));
         pnServiceDeskOperations.setEvents(events);
 
-        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations);
+        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse.getNotificationStatus());
         assertEquals(operationResponse.getNotificationStatus().getLastEventTimestamp().toInstant(), i);
         assertEquals(operationResponse.getNotificationStatus().getStatusCode(), "003");

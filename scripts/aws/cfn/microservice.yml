@@ -172,13 +172,14 @@ Parameters:
   Version:
     Type: String
     Description: 'keep track of used projects commitIds'
-  
+
   EcsLogGroup:
     Type: String
 
   ServiceDeskOperationsDynamoTableName:
     Type: String
     Description: Name of dynamodb table containing request
+
 
   ServiceDeskOperationsDynamoTableArn:
     Type: String
@@ -204,6 +205,13 @@ Parameters:
     Type: String
     Description: ARN of dynamodb table containing request
 
+  ClientDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing clientid and relative value'
+
+  ClientDynamoTableArn:
+    Type: String
+    Description: ARN of dynamodb table containing request
 
   SafeStorageCxId:
     Type: String
@@ -323,6 +331,7 @@ Resources:
         ContainerEnvEntry22: !Sub 'PN_SERVICEDESK_TTLRECEIVERADDRESS=${TtlReceiverAddress}'
         ContainerEnvEntry23: !Sub 'PN_SERVICEDESK_PAPERCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry24: !Sub 'PN_SERVICEDESK_PRODUCTTYPE=${ProductType}'
+        ContainerEnvEntry25: !Sub 'AWS_DYNAMODBCLIENTTABLE=${ClientDynamoTableName}'
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-ServiceDesk-Secrets
         MappedPaths: '/service-desk/*'
@@ -384,6 +393,8 @@ Resources:
               - !Sub "${ServiceDeskAddressDynamoTableArn}/*"
               - !Sub "${ServiceDeskOperationFileKeyDynamoTableArn}"
               - !Sub "${ServiceDeskOperationFileKeyDynamoTableArn}/*"
+              - !Sub "${ClientDynamoTableArn}"
+              - !Sub "${ClientDynamoTableArn}/*"
 
   ServiceDeskMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack
@@ -395,12 +406,13 @@ Resources:
           - ','
           - - !Ref ServiceDeskAddressDynamoTableName
             - !Ref ServiceDeskAddressDynamoTableName
-            - !Ref ServiceDeskOperationFileKeyDynamoTableName       
+            - !Ref ServiceDeskOperationFileKeyDynamoTableName
+            - !Ref ClientDynamoTableName
         QueueArns: !Join
           - ','
           - - !Ref PaperChannelToServiceDeskQueueARN
             - !Ref SafeStorageToServiceDeskQueueARN
-            - !Ref ServiceDeskInternalQueueARN     
+            - !Ref ServiceDeskInternalQueueARN
         AlarmArns: !Join
           - ','
           - - !GetAtt ServiceDeskMicroservice.Outputs.FatalLogsMetricAlarmArn
@@ -412,7 +424,7 @@ Resources:
             - !Ref PaperChannelToServiceDeskQueueAgeAlarmARN
         LogGroupsNames: !Join
           - ','
-          - - !Sub '/aws/ecs/${ProjectName}-service-desk'      
+          - - !Sub '/aws/ecs/${ProjectName}-service-desk'
 
   ########### METRICS AND ALARMS - MICROSERVICE ###########
   ApplicationLoadBalancerOnCallAlarm:
@@ -467,7 +479,7 @@ Resources:
               Namespace: AWS/ApplicationELB
             Period: 300
             Stat: Sum
-          ReturnData: False          
+          ReturnData: False
         - Id: e1
           Expression: IF(m3>=10 AND (m1/m3>=0.9 OR m2/m3>=0.1), 1, 0)
           Label: !Sub "${ProjectName}-service-desk-ALBAlarm-oncall-metric"

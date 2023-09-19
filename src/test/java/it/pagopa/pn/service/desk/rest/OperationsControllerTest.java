@@ -1,7 +1,10 @@
 package it.pagopa.pn.service.desk.rest;
 
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
+import it.pagopa.pn.service.desk.middleware.db.dao.PnClientDAO;
+import it.pagopa.pn.service.desk.middleware.entities.PnClientID;
 import it.pagopa.pn.service.desk.service.OperationsService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +24,15 @@ class OperationsControllerTest {
     @Autowired
     private WebTestClient webTestClient;
 
+    @MockBean
+    private PnClientDAO pnClientDAO;
+
+    @BeforeEach
+    void setup() {
+        Mockito.when(pnClientDAO.getByApiKey(Mockito.anyString()))
+                .thenReturn(Mono.just(new PnClientID()));
+    }
+
     @Test
     void createOperation() {
         OperationsResponse response = new OperationsResponse();
@@ -32,6 +44,7 @@ class OperationsControllerTest {
                 .uri(uriBuilder -> uriBuilder.path(path)
                         .build())
                 .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
                 .bodyValue(getCreateOperationRequest())
                 .exchange()
                 .expectStatus().isCreated();
@@ -48,6 +61,7 @@ class OperationsControllerTest {
                 .uri(uriBuilder -> uriBuilder.path(path)
                         .build())
                 .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
                 .bodyValue(getNotificationRequest())
                 .exchange()
                 .expectStatus().isOk();
@@ -64,6 +78,7 @@ class OperationsControllerTest {
                 .uri(uriBuilder -> uriBuilder.path(path)
                         .build())
                 .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
                 .bodyValue(getVideoUploadRequest())
                 .exchange()
                 .expectStatus().isOk();
