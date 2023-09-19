@@ -28,6 +28,10 @@ public class ClientIdWebFilter implements WebFilter {
 
     @Override
     public @NotNull Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        //skip health check status
+        if (StringUtils.equals(exchange.getRequest().getPath().toString(), "/")) {
+            return chain.filter(exchange);
+        }
 
         HttpHeaders requestHeaders = exchange.getRequest().getHeaders();
         List<String> valuesHeader = requestHeaders.get(HEADER_API_KEY);
