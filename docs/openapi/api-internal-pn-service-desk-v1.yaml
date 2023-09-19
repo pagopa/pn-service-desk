@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: PN Template BE Microservice
+  title: PN Service-Desk BE Microservice
   description: Documentation APIs v1.0 di Service Desk
   termsOfService: https://termofservice.it
   x-api-id: api-pn-service-desk
@@ -15,6 +15,17 @@ info:
 servers:
   - url: https://api.pn.pagopa.it
     description: Generated server url
+tags:
+  - name: HealthCheck
+    description: >-
+      Invocazioni per sapere lo stato del microservizio
+  - name: Notification
+    description: >-
+      Invocazioni per effettuare il recupero di una notifica in caso di destinatario irreperibile
+  - name: Operation
+    description: >-
+      Invocazioni per eseguire azioni di Ops come il caricamento del video
+
 paths:
   '/status':
     get:
@@ -249,6 +260,10 @@ components:
     VideoUploadRequest:
       description: Request per l'upload
       type: object
+      required:
+        - sha256
+        - preloadIdx
+        - contentType
       properties:
         preloadIdx:
           title: Id della richiesta di precaricamento di un file
@@ -438,10 +453,10 @@ components:
           description: "In caso di destinatario estero, diventa obbligatoria l’indicazione\
             \ della nazione di destinazione,  in standard UPU o altro standard condiviso."
       description: Indirizzo analogico
-      
+
     SDNotificationSummary:
       type: object
-      required: 
+      required:
         - iun
         - senderPaInternalId
         - senderPaDescription
@@ -483,11 +498,6 @@ components:
       type: apiKey
       in: header
       name: x-api-key
-#  securitySchemes:        # ONLY EXTERNAL
-#    ApiKeyAuth:           # ONLY EXTERNAL
-#      type: apiKey        # ONLY EXTERNAL
-#      in: header          # ONLY EXTERNAL
-#      name: x-api-key     # ONLY EXTERNAL
 
-#security:                 # ONLY EXTERNAL
-#  - ApiKeyAuth: [] # use the same name as under securitySchemes    # ONLY EXTERNAL
+security:                 # ONLY EXTERNAL
+  - ApiKeyAuth: [] # use the same name as under securitySchemes    # ONLY EXTERNAL

@@ -17,6 +17,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dt
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.ProposalTypeEnumDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadInfo;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
@@ -30,7 +31,6 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoTestRule;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -282,10 +281,11 @@ class ValidationOperationActionImplTest {
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(),Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
         Mockito.when(this.paperChannelClient.sendPaperPrepareRequest(Mockito.any(),Mockito.any())).thenReturn(Mono.just(paperChannelUpdateDto));
-        Mockito.when(this.paperChannelClient.sendPaperPrepareRequest(Mockito.any(),Mockito.any())).thenReturn(Mono.just(paperChannelUpdateDto));
         Mockito.when(this.pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("MDDLOP3333-e"));
+        Mockito.when(this.safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.just(getFileDownloadResponse()));
 
         this.validationOperationAction.execute("opId1234");
+
 
         ArgumentCaptor<PrepareRequestDto> capturePrepareRequest = ArgumentCaptor.forClass(PrepareRequestDto.class);
         Mockito.verify(paperChannelClient).sendPaperPrepareRequest(Mockito.any(),capturePrepareRequest.capture());
@@ -312,6 +312,15 @@ class ValidationOperationActionImplTest {
         dto.setEqualityResult(equals);
         dto.setCorrelationId("ABC");
         return dto;
+    }
+
+    private FileDownloadResponse getFileDownloadResponse(){
+        FileDownloadResponse response = new FileDownloadResponse();
+        FileDownloadInfo info = new FileDownloadInfo();
+        info.setUrl("http://localhost:8080/name.pdf");
+        response.setDownload(info);
+        response.setKey("123-FILE-KEY");
+        return response;
     }
 
 

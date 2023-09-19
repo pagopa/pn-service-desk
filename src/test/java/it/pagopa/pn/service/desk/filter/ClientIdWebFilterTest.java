@@ -19,8 +19,8 @@ import static it.pagopa.pn.service.desk.utility.Const.*;
 
 class ClientIdWebFilterTest extends BaseTest {
     private static final String DEFAULT_URL_TEST = "/service-desk/notification/unreachable";
-    private static final String PN_API_KEY = "ZEN-DESK";
-    private static final String PN_API_KEY_NOT_IN_DB = "ZEN-DESK-NOT-IN-DB";
+    private static final String PN_API_KEY = "CLIENT-TEST";
+    private static final String PN_API_KEY_NOT_IN_DB = "CLIENT-TEST-NOT-IN-DB";
     @Autowired
     private WebTestClient webTestClient;
     @MockBean
@@ -60,7 +60,7 @@ class ClientIdWebFilterTest extends BaseTest {
                 .uri(uriBuilder -> uriBuilder.path(DEFAULT_URL_TEST).build())
                 .bodyValue(getNotificationRequest())
                 .exchange()
-                .expectStatus().isBadRequest();
+                .expectStatus().isUnauthorized();
     }
 
     @Test

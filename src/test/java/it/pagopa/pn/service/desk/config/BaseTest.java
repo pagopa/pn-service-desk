@@ -39,7 +39,7 @@ public abstract class BaseTest {
         @BeforeEach
         public void init(){
             log.info(this.getClass().getSimpleName());
-            setExpection(this.getClass().getSimpleName()+ "-webhook.json");
+            setExpection(this.getClass().getSimpleName() + "-webhook.json");
         }
 
         @AfterEach

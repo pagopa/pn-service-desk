@@ -28,6 +28,10 @@ Parameters:
     Type: String
     Description: "Topic alarm"
 
+  LogRetention:
+    Type: Number
+    Default: 14
+
 Resources:
 
     ClientDynamoTable:
@@ -165,15 +169,21 @@ Resources:
           AlarmSNSTopicName: !Ref AlarmSNSTopicName
           DelaySeconds: 1
 
+    # Log group
+    PnServiceDeskLogGroup:
+      Type: AWS::CloudFormation::Stack
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain
+      Properties:
+        TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/log-group.yaml"
+        Parameters:
+          LogGroupName: !Sub "${ProjectName}-service-desk"
+          LogGroupRetention: !Ref LogRetention
+          LogGroupPrefix: '/aws/ecs'
+
 Outputs:
-
-  ClientDynamoTableName:
-    Description: Name of dynamodb table containing clientid and relative value
-    Value: !Ref ClientDynamoTable
-
-  ClientDynamoTableArn:
-    Description: ARN of dynamodb table containing request
-    Value: !Sub '${ClientDynamoTable.Arn}'
+  EcsLogGroup:
+    Value: !GetAtt PnServiceDeskLogGroup.Outputs.LogGroupName
 
   ServiceDeskInternalQueueName:
     Value: !GetAtt ServiceDeskInternalQueue.Outputs.QueueName
@@ -186,6 +196,14 @@ Outputs:
   ServiceDeskInternalQueueARN:
     Value: !GetAtt ServiceDeskInternalQueue.Outputs.QueueARN
     Description: PN-SERVICE-DESK input queue ARN
+
+  ServiceDeskInternalQueueDLQAlarmARN:
+    Value: !GetAtt ServiceDeskInternalQueue.Outputs.SqsDLQAlarmArn
+    Description: pn-service_desk_requests-DLQ alarm ARN
+
+  ServiceDeskInternalQueueAgeAlarmARN:
+    Value: !GetAtt ServiceDeskInternalQueue.Outputs.SqsAgeAlarmArn
+    Description: pn-service_desk_requests age alarm ARN
 
   ServiceDeskOperationsDynamoTableName:
     Description: Name of dynamodb table containing request
@@ -210,6 +228,14 @@ Outputs:
   ServiceDeskOperationFileKeyDynamoTableArn:
     Description: ARN of dynamodb table containing request
     Value: !Sub '${ServiceDeskOperationFileKeyDynamoTable.Arn}'
+
+  ClientDynamoTableName:
+    Description: Name of dynamodb table containing clientid and relative value
+    Value: !Ref ClientDynamoTable
+
+  ClientDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${ClientDynamoTable.Arn}'
 
   ServiceDeskKmsEncDecDynamoDataKeyARN:
     Description: Name of KMS Key for Dynamo encode/decode data

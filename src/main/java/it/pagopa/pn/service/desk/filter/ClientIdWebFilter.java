@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.filter;
 
-
 import it.pagopa.pn.service.desk.exception.PnFilterClientIdException;
 import it.pagopa.pn.service.desk.middleware.db.dao.PnClientDAO;
 import lombok.AllArgsConstructor;
@@ -21,7 +20,6 @@ import static it.pagopa.pn.service.desk.utility.Const.*;
 
 import java.util.List;
 
-
 @CustomLog
 @Component
 @AllArgsConstructor
@@ -30,30 +28,29 @@ public class ClientIdWebFilter implements WebFilter {
 
     @Override
     public @NotNull Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        //skip health check status
+        if (StringUtils.equals(exchange.getRequest().getPath().toString(), "/")) {
+            return chain.filter(exchange);
+        }
 
         HttpHeaders requestHeaders = exchange.getRequest().getHeaders();
         List<String> valuesHeader = requestHeaders.get(HEADER_API_KEY);
         if (valuesHeader == null || valuesHeader.isEmpty()){
-            return chain.filter(exchange);
+            throw new PnFilterClientIdException(API_KEY_EMPTY.getTitle(), API_KEY_EMPTY.getMessage());
         }
+
         String apiKey = valuesHeader.get(0);
         if (StringUtils.isBlank(apiKey)){
-            throw new PnFilterClientIdException(API_KEY_EMPTY.getTitle(), API_KEY_EMPTY.getMessage(), HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.toString());
+            throw new PnFilterClientIdException(API_KEY_EMPTY.getTitle(), API_KEY_EMPTY.getMessage());
         }
 
         return pnClientDAO.getByApiKey(apiKey)
                 .switchIfEmpty(Mono.error(new PnFilterClientIdException(API_KEY_NOT_PRESENT.getTitle(),
-                        API_KEY_NOT_PRESENT.getMessage().concat(" ApiKey = ").concat(apiKey),
-                                                                HttpStatus.UNAUTHORIZED.value(),
-                                                                HttpStatus.UNAUTHORIZED.toString()))
+                        API_KEY_NOT_PRESENT.getMessage().concat(" ApiKey = ").concat(apiKey)))
                 )
-                .doOnSuccess(key ->{
-                    log.info("ApiKey:  {}", key);
-                })
+                .doOnSuccess(key ->log.info("ApiKey:  {}", key))
                 .then(chain.filter(exchange))
                 .doFinally(ignored -> log.logEndingProcess("ENDING PROCESS FROM WEB FILTER"));
     }
-
-
 
 }

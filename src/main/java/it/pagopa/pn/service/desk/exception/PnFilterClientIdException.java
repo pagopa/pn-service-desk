@@ -2,14 +2,12 @@ package it.pagopa.pn.service.desk.exception;
 
 import it.pagopa.pn.commons.exceptions.PnRuntimeException;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 public class PnFilterClientIdException extends PnRuntimeException {
 
-    private final String description;
-
-    public PnFilterClientIdException(String message, String description, int status, String errorCode){
-        super(message, description, status, errorCode, null, null);
-        this.description = description;
+    public PnFilterClientIdException(String message, String description){
+        super(message, description, HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.toString(), message, description);
     }
 }

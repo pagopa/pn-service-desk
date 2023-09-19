@@ -1,8 +1,8 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
+import it.pagopa.pn.service.desk.generated.openapi.pnraddfsu.v1.dto.ResponseStatusDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsUnreachableResponse;
 
@@ -15,6 +15,7 @@ import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.AllArgsConstructor;
+import lombok.CustomLog;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
@@ -29,8 +30,11 @@ import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_IS
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_GET_UNREACHABLE_NOTIFICATION;
 
 
-@Slf4j
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_RADD_INQUIRY;
+
+
 @Service
+@CustomLog
 @AllArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
     private static final String RECIPIENT_TYPE = "PF";
@@ -43,8 +47,10 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public Mono<NotificationsUnreachableResponse> getUnreachableNotification(String xPagopaPnUid, NotificationRequest notificationRequest) {
+        log.debug("xPagopaPnUid = {}, notificationRequest = {}, GetUnreachableNotification received input", xPagopaPnUid, notificationRequest);
 
         NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
+        String randomUUID = UUID.randomUUID().toString();
 
         return dataVaultClient.anonymized(notificationRequest.getTaxId())
                 .flatMap(taxId -> this.pnDeliveryPushClient.paperNotificationFailed(taxId)
