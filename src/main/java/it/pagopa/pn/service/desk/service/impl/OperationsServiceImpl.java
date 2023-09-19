@@ -121,7 +121,7 @@ public class OperationsServiceImpl implements OperationsService {
 
     private Mono<String> manageOperationFileKey(String operationId){
         return operationsFileKeyDAO.getFileKeyByOperationId(operationId)
-                .flatMap(operationFileKey -> safeStorageClient.getFile(operationFileKey.getFileKey()))
+                .flatMap(operationFileKey -> safeStorageClient.getFile(operationFileKey.getFileKey()) )
                 .map(response -> operationId)
                 .onErrorResume(PnRetryStorageException.class, ex -> Mono.error(new PnGenericException(SAFE_STORAGE_FILE_LOADING, SAFE_STORAGE_FILE_LOADING.getMessage(), HttpStatus.BAD_REQUEST)))
                 .onErrorResume(WebClientResponseException.class, ex -> {
