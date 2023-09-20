@@ -72,38 +72,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                 })
                 .doOnNext(operationAndAddress ->
                         log.debug("operation = {}, address = {} Address retrivied", operationAndAddress.getT1(), operationAndAddress.getT2()))
-                .flatMap(operationAndAddress ->
-                    getIuns(operationAndAddress.getT1().getRecipientInternalId())
-                        .collectList()
-                        .doOnNext(responsePaperNotificationFailed -> {
-                            log.debug("listOfIuns = {}, List of iuns retrivied", responsePaperNotificationFailed);
-                            operationAndAddress.getT1().setErrorReason(null);
-                            log.error("errorReason = {}, Setting to null errorReason into entityOperation", operationAndAddress.getT1());
-                            updateOperationStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION);
-                        })
-                        .flatMapMany(Flux::fromIterable)
-                        .parallel()
-                        .flatMap(iun -> {
-                            log.debug("iun = {}, Get attachment from iun", iun);
-                            return getAttachmentsFromIun(operationAndAddress.getT1(), iun);
-                        })
-                        .sequential()
-                        .flatMap(pnServiceDeskAttachments -> {
-                            log.debug("entityAttachments = {}, iun = {}, Are attachments available for this iun?", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
-                            if (Boolean.TRUE.equals(pnServiceDeskAttachments.getIsAvailable())){
-                                log.debug("entityAttachments = {}, iun = {}, Attachments are available for this iun", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
-                                return Flux.fromIterable(pnServiceDeskAttachments.getFilesKey());
-                            }
-                            log.debug("entityAttachments = {}, iun = {}, Attachments are not available for this iun", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
-                            return Flux.empty();
-                        })
-                        .collectList()
-                        .flatMap(attachments -> {
-                            log.debug("entityOperation = {}, entityAddress = {}, attachments = {}, All data requirements are available to make the call to prepare", operationAndAddress.getT1(), operationAndAddress.getT2(), attachments);
-                            return paperPrepare(operationAndAddress.getT1(), operationAndAddress.getT2(), attachments);
-                        })
-                        .doOnError(exception -> log.error("errorReason = {}, Error during the validation flow", exception.getMessage()))
-                )
+                .flatMap(operationAndAddress -> checkValidationFlow(operationAndAddress.getT1(), operationAndAddress.getT2()))
                 .doOnError(PnEntityNotFoundException.class, error -> log.error("operationId = {}, Operation entity was not found", operationId))
                 .onErrorResume(ex -> {
                     if (ex instanceof PnEntityNotFoundException) {
@@ -112,6 +81,39 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     return traceErrorOnDB(operationId, ex);
                 })
                 .block();
+    }
+
+    private Mono<Void> checkValidationFlow(PnServiceDeskOperations operation, PnServiceDeskAddress addres) {
+        return getIuns(operation.getRecipientInternalId())
+                .collectList()
+                .doOnNext(responsePaperNotificationFailed -> {
+                    log.debug("listOfIuns = {}, List of iuns retrivied", responsePaperNotificationFailed);
+                    operation.setErrorReason(null);
+                    log.debug("errorReason = {}, Setting to null errorReason into entityOperation", operation);
+                    updateOperationStatus(operation, OperationStatusEnum.VALIDATION);
+                })
+                .flatMapMany(Flux::fromIterable)
+                .flatMap(iun -> {
+                    log.debug("iun = {}, Get attachment from iun", iun);
+                    return getAttachmentsFromIun(operation, iun);
+                })
+                .flatMap(pnServiceDeskAttachments -> getFileKeyFromAttachments(pnServiceDeskAttachments))
+                .collectList()
+                .flatMap(attachments -> {
+                    log.debug("entityOperation = {}, entityAddress = {}, attachments = {}, All data requirements are available to make the call to prepare", operation, addres, attachments);
+                    return paperPrepare(operation, addres, attachments);
+                })
+                .doOnError(exception -> log.error("errorReason = {}, Error during the validation flow", exception.getMessage()));
+    }
+
+    private Flux<String> getFileKeyFromAttachments(PnServiceDeskAttachments pnServiceDeskAttachments) {
+        log.debug("entityAttachments = {}, iun = {}, Are attachments available for this iun?", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
+        if (Boolean.TRUE.equals(pnServiceDeskAttachments.getIsAvailable())){
+            log.debug("entityAttachments = {}, iun = {}, Attachments are available for this iun", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
+            return Flux.fromIterable(pnServiceDeskAttachments.getFilesKey());
+        }
+        log.debug("entityAttachments = {}, iun = {}, Attachments are not available for this iun", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
+        return Flux.empty();
     }
 
     /**
@@ -144,7 +146,6 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
     private Mono<Void> validationAddress(PnServiceDeskAddress address) {
         log.debug("address: {}, ValidationAddress received input", address);
 
-        log.debug("address = {}, Calling address service", address);
         return addressManagerClient.deduplicates(address)
                 .onErrorResume(exception -> {
                     log.error("errorReason = {}, Error during ", exception.getMessage());
@@ -317,7 +318,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                 .doOnNext(response -> log.debug("response = {}, Paper prepare request has been sent", response))
                 .flatMap(response -> {
                     entityOperation.setErrorReason(null);
-                    log.error("errorReason = {}, Setting to null errorReason into entityOperation", entityOperation);
+                    log.debug("errorReason = {}, Setting to null errorReason into entityOperation", entityOperation);
                     return updateOperationStatus(entityOperation, OperationStatusEnum.PREPARING);
                 })
                 .onErrorResume(exception -> {
