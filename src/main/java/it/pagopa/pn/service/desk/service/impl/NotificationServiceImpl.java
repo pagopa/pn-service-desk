@@ -33,7 +33,7 @@ public class NotificationServiceImpl extends BaseService implements Notification
                 .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_GET_UNREACHABLE_NOTIFICATION, ERROR_GET_UNREACHABLE_NOTIFICATION.getMessage())))
                 .flatMap(taxId -> this.pnDeliveryPushClient.paperNotificationFailed(taxId)
                         .collectList()
-                        .flatMap(notifications -> checkNotificationFailed(taxId, notifications.stream().map(e -> e.getIun()).collect(Collectors.toList())))
+                        .flatMap(notifications -> checkNotificationFailedCount(taxId, notifications.stream().map(e -> e.getIun()).collect(Collectors.toList())))
                         .map(count -> {
                             notificationsUnreachableResponse.setNotificationsCount(count);
                             log.info("Unreachable notification: {} ",notificationsUnreachableResponse);

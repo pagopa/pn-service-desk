@@ -19,7 +19,7 @@ public class BaseService {
     @Autowired
     private OperationDAO operationDAO;
 
-    protected Mono<Long> checkNotificationFailed(String taxId, List<String> iuns) {
+    protected Mono<Long> checkNotificationFailedCount(String taxId, List<String> iuns) {
         return this.operationDAO.searchOperationsFromRecipientInternalId(taxId)
                 .collectList()
                 .flatMap(operation -> {
@@ -28,7 +28,7 @@ public class BaseService {
                         return operationContainsIuns(operation, iuns)
                                 .collectList()
                                 .flatMap(iunsToSend -> {
-                                    if (iunsToSend.isEmpty()) return Mono.just(1L);
+                                    if (iunsToSend.isEmpty()) return Mono.just(0L);
                                     else return Mono.just(1L);
                                 });
                     }
