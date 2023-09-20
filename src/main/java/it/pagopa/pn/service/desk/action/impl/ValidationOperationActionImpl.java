@@ -83,25 +83,25 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                 .block();
     }
 
-    private Mono<Void> checkValidationFlow(PnServiceDeskOperations operation, PnServiceDeskAddress addres) {
+    private Mono<Void> checkValidationFlow(PnServiceDeskOperations operation, PnServiceDeskAddress address) {
         return getIuns(operation.getRecipientInternalId())
                 .collectList()
-                .doOnNext(responsePaperNotificationFailed -> {
+                .flatMap(responsePaperNotificationFailed -> {
                     log.debug("listOfIuns = {}, List of iuns retrivied", responsePaperNotificationFailed);
                     operation.setErrorReason(null);
                     log.debug("errorReason = {}, Setting to null errorReason into entityOperation", operation);
-                    updateOperationStatus(operation, OperationStatusEnum.VALIDATION);
+                    return updateOperationStatus(operation, OperationStatusEnum.VALIDATION).thenReturn(responsePaperNotificationFailed);
                 })
                 .flatMapMany(Flux::fromIterable)
                 .flatMap(iun -> {
                     log.debug("iun = {}, Get attachment from iun", iun);
                     return getAttachmentsFromIun(operation, iun);
                 })
-                .flatMap(pnServiceDeskAttachments -> getFileKeyFromAttachments(pnServiceDeskAttachments))
+                .flatMap(this::getFileKeyFromAttachments)
                 .collectList()
                 .flatMap(attachments -> {
-                    log.debug("entityOperation = {}, entityAddress = {}, attachments = {}, All data requirements are available to make the call to prepare", operation, addres, attachments);
-                    return paperPrepare(operation, addres, attachments);
+                    log.debug("entityOperation = {}, entityAddress = {}, attachments = {}, All data requirements are available to make the call to prepare", operation, address, attachments);
+                    return paperPrepare(operation, address, attachments);
                 })
                 .doOnError(exception -> log.error("errorReason = {}, Error during the validation flow", exception.getMessage()));
     }
