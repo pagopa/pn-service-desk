@@ -216,7 +216,7 @@ class ValidationOperationActionImplTest {
         Mockito.when(this.operationDAO.updateEntity(Mockito.any()))
                 .thenReturn(Mono.just(pnServiceDeskOperations));
         Assertions.assertDoesNotThrow(() ->
-            this.validationOperationAction.execute("opId1234")
+                this.validationOperationAction.execute("opId1234")
         );
         ArgumentCaptor<PnServiceDeskOperations> captureOperations = ArgumentCaptor.forClass(PnServiceDeskOperations.class);
         Mockito.verify(operationDAO).updateEntity(captureOperations.capture());
@@ -232,11 +232,9 @@ class ValidationOperationActionImplTest {
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
         Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.empty());
-        Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(),Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
         Assertions.assertThrows(PnGenericException.class, () ->
-            this.validationOperationAction.execute("opId1234")
+                this.validationOperationAction.execute("opId1234")
         );
     }
 
