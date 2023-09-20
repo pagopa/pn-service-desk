@@ -91,7 +91,7 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb put-item \
     --table-name ClientDynamoTable  \
-    --item '{"apiKey":{"S":"ClientTest"},"clientId":{"S":"clientId"}}'
+    --item '{"apiKey":{"S":"test"},"clientId":{"S":"clientId"}}'
 
 
 echo "Initialization terminated"
