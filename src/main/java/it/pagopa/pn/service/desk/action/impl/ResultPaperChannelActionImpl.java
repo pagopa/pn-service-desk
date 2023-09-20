@@ -73,6 +73,7 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
             String operationId = Utility.extractOperationId(sendEventDto.getRequestId());
             log.debug("operationId = {}, requestId = {}, operationStatus = {}, SendEventDto is not null", operationId, sendEventDto.getRequestId(), operationStatusEnum);
             PnServiceDeskEvents pnServiceDeskEvents = ServiceDeskEventsMapper.toEntity(sendEventDto.getStatusDetail(), sendEventDto.getStatusDescription());
+            entityOperation.setOperationLastUpdateDate(pnServiceDeskEvents.getTimestamp());
 
             log.debug("operationId = {}, requestId = {}, operationStatus = {}, Is entityOperation's list's events not null?", operationId, sendEventDto.getRequestId(), operationStatusEnum);
             if(entityOperation.getEvents() == null) {
