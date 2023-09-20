@@ -78,7 +78,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                         .doOnNext(responsePaperNotificationFailed -> {
                             log.debug("listOfIuns = {}, List of iuns retrivied", responsePaperNotificationFailed);
                             operationAndAddress.getT1().setErrorReason(null);
-                            log.error("errorReason = {}, Setting to null errorReason into entityOperation", operationAndAddress.getT1());
+                            log.debug("errorReason = {}, Setting to null errorReason into entityOperation", operationAndAddress.getT1());
                             updateOperationStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION);
                         })
                         .flatMapMany(Flux::fromIterable)
@@ -317,7 +317,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                 .doOnNext(response -> log.debug("response = {}, Paper prepare request has been sent", response))
                 .flatMap(response -> {
                     entityOperation.setErrorReason(null);
-                    log.error("errorReason = {}, Setting to null errorReason into entityOperation", entityOperation);
+                    log.debug("errorReason = {}, Setting to null errorReason into entityOperation", entityOperation);
                     return updateOperationStatus(entityOperation, OperationStatusEnum.PREPARING);
                 })
                 .onErrorResume(exception -> {
