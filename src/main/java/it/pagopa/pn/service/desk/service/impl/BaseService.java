@@ -3,6 +3,7 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
+import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
@@ -14,10 +15,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @CustomLog
+@AllArgsConstructor
 public class BaseService {
 
-    @Autowired
-    private OperationDAO operationDAO;
+    private final OperationDAO operationDAO;
 
     protected Mono<Long> checkNotificationFailedCount(String taxId, List<String> iuns) {
         return this.operationDAO.searchOperationsFromRecipientInternalId(taxId)

@@ -18,11 +18,16 @@ import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_GET_UN
 
 @Service
 @CustomLog
-@AllArgsConstructor
 public class NotificationServiceImpl extends BaseService implements NotificationService {
 
-    private PnDataVaultClient dataVaultClient;
-    private PnDeliveryPushClient pnDeliveryPushClient;
+    private final PnDataVaultClient dataVaultClient;
+    private final PnDeliveryPushClient pnDeliveryPushClient;
+
+    public NotificationServiceImpl(OperationDAO operationDAO, PnDataVaultClient dataVaultClient, PnDeliveryPushClient pnDeliveryPushClient) {
+        super(operationDAO);
+        this.dataVaultClient = dataVaultClient;
+        this.pnDeliveryPushClient = pnDeliveryPushClient;
+    }
 
     @Override
     public Mono<NotificationsUnreachableResponse> getUnreachableNotification(String xPagopaPnUid, NotificationRequest notificationRequest) {
