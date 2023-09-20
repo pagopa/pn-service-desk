@@ -31,30 +31,39 @@ public class PnServiceDeskAddress {
     private String operationId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FULL_NAME)}))
+    @ToString.Exclude
     private String fullName;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_NAME_ROW_2)}))
+    @ToString.Exclude
     private String nameRow2;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS)}))
+    @ToString.Exclude
     private String address;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS_ROW_2)}))
+    @ToString.Exclude
     private String addressRow2;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CAP)}))
+    @ToString.Exclude
     private String cap;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CITY)}))
+    @ToString.Exclude
     private String city;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CITY_2)}))
+    @ToString.Exclude
     private String city2;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_COUNTRY)}))
+    @ToString.Exclude
     private String country;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PR)}))
+    @ToString.Exclude
     private String pr;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
