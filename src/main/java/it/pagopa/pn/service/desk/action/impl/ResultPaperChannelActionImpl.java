@@ -7,8 +7,10 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dt
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
 import it.pagopa.pn.service.desk.mapper.ServiceDeskEventsMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.AllArgsConstructor;
@@ -21,6 +23,7 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_PUSH_CLIENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.PAPERCHANNEL_STATUS_CODE_EMPTY;
 
 
@@ -30,6 +33,7 @@ import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.PAPERCHANNEL
 public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
 
     private OperationDAO operationDAO;
+    private PnDeliveryPushClient pnDeliveryPushClient;
 
 
     @Override
@@ -46,6 +50,10 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
                     return Mono.error(new PnGenericException(PAPERCHANNEL_STATUS_CODE_EMPTY, PAPERCHANNEL_STATUS_CODE_EMPTY.getMessage()));
                 }
                 OperationStatusEnum newStatus = Utility.getOperationStatusFrom(sendEventDto.getStatusCode());
+                if (sendEventDto.getStatusCode().equals(StatusCodeEnumDto.OK)){
+                    newStatus = Utility.getOperationStatusFrom(StatusCodeEnumDto.PROGRESS);
+                    notificationViewed(entityOperation);
+                }
                 return updateOperationEventAndStatus(sendEventDto, entityOperation, newStatus, null);
             })
             .doOnError(PnEntityNotFoundException.class, error -> log.error("operationId = {}, EntityOperation was not found", operationId))
@@ -89,6 +97,25 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
 
         log.debug("operationId = {}, operationStatus = {}, Update entityOperation and event with new status", entityOperation.getOperationId(), operationStatusEnum);
         return this.operationDAO.updateEntity(entityOperation).then();
+    }
+
+    private void notificationViewed (PnServiceDeskOperations pnServiceDeskOperations){
+
+        List<PnServiceDeskAttachments> attachments = pnServiceDeskOperations.getAttachments();
+        if (attachments != null) {
+            attachments.forEach(att -> {
+                if (Boolean.TRUE.equals(att.getIsAvailable())) {
+                    pnDeliveryPushClient.notifyNotificationViewed(att.getIun(), pnServiceDeskOperations)
+                            .doOnSuccess(notificationViewed -> {
+                                String iun = notificationViewed.getIun();
+                            })
+                            .onErrorResume(exception -> {
+                                log.error("errorReason = {}, An error occurred while call service notificationViewed", exception.getMessage());
+                                return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
+                            });
+                }
+            });
+        }
     }
 
 }
