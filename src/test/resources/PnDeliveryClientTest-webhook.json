@@ -1,7 +1,117 @@
 [
     {
         "httpRequest": {
-            "path": "/delivery-private/notifications/1234",
+            "path": "/delivery-private/notifications/ABC-IUN-34221110000",
+            "method": "GET"
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "idempotenceToken": "idenpotence123",
+                "paProtocolNumber": "paProtocolNumber1234",
+                "subject": "Subject432",
+                "abstract": "abstract121",
+                "recipients": [],
+                "documents": [
+                    {
+                        "digests": null,
+                        "contentType": "ContentType",
+                        "ref": {
+                            "key": "1234567",
+                            "versionToken": "versionToken6"
+                        },
+                        "title": "title34",
+                        "docIdx": "docIdx98"
+                    },
+                    {
+                        "digests": null,
+                        "contentType": "ContentType",
+                        "ref": {
+                            "key": "7654321",
+                            "versionToken": "versionToken1"
+                        },
+                        "title": "title34",
+                        "docIdx": "docIdx98"
+                    },
+                    {
+                        "digests": null,
+                        "contentType": "ContentType",
+                        "ref": {
+                            "key": "981234",
+                            "versionToken": "versionToken2"
+                        },
+                        "title": "title34",
+                        "docIdx": "docIdx98"
+                    }
+                ],
+                "notificationFeePolicy": null,
+                "cancelledIun": "cancelledIun354"
+            }
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/delivery-private/notifications/ABC-IUN-1112223333",
+            "method": "GET"
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "idempotenceToken": "idenpotence123",
+                "paProtocolNumber": "paProtocolNumber1234",
+                "subject": "Subject432",
+                "abstract": "abstract121",
+                "recipients": [],
+                "documents": [
+                    {
+                        "digests": null,
+                        "contentType": "ContentType",
+                        "ref": {
+                            "key": "1234567",
+                            "versionToken": "versionToken6"
+                        },
+                        "title": "title34",
+                        "docIdx": "docIdx98"
+                    },
+                    {
+                        "digests": null,
+                        "contentType": "ContentType",
+                        "ref": {
+                            "key": "7654321",
+                            "versionToken": "versionToken1"
+                        },
+                        "title": "title34",
+                        "docIdx": "docIdx98"
+                    },
+                    {
+                        "digests": null,
+                        "contentType": "ContentType",
+                        "ref": {
+                            "key": "981234",
+                            "versionToken": "versionToken2"
+                        },
+                        "title": "title34",
+                        "docIdx": "docIdx98"
+                    }
+                ],
+                "notificationFeePolicy": null,
+                "cancelledIun": "cancelledIun354"
+            }
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/delivery-private/notifications/ABC-IUN-3422155777",
             "method": "GET"
         },
         "httpResponse": {
