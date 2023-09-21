@@ -19,24 +19,39 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class BaseService {
 
-    private final OperationDAO operationDAO;
+    protected final OperationDAO operationDAO;
 
     protected Mono<Long> checkNotificationFailedCount(String taxId, List<String> iuns) {
+        return checkNotificationFailed(taxId, iuns)
+                .doOnNext(iunsToSend -> log.info("unreachable iun from operation {}", iunsToSend))
+                .collectList()
+                .flatMap(lst -> {
+                    if (!lst.isEmpty()) {
+                        lst.stream().forEach(i -> log.info("unreachable iun {}", i));
+                    }
+                    return Mono.just(lst.size()  > 0 ? 1L : 0L);
+                });
+
+    }
+
+    protected Flux<String> checkNotificationFailedList(String taxId, List<String> iuns) {
+        return checkNotificationFailed(taxId, iuns)
+                .collectList()
+                .flatMapMany(lst -> {
+                    if (!lst.isEmpty()) {
+                        lst.stream().forEach(i -> log.info("unreachable iun {}", i));
+                    }
+                    return Flux.fromIterable(lst);
+                });
+    }
+
+    private Flux<String> checkNotificationFailed(String taxId, List<String> iuns) {
         return this.operationDAO.searchOperationsFromRecipientInternalId(taxId)
                 .collectList()
-                .flatMap(operation -> {
-                    if (operation.isEmpty()) return Mono.just(1L);
+                .flatMapMany(operation -> {
+                    if (operation.isEmpty()) return Flux.fromIterable(iuns);
                     else {
-                        return operationContainsIuns(operation, iuns)
-                                .doOnNext(iunsToSend -> log.info("unreachable iun {}", iunsToSend))
-                                .collectList()
-                                .flatMap(lst -> {
-                                    if (lst.isEmpty()) {
-                                        iuns.stream().forEach(i -> log.info("unreachable iun {}", i));
-                                        return Mono.just(1L);
-                                    }
-                                    else return Mono.just(lst.size()  > 0 ? 1L : 0L);
-                                });
+                        return operationContainsIuns(operation, iuns);
                     }
                 });
     }
@@ -46,10 +61,18 @@ public class BaseService {
                 .flatMap(operation -> retrieveOperationWithIuns(operation, iuns))
                 .collectList()
                 .flatMapMany(lst -> {
+                    if (lst.isEmpty()) {
+                        iuns.stream().forEach(i -> log.info("unreachable iun from operation {}", i));
+                        return Flux.fromIterable(iuns);
+                    }
+                    // remove common iuns
+                    iuns.removeAll(lst.stream().map(i -> i.getIun()).collect(Collectors.toList()));
+
                     Set<String> unreachableIuns = lst.stream()
                             .filter(l -> StringUtils.equals(l.getStatus(), OperationStatusEnum.KO.toString()))
                             .map(i -> i.getIun())
                             .collect(Collectors.toSet());
+                    unreachableIuns.addAll(iuns.stream().collect(Collectors.toSet()));
 
                     unreachableIuns.removeAll(lst.stream()
                             .filter(l -> !StringUtils.equals(l.getStatus(), OperationStatusEnum.KO.toString()))
@@ -61,12 +84,14 @@ public class BaseService {
     }
 
     private Flux<OperationDto> retrieveOperationWithIuns(PnServiceDeskOperations operation, List<String> iuns) {
-        return Flux.fromStream(operation.getAttachments().stream())
-                .filter(a -> a.getIsAvailable() == Boolean.TRUE && iuns.contains(a.getIun()))
-                .map(attachments -> {
-                    log.info("common iun {} with operationId:{} status:{}", attachments.getIun(), operation.getOperationId(), operation.getStatus());
-                    return OperationDtoMapper.initOperation(operation, attachments.getIun());
-                });
+        if (operation.getAttachments() != null && !operation.getAttachments().isEmpty()) {
+            return Flux.fromStream(operation.getAttachments().stream())
+                    .filter(a -> a.getIsAvailable() == Boolean.TRUE && iuns.contains(a.getIun()))
+                    .map(attachments -> {
+                        log.info("common iun {} with operationId:{} status:{}", attachments.getIun(), operation.getOperationId(), operation.getStatus());
+                        return OperationDtoMapper.initOperation(operation, attachments.getIun());
+                    });
+        } else return Flux.empty();
     }
 
 }
