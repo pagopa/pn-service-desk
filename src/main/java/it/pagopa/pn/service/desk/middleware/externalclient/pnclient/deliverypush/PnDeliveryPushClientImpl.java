@@ -1,19 +1,28 @@
 package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush;
 
-
+import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
+import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.EventComunicationApi;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.LegalFactsPrivateApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.PaperNotificationFailedApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.*;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.LegalFactsPrivateApi;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import lombok.AllArgsConstructor;
+import lombok.CustomLog;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+
+import java.net.ConnectException;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.concurrent.TimeoutException;
 
 @Component
+@CustomLog
 @AllArgsConstructor
 public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
     private PaperNotificationFailedApi notificationFailedApi;
@@ -41,6 +50,14 @@ public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
         request.setRaddBusinessTransactionDate(OffsetDateTime.ofInstant(entity.getOperationStartDate(), ZoneOffset.UTC));
         request.setRaddBusinessTransactionId(entity.getOperationId());
         request.setRaddType(RADD_TYPE);
-        return eventComunicationApi.notifyNotificationViewed(iun, request);
+        return this.eventComunicationApi.notifyNotificationViewed(iun, request)
+                .map(item -> {
+                    log.info("response of notification viewed : {}", item.getIun());
+                    return item;
+                })
+                .onErrorResume(ex -> {
+                    log.error("Notification viewed in error");
+                    return Mono.empty();
+                });
     }
 }
