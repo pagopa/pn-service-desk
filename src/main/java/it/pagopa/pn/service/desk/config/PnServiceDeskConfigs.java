@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Import;
 @Import({SharedAutoConfiguration.class})
 public class PnServiceDeskConfigs {
 
-
     private String safeStorageBasePath;
     private String dataVaultBasePath;
     private String raddFsuBasePath;
@@ -30,6 +29,7 @@ public class PnServiceDeskConfigs {
     private Long ttlReceiverAddress;
     private String productType;
     private String senderPaId;
+    private Integer notifyAttempt;
 
     @Data
     public static class Topics {

@@ -51,6 +51,7 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
                     }
                     OperationStatusEnum newStatus = Utility.getOperationStatusFrom(sendEventDto.getStatusCode());
                     if (sendEventDto.getStatusCode().equals(StatusCodeEnumDto.OK)){
+                        newStatus = OperationStatusEnum.NOTIFY_VIEW;
                         updateNotificationViewedAsync(entityOperation);
                     }
 
@@ -118,14 +119,13 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
         if (iuns == null || iuns.isEmpty()) {
             return Mono.empty();
         }
-
+        log.info("notifyNotificationViewed with iun {}", iuns.get(0));
         return pnDeliveryPushClient.notifyNotificationViewed(iuns.get(0), pnServiceDeskOperations)
                 .switchIfEmpty(Mono.defer(() -> {
                     log.info("result empty push on queue ");
                     return Mono.just(new ResponseNotificationViewedDtoDto());
                 }))
                 .flatMap(a -> {
-                    log.info("reponse iun {}", a.getIun());
                     List<String> newIuns = iuns.subList(1, iuns.size());
                     return callNotificationViewed(newIuns, pnServiceDeskOperations);
                 });

@@ -60,6 +60,9 @@ public class OperationMapper {
         operationResponse.setOperationCreateTimestamp(OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationStartDate(), ZoneOffset.UTC));
         operationResponse.setOperationUpdateTimestamp( OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationLastUpdateDate(), ZoneOffset.UTC));
         NotificationStatus status = new NotificationStatus();
+        if (pnServiceDeskOperations.getStatus().equals(OperationStatusEnum.NOTIFY_VIEW.toString())) {
+            pnServiceDeskOperations.setStatus(OperationStatusEnum.OK.toString());
+        }
         status.setStatus(NotificationStatus.StatusEnum.fromValue(pnServiceDeskOperations.getStatus()));
         status.setStatusDescription(pnServiceDeskOperations.getErrorReason());
         if (pnServiceDeskOperations.getEvents() != null && !pnServiceDeskOperations.getEvents().isEmpty()) {
