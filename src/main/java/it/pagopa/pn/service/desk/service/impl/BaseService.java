@@ -59,27 +59,21 @@ public class BaseService {
     protected Flux<String> operationContainsIuns(List<PnServiceDeskOperations> operations, List<String> iuns){
         return Flux.fromStream(operations.stream())
                 .flatMap(operation -> retrieveOperationWithIuns(operation, iuns))
+                .distinct()
                 .collectList()
                 .flatMapMany(lst -> {
                     if (lst.isEmpty()) {
                         iuns.stream().forEach(i -> log.info("unreachable iun from operation {}", i));
                         return Flux.fromIterable(iuns);
                     }
-                    // remove common iuns
-                    iuns.removeAll(lst.stream().map(i -> i.getIun()).collect(Collectors.toList()));
 
-                    Set<String> unreachableIuns = lst.stream()
-                            .filter(l -> StringUtils.equals(l.getStatus(), OperationStatusEnum.KO.toString()))
+                    iuns.removeAll(lst.stream().map(i -> i.getIun()).collect(Collectors.toList()));
+                    Set<String> result = lst.stream()
+                            .filter(i -> StringUtils.equals(i.getStatus(), OperationStatusEnum.KO.toString()))
                             .map(i -> i.getIun())
                             .collect(Collectors.toSet());
-                    unreachableIuns.addAll(iuns.stream().collect(Collectors.toSet()));
-
-                    unreachableIuns.removeAll(lst.stream()
-                            .filter(l -> !StringUtils.equals(l.getStatus(), OperationStatusEnum.KO.toString()))
-                            .map(i -> i.getIun())
-                            .distinct()
-                            .collect(Collectors.toList()));
-                    return Flux.fromIterable(unreachableIuns);
+                    result.addAll(iuns);
+                    return Flux.fromStream(result.stream());
                 });
     }
 

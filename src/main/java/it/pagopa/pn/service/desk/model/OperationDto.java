@@ -4,9 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -26,7 +25,25 @@ public class OperationDto {
         }
 
         OperationDto c = (OperationDto) o;
-        return operationId.equals(c.getIun());
+        if (iun.equals(c.getIun())) {
+            // equals if same status
+            if (status.equals(c.getStatus())) {
+                if (StringUtils.equals(status, OperationStatusEnum.KO.toString())) return false;
+                else return true;
+            }
+            else {
+                // equals if status KO and other one is !KO
+                return (StringUtils.equals(status, OperationStatusEnum.KO.toString()) && !StringUtils.equals(c.getStatus(), OperationStatusEnum.KO.toString())
+                || StringUtils.equals(c.getStatus(), OperationStatusEnum.KO.toString()) && !StringUtils.equals(status, OperationStatusEnum.KO.toString()));
+            }
+        }
+
+        return iun.equals(c.getIun());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.iun);
     }
 
 }
