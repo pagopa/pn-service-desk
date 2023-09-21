@@ -97,6 +97,10 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     log.debug("iun = {}, Get attachment from iun", iun);
                     return getAttachmentsFromIun(operation, iun);
                 })
+                .collectList()
+                .doOnNext(pnServiceDeskAttachmentsList -> operation.getAttachments().addAll(pnServiceDeskAttachmentsList)) //todo  aggiungere controlli commentati in getAttachmentsFromIun
+                .flatMap(pnServiceDeskAttachments -> operationDAO.updateEntity(operation).thenReturn(pnServiceDeskAttachments)) //todo aggiungere controlli commentati in getAttachmentsFromIun
+                .flatMapMany(Flux::fromIterable)
                 .flatMap(this::getFileKeyFromAttachments)
                 .collectList()
                 .flatMap(attachments -> {
@@ -193,10 +197,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                                 entity.setFilesKey(fileKeys);
                                 log.debug("fileKeys = {}, entityAttachment = {}, EntityAttachment's list of filesKey has been setted", fileKeys, entity);
                                 return entity;
-                            })
-                            .doOnNext(pnServiceDeskAttachments -> entityOperation.getAttachments().add(pnServiceDeskAttachments))
-                            .flatMap(pnServiceDeskAttachments -> operationDAO.updateEntity(entityOperation).thenReturn(pnServiceDeskAttachments))
-                );
+                            }));
 //                ).zipWith(Mono.just(entityOperation))
 //                .flatMap(attachmentAndOperation -> {
 //                    PnServiceDeskOperations entityOperationToUpdate = attachmentAndOperation.getT2();
