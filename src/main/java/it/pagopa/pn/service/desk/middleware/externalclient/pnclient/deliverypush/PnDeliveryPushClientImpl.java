@@ -17,6 +17,7 @@ import reactor.util.retry.Retry;
 
 import java.net.ConnectException;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.concurrent.TimeoutException;
@@ -43,12 +44,12 @@ public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
     }
 
     @Override
-    public Mono<ResponseNotificationViewedDtoDto> notifyNotificationViewed(String iun, PnServiceDeskOperations entity) {
+    public Mono<ResponseNotificationViewedDtoDto> notifyNotificationViewed(String iun, String operationId, String internalRecipientId) {
         RequestNotificationViewedDtoDto request = new RequestNotificationViewedDtoDto();
         request.setRecipientType(RecipientTypeDto.PF);
-        request.setRecipientInternalId(entity.getRecipientInternalId());
-        request.setRaddBusinessTransactionDate(OffsetDateTime.ofInstant(entity.getOperationStartDate(), ZoneOffset.UTC));
-        request.setRaddBusinessTransactionId(entity.getOperationId());
+        request.setRecipientInternalId(internalRecipientId);
+        request.setRaddBusinessTransactionDate(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
+        request.setRaddBusinessTransactionId(operationId);
         request.setRaddType(RADD_TYPE);
         return this.eventComunicationApi.notifyNotificationViewed(iun, request)
                 .map(item -> {

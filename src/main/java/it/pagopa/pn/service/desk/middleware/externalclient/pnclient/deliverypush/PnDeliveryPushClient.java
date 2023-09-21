@@ -15,6 +15,6 @@ public interface PnDeliveryPushClient {
 
     Flux<ResponsePaperNotificationFailedDtoDto> paperNotificationFailed(String recipientInternalId);
     Flux<LegalFactListElementDto> getNotificationLegalFactsPrivate(String recipientInternalId, String iun);
-    Mono<ResponseNotificationViewedDtoDto> notifyNotificationViewed(String iun, PnServiceDeskOperations entity);
+    Mono<ResponseNotificationViewedDtoDto> notifyNotificationViewed(String iun, String operationId, String internalRecipientId);
 
 }

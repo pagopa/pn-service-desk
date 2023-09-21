@@ -1,16 +1,16 @@
 package it.pagopa.pn.service.desk.action.impl;
 
 import it.pagopa.pn.service.desk.action.ResultPaperChannelAction;
+import it.pagopa.pn.service.desk.action.common.CommonAction;
 import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponseNotificationViewedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.SendEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
 import it.pagopa.pn.service.desk.mapper.ServiceDeskEventsMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
-import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
+import it.pagopa.pn.service.desk.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.AllArgsConstructor;
@@ -25,16 +25,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_PUSH_CLIENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.PAPERCHANNEL_STATUS_CODE_EMPTY;
 
 @Component
 @CustomLog
 @AllArgsConstructor
-public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
+public class ResultPaperChannelActionImpl extends CommonAction implements ResultPaperChannelAction {
 
     private OperationDAO operationDAO;
-    private PnDeliveryPushClient pnDeliveryPushClient;
+    private InternalQueueMomProducer internalQueueMomProducer;
 
     @Override
     public void execute(SendEventDto sendEventDto) {
@@ -104,32 +103,25 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
         log.info("call notificationViewed for operationId {}", pnServiceDeskOperations.getOperationId());
 
         if (pnServiceDeskOperations.getAttachments() != null && !pnServiceDeskOperations.getAttachments().isEmpty()) {
-            Mono.just("").publishOn(Schedulers.boundedElastic())
-                    .flatMap(xx -> callNotificationViewed(pnServiceDeskOperations.getAttachments().stream()
-                            .filter(attachments -> attachments.getIsAvailable() == Boolean.TRUE)
-                            .map(iun -> iun.getIun())
-                            .collect(Collectors.toList()), pnServiceDeskOperations))
-                    .subscribeOn(Schedulers.boundedElastic())
-                    .subscribe();
+            return callNotificationViewed(pnServiceDeskOperations.getAttachments().stream()
+                    .filter(attachments -> attachments.getIsAvailable() == Boolean.TRUE)
+                    .map(iun -> iun.getIun())
+                    .collect(Collectors.toList()), pnServiceDeskOperations);
         }
         return Mono.empty();
     }
 
     private Mono<Void> callNotificationViewed(List<String> iuns, PnServiceDeskOperations pnServiceDeskOperations){
         if (iuns == null || iuns.isEmpty()) {
-            return Mono.empty();
+            return updateOperationEventAndStatus(null, pnServiceDeskOperations, OperationStatusEnum.OK, null);
         }
-        log.info("notifyNotificationViewed with iun {}", iuns.get(0));
-        return pnDeliveryPushClient.notifyNotificationViewed(iuns.get(0), pnServiceDeskOperations)
-                .switchIfEmpty(Mono.defer(() -> {
-                    log.info("result empty push on queue ");
-                    return Mono.just(new ResponseNotificationViewedDtoDto());
-                }))
-                .flatMap(a -> {
-                    List<String> newIuns = iuns.subList(1, iuns.size());
-                    return callNotificationViewed(newIuns, pnServiceDeskOperations);
-                });
 
+        log.info("push message on queue for operationId {}", pnServiceDeskOperations.getOperationId());
+        internalQueueMomProducer.push(getInternalEvent(iuns, pnServiceDeskOperations.getOperationId(), pnServiceDeskOperations.getRecipientInternalId()));
+        return Mono.empty();
     }
+
+
+
 
 }

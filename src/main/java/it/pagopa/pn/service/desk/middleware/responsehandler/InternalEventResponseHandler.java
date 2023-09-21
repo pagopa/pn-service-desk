@@ -5,7 +5,6 @@ package it.pagopa.pn.service.desk.middleware.responsehandler;
 import it.pagopa.pn.service.desk.action.NotifyDeliveryPushAction;
 import it.pagopa.pn.service.desk.action.ValidationOperationAction;
 import it.pagopa.pn.service.desk.middleware.queue.model.InternalEventBody;
-import it.pagopa.pn.service.desk.model.NotifyEventDTO;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import org.springframework.stereotype.Component;
@@ -29,7 +28,7 @@ public class InternalEventResponseHandler {
         }
     }
 
-    public void handleNotifyDeliveryPushEventResponse(NotifyEventDTO response) {
+    public void handleNotifyDeliveryPushEventResponse(InternalEventBody response) {
         try {
             log.logStartingProcess("VALIDATION OPERATION");
             this.notifyDeliveryPushAction.execute(response);
