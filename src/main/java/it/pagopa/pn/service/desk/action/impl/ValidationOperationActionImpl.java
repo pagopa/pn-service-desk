@@ -23,10 +23,9 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
+import it.pagopa.pn.service.desk.service.impl.BaseService;
 import it.pagopa.pn.service.desk.utility.Utility;
-import lombok.AllArgsConstructor;
 import lombok.CustomLog;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -36,19 +35,16 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.NO_ATTACHMENT_AVAILABLE;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
-
 @Component
 @CustomLog
-@AllArgsConstructor
-public class ValidationOperationActionImpl implements ValidationOperationAction {
+public class ValidationOperationActionImpl extends BaseService implements ValidationOperationAction {
 
-    private OperationDAO operationDAO;
     private AddressDAO addressDAO;
     private PnAddressManagerClient addressManagerClient;
     private PnDeliveryPushClient pnDeliveryPushClient;
@@ -57,6 +53,22 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
     private PnSafeStorageClient safeStorageClient;
     private PnServiceDeskConfigs cfn;
     private PnDataVaultClient pnDataVaultClient;
+
+    public ValidationOperationActionImpl(OperationDAO operationDao, AddressDAO addressDAO,
+                                         PnAddressManagerClient addressManagerClient, PnDeliveryPushClient pnDeliveryPushClient,
+                                         PnDeliveryClient pnDeliveryClient,
+                                         PnPaperChannelClient paperChannelClient, PnSafeStorageClient safeStorageClient,
+                                         PnServiceDeskConfigs cfn, PnDataVaultClient pnDataVaultClient) {
+        super(operationDao);
+        this.addressDAO = addressDAO;
+        this.addressManagerClient = addressManagerClient;
+        this.pnDeliveryClient = pnDeliveryClient;
+        this.pnDeliveryPushClient = pnDeliveryPushClient;
+        this.paperChannelClient = paperChannelClient;
+        this.safeStorageClient = safeStorageClient;
+        this.cfn = cfn;
+        this.pnDataVaultClient = pnDataVaultClient;
+    }
 
     @Override
     public void execute(String operationId) {
@@ -72,38 +84,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                 })
                 .doOnNext(operationAndAddress ->
                         log.debug("operation = {}, address = {} Address retrivied", operationAndAddress.getT1(), operationAndAddress.getT2()))
-                .flatMap(operationAndAddress ->
-                    getIuns(operationAndAddress.getT1().getRecipientInternalId())
-                        .collectList()
-                        .doOnNext(responsePaperNotificationFailed -> {
-                            log.debug("listOfIuns = {}, List of iuns retrivied", responsePaperNotificationFailed);
-                            operationAndAddress.getT1().setErrorReason(null);
-                            log.debug("errorReason = {}, Setting to null errorReason into entityOperation", operationAndAddress.getT1());
-                            updateOperationStatus(operationAndAddress.getT1(), OperationStatusEnum.VALIDATION);
-                        })
-                        .flatMapMany(Flux::fromIterable)
-                        .parallel()
-                        .flatMap(iun -> {
-                            log.debug("iun = {}, Get attachment from iun", iun);
-                            return getAttachmentsFromIun(operationAndAddress.getT1(), iun);
-                        })
-                        .sequential()
-                        .flatMap(pnServiceDeskAttachments -> {
-                            log.debug("entityAttachments = {}, iun = {}, Are attachments available for this iun?", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
-                            if (Boolean.TRUE.equals(pnServiceDeskAttachments.getIsAvailable())){
-                                log.debug("entityAttachments = {}, iun = {}, Attachments are available for this iun", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
-                                return Flux.fromIterable(pnServiceDeskAttachments.getFilesKey());
-                            }
-                            log.debug("entityAttachments = {}, iun = {}, Attachments are not available for this iun", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
-                            return Flux.empty();
-                        })
-                        .collectList()
-                        .flatMap(attachments -> {
-                            log.debug("entityOperation = {}, entityAddress = {}, attachments = {}, All data requirements are available to make the call to prepare", operationAndAddress.getT1(), operationAndAddress.getT2(), attachments);
-                            return paperPrepare(operationAndAddress.getT1(), operationAndAddress.getT2(), attachments);
-                        })
-                        .doOnError(exception -> log.error("errorReason = {}, Error during the validation flow", exception.getMessage()))
-                )
+                .flatMap(operationAndAddress -> checkValidationFlow(operationAndAddress.getT1(), operationAndAddress.getT2()))
                 .doOnError(PnEntityNotFoundException.class, error -> log.error("operationId = {}, Operation entity was not found", operationId))
                 .onErrorResume(ex -> {
                     if (ex instanceof PnEntityNotFoundException) {
@@ -112,6 +93,43 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     return traceErrorOnDB(operationId, ex);
                 })
                 .block();
+    }
+
+    private Mono<Void> checkValidationFlow(PnServiceDeskOperations operation, PnServiceDeskAddress address) {
+        return getIuns(operation.getRecipientInternalId())
+                .collectList()
+                .flatMap(responsePaperNotificationFailed -> {
+                    if (responsePaperNotificationFailed.isEmpty()) {
+                        throw new PnGenericException(IUNS_ALREADY_IN_PROGRESS, IUNS_ALREADY_IN_PROGRESS.getMessage());
+                    }
+
+                    log.debug("listOfIuns = {}, List of iuns retrivied", responsePaperNotificationFailed);
+                    operation.setErrorReason(null);
+                    log.debug("errorReason = {}, Setting to null errorReason into entityOperation", operation);
+                    return updateOperationStatus(operation, OperationStatusEnum.VALIDATION).thenReturn(responsePaperNotificationFailed);
+                })
+                .flatMapMany(Flux::fromIterable)
+                .flatMap(iun -> {
+                    log.debug("iun = {}, Get attachment from iun", iun);
+                    return getAttachmentsFromIun(operation, iun);
+                })
+                .flatMap(this::getFileKeyFromAttachments)
+                .collectList()
+                .flatMap(attachments -> {
+                    log.debug("entityOperation = {}, entityAddress = {}, attachments = {}, All data requirements are available to make the call to prepare", operation, address, attachments);
+                    return paperPrepare(operation, address, attachments);
+                })
+                .doOnError(exception -> log.error("errorReason = {}, Error during the validation flow", exception.getMessage()));
+    }
+
+    private Flux<String> getFileKeyFromAttachments(PnServiceDeskAttachments pnServiceDeskAttachments) {
+        log.debug("entityAttachments = {}, iun = {}, Are attachments available for this iun?", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
+        if (Boolean.TRUE.equals(pnServiceDeskAttachments.getIsAvailable())){
+            log.debug("entityAttachments = {}, iun = {}, Attachments are available for this iun", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
+            return Flux.fromIterable(pnServiceDeskAttachments.getFilesKey());
+        }
+        log.debug("entityAttachments = {}, iun = {}, Attachments are not available for this iun", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
+        return Flux.empty();
     }
 
     /**
@@ -144,7 +162,6 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
     private Mono<Void> validationAddress(PnServiceDeskAddress address) {
         log.debug("address: {}, ValidationAddress received input", address);
 
-        log.debug("address = {}, Calling address service", address);
         return addressManagerClient.deduplicates(address)
                 .onErrorResume(exception -> {
                     log.error("errorReason = {}, Error during ", exception.getMessage());
@@ -337,7 +354,10 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ex.getMessage()));
                 })
                 .doOnNext(iun -> log.debug("recipientInternalId = {}, iun = {}, Iun retrievied", iun, recipientInternalId))
-                .map(ResponsePaperNotificationFailedDtoDto::getIun);
+                .map(ResponsePaperNotificationFailedDtoDto::getIun)
+                .doOnNext(ii -> log.info("iun paper notification failed {}", ii))
+                .collectList()
+                .flatMapMany(notifications -> checkNotificationFailedList(recipientInternalId, notifications));
     }
 
     private Mono<FileDownloadResponse> getFileRecursive(Integer n, String fileKey, BigDecimal millis) {
