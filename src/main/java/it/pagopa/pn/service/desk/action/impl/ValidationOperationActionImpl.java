@@ -194,23 +194,26 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                                 log.debug("fileKeys = {}, entityAttachment = {}, EntityAttachment's list of filesKey has been setted", fileKeys, entity);
                                 return entity;
                             })
-                ).zipWith(Mono.just(entityOperation))
-                .flatMap(attachmentAndOperation -> {
-                    PnServiceDeskOperations entityOperationToUpdate = attachmentAndOperation.getT2();
-                    log.debug("entityOperation = {}, Is entityOperation's attachments null?", entityOperationToUpdate);
-                    if (entityOperationToUpdate.getAttachments() == null){
-                        log.debug("entityOperation = {}, A new entityOperation's attachments list has been created", entityOperationToUpdate);
-                        entityOperationToUpdate.setAttachments(new ArrayList<>());
-                    }
-                    entityOperationToUpdate.getAttachments().add(attachmentAndOperation.getT1());
-                    log.debug("entityOperation = {}, entityAttachment = {}, Entity's attachment list has been added", entityOperationToUpdate, attachmentAndOperation.getT1());
-                    return operationDAO.updateEntity(entityOperationToUpdate)
-                            .switchIfEmpty(Mono.defer(() -> {
-                                log.error("entityOperation = {}, Error on update entityOperation", entityOperationToUpdate);
-                                return Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()));
-                            }))
-                            .thenReturn(attachmentAndOperation.getT1());
-                });
+                            .doOnNext(pnServiceDeskAttachments -> entityOperation.getAttachments().add(pnServiceDeskAttachments))
+                            .flatMap(pnServiceDeskAttachments -> operationDAO.updateEntity(entityOperation).thenReturn(pnServiceDeskAttachments))
+                );
+//                ).zipWith(Mono.just(entityOperation))
+//                .flatMap(attachmentAndOperation -> {
+//                    PnServiceDeskOperations entityOperationToUpdate = attachmentAndOperation.getT2();
+//                    log.debug("entityOperation = {}, Is entityOperation's attachments null?", entityOperationToUpdate);
+//                    if (entityOperationToUpdate.getAttachments() == null){
+//                        log.debug("entityOperation = {}, A new entityOperation's attachments list has been created", entityOperationToUpdate);
+//                        entityOperationToUpdate.setAttachments(new ArrayList<>());
+//                    }
+//                    entityOperationToUpdate.getAttachments().add(attachmentAndOperation.getT1());
+//                    log.debug("entityOperation = {}, entityAttachment = {}, Entity's attachment list has been added", entityOperationToUpdate, attachmentAndOperation.getT1());
+//                    return operationDAO.updateEntity(entityOperationToUpdate)
+//                            .switchIfEmpty(Mono.defer(() -> {
+//                                log.error("entityOperation = {}, Error on update entityOperation", entityOperationToUpdate);
+//                                return Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()));
+//                            }))
+//                            .thenReturn(attachmentAndOperation.getT1());
+//                });
     }
 
     private Mono<Boolean> isFileAvailable(String fileKey) {
