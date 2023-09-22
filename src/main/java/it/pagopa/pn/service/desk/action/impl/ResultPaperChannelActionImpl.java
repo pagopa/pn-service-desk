@@ -8,6 +8,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dt
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
 import it.pagopa.pn.service.desk.mapper.ServiceDeskEventsMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.queue.producer.InternalQueueMomProducer;
@@ -19,7 +20,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,10 +50,9 @@ public class ResultPaperChannelActionImpl extends CommonAction implements Result
                     }
                     OperationStatusEnum newStatus = Utility.getOperationStatusFrom(sendEventDto.getStatusCode());
                     if (sendEventDto.getStatusCode().equals(StatusCodeEnumDto.OK)){
-                        newStatus = OperationStatusEnum.NOTIFY_VIEW;
-                        updateNotificationViewedAsync(entityOperation);
+                        return updateNotificationViewedAsync(entityOperation)
+                                .flatMap(operationStatusEnum -> updateOperationEventAndStatus(sendEventDto, entityOperation, operationStatusEnum, null));
                     }
-
                     return updateOperationEventAndStatus(sendEventDto, entityOperation, newStatus, null);
                 })
                 .doOnError(PnEntityNotFoundException.class, error -> log.error("operationId = {}, EntityOperation was not found", operationId))
@@ -99,26 +98,26 @@ public class ResultPaperChannelActionImpl extends CommonAction implements Result
         return this.operationDAO.updateEntity(entityOperation).then();
     }
 
-    private Mono<Void> updateNotificationViewedAsync(PnServiceDeskOperations pnServiceDeskOperations) {
+    private Mono<OperationStatusEnum> updateNotificationViewedAsync(PnServiceDeskOperations pnServiceDeskOperations) {
         log.info("call notificationViewed for operationId {}", pnServiceDeskOperations.getOperationId());
 
         if (pnServiceDeskOperations.getAttachments() != null && !pnServiceDeskOperations.getAttachments().isEmpty()) {
             return pushNotificationViewedMessage(pnServiceDeskOperations.getAttachments().stream()
-                    .filter(attachments -> attachments.getIsAvailable() == Boolean.TRUE)
-                    .map(iun -> iun.getIun())
+                    .filter(attachments -> attachments.getIsAvailable() == Boolean.TRUE && StringUtils.isNotBlank(attachments.getIun()))
+                    .map(PnServiceDeskAttachments::getIun)
                     .collect(Collectors.toList()), pnServiceDeskOperations);
         }
-        return Mono.empty();
+        return Mono.just(OperationStatusEnum.OK);
     }
 
-    private Mono<Void> pushNotificationViewedMessage(List<String> iuns, PnServiceDeskOperations pnServiceDeskOperations){
+    private Mono<OperationStatusEnum> pushNotificationViewedMessage(List<String> iuns, PnServiceDeskOperations pnServiceDeskOperations){
         if (iuns == null || iuns.isEmpty()) {
-            return updateOperationEventAndStatus(null, pnServiceDeskOperations, OperationStatusEnum.OK, null);
+            return Mono.just(OperationStatusEnum.OK);
         }
 
         log.info("push message on queue for operationId {}", pnServiceDeskOperations.getOperationId());
         internalQueueMomProducer.push(getInternalEvent(iuns, pnServiceDeskOperations.getOperationId(), pnServiceDeskOperations.getRecipientInternalId()));
-        return Mono.empty();
+        return Mono.just(OperationStatusEnum.NOTIFY_VIEW);
     }
 
 }

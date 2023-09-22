@@ -61,5 +61,21 @@
                 }
             ]
         }
+    },
+    {
+        "httpRequest": {
+            "path": "/delivery-push-private/LJLH-GNTJ-DVXR-202209-J-1/viewed",
+
+            "method": "POST"
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": "{\"iun\":\"LJLH-GNTJ-DVXR-202209-J-1\"}"
+        }
     }
 ]

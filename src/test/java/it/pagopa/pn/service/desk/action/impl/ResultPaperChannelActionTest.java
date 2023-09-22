@@ -3,8 +3,11 @@ package it.pagopa.pn.service.desk.action.impl;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.SendEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
+import it.pagopa.pn.service.desk.middleware.queue.model.InternalEvent;
+import it.pagopa.pn.service.desk.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.service.desk.utility.Utility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +37,10 @@ class ResultPaperChannelActionTest {
 
     @Mock
     private OperationDAO operationDAO;
+
+    @Mock
+    private InternalQueueMomProducer internalQueueMomProducer;
+
 
 
     @Test
@@ -93,6 +100,51 @@ class ResultPaperChannelActionTest {
     }
 
     @Test
+    void executeCaseUpdateNotificationViewed() {
+        SendEventDto sendEventDto = getSendEventDtoNotificationViewer();
+        sendEventDto.setStatusCode(StatusCodeEnumDto.OK);
+
+        PnServiceDeskOperations entity = new PnServiceDeskOperations();
+
+        List<PnServiceDeskEvents> serviceDeskEvents = new ArrayList<>();
+        serviceDeskEvents.add(new PnServiceDeskEvents());
+        entity.setEvents(serviceDeskEvents);
+        entity.setAttachments(getAttachments());
+
+        Mockito.when(operationDAO.getByOperationId("QWERTY"))
+                .thenReturn(Mono.just(entity));
+
+        Mockito.when(operationDAO.updateEntity(entity))
+                .thenReturn(Mono.just(entity));
+
+        Mockito.doNothing().when(internalQueueMomProducer)
+                .push((InternalEvent) Mockito.any());
+
+        assertDoesNotThrow(() -> resultPaperChannelAction.execute(sendEventDto));
+    }
+
+    @Test
+    void executeCaseUpdateNotificationViewedEmptyIuns() {
+        SendEventDto sendEventDto = getSendEventDtoNotificationViewer();
+        sendEventDto.setStatusCode(StatusCodeEnumDto.OK);
+
+        PnServiceDeskOperations entity = new PnServiceDeskOperations();
+
+        List<PnServiceDeskEvents> serviceDeskEvents = new ArrayList<>();
+        serviceDeskEvents.add(new PnServiceDeskEvents());
+        entity.setEvents(serviceDeskEvents);
+        entity.setAttachments(getAttachmentsEmptyIuns());
+
+        Mockito.when(operationDAO.getByOperationId("QWERTY"))
+                .thenReturn(Mono.just(entity));
+
+        Mockito.when(operationDAO.updateEntity(entity))
+                .thenReturn(Mono.just(entity));
+
+        assertDoesNotThrow(() -> resultPaperChannelAction.execute(sendEventDto));
+    }
+
+    @Test
     void executeCaseExceptionStatusCodeKoUnreachable() {
         SendEventDto sendEventDto = getSendEventDto();
         sendEventDto.setStatusCode(StatusCodeEnumDto.KOUNREACHABLE);
@@ -131,5 +183,44 @@ class ResultPaperChannelActionTest {
         sendEventDto.setStatusDescription("");
         sendEventDto.setDeliveryFailureCause("");
         return sendEventDto;
+    }
+
+    private SendEventDto getSendEventDtoNotificationViewer() {
+        String requestId = "SERVICE_DESK_OPID-QWERTY";
+        SendEventDto sendEventDto = new SendEventDto();
+        sendEventDto.setRequestId(requestId);
+        sendEventDto.setStatusCode(StatusCodeEnumDto.OK);
+        sendEventDto.setStatusDetail("");
+        sendEventDto.setStatusDateTime(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
+        sendEventDto.setClientRequestTimeStamp(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
+        sendEventDto.setStatusDescription("");
+        sendEventDto.setDeliveryFailureCause("");
+        return sendEventDto;
+    }
+
+    private List<PnServiceDeskAttachments> getAttachments (){
+        List<PnServiceDeskAttachments> attachments = new ArrayList<>();
+        PnServiceDeskAttachments attachment = new PnServiceDeskAttachments();
+        attachment.setIun("LJLH-GNTJ-DVXR-202209-J-1");
+        attachment.setIsAvailable(true);
+        List<String> fileKeys = new ArrayList<>();
+        String fileKey = "safestorage://981234";
+        fileKeys.add(fileKey);
+        attachment.setFilesKey(fileKeys);
+        attachments.add(attachment);
+        return attachments;
+    }
+
+    private List<PnServiceDeskAttachments> getAttachmentsEmptyIuns (){
+        List<PnServiceDeskAttachments> attachments = new ArrayList<>();
+        PnServiceDeskAttachments attachment = new PnServiceDeskAttachments();
+        attachment.setIsAvailable(true);
+        attachment.setIun(null);
+        List<String> fileKeys = new ArrayList<>();
+        String fileKey = "safestorage://981234";
+        fileKeys.add(fileKey);
+        attachment.setFilesKey(fileKeys);
+        attachments.add(attachment);
+        return attachments;
     }
 }
