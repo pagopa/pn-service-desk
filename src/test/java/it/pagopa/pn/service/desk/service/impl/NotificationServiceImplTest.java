@@ -2,26 +2,33 @@ package it.pagopa.pn.service.desk.service.impl;
 
 import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
-import it.pagopa.pn.service.desk.generated.openapi.pnraddfsu.v1.dto.AORInquiryResponseDto;
-import it.pagopa.pn.service.desk.generated.openapi.pnraddfsu.v1.dto.ResponseStatusDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsUnreachableResponse;
-import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.raddfsu.PnRaddFsuClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.ArrayList;
+import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_RADD_INQUIRY;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class NotificationServiceImplTest extends BaseTest {
     @MockBean
-    private PnRaddFsuClient raddFsuClient;
+    private PnDeliveryPushClient pnDeliveryPushClient;
+
+    @MockBean
+    private PnDataVaultClient pnDataVaultClient;
     @Autowired
     private NotificationServiceImpl service;
 
@@ -34,17 +41,17 @@ class NotificationServiceImplTest extends BaseTest {
 
 
     @Test
-    void getUnreachableNotificationWhenAorInquiryResponseResultIsTrue() {
+    void getUnreachableNotificationWhenPaperNotificationResponseResultIsTrue() {
         NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
         notificationsUnreachableResponse.setNotificationsCount(1L);
 
-        AORInquiryResponseDto aorInquiryResponseDto= new AORInquiryResponseDto();
-        aorInquiryResponseDto.setResult(true);
-        aorInquiryResponseDto.setStatus(new ResponseStatusDto());
-        aorInquiryResponseDto.getStatus().setCode(ResponseStatusDto.CodeEnum.NUMBER_0);
+        List<ResponsePaperNotificationFailedDtoDto> lst = new ArrayList<>();
+        ResponsePaperNotificationFailedDtoDto responsePaperNotificationFailedDto= new ResponsePaperNotificationFailedDtoDto();
+        responsePaperNotificationFailedDto.setIun("ABC");
+        lst.add(responsePaperNotificationFailedDto);
 
-        Mockito.when(raddFsuClient.aorInquiry(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(aorInquiryResponseDto));
+        Mockito.when(pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.fromIterable(lst));
+        Mockito.when(pnDataVaultClient.anonymized(Mockito.any())).thenReturn(Mono.just("xyz"));
         NotificationsUnreachableResponse response =service.getUnreachableNotification("1234", notificationRequest).block();
         assertNotNull(response);
         assertNotNull(response.getNotificationsCount());
@@ -53,17 +60,14 @@ class NotificationServiceImplTest extends BaseTest {
     }
 
     @Test
-    void getUnreachableNotificationWhenAorInquiryResponseResultIsFalse() {
+    void getUnreachableNotificationWhenPaperNotificationResponseResultIsFalse() {
         NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
         notificationsUnreachableResponse.setNotificationsCount(0L);
 
-        AORInquiryResponseDto aorInquiryResponseDto= new AORInquiryResponseDto();
-        aorInquiryResponseDto.setResult(false);
-        aorInquiryResponseDto.setStatus(new ResponseStatusDto());
-        aorInquiryResponseDto.getStatus().setCode(ResponseStatusDto.CodeEnum.NUMBER_99);
-
-        Mockito.when(raddFsuClient.aorInquiry(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(aorInquiryResponseDto));
+        List<ResponsePaperNotificationFailedDtoDto> lst = new ArrayList<>();
+        Mockito.when(pnDataVaultClient.anonymized(Mockito.any())).thenReturn(Mono.just("xyz"));
+        Mockito.when(pnDeliveryPushClient.paperNotificationFailed(Mockito.any()))
+                .thenReturn(Flux.fromIterable(lst));
         NotificationsUnreachableResponse response =service.getUnreachableNotification("1234", notificationRequest).block();
         assertNotNull(response);
         assertNotNull(response.getNotificationsCount());
@@ -71,11 +75,11 @@ class NotificationServiceImplTest extends BaseTest {
     }
 
     @Test
-    void getUnreachableNotificationWhenAorInquiryResponseError() {
+    void getUnreachableNotificationWhenPaperNotificationResponseError() {
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_RADD_INQUIRY, ERROR_ON_RADD_INQUIRY.getMessage());
-
-        Mockito.when(raddFsuClient.aorInquiry(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.error(pnGenericException));
+        Mockito.when(pnDataVaultClient.anonymized(Mockito.any())).thenReturn(Mono.just("xyz"));
+        Mockito.when(pnDeliveryPushClient.paperNotificationFailed(Mockito.any()))
+                .thenReturn(Flux.error(pnGenericException));
 
         StepVerifier.create(service.getUnreachableNotification("1234", notificationRequest))
                 .expectError(PnGenericException.class)
