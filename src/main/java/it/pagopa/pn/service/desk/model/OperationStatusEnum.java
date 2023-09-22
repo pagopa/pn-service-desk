@@ -7,6 +7,7 @@ public enum OperationStatusEnum {
     PREPARING,
     PROGRESS,
     NOTIFY_VIEW,
+    NOTIFY_VIEW_ERROR,
     OK,
     KO
 }
