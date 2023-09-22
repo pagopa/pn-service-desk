@@ -3,11 +3,13 @@ package it.pagopa.pn.service.desk.action.impl;
 import it.pagopa.pn.service.desk.action.NotifyDeliveryPushAction;
 import it.pagopa.pn.service.desk.action.common.CommonAction;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
+import it.pagopa.pn.service.desk.mapper.OperationMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.middleware.queue.model.InternalEventBody;
 import it.pagopa.pn.service.desk.middleware.queue.producer.InternalQueueMomProducer;
+import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import org.springframework.stereotype.Component;
@@ -31,7 +33,7 @@ public class NotifyDeliveryPushActionImpl extends CommonAction implements Notify
     public void execute(InternalEventBody internalEventBody) {
         log.info("NotifyDeliveryPushActionImpl execute attempt nro {} for operationId {}", internalEventBody.getAttempt(), internalEventBody.getOperationId());
         if (internalEventBody.getIuns() == null || internalEventBody.getIuns().isEmpty()) {
-            operationDAO.updateEntity(null); // TODO aggiorno lo stato in OK
+            operationDAO.updateEntity(OperationMapper.updateOperations(internalEventBody.getOperationId(), OperationStatusEnum.OK));
         }
 
         if (pnServiceDeskConfigs.getNotifyAttempt() > internalEventBody.getAttempt()) {
@@ -54,7 +56,7 @@ public class NotifyDeliveryPushActionImpl extends CommonAction implements Notify
                     .subscribe();
         } else {
             log.warn("attempt has finished for operationId {}", internalEventBody.getOperationId());
-            // TODO update della entity con errorReason e status NOTIFY_VIEW_ERROR
+            operationDAO.updateEntity(OperationMapper.updateOperations(internalEventBody.getOperationId(), OperationStatusEnum.NOTIFY_VIEW_ERROR));
         }
     }
 

@@ -60,7 +60,8 @@ public class OperationMapper {
         operationResponse.setOperationCreateTimestamp(OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationStartDate(), ZoneOffset.UTC));
         operationResponse.setOperationUpdateTimestamp( OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationLastUpdateDate(), ZoneOffset.UTC));
         NotificationStatus status = new NotificationStatus();
-        if (pnServiceDeskOperations.getStatus().equals(OperationStatusEnum.NOTIFY_VIEW.toString())) {
+        if (pnServiceDeskOperations.getStatus().equals(OperationStatusEnum.NOTIFY_VIEW.toString())
+                || pnServiceDeskOperations.getStatus().equals(OperationStatusEnum.NOTIFY_VIEW_ERROR.toString())) {
             pnServiceDeskOperations.setStatus(OperationStatusEnum.OK.toString());
         }
         status.setStatus(NotificationStatus.StatusEnum.fromValue(pnServiceDeskOperations.getStatus()));
@@ -78,6 +79,20 @@ public class OperationMapper {
         operationResponse.setTaxId(taxId);
 
         return operationResponse;
+    }
+
+    public static PnServiceDeskOperations updateOperations (String operationId, OperationStatusEnum statusEnum){
+
+        PnServiceDeskOperations operations = new PnServiceDeskOperations();
+
+        operations.setOperationId(operationId);
+        operations.setOperationLastUpdateDate(Instant.now());
+        operations.setStatus(statusEnum.toString());
+        if (statusEnum.equals(OperationStatusEnum.NOTIFY_VIEW_ERROR)) {
+            operations.setErrorReason("Error during notify viewd");
+        }
+        return operations;
+
     }
 
 }
