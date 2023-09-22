@@ -103,7 +103,7 @@ public class ResultPaperChannelActionImpl extends CommonAction implements Result
         log.info("call notificationViewed for operationId {}", pnServiceDeskOperations.getOperationId());
 
         if (pnServiceDeskOperations.getAttachments() != null && !pnServiceDeskOperations.getAttachments().isEmpty()) {
-            return callNotificationViewed(pnServiceDeskOperations.getAttachments().stream()
+            return pushNotificationViewedMessage(pnServiceDeskOperations.getAttachments().stream()
                     .filter(attachments -> attachments.getIsAvailable() == Boolean.TRUE)
                     .map(iun -> iun.getIun())
                     .collect(Collectors.toList()), pnServiceDeskOperations);
@@ -111,7 +111,7 @@ public class ResultPaperChannelActionImpl extends CommonAction implements Result
         return Mono.empty();
     }
 
-    private Mono<Void> callNotificationViewed(List<String> iuns, PnServiceDeskOperations pnServiceDeskOperations){
+    private Mono<Void> pushNotificationViewedMessage(List<String> iuns, PnServiceDeskOperations pnServiceDeskOperations){
         if (iuns == null || iuns.isEmpty()) {
             return updateOperationEventAndStatus(null, pnServiceDeskOperations, OperationStatusEnum.OK, null);
         }
@@ -120,8 +120,5 @@ public class ResultPaperChannelActionImpl extends CommonAction implements Result
         internalQueueMomProducer.push(getInternalEvent(iuns, pnServiceDeskOperations.getOperationId(), pnServiceDeskOperations.getRecipientInternalId()));
         return Mono.empty();
     }
-
-
-
 
 }
