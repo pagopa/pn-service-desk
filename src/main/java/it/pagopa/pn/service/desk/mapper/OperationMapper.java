@@ -81,11 +81,8 @@ public class OperationMapper {
         return operationResponse;
     }
 
-    public static PnServiceDeskOperations updateOperations (String operationId, OperationStatusEnum statusEnum){
+    public static PnServiceDeskOperations updateOperations (PnServiceDeskOperations operations, OperationStatusEnum statusEnum){
 
-        PnServiceDeskOperations operations = new PnServiceDeskOperations();
-
-        operations.setOperationId(operationId);
         operations.setOperationLastUpdateDate(Instant.now());
         operations.setStatus(statusEnum.toString());
         if (statusEnum.equals(OperationStatusEnum.NOTIFY_VIEW_ERROR)) {
