@@ -26,7 +26,6 @@ import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -38,7 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.NO_ATTACHMENT_AVAILABLE;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
@@ -97,6 +95,26 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     log.debug("iun = {}, Get attachment from iun", iun);
                     return getAttachmentsFromIun(operation, iun);
                 })
+                .collectList()
+                .doOnNext(pnServiceDeskAttachmentsList -> {
+                    PnServiceDeskOperations entityOperationToUpdate = operation;
+                    log.debug("entityOperation = {}, Is entityOperation's attachments null?", entityOperationToUpdate);
+                    if (entityOperationToUpdate.getAttachments() == null){
+                        log.debug("entityOperation = {}, A new entityOperation's attachments list has been created", entityOperationToUpdate);
+                        entityOperationToUpdate.setAttachments(new ArrayList<>());
+                    }
+                    operation.getAttachments().addAll(pnServiceDeskAttachmentsList);
+                })
+                .flatMap(pnServiceDeskAttachments -> {
+                    log.debug("entityOperation = {}, entityAttachment = {}, Entity's attachment list has been added", operation, pnServiceDeskAttachments);
+                    return operationDAO.updateEntity(operation)
+                            .switchIfEmpty(Mono.defer(() -> {
+                                log.error("entityOperation = {}, Error on update entityOperation", operation);
+                                return Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()));
+                            }))
+                            .thenReturn(pnServiceDeskAttachments);
+                })
+                .flatMapMany(Flux::fromIterable)
                 .flatMap(this::getFileKeyFromAttachments)
                 .collectList()
                 .flatMap(attachments -> {
@@ -193,24 +211,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                                 entity.setFilesKey(fileKeys);
                                 log.debug("fileKeys = {}, entityAttachment = {}, EntityAttachment's list of filesKey has been setted", fileKeys, entity);
                                 return entity;
-                            })
-                ).zipWith(Mono.just(entityOperation))
-                .flatMap(attachmentAndOperation -> {
-                    PnServiceDeskOperations entityOperationToUpdate = attachmentAndOperation.getT2();
-                    log.debug("entityOperation = {}, Is entityOperation's attachments null?", entityOperationToUpdate);
-                    if (entityOperationToUpdate.getAttachments() == null){
-                        log.debug("entityOperation = {}, A new entityOperation's attachments list has been created", entityOperationToUpdate);
-                        entityOperationToUpdate.setAttachments(new ArrayList<>());
-                    }
-                    entityOperationToUpdate.getAttachments().add(attachmentAndOperation.getT1());
-                    log.debug("entityOperation = {}, entityAttachment = {}, Entity's attachment list has been added", entityOperationToUpdate, attachmentAndOperation.getT1());
-                    return operationDAO.updateEntity(entityOperationToUpdate)
-                            .switchIfEmpty(Mono.defer(() -> {
-                                log.error("entityOperation = {}, Error on update entityOperation", entityOperationToUpdate);
-                                return Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()));
-                            }))
-                            .thenReturn(attachmentAndOperation.getT1());
-                });
+                            }));
     }
 
     private Mono<Boolean> isFileAvailable(String fileKey) {
@@ -244,12 +245,10 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     log.error("errorReason = {}, An error occurred while call service legalFacts", exception.getMessage());
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
                 })
-                .parallel()
                 .map(legalFactList -> {
                     log.debug("legalFactList = {}, Call to DeliveryPush's legalFacts service went successfully", legalFactList);
                     return legalFactList.getLegalFactsId().getKey();
-                })
-                .sequential();
+                });
     }
 
     /**
@@ -267,12 +266,10 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
                 })
                 .flatMapMany(doc -> Flux.fromIterable(doc.getDocuments()))
-                .parallel()
                 .map(notificationDocument -> {
                     log.debug("notificationDocument = {}, Notification received with success", notificationDocument);
                     return notificationDocument.getRef().getKey();
-                })
-                .sequential();
+                });
     }
 
     private Mono<Void> updateOperationStatus(PnServiceDeskOperations entityOperation, OperationStatusEnum operationStatusEnum) {
