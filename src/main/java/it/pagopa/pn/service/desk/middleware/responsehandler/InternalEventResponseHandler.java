@@ -30,9 +30,9 @@ public class InternalEventResponseHandler {
 
     public void handleNotifyDeliveryPushEventResponse(InternalEventBody response) {
         try {
-            log.logStartingProcess("VALIDATION OPERATION");
+            log.logStartingProcess("NOTIFY VIEW OPERATION");
             this.notifyDeliveryPushAction.execute(response);
-            log.logEndingProcess("VALIDATION OPERATION");
+            log.logEndingProcess("NOTIFY VIEW OPERATION");
         } catch (Exception ex) {
             log.logEndingProcess("ENDING WITH EXCEPTION");
         }

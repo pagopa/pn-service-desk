@@ -1,10 +1,10 @@
 package it.pagopa.pn.service.desk.mapper;
 
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationStatus;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SDNotificationSummary;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
@@ -79,17 +79,6 @@ public class OperationMapper {
         operationResponse.setTaxId(taxId);
 
         return operationResponse;
-    }
-
-    public static PnServiceDeskOperations updateOperations (PnServiceDeskOperations operations, OperationStatusEnum statusEnum){
-
-        operations.setOperationLastUpdateDate(Instant.now());
-        operations.setStatus(statusEnum.toString());
-        if (statusEnum.equals(OperationStatusEnum.NOTIFY_VIEW_ERROR)) {
-            operations.setErrorReason("Error during notify viewd");
-        }
-        return operations;
-
     }
 
 }

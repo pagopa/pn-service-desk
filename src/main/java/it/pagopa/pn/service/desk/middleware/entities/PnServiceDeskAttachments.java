@@ -17,6 +17,7 @@ public class PnServiceDeskAttachments {
     public static final String COL_IUN = "iun";
     public static final String COL_FILES_KEY = "filesKey";
     public static final String COL_IS_AVAILABLE = "isAvailable";
+    public static final String COL_IS_NOTIFIED = "isNotified";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_IUN)}))
     private String iun;
@@ -26,5 +27,8 @@ public class PnServiceDeskAttachments {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_IS_AVAILABLE)}))
     private Boolean isAvailable;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_IS_NOTIFIED)}))
+    private Boolean isNotified;
 
 }

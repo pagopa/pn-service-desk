@@ -37,7 +37,6 @@ public class OperationDto {
                 || StringUtils.equals(c.getStatus(), OperationStatusEnum.KO.toString()) && !StringUtils.equals(status, OperationStatusEnum.KO.toString()));
             }
         }
-
         return iun.equals(c.getIun());
     }
 

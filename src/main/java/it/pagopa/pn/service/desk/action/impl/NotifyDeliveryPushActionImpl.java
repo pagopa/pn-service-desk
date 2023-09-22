@@ -3,23 +3,23 @@ package it.pagopa.pn.service.desk.action.impl;
 import it.pagopa.pn.service.desk.action.NotifyDeliveryPushAction;
 import it.pagopa.pn.service.desk.action.common.CommonAction;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
-import it.pagopa.pn.service.desk.exception.PnGenericException;
-import it.pagopa.pn.service.desk.mapper.OperationMapper;
+import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.middleware.queue.model.InternalEventBody;
 import it.pagopa.pn.service.desk.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
-import org.springframework.http.HttpStatus;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
-
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.OPERATION_IS_NOT_PRESENT;
 
 @Component
 @CustomLog
@@ -35,36 +35,86 @@ public class NotifyDeliveryPushActionImpl extends CommonAction implements Notify
     public void execute(InternalEventBody internalEventBody) {
         log.info("NotifyDeliveryPushActionImpl execute attempt nro {} for operationId {}", internalEventBody.getAttempt(), internalEventBody.getOperationId());
         if (internalEventBody.getIuns() == null || internalEventBody.getIuns().isEmpty()) {
-            operationDAO.getByOperationId(internalEventBody.getOperationId())
-                    .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.NOT_FOUND)))
-                    .flatMap(operations -> operationDAO.updateEntity(OperationMapper.updateOperations(operations, OperationStatusEnum.OK)));
+            // attempt has finished and all iuns are notified
+            updateOperationWithStatus(internalEventBody.getOperationId()).block();
+            return;
         }
 
-        if (pnServiceDeskConfigs.getNotifyAttempt() > internalEventBody.getAttempt()) {
+        if (pnServiceDeskConfigs.getNotifyAttempt() >= internalEventBody.getAttempt()) {
             log.info("call notifyNotificationViewed with iun {}", internalEventBody.getIuns().get(0));
-            Mono.just("").publishOn(Schedulers.boundedElastic())
-                    .flatMap(y -> pnDeliveryPushClient.notifyNotificationViewed(internalEventBody.getIuns().get(0), internalEventBody.getOperationId(), internalEventBody.getRecipientInternalId())
-                            .switchIfEmpty(Mono.defer(() -> {
-                                log.info("an error occurs in notifyNotificationViewed with iun", internalEventBody.getIuns().get(0));
-                                internalQueueMomProducer.push
-                                        (getInternalEvent(internalEventBody.getIuns(), internalEventBody.getOperationId(), internalEventBody.getRecipientInternalId(), internalEventBody.getAttempt()+1));
-                                return Mono.empty();
-                            }))
-                            .flatMap(a -> {
-                                List<String> newIuns = internalEventBody.getIuns().subList(1, internalEventBody.getIuns().size());
-                                log.info("push message on queue with iuns size: {}", newIuns.size());
-                                internalQueueMomProducer.push(getInternalEvent(newIuns, internalEventBody.getOperationId(), internalEventBody.getRecipientInternalId()));
-                                return Mono.empty();
-                            }))
-                    .subscribeOn(Schedulers.boundedElastic())
-                    .subscribe();
-        } else {
-            log.warn("attempt has finished for operationId {}", internalEventBody.getOperationId());
-            operationDAO.getByOperationId(internalEventBody.getOperationId())
-                    .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.NOT_FOUND)))
-                    .flatMap(operations -> operationDAO.updateEntity(OperationMapper.updateOperations(operations, OperationStatusEnum.NOTIFY_VIEW_ERROR)));
+
+            pnDeliveryPushClient.notifyNotificationViewed(internalEventBody.getIuns().get(0), internalEventBody.getOperationId(), internalEventBody.getRecipientInternalId())
+                    .switchIfEmpty(Mono.defer(() -> {
+                        log.error("an error occurs in notifyNotificationViewed with iun {}", internalEventBody.getIuns().get(0));
+                        if (pnServiceDeskConfigs.getNotifyAttempt() < internalEventBody.getAttempt()+1) {
+                            log.warn("attempt has finished for iun {}", internalEventBody.getIuns().get(0));
+                            updateOperationAttachments(internalEventBody.getOperationId(), Boolean.FALSE, internalEventBody.getIuns().get(0));
+
+                            // remove elements from queue
+                            internalQueueMomProducer.push
+                                    (getInternalEvent(popIun(internalEventBody.getIuns()), internalEventBody.getOperationId(),
+                                            internalEventBody.getRecipientInternalId()));
+                        } else {
+                            // try another attempt
+                            internalQueueMomProducer.push
+                                    (getInternalEvent(internalEventBody.getIuns(), internalEventBody.getOperationId(),
+                                            internalEventBody.getRecipientInternalId(), internalEventBody.getAttempt()+1));
+
+                        }
+                        return Mono.empty();
+                    }))
+                    .flatMap(response -> {
+                        updateOperationAttachments(internalEventBody.getOperationId(), Boolean.TRUE, internalEventBody.getIuns().get(0));
+                        internalQueueMomProducer.push(getInternalEvent(popIun(internalEventBody.getIuns()), internalEventBody.getOperationId(),
+                                internalEventBody.getRecipientInternalId()));
+                        return Mono.empty();
+                    })
+                    .block();
         }
     }
 
+    private List<String> popIun(List<String> iuns) {
+        return iuns.size() > 0 ? iuns.subList(1, iuns.size()) : new ArrayList<>();
+    }
 
+    private Mono<Void> updateOperationAttachments(String operationId, Boolean notified, String iun) {
+        Mono.just("").publishOn(Schedulers.boundedElastic())
+                .flatMap(y -> operationDAO.getByOperationId(operationId)
+                        .switchIfEmpty(Mono.error(new PnEntityNotFoundException()))
+                        .flatMap(entityOperation -> {
+                            List<PnServiceDeskAttachments> attachmentsList = entityOperation.getAttachments();
+                            attachmentsList.replaceAll(attachments -> {
+                                if (StringUtils.equals(attachments.getIun(), iun)) {
+                                    attachments.setIsNotified(notified);
+                                }
+                                return attachments;
+                            });
+                            entityOperation.setAttachments(attachmentsList);
+                            log.info("update notify view {} for iun: {}", notified.booleanValue(), iun);
+                            return this.operationDAO.updateEntity(entityOperation);
+
+                        }))
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe();
+        return Mono.empty();
+    }
+
+    private Mono<Void> updateOperationWithStatus(String operationId) {
+        log.info("update status for operationId: {}", operationId);
+        return operationDAO.getByOperationId(operationId)
+                .switchIfEmpty(Mono.error(new PnEntityNotFoundException()))
+                .flatMap(entityOperation -> {
+                    if (entityOperation.getAttachments().stream()
+                            .filter(attachments -> attachments.getIsNotified() == Boolean.FALSE)
+                            .count() > 0) {
+                        entityOperation.setStatus(OperationStatusEnum.NOTIFY_VIEW_ERROR.toString());
+                        entityOperation.setErrorReason("Error during Notify View Flow");
+                    } else {
+                        entityOperation.setStatus(OperationStatusEnum.OK.toString());
+                    }
+                    entityOperation.setOperationLastUpdateDate(Instant.now());
+                    this.operationDAO.updateEntity(entityOperation);
+                    return Mono.empty();
+                });
+    }
 }
