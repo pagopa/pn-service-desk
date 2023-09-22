@@ -29,17 +29,17 @@ public class NotifyDeliveryPushActionImpl extends CommonAction implements Notify
 
     @Override
     public void execute(InternalEventBody internalEventBody) {
-        log.info("NotifyDeliveryPushActionImpl execute attempt nro {}", internalEventBody.getAttempt());
+        log.info("NotifyDeliveryPushActionImpl execute attempt nro {} for operationId {}", internalEventBody.getAttempt(), internalEventBody.getOperationId());
         if (internalEventBody.getIuns() == null || internalEventBody.getIuns().isEmpty()) {
             operationDAO.updateEntity(null); // TODO aggiorno lo stato in OK
         }
 
         if (pnServiceDeskConfigs.getNotifyAttempt() > internalEventBody.getAttempt()) {
-            log.info("notifyNotificationViewed with iun {}", internalEventBody.getIuns().get(0));
+            log.info("call notifyNotificationViewed with iun {}", internalEventBody.getIuns().get(0));
             Mono.just("").publishOn(Schedulers.boundedElastic())
                     .flatMap(y -> pnDeliveryPushClient.notifyNotificationViewed(internalEventBody.getIuns().get(0), internalEventBody.getOperationId(), internalEventBody.getRecipientInternalId())
                             .switchIfEmpty(Mono.defer(() -> {
-                                log.info("push message on queue with iuns size: {}", internalEventBody.getIuns().size());
+                                log.info("an error occurs in notifyNotificationViewed with iun", internalEventBody.getIuns().get(0));
                                 internalQueueMomProducer.push
                                         (getInternalEvent(internalEventBody.getIuns(), internalEventBody.getOperationId(), internalEventBody.getRecipientInternalId(), internalEventBody.getAttempt()+1));
                                 return Mono.empty();
@@ -54,6 +54,7 @@ public class NotifyDeliveryPushActionImpl extends CommonAction implements Notify
                     .subscribe();
         } else {
             log.warn("attempt has finished for operationId {}", internalEventBody.getOperationId());
+            // TODO update della entity con errorReason e status NOTIFY_VIEW_ERROR
         }
     }
 
