@@ -323,30 +323,7 @@
 							<modelNameSuffix>Dto</modelNameSuffix>
 						</configuration>
 					</execution>
-					<execution>
-						<id>generate-client-pn-radd-fsu</id>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<phase>generate-resources</phase>
-						<configuration>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-radd-fsu/2fe7a8e15019575eac083044233e3b7459e93bac/docs/openapi/pn-radd-fsu-v1.yaml</inputSpec>
-							<generatorName>java</generatorName>
-							<library>webclient</library>
-							<generateApiDocumentation>false</generateApiDocumentation>
-							<generateApiTests>false</generateApiTests>
-							<generateModelTests>false</generateModelTests>
-							<generateSupportingFiles>true</generateSupportingFiles>
-							<templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
-							<configOptions>
-								<swaggerAnnotations>false</swaggerAnnotations>
-								<openApiNullable>false</openApiNullable>
-							</configOptions>
-							<modelPackage>${project.groupId}.service.desk.generated.openapi.pnraddfsu.v1.dto</modelPackage>
-							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnraddfsu.v1.api</apiPackage>
-							<modelNameSuffix>Dto</modelNameSuffix>
-						</configuration>
-					</execution>
+
 					<execution>
 						<id>generate-client-pn-paper-channel</id>
 						<goals>

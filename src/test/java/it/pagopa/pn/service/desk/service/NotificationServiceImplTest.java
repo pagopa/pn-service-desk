@@ -23,6 +23,8 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_GET_UNREACHABLE_NOTIFICATION;
+
 public class NotificationServiceImplTest extends BaseTest.WithMockServer {
 
     @Autowired
@@ -30,6 +32,8 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
 
     @MockBean
     private PnDataVaultClient dataVaultClient;
+    @MockBean
+    private PnDeliveryPushClient deliveryPushClient;
     @MockBean
     private OperationDAO operationDAO;
 
@@ -50,7 +54,7 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
 
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any())).thenReturn(Mono.just("taxId"));
         Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.any())).thenReturn(Flux.fromIterable(getOperations()));
-
+        Mockito.when(this.deliveryPushClient.paperNotificationFailed(Mockito.anyString())).thenReturn(Flux.fromIterable(getResponsePaperNotificationFailed()));
         NotificationsUnreachableResponse notificationsUnreachableResponse = this.notificationService.getUnreachableNotification("fkdokm", new NotificationRequest()).block();
 
         Assertions.assertNotNull(notificationsUnreachableResponse);
@@ -61,6 +65,7 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
     @Test
     void getUnreachableNotification_No_Notification_Unreachable(){
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any())).thenReturn(Mono.just("taxId"));
+        Mockito.when(this.deliveryPushClient.paperNotificationFailed(Mockito.anyString())).thenReturn(Flux.empty());
         Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.any())).thenReturn(Flux.fromIterable(getOperationsNoUnreachable()));
 
         NotificationsUnreachableResponse notificationsUnreachableResponse = this.notificationService.getUnreachableNotification("fkdokm", new NotificationRequest()).block();
@@ -74,19 +79,19 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
     void getUnreachableNotification_No_Operation_Found(){
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any())).thenReturn(Mono.just("taxId"));
         Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.any())).thenReturn(Flux.empty());
-
+        Mockito.when(this.deliveryPushClient.paperNotificationFailed(Mockito.anyString())).thenReturn(Flux.empty());
 
         NotificationsUnreachableResponse notificationsUnreachableResponse = this.notificationService.getUnreachableNotification("fkdokm", new NotificationRequest()).block();
 
         Assertions.assertNotNull(notificationsUnreachableResponse);
-        Assertions.assertEquals(1L,notificationsUnreachableResponse.getNotificationsCount());
+        Assertions.assertEquals(0L,notificationsUnreachableResponse.getNotificationsCount());
     }
 
     @Test
     void getUnreachableNotification_PnDeliveryPush_error(){
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any())).thenReturn(Mono.just("taxId2"));
         Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.any())).thenReturn(Flux.empty());
-
+        Mockito.when(this.deliveryPushClient.paperNotificationFailed(Mockito.anyString())).thenThrow(new PnGenericException(ERROR_GET_UNREACHABLE_NOTIFICATION, ERROR_GET_UNREACHABLE_NOTIFICATION.getMessage()));
 
         PnGenericException exception = Assertions.assertThrows(PnGenericException.class, () -> {
             this.notificationService.getUnreachableNotification("fkdokm", new NotificationRequest()).block();
@@ -165,5 +170,13 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
 
 
         return operations;
+    }
+
+    private List<ResponsePaperNotificationFailedDtoDto> getResponsePaperNotificationFailed(){
+        List<ResponsePaperNotificationFailedDtoDto> list = new ArrayList<>();
+        ResponsePaperNotificationFailedDtoDto dto = new ResponsePaperNotificationFailedDtoDto();
+        dto.setIun("ABCD");
+        list.add(dto);
+        return list;
     }
 }

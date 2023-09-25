@@ -98,7 +98,7 @@ public class ResultPaperChannelActionImpl extends CommonAction implements Result
     }
 
     private Mono<OperationStatusEnum> updateNotificationViewedAsync(PnServiceDeskOperations pnServiceDeskOperations) {
-        log.info("call notificationViewed for operationId {}", pnServiceDeskOperations.getOperationId());
+        log.info("updateNotificationViewedAsync for operationId {}", pnServiceDeskOperations.getOperationId());
 
         if (pnServiceDeskOperations.getAttachments() != null && !pnServiceDeskOperations.getAttachments().isEmpty()) {
             return pushNotificationViewedMessage(pnServiceDeskOperations.getAttachments().stream()
