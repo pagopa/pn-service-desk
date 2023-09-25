@@ -105,10 +105,8 @@ class ResultPaperChannelActionTest {
         sendEventDto.setStatusCode(StatusCodeEnumDto.OK);
 
         PnServiceDeskOperations entity = new PnServiceDeskOperations();
-
-        List<PnServiceDeskEvents> serviceDeskEvents = new ArrayList<>();
-        serviceDeskEvents.add(new PnServiceDeskEvents());
-        entity.setEvents(serviceDeskEvents);
+        
+        entity.setEvents(null);
         entity.setAttachments(getAttachments());
 
         Mockito.when(operationDAO.getByOperationId("QWERTY"))

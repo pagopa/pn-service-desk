@@ -28,8 +28,7 @@ public class OperationDto {
         if (iun.equals(c.getIun())) {
             // equals if same status
             if (status.equals(c.getStatus())) {
-                if (StringUtils.equals(status, OperationStatusEnum.KO.toString())) return false;
-                else return true;
+                return !StringUtils.equals(status, OperationStatusEnum.KO.toString());
             }
             else {
                 // equals if status KO and other one is !KO

@@ -14,6 +14,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
+import static it.pagopa.pn.service.desk.model.OperationStatusEnum.NOTIFY_VIEW;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -113,6 +114,21 @@ class OperationMapperTest {
         assertEquals(operationResponse.getNotificationStatus().getLastEventTimestamp().toInstant(), i);
         assertEquals(operationResponse.getNotificationStatus().getStatusCode(), "003");
 
+    }
+
+    @Test
+    void whenCalloperationResponseMapperOperationStatusNotifyView() {
+        pnServiceDeskAttachments.setIsAvailable(true);
+
+        List<PnServiceDeskAttachments> attachments = new ArrayList<>();
+        attachments.add(pnServiceDeskAttachments);
+
+        pnServiceDeskOperations.setAttachments(attachments);
+        pnServiceDeskOperations.setStatus(NOTIFY_VIEW.toString());
+
+        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations, "XYZ");
+        assertNotNull(operationResponse);
+        assertEquals(operationResponse.getIuns().size(), 1);
     }
 
 }

@@ -54,10 +54,6 @@ public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implement
         return Mono.fromFuture(super.update(operations));
     }
 
-    public Mono<PnServiceDeskOperations> updateEntityTransactional(PnServiceDeskOperations operations) {
-        return Mono.fromFuture(super.update(operations));
-    }
-
     private void createTransaction(TransactWriteItemsEnhancedRequest.Builder builder, PnServiceDeskOperations serviceDeskOperations) {
         TransactPutItemEnhancedRequest<PnServiceDeskOperations> requestEntity =
                 TransactPutItemEnhancedRequest.builder(PnServiceDeskOperations.class)

@@ -74,7 +74,7 @@ public class NotifyDeliveryPushActionImpl extends CommonAction implements Notify
     }
 
     private List<String> popIun(List<String> iuns) {
-        return iuns.size() > 0 ? iuns.subList(1, iuns.size()) : new ArrayList<>();
+        return !iuns.isEmpty() ? iuns.subList(1, iuns.size()) : new ArrayList<>();
     }
 
     private Mono<Void> updateOperationAttachments(String operationId, Boolean notified, String iun) {

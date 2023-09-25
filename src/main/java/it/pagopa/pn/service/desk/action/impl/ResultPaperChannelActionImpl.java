@@ -23,7 +23,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.PAPERCHANNEL_STATUS_CODE_EMPTY;
 
@@ -105,7 +104,7 @@ public class ResultPaperChannelActionImpl extends CommonAction implements Result
             return pushNotificationViewedMessage(pnServiceDeskOperations.getAttachments().stream()
                     .filter(attachments -> attachments.getIsAvailable() == Boolean.TRUE && StringUtils.isNotBlank(attachments.getIun()))
                     .map(PnServiceDeskAttachments::getIun)
-                    .collect(Collectors.toList()), pnServiceDeskOperations);
+                    .toList(), pnServiceDeskOperations);
         }
         return Mono.just(OperationStatusEnum.OK);
     }

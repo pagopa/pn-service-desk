@@ -29,7 +29,7 @@ public class BaseService {
                     if (!lst.isEmpty()) {
                         lst.stream().forEach(i -> log.info("unreachable iun {}", i));
                     }
-                    return Mono.just(lst.size()  > 0 ? 1L : 0L);
+                    return Mono.just(!lst.isEmpty() ? 1L : 0L);
                 });
 
     }
@@ -67,10 +67,10 @@ public class BaseService {
                         return Flux.fromIterable(iuns);
                     }
 
-                    iuns.removeAll(lst.stream().map(i -> i.getIun()).collect(Collectors.toList()));
+                    iuns.removeAll(lst.stream().map(OperationDto::getIun).toList());
                     Set<String> result = lst.stream()
                             .filter(i -> StringUtils.equals(i.getStatus(), OperationStatusEnum.KO.toString()))
-                            .map(i -> i.getIun())
+                            .map(OperationDto::getIun)
                             .collect(Collectors.toSet());
                     result.addAll(iuns);
                     return Flux.fromStream(result.stream());

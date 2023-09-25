@@ -77,5 +77,29 @@
             },
             "body": "{\"iun\":\"LJLH-GNTJ-DVXR-202209-J-1\"}"
         }
+    },
+    {
+        "httpRequest": {
+            "path": "/delivery-push-private/LJLH-GNTJ-DVXR-202209-J-2/viewed",
+            "method": "POST"
+        },
+        "httpResponse": {
+            "statusCode": 400,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "type": "",
+                "status": 400,
+                "title": "Invalid input",
+                "detail": "Iun parameter is absent.",
+                "errors": [
+                    {"code": "123-4567"},
+                    {"detail": "Parameter not valid"}
+                ]
+            }
+        }
     }
 ]
