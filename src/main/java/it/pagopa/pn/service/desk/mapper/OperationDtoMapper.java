@@ -3,8 +3,6 @@ package it.pagopa.pn.service.desk.mapper;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.model.OperationDto;
 
-import java.util.List;
-
 public class OperationDtoMapper {
 
     private OperationDtoMapper(){}
