@@ -105,6 +105,8 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
         pnServiceDeskAttachments2.setIun("iun124");
         pnServiceDeskAttachments3.setIun("iun122");
         pnServiceDeskAttachments4.setIun("iun125");
+        pnServiceDeskAttachments.setIsAvailable(true);
+        pnServiceDeskAttachments2.setIsAvailable(true);
 
         List<PnServiceDeskAttachments> attachments = new ArrayList<>();
         attachments.add(pnServiceDeskAttachments);
@@ -175,7 +177,7 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
     private List<ResponsePaperNotificationFailedDtoDto> getResponsePaperNotificationFailed(){
         List<ResponsePaperNotificationFailedDtoDto> list = new ArrayList<>();
         ResponsePaperNotificationFailedDtoDto dto = new ResponsePaperNotificationFailedDtoDto();
-        dto.setIun("ABCD");
+        dto.setIun("iun123");
         list.add(dto);
         return list;
     }
