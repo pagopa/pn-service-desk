@@ -111,9 +111,6 @@ class NotifyDeliveryPushActionTest {
         PnServiceDeskOperations entity = new PnServiceDeskOperations();
         entity.setAttachments(getAttachments(true));
 
-        Mockito.when(operationDAO.getByOperationId(Mockito.any()))
-                .thenReturn(Mono.empty());
-
         Mockito.when(this.pnDeliveryPushClient.notifyNotificationViewed(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(Mono.empty());
 
@@ -155,12 +152,6 @@ class NotifyDeliveryPushActionTest {
 
         PnServiceDeskOperations entity = new PnServiceDeskOperations();
         entity.setAttachments(getAttachments(true));
-
-        Mockito.when(operationDAO.getByOperationId("QWERTY"))
-                .thenReturn(Mono.just(entity));
-
-        Mockito.when(operationDAO.updateEntity(entity))
-                .thenReturn(Mono.just(entity));
 
         Mockito.when(this.pnDeliveryPushClient.notifyNotificationViewed(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(Mono.just(getNotificationViewed()));
