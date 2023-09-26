@@ -26,10 +26,10 @@ import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.utils.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -246,10 +246,13 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     log.error("errorReason = {}, An error occurred while call service legalFacts", exception.getMessage());
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
                 })
-                .map(legalFactList -> {
-                    log.debug("legalFactList = {}, Call to DeliveryPush's legalFacts service went successfully", legalFactList);
-                    return legalFactList.getLegalFactsId().getKey();
-                });
+                .collectList()
+                .zipWith(pnDataVaultClient.deAnonymized(recipientInternalId))
+                .flatMapMany(legalFactAndTaxId ->  Flux.fromIterable(
+                        legalFactAndTaxId.getT1().stream()
+                                .filter(legalFact -> (StringUtils.isEmpty(legalFact.getTaxId())  || legalFact.getTaxId().equalsIgnoreCase(legalFactAndTaxId.getT2())))
+                                .map(l -> l.getLegalFactsId().getKey())
+                                .collect(Collectors.toList())));
     }
 
     /**
