@@ -122,6 +122,7 @@ class ValidationOperationActionImplTest {
         pnServiceDeskOperations.setRecipientInternalId("recipientInternalId");
 
         responsePaperNotificationFailedDtoDto.setIun("iunResponse");
+        responsePaperNotificationFailedDtoDto.setRecipientInternalId("recipientInternalId");
         legalFactsIdDto.setKey("keyLegalFact");
         legalFactsIdDto.setCategory(LegalFactCategoryDto.ANALOG_DELIVERY);
         legalFactListElementDto.setLegalFactsId(legalFactsIdDto);
@@ -245,9 +246,7 @@ class ValidationOperationActionImplTest {
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
         Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
-        Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(),Mockito.any())).thenThrow(exception);
         Assertions.assertDoesNotThrow( () -> {
             this.validationOperationAction.execute("opId1234");
         });
