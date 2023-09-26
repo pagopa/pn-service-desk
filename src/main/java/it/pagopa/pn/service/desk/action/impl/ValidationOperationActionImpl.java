@@ -339,12 +339,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ex.getMessage()));
                 })
                 .doOnNext(iun -> log.debug("recipientInternalId = {}, iun = {}, Iun retrievied", iun, recipientInternalId))
-                .collectList()
-                .flatMapMany(lst ->  Flux.fromIterable(
-                        lst.stream()
-                        .filter(notification -> StringUtils.equals(notification.getRecipientInternalId(), recipientInternalId))
-                        .map(ResponsePaperNotificationFailedDtoDto::getIun)
-                        .collect(Collectors.toList())));
+                .map(ResponsePaperNotificationFailedDtoDto::getIun);
     }
 
     private Mono<FileDownloadResponse> getFileRecursive(Integer n, String fileKey, BigDecimal millis) {
