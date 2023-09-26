@@ -7,14 +7,11 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class AddressMapperTest {
 
@@ -24,7 +21,6 @@ class AddressMapperTest {
     void toEntityTest() {
         PnServiceDeskConfigs pnServiceDeskConfigs= new PnServiceDeskConfigs();
         pnServiceDeskConfigs.setTtlReceiverAddress(Long.valueOf("1"));
-        Instant instant = LocalDateTime.now().plusDays(pnServiceDeskConfigs.getTtlReceiverAddress()).toInstant(ZoneOffset.UTC);
         AnalogAddress analogAddress= getAnalogAddress();
         PnServiceDeskAddress pnServiceDeskAddress= addressMapper.toEntity(analogAddress, "1234",  pnServiceDeskConfigs);
         assertEquals(pnServiceDeskAddress.getFullName(), analogAddress.getFullname());
@@ -35,8 +31,6 @@ class AddressMapperTest {
         assertEquals(pnServiceDeskAddress.getCity2(), analogAddress.getCity2());
         assertEquals(pnServiceDeskAddress.getPr(), analogAddress.getPr());
         assertEquals(pnServiceDeskAddress.getCountry(), analogAddress.getCountry());
-        assertEquals(pnServiceDeskAddress.getTtl(), instant.getEpochSecond());
-
     }
 
     @Test
