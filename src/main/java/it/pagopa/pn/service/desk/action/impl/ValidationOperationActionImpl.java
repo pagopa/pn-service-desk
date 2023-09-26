@@ -35,6 +35,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static java.lang.Boolean.FALSE;
@@ -335,7 +336,12 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ex.getMessage()));
                 })
                 .doOnNext(iun -> log.debug("recipientInternalId = {}, iun = {}, Iun retrievied", iun, recipientInternalId))
-                .map(ResponsePaperNotificationFailedDtoDto::getIun);
+                .collectList()
+                .flatMapMany(lst ->  Flux.fromIterable(
+                        lst.stream()
+                        .filter(notification -> StringUtils.equals(notification.getRecipientInternalId(), recipientInternalId))
+                        .map(ResponsePaperNotificationFailedDtoDto::getIun)
+                        .collect(Collectors.toList())));
     }
 
     private Mono<FileDownloadResponse> getFileRecursive(Integer n, String fileKey, BigDecimal millis) {
