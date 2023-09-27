@@ -45,7 +45,7 @@ class NotifyDeliveryPushActionTest {
         Mockito.when(operationDAO.getByOperationId(Mockito.any()))
                 .thenReturn(Mono.empty());
         PnEntityNotFoundException exception = assertThrows(PnEntityNotFoundException.class, () -> notifyDeliveryPushAction.execute(internalEventBody));
-        assertEquals(exception.getExceptionType(), ExceptionTypeEnum.ENTITY_NOT_FOUND);
+        assertEquals(ExceptionTypeEnum.ENTITY_NOT_FOUND, exception.getExceptionType());
     }
 
     @Test

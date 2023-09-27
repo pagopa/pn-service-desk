@@ -269,7 +269,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                         legalFactAndTaxId.getT1().stream()
                                 .filter(legalFact -> (StringUtils.isEmpty(legalFact.getTaxId())  || legalFact.getTaxId().equalsIgnoreCase(legalFactAndTaxId.getT2())))
                                 .map(l -> l.getLegalFactsId().getKey())
-                                .collect(Collectors.toList())));
+                                .toList()));
     }
 
     /**

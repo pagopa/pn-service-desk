@@ -12,7 +12,6 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +24,7 @@ import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_GET_UNREACHABLE_NOTIFICATION;
 
-public class NotificationServiceImplTest extends BaseTest.WithMockServer {
+class NotificationServiceImplTest extends BaseTest.WithMockServer {
 
     @Autowired
     private NotificationService notificationService;
@@ -93,10 +92,8 @@ public class NotificationServiceImplTest extends BaseTest.WithMockServer {
         Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.any())).thenReturn(Flux.empty());
         Mockito.when(this.deliveryPushClient.paperNotificationFailed(Mockito.anyString())).thenThrow(new PnGenericException(ERROR_GET_UNREACHABLE_NOTIFICATION, ERROR_GET_UNREACHABLE_NOTIFICATION.getMessage()));
 
-        PnGenericException exception = Assertions.assertThrows(PnGenericException.class, () -> {
-            this.notificationService.getUnreachableNotification("fkdokm", new NotificationRequest()).block();
-        });
-        Assertions.assertEquals(exception.getExceptionType(), ExceptionTypeEnum.ERROR_GET_UNREACHABLE_NOTIFICATION);
+        PnGenericException exception = Assertions.assertThrows(PnGenericException.class, () -> this.notificationService.getUnreachableNotification("fkdokm", new NotificationRequest()).block());
+        Assertions.assertEquals(ExceptionTypeEnum.ERROR_GET_UNREACHABLE_NOTIFICATION, exception.getExceptionType());
     }
 
     private List<PnServiceDeskOperations> getOperations(){

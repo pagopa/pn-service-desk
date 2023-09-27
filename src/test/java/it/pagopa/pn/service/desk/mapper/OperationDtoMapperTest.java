@@ -17,8 +17,8 @@ class OperationDtoMapperTest {
         p.setOperationId("1");
         OperationDto dto = OperationDtoMapper.initOperation(p, "123");
         assertNotNull(dto);
-        assertEquals(dto.getOperationId(), p.getOperationId());
-        assertEquals(dto.getIun(), "123");
+        assertEquals(p.getOperationId(), dto.getOperationId());
+        assertEquals("123", dto.getIun());
     }
 
 }
