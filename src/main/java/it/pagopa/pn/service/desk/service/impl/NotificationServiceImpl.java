@@ -36,7 +36,10 @@ public class NotificationServiceImpl extends BaseService implements Notification
         NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
         return dataVaultClient.anonymized(notificationRequest.getTaxId())
                 .flatMap(taxId -> this.pnDeliveryPushClient.paperNotificationFailed(taxId)
-                        .onErrorResume(ex -> Mono.error(new PnGenericException(ERROR_GET_UNREACHABLE_NOTIFICATION, ERROR_GET_UNREACHABLE_NOTIFICATION.getMessage())))
+                        .onErrorResume(ex -> {
+                            log.error("Paper notification failer error {}", ex);
+                            return Mono.error(new PnGenericException(ERROR_GET_UNREACHABLE_NOTIFICATION, ERROR_GET_UNREACHABLE_NOTIFICATION.getMessage()));
+                        })
                         .collectList()
                         .flatMap(notifications -> checkNotificationFailedCount(taxId, notifications.stream().map(e -> e.getIun()).collect(Collectors.toList())))
                         .map(count -> {
