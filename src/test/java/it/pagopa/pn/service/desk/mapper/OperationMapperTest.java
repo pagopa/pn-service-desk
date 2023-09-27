@@ -128,7 +128,7 @@ class OperationMapperTest {
 
         OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse);
-        assertEquals(operationResponse.getIuns().size(), 1);
+        assertEquals(1,operationResponse.getIuns().size());
     }
 
 }

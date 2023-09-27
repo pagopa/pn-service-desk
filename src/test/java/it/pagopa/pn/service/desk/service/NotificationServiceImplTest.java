@@ -92,8 +92,13 @@ class NotificationServiceImplTest extends BaseTest.WithMockServer {
         Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.any())).thenReturn(Flux.empty());
         Mockito.when(this.deliveryPushClient.paperNotificationFailed(Mockito.anyString())).thenThrow(new PnGenericException(ERROR_GET_UNREACHABLE_NOTIFICATION, ERROR_GET_UNREACHABLE_NOTIFICATION.getMessage()));
 
-        PnGenericException exception = Assertions.assertThrows(PnGenericException.class, () -> this.notificationService.getUnreachableNotification("fkdokm", new NotificationRequest()).block());
-        Assertions.assertEquals(ExceptionTypeEnum.ERROR_GET_UNREACHABLE_NOTIFICATION, exception.getExceptionType());
+        try {
+            this.notificationService.getUnreachableNotification("fkdokm", new NotificationRequest())
+                    .block();
+            Assertions.fail("Expected an PnGenericException to be thrown");
+        } catch (PnGenericException e) {
+            Assertions.assertEquals(ExceptionTypeEnum.ERROR_GET_UNREACHABLE_NOTIFICATION, e.getExceptionType());
+        }
     }
 
     private List<PnServiceDeskOperations> getOperations(){
