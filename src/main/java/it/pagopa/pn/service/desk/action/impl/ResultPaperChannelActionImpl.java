@@ -1,14 +1,17 @@
 package it.pagopa.pn.service.desk.action.impl;
 
 import it.pagopa.pn.service.desk.action.ResultPaperChannelAction;
+import it.pagopa.pn.service.desk.action.common.CommonAction;
 import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.SendEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
 import it.pagopa.pn.service.desk.mapper.ServiceDeskEventsMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
+import it.pagopa.pn.service.desk.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.AllArgsConstructor;
@@ -23,14 +26,13 @@ import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.PAPERCHANNEL_STATUS_CODE_EMPTY;
 
-
 @Component
 @CustomLog
 @AllArgsConstructor
-public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
+public class ResultPaperChannelActionImpl extends CommonAction implements ResultPaperChannelAction {
 
     private OperationDAO operationDAO;
-
+    private InternalQueueMomProducer internalQueueMomProducer;
 
     @Override
     public void execute(SendEventDto sendEventDto) {
@@ -38,28 +40,32 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
         log.debug("sendEventDto = {}, ResultPaperChannelAction - Execute received input", sendEventDto);
 
         operationDAO.getByOperationId(operationId)
-            .switchIfEmpty(Mono.error(new PnEntityNotFoundException()))
-            .flatMap(entityOperation -> {
-                log.debug("entityOperation = {}, operationId = {}, Is sendEventDto null or blank?", entityOperation, operationId);
-                if(sendEventDto.getStatusCode() == null || StringUtils.isBlank(sendEventDto.getStatusCode().getValue())) {
-                    log.error("entityOperation = {}, operationId = {}, Status code is null or blank", entityOperation, operationId);
-                    return Mono.error(new PnGenericException(PAPERCHANNEL_STATUS_CODE_EMPTY, PAPERCHANNEL_STATUS_CODE_EMPTY.getMessage()));
-                }
-                OperationStatusEnum newStatus = Utility.getOperationStatusFrom(sendEventDto.getStatusCode());
-                return updateOperationEventAndStatus(sendEventDto, entityOperation, newStatus, null);
-            })
-            .doOnError(PnEntityNotFoundException.class, error -> log.error("operationId = {}, EntityOperation was not found", operationId))
-            .onErrorResume(exception -> {
-                if(exception instanceof PnEntityNotFoundException) {
-                    return Mono.empty();
-                }
-                OperationStatusEnum newStatus = Utility.getOperationStatusFrom(StatusCodeEnumDto.KO);
-                return operationDAO
-                    .getByOperationId(operationId)
-                    .flatMap(entityOperation ->
-                            updateOperationEventAndStatus(null, entityOperation, newStatus, exception.getMessage()));
-            })
-            .block();
+                .switchIfEmpty(Mono.error(new PnEntityNotFoundException()))
+                .flatMap(entityOperation -> {
+                    log.debug("entityOperation = {}, operationId = {}, Is sendEventDto null or blank?", entityOperation, operationId);
+                    if(sendEventDto.getStatusCode() == null || StringUtils.isBlank(sendEventDto.getStatusCode().getValue())) {
+                        log.error("entityOperation = {}, operationId = {}, Status code is null or blank", entityOperation, operationId);
+                        return Mono.error(new PnGenericException(PAPERCHANNEL_STATUS_CODE_EMPTY, PAPERCHANNEL_STATUS_CODE_EMPTY.getMessage()));
+                    }
+                    OperationStatusEnum newStatus = Utility.getOperationStatusFrom(sendEventDto.getStatusCode());
+                    if (sendEventDto.getStatusCode().equals(StatusCodeEnumDto.OK)){
+                        return updateNotificationViewedAsync(entityOperation)
+                                .flatMap(operationStatusEnum -> updateOperationEventAndStatus(sendEventDto, entityOperation, operationStatusEnum, null));
+                    }
+                    return updateOperationEventAndStatus(sendEventDto, entityOperation, newStatus, null);
+                })
+                .doOnError(PnEntityNotFoundException.class, error -> log.error("operationId = {}, EntityOperation was not found", operationId))
+                .onErrorResume(exception -> {
+                    if(exception instanceof PnEntityNotFoundException) {
+                        return Mono.empty();
+                    }
+                    OperationStatusEnum newStatus = Utility.getOperationStatusFrom(StatusCodeEnumDto.KO);
+                    return operationDAO
+                            .getByOperationId(operationId)
+                            .flatMap(entityOperation ->
+                                    updateOperationEventAndStatus(null, entityOperation, newStatus, exception.getMessage()));
+                })
+                .block();
     }
 
     private Mono<Void> updateOperationEventAndStatus(SendEventDto sendEventDto,
@@ -89,6 +95,28 @@ public class ResultPaperChannelActionImpl implements ResultPaperChannelAction {
 
         log.debug("operationId = {}, operationStatus = {}, Update entityOperation and event with new status", entityOperation.getOperationId(), operationStatusEnum);
         return this.operationDAO.updateEntity(entityOperation).then();
+    }
+
+    private Mono<OperationStatusEnum> updateNotificationViewedAsync(PnServiceDeskOperations pnServiceDeskOperations) {
+        log.info("updateNotificationViewedAsync for operationId {}", pnServiceDeskOperations.getOperationId());
+
+        if (pnServiceDeskOperations.getAttachments() != null && !pnServiceDeskOperations.getAttachments().isEmpty()) {
+            return pushNotificationViewedMessage(pnServiceDeskOperations.getAttachments().stream()
+                    .filter(attachments -> attachments.getIsAvailable() == Boolean.TRUE && StringUtils.isNotBlank(attachments.getIun()))
+                    .map(PnServiceDeskAttachments::getIun)
+                    .toList(), pnServiceDeskOperations);
+        }
+        return Mono.just(OperationStatusEnum.OK);
+    }
+
+    private Mono<OperationStatusEnum> pushNotificationViewedMessage(List<String> iuns, PnServiceDeskOperations pnServiceDeskOperations){
+        if (iuns == null || iuns.isEmpty()) {
+            return Mono.just(OperationStatusEnum.OK);
+        }
+
+        log.info("push message on queue for operationId {}", pnServiceDeskOperations.getOperationId());
+        internalQueueMomProducer.push(getInternalEvent(iuns, pnServiceDeskOperations.getOperationId(), pnServiceDeskOperations.getRecipientInternalId()));
+        return Mono.just(OperationStatusEnum.NOTIFY_VIEW);
     }
 
 }

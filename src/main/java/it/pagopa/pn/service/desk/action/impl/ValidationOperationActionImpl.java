@@ -23,8 +23,8 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
+import it.pagopa.pn.service.desk.service.impl.BaseService;
 import it.pagopa.pn.service.desk.utility.Utility;
-import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -41,13 +41,10 @@ import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
-
 @Component
 @CustomLog
-@AllArgsConstructor
-public class ValidationOperationActionImpl implements ValidationOperationAction {
+public class ValidationOperationActionImpl extends BaseService implements ValidationOperationAction {
 
-    private OperationDAO operationDAO;
     private AddressDAO addressDAO;
     private PnAddressManagerClient addressManagerClient;
     private PnDeliveryPushClient pnDeliveryPushClient;
@@ -56,6 +53,22 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
     private PnSafeStorageClient safeStorageClient;
     private PnServiceDeskConfigs cfn;
     private PnDataVaultClient pnDataVaultClient;
+
+    public ValidationOperationActionImpl(OperationDAO operationDao, AddressDAO addressDAO,
+                                         PnAddressManagerClient addressManagerClient, PnDeliveryPushClient pnDeliveryPushClient,
+                                         PnDeliveryClient pnDeliveryClient,
+                                         PnPaperChannelClient paperChannelClient, PnSafeStorageClient safeStorageClient,
+                                         PnServiceDeskConfigs cfn, PnDataVaultClient pnDataVaultClient) {
+        super(operationDao);
+        this.addressDAO = addressDAO;
+        this.addressManagerClient = addressManagerClient;
+        this.pnDeliveryClient = pnDeliveryClient;
+        this.pnDeliveryPushClient = pnDeliveryPushClient;
+        this.paperChannelClient = paperChannelClient;
+        this.safeStorageClient = safeStorageClient;
+        this.cfn = cfn;
+        this.pnDataVaultClient = pnDataVaultClient;
+    }
 
     @Override
     public void execute(String operationId) {
@@ -86,6 +99,10 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
         return getIuns(operation.getRecipientInternalId())
                 .collectList()
                 .flatMap(responsePaperNotificationFailed -> {
+                    if (responsePaperNotificationFailed.isEmpty()) {
+                        return Mono.error(new PnGenericException(IUNS_ALREADY_IN_PROGRESS, IUNS_ALREADY_IN_PROGRESS.getMessage()));
+                    }
+
                     log.debug("listOfIuns = {}, List of iuns retrivied", responsePaperNotificationFailed);
                     operation.setErrorReason(null);
                     log.debug("errorReason = {}, Setting to null errorReason into entityOperation", operation);
@@ -252,7 +269,7 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                         legalFactAndTaxId.getT1().stream()
                                 .filter(legalFact -> (StringUtils.isEmpty(legalFact.getTaxId())  || legalFact.getTaxId().equalsIgnoreCase(legalFactAndTaxId.getT2())))
                                 .map(l -> l.getLegalFactsId().getKey())
-                                .collect(Collectors.toList())));
+                                .toList()));
     }
 
     /**
@@ -339,7 +356,10 @@ public class ValidationOperationActionImpl implements ValidationOperationAction 
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ex.getMessage()));
                 })
                 .doOnNext(iun -> log.debug("recipientInternalId = {}, iun = {}, Iun retrievied", iun, recipientInternalId))
-                .map(ResponsePaperNotificationFailedDtoDto::getIun);
+                .map(ResponsePaperNotificationFailedDtoDto::getIun)
+                .doOnNext(iun -> log.info("iun paper notification failed {}", iun))
+                .collectList()
+                .flatMapMany(notifications -> checkNotificationFailedList(recipientInternalId, notifications));
     }
 
     private Mono<FileDownloadResponse> getFileRecursive(Integer n, String fileKey, BigDecimal millis) {

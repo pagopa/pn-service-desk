@@ -26,6 +26,20 @@ public class ServiceDeskEventHandler {
                 addOperationIdToMdc(message.getPayload().getOperationId());
                 responseHandler.handleInternalEventResponse(message.getPayload());
             } catch (Exception ex) {
+                log.error("Error in validationOperationsInboundConsumer {}", ex.getMessage());
+                throw ex;
+            }
+        };
+    }
+
+    @Bean
+    public Consumer<Message<InternalEventBody>> notifyDeliveryPushInboundConsumer(){
+        return message -> {
+            try {
+                log.info("Handle message from InternalQueue with content {}", message);
+                responseHandler.handleNotifyDeliveryPushEventResponse(message.getPayload());
+            } catch (Exception ex) {
+                log.error("Error in notifyDeliveryPushInboundConsumer {}", ex.getMessage());
                 throw ex;
             }
         };

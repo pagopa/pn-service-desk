@@ -7,6 +7,7 @@ import it.pagopa.pn.service.desk.middleware.queue.model.InternalEvent;
 import it.pagopa.pn.service.desk.middleware.queue.model.InternalEventBody;
 import it.pagopa.pn.service.desk.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.service.desk.model.EventTypeEnum;
+import it.pagopa.pn.service.desk.utility.Const;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,6 @@ import java.util.UUID;
 @CustomLog
 @AllArgsConstructor
 public class SafeStorageResponseHandler {
-    private static final String PUBLISHER_PREPARE = "service-desk-event";
 
     private InternalQueueMomProducer internalQueueMomProducer;
     private OperationsFileKeyDAO operationsFileKeyDAO;
@@ -35,7 +35,7 @@ public class SafeStorageResponseHandler {
     private InternalEvent getInternalEvent(String operationId){
 
         GenericEventHeader prepareHeader= GenericEventHeader.builder()
-                .publisher(PUBLISHER_PREPARE)
+                .publisher(Const.PUBLISHER_PREPARE)
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
                 .eventType(EventTypeEnum.VALIDATION_OPERATIONS_EVENTS.name())

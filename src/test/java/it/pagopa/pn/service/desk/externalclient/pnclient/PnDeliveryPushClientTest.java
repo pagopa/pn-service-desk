@@ -2,18 +2,20 @@ package it.pagopa.pn.service.desk.externalclient.pnclient;
 
 import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponseNotificationViewedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import reactor.core.publisher.Flux;
 
 import java.util.List;
 
 class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
     private static final String IUN = "LJLH-GNTJ-DVXR-202209-J-1";
     private static final String RECIPIENT_INTERNAL_ID = "PF-4fc75df3-0913-407e-bdaa-e50329708b7d";
+
+    private static final String OPERATION_ID = "test12345";
 
     @Autowired
     private PnDeliveryPushClient pnDeliveryPushClient;
@@ -37,5 +39,17 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
 
         Assertions.assertNotNull(legalFactListElementDtos);
         Assertions.assertEquals(3, legalFactListElementDtos.size());
+    }
+
+    @Test
+    void notifyNotificationViewed(){
+
+
+        ResponseNotificationViewedDtoDto responseNotificationViewedDtoDto =
+                this.pnDeliveryPushClient
+                        .notifyNotificationViewed(IUN, OPERATION_ID, RECIPIENT_INTERNAL_ID).block();
+
+        Assertions.assertNotNull(responseNotificationViewedDtoDto);
+        Assertions.assertEquals(IUN, responseNotificationViewedDtoDto.getIun());
     }
 }
