@@ -357,7 +357,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                 })
                 .doOnNext(iun -> log.debug("recipientInternalId = {}, iun = {}, Iun retrievied", iun, recipientInternalId))
                 .map(ResponsePaperNotificationFailedDtoDto::getIun)
-                .doOnNext(ii -> log.info("iun paper notification failed {}", ii))
+                .doOnNext(iun -> log.info("iun paper notification failed {}", iun))
                 .collectList()
                 .flatMapMany(notifications -> checkNotificationFailedList(recipientInternalId, notifications));
     }

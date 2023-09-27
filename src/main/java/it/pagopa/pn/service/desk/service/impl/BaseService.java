@@ -11,6 +11,8 @@ import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -57,22 +59,23 @@ public class BaseService {
     }
 
     protected Flux<String> operationContainsIuns(List<PnServiceDeskOperations> operations, List<String> iuns){
+        List<String> lstIuns = new ArrayList<>(iuns);
         return Flux.fromStream(operations.stream())
-                .flatMap(operation -> retrieveOperationWithIuns(operation, iuns))
+                .flatMap(operation -> retrieveOperationWithIuns(operation, lstIuns))
                 .distinct()
                 .collectList()
                 .flatMapMany(lst -> {
                     if (lst.isEmpty()) {
-                        iuns.stream().forEach(i -> log.info("unreachable iun from operation {}", i));
-                        return Flux.fromIterable(iuns);
+                        lstIuns.stream().forEach(i -> log.info("unreachable iun from operation {}", i));
+                        return Flux.fromIterable(lstIuns);
                     }
 
-                    iuns.removeAll(lst.stream().map(OperationDto::getIun).toList());
+                    lstIuns.removeAll(lst.stream().map(OperationDto::getIun).toList());
                     Set<String> result = lst.stream()
                             .filter(i -> StringUtils.equals(i.getStatus(), OperationStatusEnum.KO.toString()))
                             .map(OperationDto::getIun)
                             .collect(Collectors.toSet());
-                    result.addAll(iuns);
+                    result.addAll(lstIuns);
                     return Flux.fromStream(result.stream());
                 });
     }
