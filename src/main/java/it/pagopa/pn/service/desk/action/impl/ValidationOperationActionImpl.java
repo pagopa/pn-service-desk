@@ -100,7 +100,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                 .collectList()
                 .flatMap(responsePaperNotificationFailed -> {
                     if (responsePaperNotificationFailed.isEmpty()) {
-                        throw new PnGenericException(IUNS_ALREADY_IN_PROGRESS, IUNS_ALREADY_IN_PROGRESS.getMessage());
+                        return Mono.error(new PnGenericException(IUNS_ALREADY_IN_PROGRESS, IUNS_ALREADY_IN_PROGRESS.getMessage()));
                     }
 
                     log.debug("listOfIuns = {}, List of iuns retrivied", responsePaperNotificationFailed);

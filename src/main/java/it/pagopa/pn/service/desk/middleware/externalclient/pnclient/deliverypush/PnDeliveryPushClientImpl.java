@@ -48,7 +48,7 @@ public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
                     return item;
                 })
                 .onErrorResume(ex -> {
-                    log.error("Notification viewed in error {}", ex.getMessage());
+                    log.error("Notification viewed in error {}", ex);
                     return Mono.empty();
                 });
     }
