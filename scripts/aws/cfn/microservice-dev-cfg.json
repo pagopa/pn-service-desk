@@ -7,7 +7,7 @@
     "AddressManagerCxId": "pn-service-desk",
     "PaperChannelCxId": "pn-service-desk",
     "AddressManagerApiKey": "_",
-    "NotifyAttempt": 2,
+    "NotifyAttempt": "2",
     "AddressManagerBaseUrl": "http://alb.confidential.pn.internal:8080",
     "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080"
   }
