@@ -131,16 +131,19 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                         log.debug("entityOperation = {}, A new entityOperation's attachments list has been created", operation);
                         operation.setAttachments(new ArrayList<>());
                     }
-                    operation.getAttachments().addAll(pnServiceDeskAttachmentsList);
                 })
-                .flatMap(pnServiceDeskAttachments -> {
+                .map(pnServiceDeskAttachments -> {
                     log.debug("entityOperation = {}, entityAttachment = {}, Entity's attachment list has been added", operation, pnServiceDeskAttachments);
-                    return operationDAO.updateEntity(operation)
-                            .switchIfEmpty(Mono.defer(() -> {
-                                log.error("entityOperation = {}, Error on update entityOperation", operation);
-                                return Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()));
-                            }))
-                            .thenReturn(pnServiceDeskAttachments);
+                    setAttachmentsListForOperations(operation, pnServiceDeskAttachments)
+                            .map(operations -> operationDAO.updateEntity(operation)
+                                    .switchIfEmpty(Mono.defer(() -> {
+                                        log.error("entityOperation = {}, Error on update entityOperation", operation);
+                                        return Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()));
+                                    })));
+                    return pnServiceDeskAttachments
+                            .stream()
+                            .flatMap(List::stream)
+                            .collect(Collectors.toList());
                 })
                 .flatMapMany(Flux::fromIterable)
                 .flatMap(this::getFileKeyFromAttachments)
