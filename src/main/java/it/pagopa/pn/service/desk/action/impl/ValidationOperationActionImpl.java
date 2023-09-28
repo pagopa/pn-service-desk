@@ -436,15 +436,17 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                 .map(ArrayList::new);
     }
 
-//    public Flux<PnServiceDeskOperations> setAttachmentsListForOperations(PnServiceDeskOperations operations, List<List<PnServiceDeskAttachments>> splitAttachmentsList) {
-//        return Flux.fromIterable(splitAttachmentsList)
-//                .flatMap(attachments -> {
-//                    PnServiceDeskOperations pnServiceDeskOperations = OperationMapper.copyOperation(operations);
-//                    pnServiceDeskOperations.setAttachments(attachments);
-//
-//                    pnServiceDeskOperations.setOperationId(operations.getOperationId().concat(""));
-//                    return pnServiceDeskOperations;
-//                });
-//    }
+    public Flux<PnServiceDeskOperations> setAttachmentsListForOperations(PnServiceDeskOperations operations, List<List<PnServiceDeskAttachments>> splitAttachmentsList) {
+        final int[] sequenceNumber = {1};
+            return Flux.fromIterable(splitAttachmentsList)
+                .map(attachments -> {
+                    PnServiceDeskOperations pnServiceDeskOperations = OperationMapper.copyOperation(operations);
+                    pnServiceDeskOperations.setAttachments(attachments);
+                    String operationId = operations.getOperationId().concat("-" + sequenceNumber[0]);
+                    pnServiceDeskOperations.setOperationId(operationId);
+                    sequenceNumber[0]++;
+                    return pnServiceDeskOperations;
+                }).skip(1);
+    }
 
 }
