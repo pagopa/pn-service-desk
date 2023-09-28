@@ -100,7 +100,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                 .collectList()
                 .flatMap(responsePaperNotificationFailed -> {
                     if (responsePaperNotificationFailed.isEmpty()) {
-                        throw new PnGenericException(IUNS_ALREADY_IN_PROGRESS, IUNS_ALREADY_IN_PROGRESS.getMessage());
+                        return Mono.error(new PnGenericException(IUNS_ALREADY_IN_PROGRESS, IUNS_ALREADY_IN_PROGRESS.getMessage()));
                     }
 
                     log.debug("listOfIuns = {}, List of iuns retrivied", responsePaperNotificationFailed);
@@ -269,7 +269,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                         legalFactAndTaxId.getT1().stream()
                                 .filter(legalFact -> (StringUtils.isEmpty(legalFact.getTaxId())  || legalFact.getTaxId().equalsIgnoreCase(legalFactAndTaxId.getT2())))
                                 .map(l -> l.getLegalFactsId().getKey())
-                                .collect(Collectors.toList())));
+                                .toList()));
     }
 
     /**
@@ -357,7 +357,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                 })
                 .doOnNext(iun -> log.debug("recipientInternalId = {}, iun = {}, Iun retrievied", iun, recipientInternalId))
                 .map(ResponsePaperNotificationFailedDtoDto::getIun)
-                .doOnNext(ii -> log.info("iun paper notification failed {}", ii))
+                .doOnNext(iun -> log.info("iun paper notification failed {}", iun))
                 .collectList()
                 .flatMapMany(notifications -> checkNotificationFailedList(recipientInternalId, notifications));
     }

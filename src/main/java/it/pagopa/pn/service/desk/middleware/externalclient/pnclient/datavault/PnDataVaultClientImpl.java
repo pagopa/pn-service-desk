@@ -28,8 +28,6 @@ public class PnDataVaultClientImpl implements PnDataVaultClient {
 
     @Override
     public Mono<String> anonymized(String data) {
-        log.debug("data = {}, Anonymized received input", data);
-
         String PN_DATA_VAULT_DESCRIPTION = "Data Vault encode";
         log.logInvokingExternalService(PnLogger.EXTERNAL_SERVICES.PN_DATA_VAULT, PN_DATA_VAULT_DESCRIPTION);
         return this.recipientsApi.ensureRecipientByExternalId(RecipientTypeDto.PF, data)
