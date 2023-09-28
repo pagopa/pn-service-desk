@@ -18,6 +18,7 @@ public class PnServiceDeskAttachments {
     public static final String COL_FILES_KEY = "filesKey";
     public static final String COL_IS_AVAILABLE = "isAvailable";
     public static final String COL_IS_NOTIFIED = "isNotified";
+    public static final String COL_PAGE_NUMBER = "numberOfPages";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_IUN)}))
     private String iun;
@@ -30,5 +31,8 @@ public class PnServiceDeskAttachments {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_IS_NOTIFIED)}))
     private Boolean isNotified;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAGE_NUMBER)}))
+    private Integer numberOfPages;
 
 }

@@ -1,6 +1,7 @@
 package it.pagopa.pn.service.desk.action.impl;
 
 import it.pagopa.pn.service.desk.action.ValidationOperationAction;
+import it.pagopa.pn.service.desk.config.HttpConnector;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
 import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
@@ -10,6 +11,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dt
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PaperChannelUpdateDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
 import it.pagopa.pn.service.desk.mapper.AttachmentMapper;
+import it.pagopa.pn.service.desk.mapper.OperationMapper;
 import it.pagopa.pn.service.desk.mapper.PaperChannelMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
@@ -22,18 +24,24 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnD
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
+import it.pagopa.pn.service.desk.model.AttachmentInfo;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.service.impl.BaseService;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.CustomLog;
+import org.apache.http.client.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuples;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -114,12 +122,14 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                     return getAttachmentsFromIun(operation, iun);
                 })
                 .collectList()
+                .flatMap(attachments -> splitAttachments(attachments)
+                        .collectList()
+                        .map(lists -> lists))
                 .doOnNext(pnServiceDeskAttachmentsList -> {
-                    PnServiceDeskOperations entityOperationToUpdate = operation;
-                    log.debug("entityOperation = {}, Is entityOperation's attachments null?", entityOperationToUpdate);
-                    if (entityOperationToUpdate.getAttachments() == null){
-                        log.debug("entityOperation = {}, A new entityOperation's attachments list has been created", entityOperationToUpdate);
-                        entityOperationToUpdate.setAttachments(new ArrayList<>());
+                    log.debug("entityOperation = {}, Is entityOperation's attachments null?", operation);
+                    if (operation.getAttachments() == null){
+                        log.debug("entityOperation = {}, A new entityOperation's attachments list has been created", operation);
+                        operation.setAttachments(new ArrayList<>());
                     }
                     operation.getAttachments().addAll(pnServiceDeskAttachmentsList);
                 })
@@ -215,10 +225,11 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                             .flatMap(fileKey -> {
                                 log.debug("fileKey = {}, Is the file received on available?", fileKey);
                                 if (TRUE.equals(entity.getIsAvailable())){
-                                    return isFileAvailable(fileKey)
-                                            .map(isAvailable ->{
-                                                log.debug("fileKey = {}, isAvailable = {}, The file received is available", fileKey, isAvailable);
-                                                entity.setIsAvailable(entity.getIsAvailable() && isAvailable);
+                                    return attachmentInfo(fileKey)
+                                            .map(attachmentInfo ->{
+                                                log.debug("fileKey = {}, isAvailable = {}, The file received is available", fileKey, attachmentInfo.isAvailable());
+                                                entity.setIsAvailable(entity.getIsAvailable() && attachmentInfo.isAvailable());
+                                                entity.setNumberOfPages(attachmentInfo.getNumberOfPage());
                                                 return fileKey.contains(Utility.SAFESTORAGE_BASE_URL) ? fileKey : Utility.SAFESTORAGE_BASE_URL.concat(fileKey);
                                             });
                                 }
@@ -232,18 +243,34 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                             }));
     }
 
-    private Mono<Boolean> isFileAvailable(String fileKey) {
+    private Mono<AttachmentInfo> attachmentInfo(String fileKey) {
         log.debug("fileKey: {}, IsFileAvailable received input", fileKey);
 
         return this.getFileRecursive(5, fileKey, BigDecimal.ZERO)
-                //TODO aggiungere chiamata per il download del documento
-                .map(response -> {
-                    log.debug("response: {}, The file was recovered successfully", response);
-                    return TRUE;
+                .flatMap(response -> {
+                    AttachmentInfo info = AttachmentMapper.fromSafeStorage(response);
+                    if (info.getUrl() == null){
+                        info.setAvailable(FALSE);
+                        return Mono.just(info);
+                    }
+                    return HttpConnector.downloadFile(info.getUrl())
+                            .map(pdDocument -> {
+                                try {
+                                    info.setAvailable(TRUE);
+                                    info.setNumberOfPage(pdDocument.getNumberOfPages());
+                                    pdDocument.close();
+                                } catch (IOException e) {
+                                    throw new PnGenericException(ERROR_SAFE_STORAGE_BODY_NULL, ERROR_SAFE_STORAGE_BODY_NULL.getMessage());
+                                }
+                                return info;
+                            });
+
                 })
                 .onErrorResume(exception -> {
                     log.debug("errorReason = {}, An error occurred while retrieving the file", exception.getMessage());
-                    return Mono.just(FALSE);
+                    AttachmentInfo info = new AttachmentInfo();
+                    info.setAvailable(FALSE);
+                    return Mono.just(info);
                 });
     }
 
@@ -401,5 +428,23 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                     return updateOperationStatus(operation, OperationStatusEnum.KO);
                 });
     }
+
+    public Flux<List<PnServiceDeskAttachments>> splitAttachments(List<PnServiceDeskAttachments> attachments) {
+        return Flux.fromIterable(attachments)
+                .groupBy(PnServiceDeskAttachments::getIun)
+                .flatMap(group -> group.buffer(100))
+                .map(ArrayList::new);
+    }
+
+//    public Flux<PnServiceDeskOperations> setAttachmentsListForOperations(PnServiceDeskOperations operations, List<List<PnServiceDeskAttachments>> splitAttachmentsList) {
+//        return Flux.fromIterable(splitAttachmentsList)
+//                .flatMap(attachments -> {
+//                    PnServiceDeskOperations pnServiceDeskOperations = OperationMapper.copyOperation(operations);
+//                    pnServiceDeskOperations.setAttachments(attachments);
+//
+//                    pnServiceDeskOperations.setOperationId(operations.getOperationId().concat(""));
+//                    return pnServiceDeskOperations;
+//                });
+//    }
 
 }
