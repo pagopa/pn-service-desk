@@ -88,7 +88,7 @@ class ValidationOperationActionImplTest {
     private final LegalFactListElementDto legalFactListElementDto = new LegalFactListElementDto();
     private final LegalFactsIdDto legalFactsIdDto = new LegalFactsIdDto();
     private final PnServiceDeskAttachments pnServiceDeskAttachments = new PnServiceDeskAttachments();
-    private final List<PnServiceDeskAttachments> pnServiceDeskAttachmentsList  = new ArrayList<>();
+    private final List<PnServiceDeskAttachments> pnServiceDeskAttachmentsList = new ArrayList<>();
     private final List<String> fileKeys = new ArrayList<>();
     private final PaperChannelUpdateDto paperChannelUpdateDto = new PaperChannelUpdateDto();
     private final PrepareEventDto prepareEventDto = new PrepareEventDto();
@@ -97,7 +97,7 @@ class ValidationOperationActionImplTest {
 
 
     @BeforeEach
-    public void init(){
+    public void init() {
         fileDownloadResponse.setKey("key1234");
         fileDownloadResponse.setChecksum("checkSum");
         fileDownloadResponse.setContentType("contentType");
@@ -116,13 +116,12 @@ class ValidationOperationActionImplTest {
         pnServiceDeskOperations.setTicketId("ticketId");
         pnServiceDeskOperations.setOperationStartDate(Instant.now());
         pnServiceDeskOperations.setEvents(null);
-        pnServiceDeskOperations.setAttachments(pnServiceDeskAttachmentsList );
+        pnServiceDeskOperations.setAttachments(pnServiceDeskAttachmentsList);
         pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
         pnServiceDeskOperations.setErrorReason("errorReason");
         pnServiceDeskOperations.setRecipientInternalId("recipientInternalId");
 
         responsePaperNotificationFailedDtoDto.setIun("iunResponse");
-        responsePaperNotificationFailedDtoDto.setRecipientInternalId("recipientInternalId");
         legalFactsIdDto.setKey("keyLegalFact");
         legalFactsIdDto.setCategory(LegalFactCategoryDto.ANALOG_DELIVERY);
         legalFactListElementDto.setLegalFactsId(legalFactsIdDto);
@@ -134,7 +133,7 @@ class ValidationOperationActionImplTest {
     }
 
     @Test
-    void executeWithoutOperationId(){
+    void executeWithoutOperationId() {
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.empty());
         Assertions.assertThrows(PnEntityNotFoundException.class, () -> {
             this.validationOperationAction.execute("opId1234");
@@ -142,7 +141,7 @@ class ValidationOperationActionImplTest {
     }
 
     @Test
-    void executeGetAddressNotFound(){
+    void executeGetAddressNotFound() {
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.empty());
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
@@ -160,7 +159,7 @@ class ValidationOperationActionImplTest {
     }
 
     @Test
-    void executeAddressNotValidThrowGenericException(){
+    void executeAddressNotValidThrowGenericException() {
         Mockito.when(this.operationDAO.getByOperationId("opId1234"))
                 .thenReturn(Mono.just(pnServiceDeskOperations));
 
@@ -184,7 +183,7 @@ class ValidationOperationActionImplTest {
     }
 
     @Test
-    void executeAddressNotEqualsThrowGenericException(){
+    void executeAddressNotEqualsThrowGenericException() {
         Mockito.when(this.operationDAO.getByOperationId("opId1234"))
                 .thenReturn(Mono.just(pnServiceDeskOperations));
 
@@ -208,8 +207,8 @@ class ValidationOperationActionImplTest {
     }
 
     @Test
-    void executePnDeliveryPushClient(){
-        PnGenericException exception = new PnGenericException(ExceptionTypeEnum.BAD_REQUEST,ExceptionTypeEnum.BAD_REQUEST.getMessage());
+    void executePnDeliveryPushClient() {
+        PnGenericException exception = new PnGenericException(ExceptionTypeEnum.BAD_REQUEST, ExceptionTypeEnum.BAD_REQUEST.getMessage());
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
         Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
@@ -228,7 +227,7 @@ class ValidationOperationActionImplTest {
     }
 
     @Test
-    void executeUpdateOperationStatusEmpty(){
+    void executeUpdateOperationStatusEmpty() {
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
         Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
@@ -240,52 +239,59 @@ class ValidationOperationActionImplTest {
     }
 
     @Test
-    void executeGetNotificationLegalFactsPrivateEmpty(){
-        PnGenericException exception = new PnGenericException(null,null);
-        Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
-        Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
-        Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
-        Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
-        Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
-        Assertions.assertDoesNotThrow( () -> {
-            this.validationOperationAction.execute("opId1234");
-        });
-    }
-
-    @Test
-    void executeGetNotificationLegalFactsPrivateEmptyAndIsAvailableFalse(){
-        pnServiceDeskOperations.getAttachments().get(0).setIsAvailable(Boolean.FALSE);
-        PnGenericException exception = new PnGenericException(null,null);
+    void executeGetNotificationLegalFactsPrivateEmpty() {
+        PnGenericException exception = new PnGenericException(null, null);
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
         Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
-        Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(),Mockito.any())).thenThrow(exception);
+        Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenThrow(exception);
+        Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.anyString())).thenReturn(Flux.empty());
+
         Assertions.assertDoesNotThrow(() -> {
             this.validationOperationAction.execute("opId1234");
         });
     }
 
     @Test
-    void executeGetNotificationLegalFactsPrivate(){
+    void executeGetNotificationLegalFactsPrivateEmptyAndIsAvailableFalse() {
+        pnServiceDeskOperations.getAttachments().get(0).setIsAvailable(Boolean.FALSE);
+        PnGenericException exception = new PnGenericException(null, null);
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
         Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
-        Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(),Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
-        Mockito.when(this.paperChannelClient.sendPaperPrepareRequest(Mockito.any(),Mockito.any())).thenReturn(Mono.just(paperChannelUpdateDto));
+        Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenThrow(exception);
+        Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.anyString())).thenReturn(Flux.empty());
+
+        Assertions.assertDoesNotThrow(() -> {
+            this.validationOperationAction.execute("opId1234");
+        });
+    }
+
+    @Test
+    void executeGetNotificationLegalFactsPrivate() {
+        Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
+        Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
+        Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
+        Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
+        Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
+        Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
+        Mockito.when(this.paperChannelClient.sendPaperPrepareRequest(Mockito.any(), Mockito.any())).thenReturn(Mono.just(paperChannelUpdateDto));
         Mockito.when(this.pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("MDDLOP3333-e"));
         Mockito.when(this.safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.just(getFileDownloadResponse()));
+        Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.anyString())).thenReturn(Flux.empty());
 
         this.validationOperationAction.execute("opId1234");
 
 
         ArgumentCaptor<PrepareRequestDto> capturePrepareRequest = ArgumentCaptor.forClass(PrepareRequestDto.class);
-        Mockito.verify(paperChannelClient).sendPaperPrepareRequest(Mockito.any(),capturePrepareRequest.capture());
+        Mockito.verify(paperChannelClient).sendPaperPrepareRequest(Mockito.any(), capturePrepareRequest.capture());
 
         Assertions.assertNotNull(capturePrepareRequest.getValue().getRequestId());
         Assertions.assertNotNull(capturePrepareRequest.getValue().getIun());
@@ -297,21 +303,21 @@ class ValidationOperationActionImplTest {
     }
 
 
-    private DeduplicatesResponseDto getDeduplicatesResponseWithError(){
+    private DeduplicatesResponseDto getDeduplicatesResponseWithError() {
         DeduplicatesResponseDto dto = new DeduplicatesResponseDto();
         dto.setError("Invalid Address");
         dto.setCorrelationId("ABC");
         return dto;
     }
 
-    private DeduplicatesResponseDto getDeduplicatesResponse(boolean equals){
+    private DeduplicatesResponseDto getDeduplicatesResponse(boolean equals) {
         DeduplicatesResponseDto dto = new DeduplicatesResponseDto();
         dto.setEqualityResult(equals);
         dto.setCorrelationId("ABC");
         return dto;
     }
 
-    private FileDownloadResponse getFileDownloadResponse(){
+    private FileDownloadResponse getFileDownloadResponse() {
         FileDownloadResponse response = new FileDownloadResponse();
         FileDownloadInfo info = new FileDownloadInfo();
         info.setUrl("http://localhost:8080/name.pdf");

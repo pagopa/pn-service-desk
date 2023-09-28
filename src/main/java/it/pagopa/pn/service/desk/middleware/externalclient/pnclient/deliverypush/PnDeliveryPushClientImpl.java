@@ -1,18 +1,25 @@
 package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush;
 
+import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.EventComunicationApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.LegalFactsPrivateApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.PaperNotificationFailedApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.*;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
+import java.net.ConnectException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.concurrent.TimeoutException;
 
 @Component
 @CustomLog
@@ -26,7 +33,14 @@ public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
 
     @Override
     public Flux<ResponsePaperNotificationFailedDtoDto> paperNotificationFailed(String recipientInternalId) {
-        return notificationFailedApi.paperNotificationFailed(recipientInternalId, Boolean.TRUE);
+        return notificationFailedApi.paperNotificationFailed(recipientInternalId, Boolean.TRUE)
+                .onErrorResume(WebClientResponseException.class, ex -> {
+                    if (ex.getStatusCode() == HttpStatus.NOT_FOUND){
+                        log.warn("No notification failed found for {}", recipientInternalId);
+                        return Flux.empty();
+                    }
+                    return Mono.error(ex);
+                });
     }
 
     @Override
@@ -48,7 +62,7 @@ public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
                     return item;
                 })
                 .onErrorResume(ex -> {
-                    log.error("Notification viewed in error {}", ex.getMessage());
+                    log.error("Notification viewed in error {}", ex);
                     return Mono.empty();
                 });
     }
