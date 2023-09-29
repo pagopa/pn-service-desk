@@ -39,8 +39,12 @@ public class OperationMapper {
 
     public static OperationResponse operationResponseMapper(PnServiceDeskOperations pnServiceDeskOperations, String taxId){
         OperationResponse operationResponse = new OperationResponse();
-        operationResponse.setOperationId(pnServiceDeskOperations.getOperationId());
-
+        int removeString = pnServiceDeskOperations.getOperationId().indexOf("-SENT-");
+        if (removeString != -1) {
+            operationResponse.setOperationId(pnServiceDeskOperations.getOperationId().substring(0, removeString));
+        }else {
+            operationResponse.setOperationId(pnServiceDeskOperations.getOperationId());
+        }
         List<SDNotificationSummary> iunsList = new ArrayList<>();
         List<SDNotificationSummary> uncompletedIunsList = new ArrayList<>();
         operationResponse.setIuns(iunsList);
