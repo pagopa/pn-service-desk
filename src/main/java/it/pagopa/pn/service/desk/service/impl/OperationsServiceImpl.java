@@ -94,7 +94,7 @@ public class OperationsServiceImpl implements OperationsService {
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
                 .flatMapMany(taxId -> operationDAO.searchOperationsFromRecipientInternalId(taxId))
                 .map(operationResponseMapper -> OperationMapper.operationResponseMapper(operationResponseMapper, searchNotificationRequest.getTaxId()))
-                .collectList()
+                .collectSortedList((op1, op2) -> op2.getOperationUpdateTimestamp().compareTo(op1.getOperationUpdateTimestamp()))
                 .map(operations -> {
                     response.setOperations(operations);
                     return response;
