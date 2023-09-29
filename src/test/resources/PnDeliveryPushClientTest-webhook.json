@@ -4,7 +4,7 @@
             "path": "/delivery-push-private/PF-4fc75df3-0913-407e-bdaa-e50329708b7d/paper-notification-failed",
             "method": "GET",
             "queryStringParameters" : {
-                "getAAR" : [ "true" ]
+                "getAAR" : [ "false" ]
             }
         },
         "httpResponse": {
