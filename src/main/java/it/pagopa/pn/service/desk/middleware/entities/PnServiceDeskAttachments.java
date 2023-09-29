@@ -7,6 +7,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttri
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 
 import java.util.List;
+import java.util.Objects;
 
 @DynamoDbBean
 @Getter
@@ -34,5 +35,23 @@ public class PnServiceDeskAttachments {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAGE_NUMBER)}))
     private Integer numberOfPages;
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof PnServiceDeskAttachments)) {
+            return false;
+        }
+
+        PnServiceDeskAttachments c = (PnServiceDeskAttachments) o;
+        return iun.equals(c.getIun());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.iun);
+    }
 
 }
