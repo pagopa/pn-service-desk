@@ -8,6 +8,7 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
+import it.pagopa.pn.service.desk.utility.Const;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -39,7 +40,7 @@ public class OperationMapper {
 
     public static OperationResponse operationResponseMapper(PnServiceDeskOperations pnServiceDeskOperations, String taxId){
         OperationResponse operationResponse = new OperationResponse();
-        int removeString = pnServiceDeskOperations.getOperationId().indexOf("-SENT-");
+        int removeString = pnServiceDeskOperations.getOperationId().indexOf(Const.OPERATION_ID_SUFFIX);
         if (removeString != -1) {
             operationResponse.setOperationId(pnServiceDeskOperations.getOperationId().substring(0, removeString));
         }else {

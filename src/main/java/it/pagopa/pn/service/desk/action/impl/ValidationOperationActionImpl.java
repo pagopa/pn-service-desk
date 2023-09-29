@@ -111,7 +111,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                 })
                 .flatMapMany(iuns -> getAttachmentsList(operation, iuns))
                 .collectList()
-                .flatMapMany(lstAttachemtns -> new GroupingServiceDeskAttachments(lstAttachemtns, operation).splitAttachment())
+                .flatMapMany(lstAttachemtns -> new GroupingServiceDeskAttachments(lstAttachemtns, operation, cfn.getMaxNumberOfPages()).splitAttachment())
                 .flatMap(op -> {
                     log.info("create entity for {}", op.getOperationId());
                     return operationDAO.updateEntity(op)
@@ -234,6 +234,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                     } else {
                                         entity.setIsAvailable(TRUE);
                                         entity.setNumberOfPages(lst.stream().reduce(0, (total, element) -> total + element.getNumberOfPage(), Integer::sum));
+                                        entity.setNumberOfPages(entity.getNumberOfPages()/2);
                                         log.info("Number of pages {}", entity.getNumberOfPages());
                                         return entity;
                                     }

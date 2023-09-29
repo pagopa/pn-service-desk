@@ -15,17 +15,19 @@ public class GroupingServiceDeskAttachments {
 
     private List<PnServiceDeskAttachments> source;
     private PnServiceDeskOperations baseOperation;
+    private Integer maxNumber;
 
-    public GroupingServiceDeskAttachments(List<PnServiceDeskAttachments> source, PnServiceDeskOperations baseOperation) {
+    public GroupingServiceDeskAttachments(List<PnServiceDeskAttachments> source, PnServiceDeskOperations baseOperation, Integer maxNumber) {
         this.source = source;
         this.baseOperation = baseOperation;
+        this.maxNumber = maxNumber;
         this.source.sort(Comparator.comparingInt(PnServiceDeskAttachments::getNumberOfPages).reversed());
     }
 
     private List<PnServiceDeskAttachments> splitAttachment(List<PnServiceDeskAttachments> attachments, List<PnServiceDeskAttachments> target, int total, int i) {
         if (i == target.size()) return attachments;
-        total -= target.get(i).getNumberOfPages();
 
+        total -= target.get(i).getNumberOfPages();
         if (total < 0) {
             return attachments;
         }
@@ -42,7 +44,7 @@ public class GroupingServiceDeskAttachments {
         result.addAll(source);
         int count = 0;
         while(!result.isEmpty()) {
-            temp = splitAttachment(new ArrayList<>(), result,6, 0);
+            temp = splitAttachment(new ArrayList<>(), result, this.maxNumber, 0);
             result.removeAll(temp);
             PnServiceDeskOperations op = createOperationsToSend(this.baseOperation, temp, (count == 0 ? "" : String.valueOf(count)));
             operations.add(op);
