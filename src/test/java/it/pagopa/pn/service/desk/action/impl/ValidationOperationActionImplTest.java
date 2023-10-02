@@ -35,10 +35,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -51,6 +48,7 @@ import java.util.List;
 class ValidationOperationActionImplTest {
 
     @InjectMocks
+    @Spy
     private ValidationOperationActionImpl validationOperationAction;
 
     @Mock
@@ -110,6 +108,7 @@ class ValidationOperationActionImplTest {
         pnServiceDeskAttachments.setIsAvailable(Boolean.TRUE);
         pnServiceDeskAttachments.setFilesKey(fileKeys);
         pnServiceDeskAttachments.setIun("iunAttachment");
+        pnServiceDeskAttachments.setNumberOfPages(1);
         pnServiceDeskAttachmentsList.add(pnServiceDeskAttachments);
         pnServiceDeskOperations.setOperationId("opId1234");
         pnServiceDeskOperations.setStatus("status");
@@ -279,13 +278,11 @@ class ValidationOperationActionImplTest {
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
         Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
-        Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
         Mockito.when(this.paperChannelClient.sendPaperPrepareRequest(Mockito.any(), Mockito.any())).thenReturn(Mono.just(paperChannelUpdateDto));
         Mockito.when(this.pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("MDDLOP3333-e"));
-        Mockito.when(this.safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.just(getFileDownloadResponse()));
         Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.anyString())).thenReturn(Flux.empty());
+        Mockito.when(this.validationOperationAction.getAttachmentsList(Mockito.any(), Mockito.any())).thenReturn(Flux.fromIterable(pnServiceDeskAttachmentsList));
 
         this.validationOperationAction.execute("opId1234");
 

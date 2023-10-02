@@ -206,8 +206,11 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                 }).then();
     }
 
-    private Flux<PnServiceDeskAttachments> getAttachmentsList(PnServiceDeskOperations entityOperation, List<String> iuns) {
-        return Flux.fromIterable(iuns).flatMap(iun -> getAttachmentsFromIun(entityOperation, iun));
+    protected Flux<PnServiceDeskAttachments> getAttachmentsList(PnServiceDeskOperations entityOperation, List<String> iuns) {
+        if (iuns != null && !iuns.isEmpty()) {
+            return Flux.fromIterable(iuns).flatMap(iun -> getAttachmentsFromIun(entityOperation, iun));
+        }
+        return Flux.empty();
     }
 
     private Mono<PnServiceDeskAttachments> getAttachmentsFromIun(PnServiceDeskOperations entityOperation, String iun) {
@@ -219,7 +222,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                 .concatWith(getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
                                 .flatMap(this::attachmentInfo)
                                 .map(attachmentInfo -> {
-                                    attachmentInfo.setFileKey(attachmentInfo.getFileKey().contains(Utility.SAFESTORAGE_BASE_URL) ? attachmentInfo.getFileKey() : Utility.SAFESTORAGE_BASE_URL.concat(attachmentInfo.getFileKey()));
+                                    if (StringUtils.isNotEmpty(attachmentInfo.getFileKey())) attachmentInfo.setFileKey(attachmentInfo.getFileKey().contains(Utility.SAFESTORAGE_BASE_URL) ? attachmentInfo.getFileKey() : Utility.SAFESTORAGE_BASE_URL.concat(attachmentInfo.getFileKey()));
                                     return attachmentInfo;
                                 })
                                 .collectList()
