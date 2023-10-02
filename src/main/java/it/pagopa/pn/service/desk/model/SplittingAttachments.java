@@ -11,13 +11,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class GroupingServiceDeskAttachments {
+public class SplittingAttachments {
 
     private List<PnServiceDeskAttachments> source;
     private PnServiceDeskOperations baseOperation;
     private Integer maxNumber;
 
-    public GroupingServiceDeskAttachments(List<PnServiceDeskAttachments> source, PnServiceDeskOperations baseOperation, Integer maxNumber) {
+    public SplittingAttachments(List<PnServiceDeskAttachments> source, PnServiceDeskOperations baseOperation, Integer maxNumber) {
         this.source = source;
         this.baseOperation = baseOperation;
         this.maxNumber = maxNumber;
@@ -26,6 +26,10 @@ public class GroupingServiceDeskAttachments {
 
     private List<PnServiceDeskAttachments> splitAttachment(List<PnServiceDeskAttachments> attachments, List<PnServiceDeskAttachments> target, int total, int i) {
         if (i == target.size()) return attachments;
+        if (target.get(i).getNumberOfPages() > maxNumber) {
+            attachments.add(target.get(i));
+            return attachments;
+        }
 
         total -= target.get(i).getNumberOfPages();
         if (total < 0) {

@@ -25,7 +25,7 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.model.AttachmentInfo;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
-import it.pagopa.pn.service.desk.model.GroupingServiceDeskAttachments;
+import it.pagopa.pn.service.desk.model.SplittingAttachments;
 import it.pagopa.pn.service.desk.service.impl.BaseService;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.CustomLog;
@@ -111,7 +111,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                 })
                 .flatMapMany(iuns -> getAttachmentsList(operation, iuns))
                 .collectList()
-                .flatMapMany(lstAttachemtns -> new GroupingServiceDeskAttachments(lstAttachemtns, operation, cfn.getMaxNumberOfPages()).splitAttachment())
+                .flatMapMany(lstAttachemtns -> new SplittingAttachments(lstAttachemtns, operation, cfn.getMaxNumberOfPages()).splitAttachment())
                 .flatMap(op -> {
                     log.info("create entity for {}", op.getOperationId());
                     return operationDAO.updateEntity(op)
@@ -234,7 +234,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                     } else {
                                         entity.setIsAvailable(TRUE);
                                         entity.setNumberOfPages(lst.stream().reduce(0, (total, element) -> total + element.getNumberOfPage(), Integer::sum));
-                                        entity.setNumberOfPages(entity.getNumberOfPages()/2);
+                                        entity.setNumberOfPages(entity.getNumberOfPages()%2 + entity.getNumberOfPages()/2);
                                         log.info("Number of pages {}", entity.getNumberOfPages());
                                         return entity;
                                     }
