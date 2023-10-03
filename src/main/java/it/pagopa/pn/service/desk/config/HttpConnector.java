@@ -36,10 +36,12 @@ public class HttpConnector {
                         try {
                             return Mono.just(PDDocument.load(bytes));
                         } catch (IOException e) {
+                            log.error("Error load PDF for url {}: {}", url, e.getMessage());
                             return Mono.error(e);
                         }
                     });
         } catch (URISyntaxException e) {
+            log.error("Error syntax URI for url {}: {}", url, e.getMessage());
             return Mono.error(e);
         }
     }

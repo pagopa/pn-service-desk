@@ -33,4 +33,13 @@ class UtilityTest {
         Assertions.assertEquals("1234a-dfr", operationId);
     }
 
+    @Test
+    void testCleanUpOperationId(){
+        String operationId = Utility.cleanUpOperationId("TEST-new-UN-6test-unre-SENT-1");
+        Assertions.assertEquals("TEST-new-UN-6test-unre", operationId);
+
+        operationId = Utility.cleanUpOperationId("TEST-new-UN-6test-unre");
+        Assertions.assertEquals("TEST-new-UN-6test-unre", operationId);
+    }
+
 }
