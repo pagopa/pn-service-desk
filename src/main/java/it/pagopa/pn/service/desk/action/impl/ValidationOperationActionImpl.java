@@ -128,7 +128,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
 
     private Mono<Void> requestToPaperPrepare(PnServiceDeskOperations operation, PnServiceDeskAddress address) {
         return Flux.fromIterable(operation.getAttachments())
-                                .flatMap(pnServiceDeskAttachments -> getFileKeyFromAttachments(pnServiceDeskAttachments))
+                                .flatMap(this::getFileKeyFromAttachments)
                                 .map(fileKey -> fileKey)
                                 .collectList()
                                 .flatMap(attachments -> {
