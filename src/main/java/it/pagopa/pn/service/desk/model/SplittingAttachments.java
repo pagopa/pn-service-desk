@@ -41,11 +41,9 @@ public class SplittingAttachments {
     }
 
     public Flux<PnServiceDeskOperations> splitAttachment() {
-        List<PnServiceDeskAttachments> result = new ArrayList<>();
         List<PnServiceDeskAttachments> temp;
         List<PnServiceDeskOperations> operations = new ArrayList<>();
-
-        result.addAll(source);
+        List<PnServiceDeskAttachments> result = new ArrayList<>(source);
         int count = 0;
         while(!result.isEmpty()) {
             temp = splitAttachment(new ArrayList<>(), result, this.maxNumber, 0);
