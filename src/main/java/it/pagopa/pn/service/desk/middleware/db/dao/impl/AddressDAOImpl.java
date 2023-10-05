@@ -6,6 +6,7 @@ import it.pagopa.pn.service.desk.encryption.DataEncryption;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
+import it.pagopa.pn.service.desk.utility.Utility;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -26,7 +27,7 @@ public class AddressDAOImpl extends BaseDAO<PnServiceDeskAddress> implements Add
 
     @Override
     public Mono<PnServiceDeskAddress> getAddress(String operationId) {
-        return Mono.fromFuture(super.get(operationId, null).thenApply(item -> item));
+        return Mono.fromFuture(super.get(Utility.cleanUpOperationId(operationId), null).thenApply(item -> item));
     }
 
     @Override

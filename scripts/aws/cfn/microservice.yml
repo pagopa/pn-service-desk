@@ -284,6 +284,10 @@ Parameters:
     Type: Number
     Description: 'Number of attempts for notify on delivery push'
 
+  MaxNumberOfPages:
+    Type: Number
+    Description: 'Number of pages for shipment'
+
 Conditions:
   HasAlbDimensionName: !Not [ !Equals [ !Ref ApplicationLoadBalancerMetricsDimensionName, '' ] ]
 
@@ -337,6 +341,7 @@ Resources:
         ContainerEnvEntry24: !Sub 'PN_SERVICEDESK_PRODUCTTYPE=${ProductType}'
         ContainerEnvEntry25: !Sub 'AWS_DYNAMODBCLIENTTABLE=${ClientDynamoTableName}'
         ContainerEnvEntry26: !Sub 'PN_SERVICEDESK_NOTIFYATTEMPT=${NotifyAttempt}'
+        ContainerEnvEntry27: !Sub 'PN_SERVICEDESK_MAXNUMBEROFPAGES=${MaxNumberOfPages}'
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-ServiceDesk-Secrets
         MappedPaths: '/service-desk/*'

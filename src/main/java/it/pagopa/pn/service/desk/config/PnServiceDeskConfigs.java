@@ -30,6 +30,7 @@ public class PnServiceDeskConfigs {
     private String productType;
     private String senderPaId;
     private Integer notifyAttempt;
+    private Integer maxNumberOfPages;
 
     @Data
     public static class Topics {

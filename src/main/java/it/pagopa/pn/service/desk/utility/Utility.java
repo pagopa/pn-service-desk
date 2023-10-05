@@ -52,4 +52,15 @@ public class Utility {
         return OffsetDateTime.ofInstant(date, ZoneOffset.UTC);
     }
 
+    public static String cleanUpOperationId (String operationId){
+        int removeString = operationId.indexOf(Const.OPERATION_ID_SUFFIX);
+        String cleanUpOperationId;
+        if (removeString != -1) {
+            cleanUpOperationId = operationId.substring(0, removeString);
+        }else {
+            cleanUpOperationId = operationId;
+        }
+        return cleanUpOperationId;
+    }
+
 }

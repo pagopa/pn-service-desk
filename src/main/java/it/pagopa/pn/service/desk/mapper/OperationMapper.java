@@ -10,6 +10,7 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -38,8 +39,7 @@ public class OperationMapper {
 
     public static OperationResponse operationResponseMapper(PnServiceDeskOperations pnServiceDeskOperations, String taxId){
         OperationResponse operationResponse = new OperationResponse();
-        operationResponse.setOperationId(pnServiceDeskOperations.getOperationId());
-
+        operationResponse.setOperationId(Utility.cleanUpOperationId(pnServiceDeskOperations.getOperationId()));
         List<SDNotificationSummary> iunsList = new ArrayList<>();
         List<SDNotificationSummary> uncompletedIunsList = new ArrayList<>();
         operationResponse.setIuns(iunsList);
@@ -79,6 +79,12 @@ public class OperationMapper {
         operationResponse.setTaxId(taxId);
 
         return operationResponse;
+    }
+
+    public static PnServiceDeskOperations copyOperation (PnServiceDeskOperations operations){
+        PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
+        BeanUtils.copyProperties(operations, pnServiceDeskOperations);
+        return pnServiceDeskOperations;
     }
 
 }

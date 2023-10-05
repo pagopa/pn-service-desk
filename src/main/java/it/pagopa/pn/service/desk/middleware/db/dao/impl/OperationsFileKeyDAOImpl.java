@@ -5,6 +5,7 @@ import it.pagopa.pn.service.desk.encryption.DataEncryption;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperationFileKey;
+import it.pagopa.pn.service.desk.utility.Utility;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -32,7 +33,7 @@ public class OperationsFileKeyDAOImpl extends BaseDAO<PnServiceDeskOperationFile
 
     @Override
     public Mono<PnServiceDeskOperationFileKey> getFileKeyByOperationId(String operationId) {
-        return this.getBySecondaryIndex(PnServiceDeskOperationFileKey.OPERATION_ID_INDEX, operationId, null)
+        return this.getBySecondaryIndex(PnServiceDeskOperationFileKey.OPERATION_ID_INDEX, Utility.cleanUpOperationId(operationId), null)
                 .collectList()
                 .flatMap(item -> {
                     if (item.isEmpty()) return Mono.empty();
