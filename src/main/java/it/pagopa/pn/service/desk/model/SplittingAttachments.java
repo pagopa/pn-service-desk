@@ -24,6 +24,14 @@ public class SplittingAttachments {
         this.source.sort(Comparator.comparingInt(PnServiceDeskAttachments::getNumberOfPages).reversed());
     }
 
+    /**
+     * Fills the list as long as the maximum number of pages is not exceeded
+     * @param attachments elements to add in the result
+     * @param target current list
+     * @param total current number of pages into list
+     * @param i index
+     * @return list of attachments
+     */
     private List<PnServiceDeskAttachments> splitAttachment(List<PnServiceDeskAttachments> attachments, List<PnServiceDeskAttachments> target, int total, int i) {
         if (i == target.size()) return attachments;
         if (target.get(i).getNumberOfPages() > maxNumber) {
@@ -40,6 +48,12 @@ public class SplittingAttachments {
         return splitAttachment(attachments, target, total, i+1);
     }
 
+    /**
+     * Creates a stream of PnServiceDeskOperations
+     * Divide attachments according to their number of pages
+     * If the list of attachments exceeds the maximum number of pages, then creates a new PnServiceDeskOperations
+     * @return list of attachments
+     */
     public Flux<PnServiceDeskOperations> splitAttachment() {
         List<PnServiceDeskAttachments> temp;
         List<PnServiceDeskOperations> operations = new ArrayList<>();
@@ -55,6 +69,11 @@ public class SplittingAttachments {
         return Flux.fromIterable(operations);
     }
 
+    /**
+     * Creates a PnServiceDeskOperations
+     * Adds suffix in operationId
+     * @return an operation
+     */
     public PnServiceDeskOperations createOperationsToSend(PnServiceDeskOperations operations, List<PnServiceDeskAttachments> splitAttachmentsList, String sequenceNumber) {
         PnServiceDeskOperations pnServiceDeskOperations = OperationMapper.copyOperation(operations);
         pnServiceDeskOperations.setAttachments(splitAttachmentsList);
