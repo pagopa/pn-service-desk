@@ -1,16 +1,14 @@
 package it.pagopa.pn.service.desk.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pdfbox.io.RandomAccessBuffer;
-import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @Slf4j
 public class HttpConnector {
@@ -20,30 +18,31 @@ public class HttpConnector {
     }
 
     public static Mono<PDDocument> downloadFile(String url) {
-
         log.info("Url to download: {}", url);
-
-        return WebClient.create()
-                .get()
-                .uri(url)
-                .accept(MediaType.APPLICATION_PDF)
-                .retrieve()
-                .bodyToMono(DataBuffer.class)
-                .flatMap(dataBuffers -> DataBufferUtils.join(Mono.just(dataBuffers))
-                         .map(dataBuffer -> {
-                             byte[] bytes = new byte[dataBuffer.readableByteCount()];
-                             dataBuffer.read(bytes);
-                             DataBufferUtils.release(dataBuffer);
-                             return new RandomAccessBuffer(bytes);
-                         })
-                         .map(randomAccess -> {
-                             try {
-                                 return new PDFParser(randomAccess).getPDDocument();
-                             } catch (IOException e) {
-                                 throw new RuntimeException(e);
-                             }
-                         }));
+        try {
+            return WebClient
+                    .builder()
+                    .codecs(codecs ->
+                            codecs.defaultCodecs()
+                                    .maxInMemorySize(-1)
+                    )
+                    .build()
+                    .get()
+                    .uri(new URI(url))
+                    .accept(MediaType.APPLICATION_PDF)
+                    .retrieve()
+                    .bodyToMono(byte[].class)
+                    .flatMap(bytes -> {
+                        try {
+                            return Mono.just(PDDocument.load(bytes));
+                        } catch (IOException e) {
+                            log.error("Error load PDF for url {}: {}", url, e.getMessage());
+                            return Mono.error(e);
+                        }
+                    });
+        } catch (URISyntaxException e) {
+            log.error("Error syntax URI for url {}: {}", url, e.getMessage());
+            return Mono.error(e);
+        }
     }
-
-
 }
