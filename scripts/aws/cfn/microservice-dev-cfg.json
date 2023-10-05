@@ -8,7 +8,7 @@
     "PaperChannelCxId": "pn-service-desk",
     "AddressManagerApiKey": "_",
     "NotifyAttempt": "2",
-    "MaxNumberOfPages": "50",
+    "MaxNumberOfPages": "10",
     "AddressManagerBaseUrl": "http://alb.confidential.pn.internal:8080",
     "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080"
   }
