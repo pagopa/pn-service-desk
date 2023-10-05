@@ -54,6 +54,7 @@ public class OperationMapper {
                 summary.setIun(att.getIun());
                 summary.setSenderPaInternalId(pnServiceDeskConfigs.getSenderPaId());
                 summary.setSenderPaIpaCode(pnServiceDeskConfigs.getSenderIpaCode());
+                summary.setSenderPaTaxCode(pnServiceDeskConfigs.getSenderTaxCode());
                 summary.setSenderPaDescription(pnServiceDeskConfigs.getSenderAddress().getFullname());
                 if (Boolean.TRUE.equals(att.getIsAvailable())) {
                     operationResponse.getIuns().add(summary);
