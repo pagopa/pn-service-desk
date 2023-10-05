@@ -1,5 +1,6 @@
 package it.pagopa.pn.service.desk.mapper;
 
+import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationResponse;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
@@ -22,9 +23,14 @@ class OperationMapperTest {
 
     private final PnServiceDeskOperations pnServiceDeskOperations= new PnServiceDeskOperations();
     private final PnServiceDeskAttachments pnServiceDeskAttachments= new PnServiceDeskAttachments();
+    private final PnServiceDeskConfigs pnServiceDeskConfigs= new PnServiceDeskConfigs();
 
     @BeforeEach
     public void inizialize(){
+        PnServiceDeskConfigs.SenderAddress senderAddress = new PnServiceDeskConfigs.SenderAddress();
+        senderAddress.setFullname("NAME");
+        pnServiceDeskConfigs.setSenderAddress(senderAddress);
+        pnServiceDeskConfigs.setSenderPaId("012");
         pnServiceDeskAttachments.setIun("123");
         pnServiceDeskAttachments.setFilesKey(new ArrayList<>());
 
@@ -67,7 +73,7 @@ class OperationMapperTest {
 
         pnServiceDeskOperations.setAttachments(attachments);
 
-        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations, "XYZ");
+        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskConfigs, pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse);
         assertEquals(operationResponse.getIuns().size(), 1);
     }
@@ -81,7 +87,7 @@ class OperationMapperTest {
 
         pnServiceDeskOperations.setAttachments(attachments);
 
-        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations, "XYZ");
+        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskConfigs, pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse);
         assertEquals(operationResponse.getUncompletedIuns().size(), 1);
     }
@@ -109,7 +115,7 @@ class OperationMapperTest {
         events.addAll(List.of(pnServiceDeskEvents1, pnServiceDeskEvents2, pnServiceDeskEvents3));
         pnServiceDeskOperations.setEvents(events);
 
-        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations, "XYZ");
+        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskConfigs, pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse.getNotificationStatus());
         assertEquals(operationResponse.getNotificationStatus().getLastEventTimestamp().toInstant(), i);
         assertEquals(operationResponse.getNotificationStatus().getStatusCode(), "003");
@@ -126,7 +132,7 @@ class OperationMapperTest {
         pnServiceDeskOperations.setAttachments(attachments);
         pnServiceDeskOperations.setStatus(NOTIFY_VIEW.toString());
 
-        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskOperations, "XYZ");
+        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskConfigs, pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse);
         assertEquals(1,operationResponse.getIuns().size());
     }
