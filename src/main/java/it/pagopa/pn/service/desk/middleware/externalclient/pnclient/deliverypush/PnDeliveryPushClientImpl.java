@@ -33,7 +33,7 @@ public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
 
     @Override
     public Flux<ResponsePaperNotificationFailedDtoDto> paperNotificationFailed(String recipientInternalId) {
-        return notificationFailedApi.paperNotificationFailed(recipientInternalId, Boolean.TRUE)
+        return notificationFailedApi.paperNotificationFailed(recipientInternalId, Boolean.FALSE)
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     if (ex.getStatusCode() == HttpStatus.NOT_FOUND){
                         log.warn("No notification failed found for {}", recipientInternalId);
