@@ -8,7 +8,6 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
@@ -24,27 +23,26 @@ public class HttpConnector {
 
         log.info("Url to download: {}", url);
 
-        Flux<DataBuffer> dataBufferFlux = WebClient.create()
+        return WebClient.create()
                 .get()
                 .uri(url)
                 .accept(MediaType.APPLICATION_PDF)
                 .retrieve()
-                .bodyToFlux(DataBuffer.class);
-
-        return DataBufferUtils.join(dataBufferFlux)
-                .map(dataBuffer -> {
-                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
-                    dataBuffer.read(bytes);
-                    DataBufferUtils.release(dataBuffer);
-                    return new RandomAccessBuffer(bytes);
-                })
-                .map(randomAccess -> {
-                    try {
-                        return new PDFParser(randomAccess).getPDDocument();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                .bodyToMono(DataBuffer.class)
+                .flatMap(dataBuffers -> DataBufferUtils.join(Mono.just(dataBuffers))
+                         .map(dataBuffer -> {
+                             byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                             dataBuffer.read(bytes);
+                             DataBufferUtils.release(dataBuffer);
+                             return new RandomAccessBuffer(bytes);
+                         })
+                         .map(randomAccess -> {
+                             try {
+                                 return new PDFParser(randomAccess).getPDDocument();
+                             } catch (IOException e) {
+                                 throw new RuntimeException(e);
+                             }
+                         }));
     }
 
 
