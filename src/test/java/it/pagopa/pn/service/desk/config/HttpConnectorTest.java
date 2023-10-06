@@ -64,7 +64,7 @@ public class HttpConnectorTest {
     }
 
     @Test
-    public void testDownloadFile404NotFound() throws Exception {
+    void testDownloadFile404NotFound() throws Exception {
         WebClient webClient = mock(WebClient.class);
         WebClient.RequestHeadersUriSpec requestHeadersUriSpec = Mockito.mock(WebClient.RequestHeadersUriSpec.class);
         WebClient.RequestHeadersSpec requestHeadersSpec = Mockito.mock(WebClient.RequestHeadersSpec.class);
