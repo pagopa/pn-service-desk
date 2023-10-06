@@ -8,10 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-
-
-
-public class SplittingAttachmentsTest {
+class SplittingAttachmentsTest {
 
     @Test
     void splitAttachmentTest() {
@@ -35,7 +32,7 @@ public class SplittingAttachmentsTest {
         List<PnServiceDeskOperations> operationsSplittered = splittingAttachments.splitAttachment().collectList().block();
 
         Assertions.assertNotNull(operationsSplittered);
-        Assertions.assertEquals(operationsSplittered.size(), 2);
+        Assertions.assertEquals(2, operationsSplittered.size());
     }
 
     @Test
@@ -60,6 +57,6 @@ public class SplittingAttachmentsTest {
         List<PnServiceDeskOperations> operationsSplittered = splittingAttachments.splitAttachment().collectList().block();
 
         Assertions.assertNotNull(operationsSplittered);
-        Assertions.assertEquals(operationsSplittered.size(), 2);
+        Assertions.assertEquals(2, operationsSplittered.size());
     }
 }
