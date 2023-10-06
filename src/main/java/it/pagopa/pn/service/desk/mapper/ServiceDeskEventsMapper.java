@@ -6,6 +6,7 @@ import java.time.Instant;
 
 public class ServiceDeskEventsMapper {
 
+    private ServiceDeskEventsMapper(){}
 
     public static PnServiceDeskEvents toEntity(String statusDetail, String statusDescription){
         PnServiceDeskEvents pnServiceDeskEvents = new PnServiceDeskEvents();
