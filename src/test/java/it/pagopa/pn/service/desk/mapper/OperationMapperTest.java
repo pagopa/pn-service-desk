@@ -75,7 +75,7 @@ class OperationMapperTest {
 
         OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskConfigs, pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse);
-        assertEquals(operationResponse.getIuns().size(), 1);
+        assertEquals(1, operationResponse.getIuns().size());
     }
 
     @Test
@@ -89,7 +89,7 @@ class OperationMapperTest {
 
         OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskConfigs, pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse);
-        assertEquals(operationResponse.getUncompletedIuns().size(), 1);
+        assertEquals(1, operationResponse.getUncompletedIuns().size());
     }
 
     @Test
@@ -118,7 +118,7 @@ class OperationMapperTest {
         OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskConfigs, pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse.getNotificationStatus());
         assertEquals(operationResponse.getNotificationStatus().getLastEventTimestamp().toInstant(), i);
-        assertEquals(operationResponse.getNotificationStatus().getStatusCode(), "003");
+        assertEquals("003", operationResponse.getNotificationStatus().getStatusCode());
 
     }
 
