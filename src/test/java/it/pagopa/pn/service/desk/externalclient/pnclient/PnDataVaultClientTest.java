@@ -40,7 +40,8 @@ class PnDataVaultClientTest extends BaseTest.WithMockServer {
 
     @Test
     void deanonymizedError(){
+        String recipentInternalId = anonymizedData.concat("XX");
         Assertions.assertThrows(PnGenericException.class, () ->
-                this.pnDataVaultClient.deAnonymized(anonymizedData.concat("XX")).block());
+                this.pnDataVaultClient.deAnonymized(recipentInternalId).block());
     }
 }
