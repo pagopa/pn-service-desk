@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.model.OperationStatusEnum.NOTIFY_VIEW;
+import static it.pagopa.pn.service.desk.model.OperationStatusEnum.NOTIFY_VIEW_ERROR;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OperationMapperTest {
@@ -134,7 +135,11 @@ class OperationMapperTest {
 
         OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskConfigs, pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse);
-        assertEquals(1,operationResponse.getIuns().size());
+        assertEquals(OperationStatusEnum.OK.toString(),operationResponse.getNotificationStatus().getStatus().toString());
+
+        pnServiceDeskOperations.setStatus(NOTIFY_VIEW_ERROR.toString());
+        operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskConfigs, pnServiceDeskOperations, "XYZ");
+        assertEquals(OperationStatusEnum.OK.toString(),operationResponse.getNotificationStatus().getStatus().toString());
     }
 
     @Test

@@ -232,9 +232,15 @@ class ValidationOperationActionImplTest {
         Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.empty());
+        Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.anyString())).thenReturn(Flux.empty());
         Assertions.assertThrows(PnGenericException.class, () ->
                 this.validationOperationAction.execute("opId1234")
         );
+
+        Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.empty());
+        Assertions.assertThrows(PnGenericException.class, () ->
+                this.validationOperationAction.execute("opId1234")
+        ).getMessage();
     }
 
     @Test
