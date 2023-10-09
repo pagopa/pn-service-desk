@@ -1,12 +1,5 @@
 package it.pagopa.pn.service.desk.config;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-import static org.mockserver.integration.ClientAndServer.startClientAndServer;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
-
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,7 +9,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
@@ -30,11 +22,18 @@ import reactor.test.StepVerifier;
 
 import java.net.URI;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class HttpConnectorTest {
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockserver.integration.ClientAndServer.startClientAndServer;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
+
+class HttpConnectorTest {
 
     private static ClientAndServer mockServer;
-    //
+
     @BeforeAll
     public static void startMockServer() {
         mockServer = startClientAndServer(9998);
@@ -51,7 +50,6 @@ public class HttpConnectorTest {
         String path = "/filedownload.pdf";
         String fileUrl = "http://localhost:9998" + path;
 
-
         new MockServerClient("localhost", 9998)
                 .when(request()
                         .withMethod("GET")
@@ -64,7 +62,7 @@ public class HttpConnectorTest {
     }
 
     @Test
-    void testDownloadFile404NotFound() throws Exception {
+    void testDownloadFile404NotFound() {
         WebClient webClient = mock(WebClient.class);
         WebClient.RequestHeadersUriSpec requestHeadersUriSpec = Mockito.mock(WebClient.RequestHeadersUriSpec.class);
         WebClient.RequestHeadersSpec requestHeadersSpec = Mockito.mock(WebClient.RequestHeadersSpec.class);
@@ -92,10 +90,7 @@ public class HttpConnectorTest {
                 .verify();
     }
 
-
-
-
-    public static DataBuffer createDataBufferWithBytes(byte[] bytes) {
+    private DataBuffer createDataBufferWithBytes(byte[] bytes) {
         DataBufferFactory bufferFactory = new DefaultDataBufferFactory();
         return bufferFactory.wrap(bytes);
     }
