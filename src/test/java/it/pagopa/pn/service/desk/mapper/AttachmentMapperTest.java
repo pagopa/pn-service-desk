@@ -25,5 +25,8 @@ class AttachmentMapperTest {
         response.setDownload(downloadInfo);
         assertNotNull(AttachmentMapper.fromSafeStorage(response));
 
+        downloadInfo.setUrl(null);
+        response.setDownload(downloadInfo);
+        assertNull(AttachmentMapper.fromSafeStorage(response).getUrl());
     }
 }

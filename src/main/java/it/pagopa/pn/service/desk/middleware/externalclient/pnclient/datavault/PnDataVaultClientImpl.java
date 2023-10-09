@@ -28,8 +28,8 @@ public class PnDataVaultClientImpl implements PnDataVaultClient {
 
     @Override
     public Mono<String> anonymized(String data) {
-        String PN_DATA_VAULT_DESCRIPTION = "Data Vault encode";
-        log.logInvokingExternalService(PnLogger.EXTERNAL_SERVICES.PN_DATA_VAULT, PN_DATA_VAULT_DESCRIPTION);
+        String pnDataVaultDescription = "Data Vault encode";
+        log.logInvokingExternalService(PnLogger.EXTERNAL_SERVICES.PN_DATA_VAULT, pnDataVaultDescription);
         return this.recipientsApi.ensureRecipientByExternalId(RecipientTypeDto.PF, data)
                 .onErrorResume(exception -> {
                     log.error("errorReason = {}, An error occurred while calling the service inquiry api", exception.getMessage());
@@ -43,8 +43,8 @@ public class PnDataVaultClientImpl implements PnDataVaultClient {
 
         List<String> toDecode = new ArrayList<>();
         toDecode.add(recipientInternalId);
-        String PN_DATA_VAULT_DESCRIPTION = "Data Vault decode";
-        log.logInvokingExternalService(PnLogger.EXTERNAL_SERVICES.PN_DATA_VAULT, PN_DATA_VAULT_DESCRIPTION);
+        String pnDataVaultDescription = "Data Vault decode";
+        log.logInvokingExternalService(PnLogger.EXTERNAL_SERVICES.PN_DATA_VAULT, pnDataVaultDescription);
         return this.recipientsApi.getRecipientDenominationByInternalId(toDecode)
                 .retryWhen(
                         Retry.backoff(2, Duration.ofMillis(25))

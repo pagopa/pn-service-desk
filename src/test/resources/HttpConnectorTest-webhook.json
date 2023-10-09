@@ -1,0 +1,41 @@
+[
+
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/filedownloadError.pdf"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": [
+          "application/pdf"
+        ]
+      },
+      "body": {
+        "content": [37, 80, 68, 70, 45, 49, 46, 52, 10, 37, 97, 176, 200, 208, 10, 109, 49, 32, 49, 32, 111, 98, 106, 10, 60, 60, 32]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/filedownloadOK.pdf"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": [
+          "application/pdf"
+        ]
+      },
+      "body": {
+        "content": "JVBERi0xLjQKJeLjz9MKNyAwIG9iago8PC9UeXBlIC9QYWdlcyB0byBkZWZhdWx0L0ltYWdlcy9TaXplIDkvV2lkdGggMzY0L0hlaWdodCA0MTYvQ29sb3JTcGFjZS9EZXZpY2VSR0I+L1N1YnR5cGUvVHlwZTIgMS9Gb250L0hlcm9uTm9ybWFsL1dpbkFuc2lFbmNvZGluZy9Db3VyaWVyaW5nT25seT4+L1dpbkFuc2lFbmNvZGluZy9Db3VyaWVyaW5nT25seS9EZXZpY2VSR0IKL1Byb2R1Y2VyIHZhbHVlCj4+CiUlRU9G"
+      }
+    }
+  }
+
+]
+
+
+

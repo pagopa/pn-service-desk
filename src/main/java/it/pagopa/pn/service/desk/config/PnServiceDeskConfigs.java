@@ -29,6 +29,8 @@ public class PnServiceDeskConfigs {
     private Long ttlReceiverAddress;
     private String productType;
     private String senderPaId;
+    private String senderIpaCode;
+    private String senderTaxCode;
     private Integer notifyAttempt;
     private Integer maxNumberOfPages;
 

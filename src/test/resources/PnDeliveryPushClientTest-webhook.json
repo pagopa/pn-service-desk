@@ -35,6 +35,44 @@
     },
     {
         "httpRequest": {
+            "path": "/delivery-push-private/PF-4fc75df3-0913-407e-bdaa-e503297/paper-notification-failed",
+            "method": "GET",
+            "queryStringParameters" : {
+                "getAAR" : [ "false" ]
+            }
+        },
+        "httpResponse": {
+            "statusCode": 500,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": [
+            ]
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/delivery-push-private/PF-4fc75df3-0913-407e-bdaa-e50329722/paper-notification-failed",
+            "method": "GET",
+            "queryStringParameters" : {
+                "getAAR" : [ "false" ]
+            }
+        },
+        "httpResponse": {
+            "statusCode": 404,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": [
+            ]
+        }
+    },
+    {
+        "httpRequest": {
             "path": "/delivery-push-private/LJLH-GNTJ-DVXR-202209-J-1/legal-facts",
             "queryStringParameters" : {
                 "recipientInternalId" : [ "PF-4fc75df3-0913-407e-bdaa-e50329708b7d" ]

@@ -25,9 +25,9 @@ public class OperationDto {
         }
 
         OperationDto c = (OperationDto) o;
-        if (iun.equals(c.getIun())) {
+        if (StringUtils.equals(iun, c.getIun())) {
             // equals if same status
-            if (status.equals(c.getStatus())) {
+            if (StringUtils.equals(status, c.getStatus())) {
                 return !StringUtils.equals(status, OperationStatusEnum.KO.toString());
             }
             else {

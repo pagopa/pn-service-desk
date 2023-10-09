@@ -1,5 +1,7 @@
 package it.pagopa.pn.service.desk.config;
 
+import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
+import it.pagopa.pn.service.desk.exception.PnGenericException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -12,6 +14,7 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_DURING_RECOVERING_FILE;
 
 @Slf4j
 public class HttpConnector {
@@ -42,7 +45,7 @@ public class HttpConnector {
                             return PDDocument.load(randomAccess);
                         } catch (IOException ex) {
                             log.error("Error during download", ex);
-                            throw new RuntimeException(ex);
+                            throw new PnGenericException(ERROR_DURING_RECOVERING_FILE, ERROR_DURING_RECOVERING_FILE.getMessage());
                         }
                     });
         } catch (URISyntaxException ex) {

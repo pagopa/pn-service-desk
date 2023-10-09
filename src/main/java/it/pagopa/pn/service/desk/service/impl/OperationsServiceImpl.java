@@ -24,6 +24,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
@@ -93,8 +95,10 @@ public class OperationsServiceImpl implements OperationsService {
 
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
                 .flatMapMany(taxId -> operationDAO.searchOperationsFromRecipientInternalId(taxId))
-                .map(operationResponseMapper -> OperationMapper.operationResponseMapper(operationResponseMapper, searchNotificationRequest.getTaxId()))
-                .collectSortedList((op1, op2) -> op2.getOperationUpdateTimestamp().compareTo(op1.getOperationUpdateTimestamp()))
+                .map(operationResponseMapper -> OperationMapper.operationResponseMapper(cfn, operationResponseMapper, searchNotificationRequest.getTaxId()))
+                .collectSortedList((op1, op2) ->
+                        (op2.getOperationUpdateTimestamp() != null ? op2.getOperationUpdateTimestamp()  : OffsetDateTime.now())
+                                .compareTo((op1.getOperationUpdateTimestamp() != null ? op1.getOperationUpdateTimestamp()  : OffsetDateTime.now())))
                 .map(operations -> {
                     response.setOperations(operations);
                     return response;

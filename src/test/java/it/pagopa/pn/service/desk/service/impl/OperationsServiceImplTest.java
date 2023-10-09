@@ -130,9 +130,9 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void searchOperationsFromRecipientInternalIdTest() {
+        pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
         Mockito.when(operationDAO.searchOperationsFromRecipientInternalId(Mockito.any())).thenReturn(Flux.just(pnServiceDeskOperations));
         assertNotNull(service.searchOperationsFromRecipientInternalId("1234", getNotificationRequest()).block());
-
     }
 
     @Test
