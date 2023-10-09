@@ -12,7 +12,31 @@
                     "application/json"
                 ]
             },
-            "body": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d"
+            "body": "PF-1a434901-5964-4df6-8eff-aa204cb961dz"
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/datavault-private/v1/recipients/internal",
+            "queryStringParameters" : {
+                "internalId" : [ "PF-1a434901-5964-4df6-8eff-aa204cb961dz" ]
+            },
+            "method": "GET"
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "internalId":"PF-1a434901-5964-4df6-8eff-aa204cb961dz",
+                "taxId":"FRMTTR76M06B715E",
+                "recipientType": null,
+                "denomination": null
+
+            }
         }
     }
 ]

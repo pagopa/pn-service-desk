@@ -38,7 +38,6 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
 
     @Test
     void paperNotificationFailedException(){
-
         StepVerifier.create(this.pnDeliveryPushClient.paperNotificationFailed(RECIPIENT_INTERNAL_ID_ERROR))
                 .expectError(WebClientResponseException.class)
                 .verify();
@@ -55,8 +54,6 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
 
     @Test
     void getNotificationLegalFactsPrivate(){
-
-
         List<LegalFactListElementDto> legalFactListElementDtos =
                 this.pnDeliveryPushClient
                         .getNotificationLegalFactsPrivate(RECIPIENT_INTERNAL_ID, IUN).collectList().block();

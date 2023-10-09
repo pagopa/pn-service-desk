@@ -16,8 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.model.OperationStatusEnum.NOTIFY_VIEW;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class OperationMapperTest {
 
@@ -52,6 +51,7 @@ class OperationMapperTest {
         assertEquals(pnServiceDeskOperations.getOperationId(), operationRequest.getTicketId().concat(operationRequest.getTicketOperationId()));
         assertEquals(pnServiceDeskOperations.getStatus(), OperationStatusEnum.CREATING.toString());
     }
+
     @Test
     void whenCallgetInitialOperationAndTicketOperationIdIsNull() {
         CreateOperationRequest operationRequest= new CreateOperationRequest();
@@ -135,6 +135,24 @@ class OperationMapperTest {
         OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskConfigs, pnServiceDeskOperations, "XYZ");
         assertNotNull(operationResponse);
         assertEquals(1,operationResponse.getIuns().size());
+    }
+
+    @Test
+    void whenCalloperationResponseMapperOperationWithErrorReason() {
+        pnServiceDeskAttachments.setIsAvailable(true);
+
+        List<PnServiceDeskAttachments> attachments = new ArrayList<>();
+        attachments.add(pnServiceDeskAttachments);
+
+        pnServiceDeskOperations.setAttachments(attachments);
+        pnServiceDeskOperations.setStatus("KO");
+        pnServiceDeskOperations.setErrorReason("Error");
+        pnServiceDeskOperations.setOperationLastUpdateDate(null);
+
+        OperationResponse operationResponse= OperationMapper.operationResponseMapper(pnServiceDeskConfigs, pnServiceDeskOperations, "XYZ");
+        assertEquals("KO",operationResponse.getNotificationStatus().getStatus().toString());
+        assertEquals("Error",operationResponse.getNotificationStatus().getStatusDescription());
+        assertNull(operationResponse.getOperationUpdateTimestamp());
     }
 
 }
