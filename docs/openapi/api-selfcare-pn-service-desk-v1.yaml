@@ -19,7 +19,7 @@ tags:
   - name: HealthCheck
     description: >-
       Invocations to check the status of the microservice
-  - name: Notification
+  - name: NotificationAndMessage
     description: >-
       Invocations to retrieve user notification and courtesy messages
   - name: PA
@@ -79,7 +79,7 @@ paths:
       summary: Retrieve all cortesy messages sent to recipient
       description: Retrieve all cortesy messages sent to recipient
       tags:
-        - Notification
+        - NotificationAndMessage
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
         - $ref: '#/components/parameters/queryStartDate'
@@ -151,7 +151,7 @@ paths:
       summary: Retrieve all notifications sent to recipient
       description: Retrieve all notifications sent to recipient
       tags:
-        - Notification
+        - NotificationAndMessage
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
         - $ref: '#/components/parameters/queryNumberPage'
@@ -187,7 +187,7 @@ paths:
       summary: Retrieve notification detail by IUN
       description: Retrieve notification detail by IUN
       tags:
-        - Notification
+        - NotificationAndMessage
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
         - name: iun
@@ -227,7 +227,7 @@ paths:
       summary: Retrieve entire timeline of IUN
       description: Retrieve entire timeline of IUN
       tags:
-        - Notification
+        - NotificationAndMessage
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
         - name: iun
@@ -261,7 +261,7 @@ paths:
       summary: Retrieve all documents of IUN
       description: Retrieve all documents of IUN
       tags:
-        - Notification
+        - NotificationAndMessage
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
         - name: iun
@@ -296,7 +296,7 @@ paths:
       summary: Retrieve all notifications sent to recipient as delegate
       description: Retrieve all notifications sent to recipient as delegate
       tags:
-        - Notification
+        - NotificationAndMessage
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
         - $ref: '#/components/parameters/queryNumberPage'
@@ -332,7 +332,7 @@ paths:
       summary: Retrieve all notifications sent to recipient as delegator
       description: Retrieve all notifications sent to recipient as delegator
       tags:
-        - Notification
+        - NotificationAndMessage
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
         - $ref: '#/components/parameters/queryNumberPage'
@@ -646,8 +646,8 @@ components:
         subject:
           type: string
           description: Oggetto della notifica
-        notificationStatus:
-          $ref: '#/components/schemas/NotificationStatus'
+        notificationStatusDetail:
+          $ref: '#/components/schemas/notificationStatusDetail'
 
     IUN:
       description: Identificativo Univoco Notifica
@@ -656,7 +656,7 @@ components:
       maxLength: 25
       pattern: ^[A-Z]{4}-[A-Z]{4}-[A-Z]{4}-[0-9]{6}-[A-Z]{1}-[0-9]{1}$
 
-    NotificationStatus:
+    notificationStatusDetail:
       type: string
       description: >
         stato di avanzamento del processo di notifica:
@@ -978,12 +978,12 @@ components:
     TimelineResponse:
       type: object
       required:
-        - notificationStatus
+        - notificationStatusDetail
         - timeline
       description: Timeline IUN detail
       properties:
-        notificationStatus:
-          $ref: '#/components/schemas/NotificationStatus'
+        notificationStatusDetail:
+          $ref: '#/components/schemas/notificationStatusDetail'
         timeline:
           description: >-
             elenco dettagliato di tutto ciò che è accaduto durante il processo di notifica
@@ -1001,7 +1001,7 @@ components:
         - event
       properties:
         status:
-          $ref: "#/components/schemas/NotificationStatus"
+          $ref: "#/components/schemas/notificationStatusDetail"
         activeFrom:
           type: string
           description: data e ora di raggiungimento dello stato di avanzamento
