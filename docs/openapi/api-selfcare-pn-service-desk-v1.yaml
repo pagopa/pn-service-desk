@@ -1140,27 +1140,22 @@ components:
 
     NotificationsDelegateRequest:
       required:
-        - taxId
+        - mandateId
       type: object
       properties:
-        taxId:
+        mandateId:
+          description: internal identifier of mandate
           type: string
-          maxLength: 32
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
       additionalProperties: false
 
     NotificationsDelegatorRequest:
       required:
-        - taxId
-        - recipientType
+        - mandateId
       type: object
       properties:
-        taxId:
+        mandateId:
+          description: internal identifier of mandate
           type: string
-          maxLength: 32
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
-        recipientType:
-          $ref: '#/components/schemas/RecipientType'
       additionalProperties: false
 
     PaNotificationsRequest:
