@@ -114,6 +114,11 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-commons</artifactId>
+			<version>3.1.0</version>
+		</dependency>
 		<!--LOCALSTACK/TESTCONTAINERS-->
 		<dependency>
 			<groupId>org.testcontainers</groupId>
@@ -201,6 +206,42 @@
 						<phase>process-resources</phase>
 						<configuration>
 							<inputSpec>${project.basedir}/docs/openapi/api-internal-pn-service-desk-v1.yaml</inputSpec>
+							<generatorName>spring</generatorName>
+							<library>spring-boot</library>
+							<modelNameSuffix />
+							<generateApiTests>false</generateApiTests>
+							<generateModelTests>false</generateModelTests>
+							<templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/server</templateDirectory>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<generateApiTests>false</generateApiTests>
+							<generateModelTests>false</generateModelTests>
+							<configOptions>
+								<basePackage>${project.groupId}.service.desk.generated.openapi.server.v1</basePackage>
+								<modelPackage>${project.groupId}.service.desk.generated.openapi.server.v1.dto</modelPackage>
+								<apiPackage>${project.groupId}.service.desk.generated.openapi.server.v1.api</apiPackage>
+								<configPackage>${project.groupId}.service.desk.generated.openapi.server.v1.config</configPackage>
+								<dateLibrary>java8</dateLibrary>
+								<delegatePattern>true</delegatePattern>
+								<interfaceOnly>true</interfaceOnly>
+								<annotationLibrary>none</annotationLibrary>
+								<documentationProvider>source</documentationProvider>
+								<openApiNullable>false</openApiNullable>
+								<reactive>true</reactive>
+								<skipDefaultInterface>false</skipDefaultInterface>
+								<useTags>true</useTags>
+							</configOptions>
+						</configuration>
+					</execution>
+
+					<!-- OPEN API SELFCARE PN-SERVICE_DESK-->
+					<execution>
+						<id>api-selfcare-pn-service-desk-v1</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>process-resources</phase>
+						<configuration>
+							<inputSpec>${project.basedir}/docs/openapi/api-selfcare-pn-service-desk-v1.yaml</inputSpec>
 							<generatorName>spring</generatorName>
 							<library>spring-boot</library>
 							<modelNameSuffix />
@@ -329,7 +370,6 @@
 							<modelNameSuffix>Dto</modelNameSuffix>
 						</configuration>
 					</execution>
-
 					<execution>
 						<id>generate-client-pn-paper-channel</id>
 						<goals>
@@ -375,6 +415,29 @@
 							</configOptions>
 							<modelPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnaddressmanager.v1.dto</modelPackage>
 							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnaddressmanager.v1.api</apiPackage>
+							<modelNameSuffix>Dto</modelNameSuffix>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-client-pn-external-registries</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>process-resources</phase>
+						<configuration>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-external-registries/9f9bed8a85ab9ac5720294895afd26abccde5be6/docs/openapi/pn-selfcare-internal-v1.yaml</inputSpec>
+							<generatorName>java</generatorName>
+							<library>webclient</library>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<generateApiTests>false</generateApiTests>
+							<generateModelTests>false</generateModelTests>
+							<generateSupportingFiles>true</generateSupportingFiles>
+							<configOptions>
+								<swaggerAnnotations>false</swaggerAnnotations>
+								<openApiNullable>false</openApiNullable>
+							</configOptions>
+							<modelPackage>${project.groupId}.platform.msclient.generated.pnexternalregistries.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.platform.msclient.generated.pnexternalregistries.v1.api</apiPackage>
 							<modelNameSuffix>Dto</modelNameSuffix>
 						</configuration>
 					</execution>

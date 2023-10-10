@@ -342,6 +342,7 @@ Resources:
         ContainerEnvEntry25: !Sub 'AWS_DYNAMODBCLIENTTABLE=${ClientDynamoTableName}'
         ContainerEnvEntry26: !Sub 'PN_SERVICEDESK_NOTIFYATTEMPT=${NotifyAttempt}'
         ContainerEnvEntry27: !Sub 'PN_SERVICEDESK_MAXNUMBEROFPAGES=${MaxNumberOfPages}'
+        ContainerEnvEntry28: !Sub 'PN_SERVICEDESK_EXTERNALREGISTRIESBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-ServiceDesk-Secrets
         MappedPaths: '/service-desk/*'
