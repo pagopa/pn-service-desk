@@ -60,8 +60,8 @@ components:
             Elenco, non esaustivo, delle chiavi da usare per richiedere le 
             pagine di risultati successive a quella corrente. <br/>
             Valorizzato solo se il campo __moreResult__ ha valore __true__.
-            type: array
-            items:
+          type: array
+          items:
             type: string
       additionalProperties: false
 
@@ -245,9 +245,9 @@ components:
              Elenco, non esaustivo, delle chiavi da usare per richiedere le 
              pagine di risultati successive a quella corrente. <br/>
              Valorizzato solo se il campo __moreResult__ ha valore __true__.
-           type: array
-           items:
-             type: string
+          type: array
+          items:
+            type: string
       additionalProperties: false
 
     Notification:
@@ -465,89 +465,6 @@ components:
       maxLength: 11
       minLength: 11
       pattern: '^\d+$'
-
-    Pageable:
-      type: object
-      properties:
-        offset:
-          type: integer
-          format: int64
-          maximum: 999999999
-          minimum: 1
-        pageNumber:
-          type: integer
-          format: int32
-          maximum: 999999999
-          minimum: 1
-        pageSize:
-          type: integer
-          format: int32
-          maximum: 999999999
-          minimum: 1
-        paged:
-          type: boolean
-        sort:
-          $ref: '#/components/schemas/Sort'
-        unpaged:
-          type: boolean
-      additionalProperties: false
-
-    Sort:
-      type: object
-      properties:
-        empty:
-          type: boolean
-        sorted:
-          type: boolean
-        unsorted:
-          type: boolean
-      additionalProperties: false
-
-    Page:
-      type: object
-      properties:
-        empty:
-          type: boolean
-        first:
-          type: boolean
-        last:
-          type: boolean
-        number:
-          type: integer
-          format: int32
-          maximum: 999999999
-          minimum: 1
-        numberOfElements:
-          type: integer
-          format: int32
-          maximum: 999999999
-          minimum: 1
-        pageable:
-          $ref: '#/components/schemas/Pageable'
-        size:
-          type: integer
-          format: int32
-          maximum: 1024
-          minimum: 1
-        sort:
-          $ref: '#/components/schemas/Sort'
-        totalElements:
-          type: integer
-          format: int64
-          maximum: 1
-          minimum: 1
-        totalPages:
-          type: integer
-          format: int64
-          maximum: 999999999
-          minimum: 1
-      additionalProperties: false
-      required:
-        - number
-        - numberOfElements
-        - size
-        - totalElements
-        - totalPages
 
     TimelineResponse:
       type: object
