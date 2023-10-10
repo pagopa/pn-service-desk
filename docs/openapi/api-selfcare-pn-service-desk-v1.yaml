@@ -84,8 +84,8 @@ paths:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
         - $ref: '#/components/parameters/queryStartDate'
         - $ref: '#/components/parameters/queryEndDate'
-        - $ref: '#/components/parameters/queryNumberPage'
-        - $ref: '#/components/parameters/querySizePage'
+        - $ref: '#/components/parameters/searchPageSize'
+        - $ref: '#/components/parameters/searchNextPagesKey'
       requestBody:
         content:
           application/json:
@@ -154,8 +154,8 @@ paths:
         - NotificationAndMessage
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
-        - $ref: '#/components/parameters/queryNumberPage'
-        - $ref: '#/components/parameters/querySizePage'
+        - $ref: '#/components/parameters/searchPageSize'
+        - $ref: '#/components/parameters/searchNextPagesKey'
       requestBody:
         content:
           application/json:
@@ -299,8 +299,8 @@ paths:
         - NotificationAndMessage
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
-        - $ref: '#/components/parameters/queryNumberPage'
-        - $ref: '#/components/parameters/querySizePage'
+        - $ref: '#/components/parameters/searchPageSize'
+        - $ref: '#/components/parameters/searchNextPagesKey'
       requestBody:
         content:
           application/json:
@@ -335,8 +335,8 @@ paths:
         - NotificationAndMessage
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
-        - $ref: '#/components/parameters/queryNumberPage'
-        - $ref: '#/components/parameters/querySizePage'
+        - $ref: '#/components/parameters/searchPageSize'
+        - $ref: '#/components/parameters/searchNextPagesKey'
       requestBody:
         content:
           application/json:
@@ -371,8 +371,8 @@ paths:
         - PA
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
-        - $ref: '#/components/parameters/queryNumberPage'
-        - $ref: '#/components/parameters/querySizePage'
+        - $ref: '#/components/parameters/searchPageSize'
+        - $ref: '#/components/parameters/searchNextPagesKey'
       requestBody:
         content:
           application/json:
@@ -412,29 +412,26 @@ components:
         minLength: 1
         maxLength: 64
 
-    querySizePage:
+    searchPageSize:
       name: size
+      description: >-
+        dimensione della pagina di risultati
       in: query
-      description: Numero di elementi per pagina.
       required: false
       schema:
         type: integer
-        default: 5
         format: int32
-        maximum: 999999999
-        minimum: 1
+        maximum: 50
 
-    queryNumberPage:
-      name: page
+    searchNextPagesKey:
+      name: nextPagesKey
+      description: >-
+        Chiave indicante la pagina di risultati, da specificare solo se si vuole una pagina 
+        diversa dalla prima.
       in: query
-      description: Risultati di pagina che si vuole ottenere (0..N)
       required: false
       schema:
-        type: integer
-        default: 0
-        format: int32
-        maximum: 999999999
-        minimum: 0
+        type: string
 
     queryStartDate:
       name: startDate

@@ -45,8 +45,6 @@ components:
     SearchCourtesyMessagesResponse:
       description: Search courtesy messages response
       type: object
-      allOf:
-        - $ref: '#/components/schemas/Page'
       properties:
         notifications:
           type: array
@@ -54,6 +52,17 @@ components:
           maxItems: 999999999
           items:
             $ref: '#/components/schemas/CourtesyMessageResponse'
+        moreResult:
+          description: Indica se sono presenti ulteriori pagine di risultati
+          type: boolean
+        nextPagesKey:
+          description: >-
+            Elenco, non esaustivo, delle chiavi da usare per richiedere le 
+            pagine di risultati successive a quella corrente. <br/>
+            Valorizzato solo se il campo __moreResult__ ha valore __true__.
+            type: array
+            items:
+            type: string
       additionalProperties: false
 
     CourtesyMessageResponse:
@@ -223,13 +232,22 @@ components:
     NotificationsResponse:
       description: Get all Notifications response
       type: object
-      allOf:
-        - $ref: '#/components/schemas/Page'
       properties:
         results:
           type: array
           items:
             $ref: '#/components/schemas/Notification'
+        moreResult:
+          description: Indica se sono presenti ulteriori pagine di risultati
+          type: boolean
+        nextPagesKey:
+          description: >-
+             Elenco, non esaustivo, delle chiavi da usare per richiedere le 
+             pagine di risultati successive a quella corrente. <br/>
+             Valorizzato solo se il campo __moreResult__ ha valore __true__.
+           type: array
+           items:
+             type: string
       additionalProperties: false
 
     Notification:
