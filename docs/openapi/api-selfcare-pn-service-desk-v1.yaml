@@ -73,31 +73,29 @@ paths:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
 
-  '/service-desk/courtesy-message/search':
+  '/service-desk/notifications':
     post:
       operationId: searchCourtesyMessagesFromTaxId
-      summary: Retrieve all cortesy messages sent to recipient
-      description: Retrieve all cortesy messages sent to recipient
+      summary: Retrieve all notifications sent to recipient
+      description: Retrieve all notifications sent to recipient
       tags:
         - NotificationAndMessage
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
-        - $ref: '#/components/parameters/queryStartDate'
-        - $ref: '#/components/parameters/queryEndDate'
         - $ref: '#/components/parameters/searchPageSize'
         - $ref: '#/components/parameters/searchNextPagesKey'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchCourtesyMessagesRequest'
+              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchMessagesRequest'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchCourtesyMessagesResponse'
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/NotificationsResponse'
         '400':
           description: Invalid input
           content:
@@ -132,42 +130,6 @@ paths:
             application/json:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/ProfileResponse'
-        '400':
-          description: Invalid input
-          content:
-            application/problem+json:
-              schema:
-                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
-        '500':
-          description: Internal server error
-          content:
-            application/problem+json:
-              schema:
-                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
-
-  '/service-desk/notifications':
-    post:
-      operationId: searchNotificationsFromTaxId
-      summary: Retrieve all notifications sent to recipient
-      description: Retrieve all notifications sent to recipient
-      tags:
-        - NotificationAndMessage
-      parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
-        - $ref: '#/components/parameters/searchPageSize'
-        - $ref: '#/components/parameters/searchNextPagesKey'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/NotificationsRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/NotificationsResponse'
         '400':
           description: Invalid input
           content:
@@ -291,7 +253,7 @@ paths:
 
 
   '/service-desk/notifications/delegate':
-    post:
+    get:
       operationId: searchNotificationsAsDelegateFromTaxId
       summary: Retrieve all notifications sent to recipient as delegate
       description: Retrieve all notifications sent to recipient as delegate
@@ -299,49 +261,10 @@ paths:
         - NotificationAndMessage
       parameters:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: '#/components/parameters/searchMandateId'
+        - $ref: '#/components/parameters/searchDelegateInternalId'
         - $ref: '#/components/parameters/searchPageSize'
         - $ref: '#/components/parameters/searchNextPagesKey'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/NotificationsDelegateRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/NotificationsResponse'
-        '400':
-          description: Invalid input
-          content:
-            application/problem+json:
-              schema:
-                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
-        '500':
-          description: Internal server error
-          content:
-            application/problem+json:
-              schema:
-                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
-
-  '/service-desk/notifications/delegator':
-    post:
-      operationId: searchNotificationsAsDelegatorFromTaxId
-      summary: Retrieve all notifications sent to recipient as delegator
-      description: Retrieve all notifications sent to recipient as delegator
-      tags:
-        - NotificationAndMessage
-      parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
-        - $ref: '#/components/parameters/searchPageSize'
-        - $ref: '#/components/parameters/searchNextPagesKey'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/NotificationsDelegatorRequest'
       responses:
         '200':
           description: OK
@@ -412,6 +335,24 @@ components:
         minLength: 1
         maxLength: 64
 
+    searchMandateId:
+      name: mandateId
+      description: >-
+        mandate internal id
+      in: query
+      required: true
+      schema:
+        type: string
+
+    searchDelegateInternalId:
+      name: delegateInternalId
+      description: >-
+        delegate internal id
+      in: query
+      required: true
+      schema:
+        type: string
+
     searchPageSize:
       name: size
       description: >-
@@ -426,7 +367,7 @@ components:
     searchNextPagesKey:
       name: nextPagesKey
       description: >-
-        Chiave indicante la pagina di risultati, da specificare solo se si vuole una pagina 
+        Chiave indicante la pagina di risultati, da specificare solo se si vuole una pagina
         diversa dalla prima.
       in: query
       required: false

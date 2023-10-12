@@ -28,7 +28,7 @@ components:
       items:
         $ref: '#/components/schemas/PaSummary'
 
-    SearchCourtesyMessagesRequest:
+    SearchMessagesRequest:
       required:
         - taxId
         - recipientType
@@ -41,47 +41,6 @@ components:
         recipientType:
           $ref: '#/components/schemas/RecipientType'
       additionalProperties: false
-
-    SearchCourtesyMessagesResponse:
-      description: Search courtesy messages response
-      type: object
-      properties:
-        notifications:
-          type: array
-          minItems: 0
-          maxItems: 999999999
-          items:
-            $ref: '#/components/schemas/CourtesyMessageResponse'
-        moreResult:
-          description: Indica se sono presenti ulteriori pagine di risultati
-          type: boolean
-        nextPagesKey:
-          description: >-
-            Elenco, non esaustivo, delle chiavi da usare per richiedere le 
-            pagine di risultati successive a quella corrente. <br/>
-            Valorizzato solo se il campo __moreResult__ ha valore __true__.
-          type: array
-          items:
-            type: string
-      additionalProperties: false
-
-    CourtesyMessageResponse:
-      required:
-        - iun
-        - paId
-      properties:
-        iun:
-          type: string
-          maxLength: 99999
-        paId:
-          type: string
-          maxLength: 99999
-          description: >-
-            Identifier of PA that sent the courtesy message
-        courtesyMessages:
-          type: array
-          items:
-            $ref: '#/components/schemas/CourtesyMessage'
 
     CourtesyMessage:
       type: object
@@ -122,7 +81,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Address'
-        mandates:
+        delegatorMandates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mandate'
+        delegateMandates:
           type: array
           items:
             $ref: '#/components/schemas/Mandate'
@@ -200,18 +163,19 @@ components:
         mandateId:
           description: internal identifier of mandate
           type: string
-        delegator:
-          description: taxId of delegator
-          type: string
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
-        delegate:
+        taxId:
           description: taxId of delegate
           type: string
           x-field-extra-annotation: "@lombok.ToString.Exclude"
-        datefrom:
+        recipientType:
+          $ref: '#/components/schemas/RecipientType'
+        internalId:
+          description: internal id of delegate
+          type: string
+        dateFrom:
           description: mandate start date (ISO 8601 format)
           type: string
-        dateto:
+        dateTo:
           description: mandate end date (ISO 8601 format)
           type: string
 
@@ -242,9 +206,9 @@ components:
           type: boolean
         nextPagesKey:
           description: >-
-             Elenco, non esaustivo, delle chiavi da usare per richiedere le 
-             pagine di risultati successive a quella corrente. <br/>
-             Valorizzato solo se il campo __moreResult__ ha valore __true__.
+            Elenco, non esaustivo, delle chiavi da usare per richiedere le
+            pagine di risultati successive a quella corrente. <br/>
+            Valorizzato solo se il campo __moreResult__ ha valore __true__.
           type: array
           items:
             type: string
@@ -869,21 +833,35 @@ components:
     NotificationsDelegateRequest:
       required:
         - mandateId
+        - taxId
+        - recipientType
       type: object
       properties:
         mandateId:
           description: internal identifier of mandate
           type: string
+        taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+        recipientType:
+          $ref: '#/components/schemas/RecipientType'
       additionalProperties: false
 
     NotificationsDelegatorRequest:
       required:
         - mandateId
+        - taxId
+        - recipientType
       type: object
       properties:
         mandateId:
           description: internal identifier of mandate
           type: string
+        taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+        recipientType:
+          $ref: '#/components/schemas/RecipientType'
       additionalProperties: false
 
     PaNotificationsRequest:
@@ -1385,7 +1363,7 @@ components:
           maxLength: 99999
           description: >-
             identificativo dell'operation appena creata sarà costituito da
-            _ticketId_ e _ticketOperationId_ separati dal carattere "~" se 
+            _ticketId_ e _ticketOperationId_ separati dal carattere "~" se
             _ticketOperationId_ non è stato specificato allora l'operationId
             coinciderà con il _ticketId_
       additionalProperties: false
@@ -1468,7 +1446,7 @@ components:
             * `VALIDATION` - Operazione in fase di validazione di indirizzo e allegati
             * `PREPARING` - Operazione in fase di preparazione di invio
             * `PROGRESS` - Operazione in fase di processamento della spedizione
-            * `OK` - Notifica recapitata  
+            * `OK` - Notifica recapitata
             * `KO` - Notifica in errore di spedizione o in errore di validazione
           enum:
             - CREATING
