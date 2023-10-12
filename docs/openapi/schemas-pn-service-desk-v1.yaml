@@ -83,10 +83,12 @@ components:
             $ref: '#/components/schemas/Address'
         delegatorMandates:
           type: array
+          description: elendo delle deleghe assegnate a terzi
           items:
             $ref: '#/components/schemas/Mandate'
         delegateMandates:
           type: array
+          description: Elenco delle deleghe ricevute da terzi
           items:
             $ref: '#/components/schemas/Mandate'
 
@@ -278,8 +280,9 @@ components:
           # wide range of characters
           pattern: ^.*$
           maxLength: 1024
-        recipients:
-          $ref: "#/components/schemas/NotificationRecipient"
+        isMultiRecipients:
+          type: boolean
+          description: Indica la presenza di altri destinatari
         hasDocuments:
           type: boolean
           description: Indica la presenza di documenti
@@ -311,34 +314,6 @@ components:
         hasPayments:
           type: boolean
           description: Indica la presenza di avvisi di pagamento e/o F24
-
-    NotificationRecipient:
-      description: Informazioni sui destinatari
-      required:
-        - denomination
-        - recipientType
-        - taxId
-        - physicalAddress
-      type: object
-      properties:
-        recipientType:
-          type: string
-          description: 'Tipologia di destinatario: Persona Fisica (PF) o Persona Giuridica
-            (PG)'
-          enum:
-            - PF
-            - PG
-        taxId:
-          $ref: '#/components/schemas/TaxId'
-        internalId:
-          type: string
-          description: id interno anonimizzato
-        denomination:
-          $ref: '#/components/schemas/Denomination'
-        digitalDomicile:
-          $ref: "#/components/schemas/DigitalAddress"
-        physicalAddress:
-          $ref: "#/components/schemas/NotificationPhysicalAddress"
 
     Denomination:
       description: Denominazione ente o persona fisica / ragione sociale
