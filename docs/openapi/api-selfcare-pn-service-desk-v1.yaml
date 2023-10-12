@@ -84,6 +84,8 @@ paths:
         - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
         - $ref: '#/components/parameters/searchPageSize'
         - $ref: '#/components/parameters/searchNextPagesKey'
+        - $ref: '#/components/parameters/queryStartDate'
+        - $ref: '#/components/parameters/queryEndDate'
       requestBody:
         content:
           application/json:
