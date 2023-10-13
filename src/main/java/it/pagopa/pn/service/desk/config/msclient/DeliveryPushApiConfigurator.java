@@ -6,6 +6,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.Ap
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.EventComunicationApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.PaperNotificationFailedApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.LegalFactsPrivateApi;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.TimelineAndStatusApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,5 +35,13 @@ public class DeliveryPushApiConfigurator extends CommonBaseClient {
                 new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
         apiClient.setBasePath(pnServiceDeskConfigs.getDeliveryPushBasePath());
         return new EventComunicationApi(apiClient);
+    }
+
+    @Bean
+    public TimelineAndStatusApi getNotificationHistoryApiDeliveryPush(PnServiceDeskConfigs pnServiceDeskConfigs){
+        ApiClient apiClient =
+                new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
+        apiClient.setBasePath(pnServiceDeskConfigs.getDeliveryPushBasePath());
+        return new TimelineAndStatusApi(apiClient);
     }
 }

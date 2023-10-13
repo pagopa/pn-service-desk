@@ -5,5 +5,6 @@ import reactor.core.publisher.Mono;
 public interface PnDataVaultClient {
 
     Mono<String> anonymized(String data);
+    Mono<String> anonymized(String data, String recipientType);
     Mono<String> deAnonymized(String recipientInternalId);
 }

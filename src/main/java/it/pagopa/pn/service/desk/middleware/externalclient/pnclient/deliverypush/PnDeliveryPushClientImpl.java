@@ -3,6 +3,7 @@ package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypus
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.EventComunicationApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.LegalFactsPrivateApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.PaperNotificationFailedApi;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.api.TimelineAndStatusApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.*;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
@@ -23,6 +24,7 @@ public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
     private PaperNotificationFailedApi notificationFailedApi;
     private LegalFactsPrivateApi legalFactsPrivateApi;
     private EventComunicationApi eventComunicationApi;
+    private TimelineAndStatusApi timelineAndStatusApi;
 
     private static final String RADD_TYPE = "SERVICE_DESK";
 
@@ -60,5 +62,10 @@ public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
                     log.error("Notification viewed in error {}", ex);
                     return Mono.empty();
                 });
+    }
+
+    @Override
+    public Mono<NotificationHistoryResponseDto> getNotificationHistory(String iun, Integer numberOfRecipients, OffsetDateTime createdAt) {
+        return this.timelineAndStatusApi.getNotificationHistory(iun, numberOfRecipients, createdAt);
     }
 }
