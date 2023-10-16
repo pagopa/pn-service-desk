@@ -180,6 +180,12 @@ components:
         dateTo:
           description: mandate end date (ISO 8601 format)
           type: string
+        delegatorInternalId:
+          description: delegator internalId
+          type: string
+        delegateInternalId:
+          description: delegate internalId
+          type: string
 
     NotificationsRequest:
       required:
