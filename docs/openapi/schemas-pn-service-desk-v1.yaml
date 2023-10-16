@@ -1598,3 +1598,44 @@ components:
           type: string
           maxLength: 99999
           description: "Codice Fiscale della PA mittente"
+
+    ResponseApiKeys:
+      title: Elenco di api keys
+      description: >-
+        Dto contenente la lista delle api keys associate ad un utente.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiKeyRow'
+        total:
+          type: integer
+
+    ApiKeyRow:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Id dell'api key
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+        name:
+          type: string
+          description: Nome dell'api key
+        pdnd:
+          type: boolean
+          description: Pdnd dell'api key
+        groups:
+          type: array
+          description: Gruppi a cui appartiene l'api key
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/ApiKeyStatus'
+
+    ApiKeyStatus:
+      description: Stato dell'api key
+      type: string
+      enum: [ 'CREATED', 'ENABLED', 'BLOCKED', 'ROTATED' ]

@@ -145,6 +145,39 @@ paths:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
 
+  '/service-desk/api-keys':
+    get:
+      operationId: getApiKeys
+      summary: Retrieve api keys for a given paId
+      description: Retrieve api keys for a given paId
+      tags:
+        - ApiKeys
+      parameters:
+        - name: paId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/ResponseApiKeys'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+
   '/service-desk/notification/{iun}':
     get:
       operationId: getNotificationFromIUN
