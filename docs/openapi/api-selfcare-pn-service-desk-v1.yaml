@@ -28,6 +28,9 @@ tags:
   - name: Profile
     description: >-
       Invocations to user profile
+  - name: ApiKeys
+    description: >-
+      Retrieve api keys for a given paId
 
 
 paths:
@@ -158,6 +161,7 @@ paths:
           required: true
           schema:
             type: string
+            maxLength: 50
       responses:
         '200':
           description: OK
@@ -378,6 +382,8 @@ components:
       required: true
       schema:
         type: string
+        minLength: 1
+        maxLength: 64
 
     searchDelegateInternalId:
       name: delegateInternalId
@@ -387,6 +393,8 @@ components:
       required: true
       schema:
         type: string
+        minLength: 1
+        maxLength: 64
 
     searchPageSize:
       name: size
@@ -398,6 +406,7 @@ components:
         type: integer
         format: int32
         maximum: 50
+        minimum: 1
 
     searchNextPagesKey:
       name: nextPagesKey
@@ -408,6 +417,7 @@ components:
       required: false
       schema:
         type: string
+        maxLength: 50
 
     queryStartDate:
       name: startDate
@@ -415,6 +425,7 @@ components:
       required: false
       schema:
         type: string
+        maxLength: 30
 
     queryEndDate:
       name: endDate
@@ -422,6 +433,7 @@ components:
       required: false
       schema:
         type: string
+        maxLength: 30
 
   securitySchemes:
     ApiKeyAuth:

@@ -1,6 +1,6 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.platform.msclient.generated.pnexternalregistries.v1.dto.PaSummaryDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.v1.dto.PaSummaryDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaSummary;
 import it.pagopa.pn.service.desk.mapper.common.BaseMapper;
 import it.pagopa.pn.service.desk.mapper.common.BaseMapperImpl;

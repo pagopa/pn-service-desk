@@ -431,8 +431,54 @@
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
 							</configOptions>
-							<modelPackage>${project.groupId}.platform.msclient.generated.pnexternalregistries.v1.dto</modelPackage>
-							<apiPackage>${project.groupId}.platform.msclient.generated.pnexternalregistries.v1.api</apiPackage>
+							<modelPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnexternalregistries.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnexternalregistries.v1.api</apiPackage>
+							<modelNameSuffix>Dto</modelNameSuffix>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-client-pn-user-attributes</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-user-attributes/9d0cfbab701d7934281566eadd53e38f91fe106c/docs/openapi/pn-address-book-api-internal.yaml</inputSpec>
+							<generatorName>java</generatorName>
+							<library>webclient</library>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<generateApiTests>false</generateApiTests>
+							<generateModelTests>false</generateModelTests>
+							<generateSupportingFiles>true</generateSupportingFiles>
+							<configOptions>
+								<swaggerAnnotations>false</swaggerAnnotations>
+								<openApiNullable>false</openApiNullable>
+							</configOptions>
+							<modelPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnuserattributes.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnuserattributes.v1.api</apiPackage>
+							<modelNameSuffix>Dto</modelNameSuffix>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-client-pn-mandate</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-mandate/c0f15f2bfd7df51dbac09c0927dff073b3da8e8f/docs/openapi/pn-mandate-internal.yaml</inputSpec>
+							<generatorName>java</generatorName>
+							<library>webclient</library>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<generateApiTests>false</generateApiTests>
+							<generateModelTests>false</generateModelTests>
+							<generateSupportingFiles>true</generateSupportingFiles>
+							<configOptions>
+								<swaggerAnnotations>false</swaggerAnnotations>
+								<openApiNullable>false</openApiNullable>
+							</configOptions>
+							<modelPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnmandate.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnmandate.v1.api</apiPackage>
 							<modelNameSuffix>Dto</modelNameSuffix>
 						</configuration>
 					</execution>

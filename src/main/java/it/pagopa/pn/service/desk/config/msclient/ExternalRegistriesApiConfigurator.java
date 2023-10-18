@@ -1,9 +1,9 @@
 package it.pagopa.pn.service.desk.config.msclient;
 
 import it.pagopa.pn.commons.pnclients.CommonBaseClient;
-import it.pagopa.pn.platform.msclient.generated.pnexternalregistries.v1.ApiClient;
-import it.pagopa.pn.platform.msclient.generated.pnexternalregistries.v1.api.InfoPaApi;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.v1.ApiClient;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.v1.api.InfoPaApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

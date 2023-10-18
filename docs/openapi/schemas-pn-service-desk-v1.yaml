@@ -171,9 +171,6 @@ components:
           x-field-extra-annotation: "@lombok.ToString.Exclude"
         recipientType:
           $ref: '#/components/schemas/RecipientType'
-        internalId:
-          description: internal id of delegate
-          type: string
         dateFrom:
           description: mandate start date (ISO 8601 format)
           type: string
