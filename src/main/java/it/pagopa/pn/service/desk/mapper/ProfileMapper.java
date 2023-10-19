@@ -5,6 +5,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pnuserattributes.v1.
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnuserattributes.v1.dto.LegalDigitalAddressDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,8 +43,8 @@ public class ProfileMapper {
         internalMandateDelegators.forEach(internalMandateDto -> {
             Mandate mandate = new Mandate();
             mandate.setMandateId(internalMandateDto.getMandateId());
-            mandate.setDateFrom(internalMandateDto.getDatefrom());
-            mandate.setDateTo(internalMandateDto.getDateto());
+            mandate.setDateFrom(OffsetDateTime.parse(internalMandateDto.getDatefrom()));
+            mandate.setDateTo(OffsetDateTime.parse(internalMandateDto.getDateto()));
             mandate.setDelegatorInternalId(internalMandateDto.getDelegator());
             mandate.setRecipientType(RecipientType.fromValue(internalMandateDto.getDelegator().split("-")[0]));
             mandate.setDelegateInternalId(internalMandateDto.getDelegate());
@@ -55,8 +56,8 @@ public class ProfileMapper {
         internalMandateDelegates.forEach(internalMandateDto -> {
             Mandate mandate = new Mandate();
             mandate.setMandateId(internalMandateDto.getMandateId());
-            mandate.setDateFrom(internalMandateDto.getDatefrom());
-            mandate.setDateTo(internalMandateDto.getDateto());
+            mandate.setDateFrom(OffsetDateTime.parse(internalMandateDto.getDatefrom()));
+            mandate.setDateTo(OffsetDateTime.parse(internalMandateDto.getDateto()));
             mandate.setDelegatorInternalId(internalMandateDto.getDelegate());
             mandate.setRecipientType(RecipientType.fromValue(internalMandateDto.getDelegator().split("-")[0]));
             delegateMandates.add(mandate);

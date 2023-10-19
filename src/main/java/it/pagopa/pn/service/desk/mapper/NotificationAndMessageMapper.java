@@ -9,8 +9,8 @@ import java.util.List;
 
 public class NotificationAndMessageMapper {
 
-    public static Notification getNotification (NotificationSearchRowDto notificationSearchRowDto, List<TimelineElementDto> filteredElements){
-        Notification notification = new Notification();
+    public static NotificationResponse getNotification (NotificationSearchRowDto notificationSearchRowDto, List<TimelineElementDto> filteredElements){
+        NotificationResponse notification = new NotificationResponse();
         notification.setIun(notificationSearchRowDto.getIun());
         notification.setSender(notificationSearchRowDto.getSender());
         notification.setSentAt(notificationSearchRowDto.getSentAt());
