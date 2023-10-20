@@ -209,7 +209,7 @@ paths:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
 
-  '/service-desk/notification/{iun}/timeline':
+  '/service-desk/notifications/{iun}/timeline':
     get:
       operationId: getTimelineOfIUN
       summary: Retrieve entire timeline of IUN
