@@ -3,8 +3,8 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementDto;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsResponse;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchMessagesRequest;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsRequest;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
 import it.pagopa.pn.service.desk.mapper.NotificationAndMessageMapper;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
@@ -37,11 +37,11 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @Override
-    public Mono<NotificationsResponse> searchCourtesyMessagesFromTaxId(String xPagopaPnUid, String startDate, String endDate, Integer size, String nextPagesKey, SearchMessagesRequest request) {
-        NotificationsResponse response = new NotificationsResponse();
+    public Mono<SearchNotificationsResponse> searchNotificationsFromTaxId(String xPagopaPnUid, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, SearchNotificationsRequest request) {
+        SearchNotificationsResponse response = new SearchNotificationsResponse();
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
                 .flatMap(taxId ->
-                        pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse(startDate), OffsetDateTime.parse(endDate), taxId, null, size, nextPagesKey)
+                        pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, taxId, null, size, nextPagesKey)
                                 .onErrorResume(exception -> {
                                     log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));

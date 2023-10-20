@@ -28,7 +28,7 @@ components:
       items:
         $ref: '#/components/schemas/PaSummary'
 
-    SearchMessagesRequest:
+    SearchNotificationsRequest:
       required:
         - taxId
         - recipientType
@@ -75,7 +75,6 @@ components:
       type: object
       required:
         - userAddresses
-        - mandates
       properties:
         userAddresses:
           type: array
@@ -126,7 +125,7 @@ components:
       description: >-
         ### Tipo del destinatario
           - PF: Persona Fisica
-          - PG: Persomna Giuridica
+          - PG: Persona Giuridica
       type: string
       enum:
         - PF
@@ -166,7 +165,7 @@ components:
           description: internal identifier of mandate
           type: string
         taxId:
-          description: taxId of delegate
+          description: taxId of delegate in case of delegateMandates array or delegator in case of delegatorMandates array
           type: string
           x-field-extra-annotation: "@lombok.ToString.Exclude"
         recipientType:
@@ -174,9 +173,11 @@ components:
         dateFrom:
           description: mandate start date (ISO 8601 format)
           type: string
+          format: date-time
         dateTo:
           description: mandate end date (ISO 8601 format)
           type: string
+          format: date-time
         delegatorInternalId:
           description: delegator internalId
           type: string
@@ -198,14 +199,14 @@ components:
           $ref: '#/components/schemas/RecipientType'
       additionalProperties: false
 
-    NotificationsResponse:
+    SearchNotificationsResponse:
       description: Get all Notifications response
       type: object
       properties:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/Notification'
+            $ref: '#/components/schemas/NotificationResponse'
         moreResult:
           description: Indica se sono presenti ulteriori pagine di risultati
           type: boolean
@@ -219,7 +220,7 @@ components:
             type: string
       additionalProperties: false
 
-    Notification:
+    NotificationResponse:
       description: single notification
       type: object
       properties:

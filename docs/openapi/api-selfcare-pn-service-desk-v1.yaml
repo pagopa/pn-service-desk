@@ -34,19 +34,6 @@ tags:
 
 
 paths:
-  '/status':
-    get:
-      summary: healthCheck path
-      description: health check path to check microservice status
-      tags:
-        - HealthCheck
-      operationId: status
-      responses:
-        '200':
-          description: Ok
-        '500':
-          description: Internal Server Error
-
   '/service-desk/pa/activated-on-pn':
     get:
       operationId: getListOfOnboardedPA
@@ -78,7 +65,7 @@ paths:
 
   '/service-desk/notifications':
     post:
-      operationId: searchCourtesyMessagesFromTaxId
+      operationId: searchNotificationsFromTaxId
       summary: Retrieve all notifications sent to recipient
       description: Retrieve all notifications sent to recipient
       tags:
@@ -93,14 +80,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchMessagesRequest'
+              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchNotificationsRequest'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/NotificationsResponse'
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchNotificationsResponse'
         '400':
           description: Invalid input
           content:
@@ -182,7 +169,7 @@ paths:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
 
-  '/service-desk/notification/{iun}':
+  '/service-desk/notifications/{iun}':
     get:
       operationId: getNotificationFromIUN
       summary: Retrieve notification detail by IUN
@@ -249,6 +236,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '404':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
         '500':
           description: Internal server error
           content:
@@ -256,7 +249,7 @@ paths:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
 
-  '/service-desk/notification/{iun}/documents':
+  '/service-desk/notifications/{iun}/documents':
     post:
       operationId: getDocumentsOfIUN
       summary: Retrieve all documents of IUN
@@ -288,6 +281,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '404':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
         '500':
           description: Internal server error
           content:
@@ -298,7 +297,7 @@ paths:
 
   '/service-desk/notifications/delegate':
     get:
-      operationId: searchNotificationsAsDelegateFromTaxId
+      operationId: searchNotificationsAsDelegateFromInternalId
       summary: Retrieve all notifications sent to recipient as delegate
       description: Retrieve all notifications sent to recipient as delegate
       tags:
@@ -315,7 +314,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/NotificationsResponse'
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchNotificationsResponse'
         '400':
           description: Invalid input
           content:
@@ -351,7 +350,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/NotificationsResponse'
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchNotificationsResponse'
         '400':
           description: Invalid input
           content:
@@ -431,6 +430,7 @@ components:
       schema:
         type: string
         maxLength: 30
+        format: date-time
 
     queryEndDate:
       name: endDate
@@ -439,6 +439,7 @@ components:
       schema:
         type: string
         maxLength: 30
+        format: date-time
 
   securitySchemes:
     ApiKeyAuth:

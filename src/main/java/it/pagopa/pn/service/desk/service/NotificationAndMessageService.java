@@ -1,11 +1,13 @@
 package it.pagopa.pn.service.desk.service;
 
 
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsResponse;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchMessagesRequest;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsRequest;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
 import reactor.core.publisher.Mono;
+
+import java.time.OffsetDateTime;
 
 public interface NotificationAndMessageService {
 
-    Mono<NotificationsResponse> searchCourtesyMessagesFromTaxId(String xPagopaPnUid, String startDate, String endDate, Integer size, String nextPagesKey, SearchMessagesRequest searchMessagesRequest);
+    Mono<SearchNotificationsResponse> searchNotificationsFromTaxId(String xPagopaPnUid, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, SearchNotificationsRequest searchMessagesRequest);
 }
