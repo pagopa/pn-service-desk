@@ -774,6 +774,20 @@ components:
         system:
           type: string
 
+    DocumentsRequest:
+      type: object
+      required:
+        - taxId
+        - recipientType
+      properties:
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude"
+        recipientType:
+          $ref: '#/components/schemas/RecipientType'
+      additionalProperties: false
+
     DocumentsResponse:
       type: object
       description: IUN Documents

@@ -257,7 +257,7 @@ paths:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
 
   '/service-desk/notification/{iun}/documents':
-    get:
+    post:
       operationId: getDocumentsOfIUN
       summary: Retrieve all documents of IUN
       description: Retrieve all documents of IUN
@@ -270,6 +270,11 @@ paths:
           required: true
           schema:
             $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/IUN'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/DocumentsRequest'
       responses:
         '200':
           description: OK
