@@ -798,6 +798,9 @@ components:
         documentsAvailable:
           type: boolean
           description: Indica se i documenti notificati sono ancora disponibili.
+        totalSize:
+          type: integer
+          description: Indica la dimensione totale dei documenti
         documents:
           type: array
           description: Documenti notificati
