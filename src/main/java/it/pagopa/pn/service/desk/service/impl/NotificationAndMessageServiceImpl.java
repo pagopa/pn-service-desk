@@ -40,8 +40,8 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     public Mono<SearchNotificationsResponse> searchNotificationsFromTaxId(String xPagopaPnUid, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, SearchNotificationsRequest request) {
         SearchNotificationsResponse response = new SearchNotificationsResponse();
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
-                .flatMap(taxId ->
-                        pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, taxId, null, size, nextPagesKey)
+                .flatMap(internalId ->
+                        pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, internalId, null, size, nextPagesKey)
                                 .onErrorResume(exception -> {
                                     log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
