@@ -428,18 +428,10 @@ components:
     TimelineElement:
       type: object
       required:
-        - status
-        - activeFrom
         - timestamp
         - category
         - detail
       properties:
-        status:
-          $ref: "#/components/schemas/IunStatus"
-        activeFrom:
-          type: string
-          description: data e ora di raggiungimento dello stato di avanzamento
-          format: date-time
         timestamp:
           type: string
           description: Momento in cui avviene l'evento descritto in questo elemento

@@ -429,7 +429,6 @@ components:
       required: false
       schema:
         type: string
-        maxLength: 30
         format: date-time
 
     queryEndDate:
@@ -438,7 +437,6 @@ components:
       required: false
       schema:
         type: string
-        maxLength: 30
         format: date-time
 
   securitySchemes:
