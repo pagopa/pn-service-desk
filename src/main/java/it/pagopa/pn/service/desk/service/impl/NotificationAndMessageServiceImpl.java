@@ -1,10 +1,11 @@
 package it.pagopa.pn.service.desk.service.impl;
 
 import it.pagopa.pn.service.desk.exception.PnGenericException;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV20Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.TimelineResponse;
 import it.pagopa.pn.service.desk.mapper.NotificationAndMessageMapper;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
@@ -16,6 +17,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,20 +60,19 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 })
                 .flatMap(notificationSearchRowDto ->
                         this.pnDeliveryPushClient.getNotificationHistory(notificationSearchRowDto.getIun(), notificationSearchRowDto.getRecipients().size(), notificationSearchRowDto.getSentAt())
-                                .switchIfEmpty(Mono.defer(() -> {
-                                    NotificationAndMessageMapper.getNotification(notificationSearchRowDto, null);
-                                    return Mono.empty();
-                                }))
                                 .onErrorResume(exception -> {
                                     log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
                                 })
-                                .flatMap(notificationHistoryResponseDto -> {
-                                    List<TimelineElementDto> filteredElements = notificationHistoryResponseDto.getTimeline()
-                                            .stream()
-                                            .filter(element -> element.getCategory().equals(TimelineElementCategoryDto.SEND_COURTESY_MESSAGE))
-                                            .collect(Collectors.toList());
-                                    return Mono.just(NotificationAndMessageMapper.getNotification(notificationSearchRowDto, filteredElements));
+                                .map(notificationHistoryResponseDto -> {
+                                    List<TimelineElementV20Dto> filteredElements = new ArrayList<>();
+                                    if (notificationHistoryResponseDto.getTimeline() != null){
+                                         filteredElements = notificationHistoryResponseDto.getTimeline()
+                                                .stream()
+                                                .filter(element -> element.getCategory().equals(TimelineElementCategoryV20Dto.SEND_COURTESY_MESSAGE))
+                                                .collect(Collectors.toList());
+                                    }
+                                    return NotificationAndMessageMapper.getNotification(notificationSearchRowDto, filteredElements);
                                 })
                 )
                 .collectList()
@@ -80,4 +81,25 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                     return response;
                 });
     }
+
+    @Override
+    public Mono<TimelineResponse> getTimelineOfIUN(String xPagopaPnUid, String iun) {
+        return pnDeliveryClient.getSentNotificationPrivate(iun)
+                .onErrorResume(exception -> {
+                    log.error("errorReason = {}, An error occurred while call service for obtain notification sent", exception.getMessage());
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                })
+                .flatMap(sentNotificationDto ->
+                        pnDeliveryPushClient.getNotificationHistory(iun, sentNotificationDto.getRecipients().size(), sentNotificationDto.getSentAt())
+                                .switchIfEmpty(Mono.empty())
+                                .onErrorResume(exception -> {
+                                    log.error("errorReason = {}, An error occurred while call service for obtain notification history", exception.getMessage());
+                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                                })
+                                .map(NotificationAndMessageMapper::getTimeline)
+                );
+    }
+
+
+
 }

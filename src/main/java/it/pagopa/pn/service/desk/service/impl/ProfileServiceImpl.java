@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_MANDATE_CLIENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_USER_ATTRIBUTES_CLIENT;
@@ -42,11 +41,9 @@ public class ProfileServiceImpl implements ProfileService {
                             return Mono.error(new PnGenericException(ERROR_ON_USER_ATTRIBUTES_CLIENT, exception.getMessage()));
                         })
                         .collectList()
-                        .switchIfEmpty(Mono.just(Collections.emptyList()))
                         .flatMap(legalDigitalAddressDtos ->
                                 userAttributesClient.getCourtesyAddressBySender(internalId, "default")
                                         .collectList()
-                                        .switchIfEmpty(Mono.just(Collections.emptyList()))
                                         .onErrorResume(exception -> {
                                             log.error("errorReason = {}, error = {}, Error during retrieving", exception.getMessage(), exception);
                                             return Mono.error(new PnGenericException(ERROR_ON_USER_ATTRIBUTES_CLIENT, exception.getMessage()));
@@ -57,7 +54,6 @@ public class ProfileServiceImpl implements ProfileService {
                 )
                 .flatMap(internalId -> mandateClient.listMandatesByDelegator(internalId)
                         .collectList()
-                        .switchIfEmpty(Mono.just(Collections.emptyList()))
                         .onErrorResume(exception -> {
                             log.error("errorReason = {}, error = {}, Error during retrieving", exception.getMessage(), exception);
                             return Mono.error(new PnGenericException(ERROR_ON_MANDATE_CLIENT, exception.getMessage()));
@@ -65,7 +61,6 @@ public class ProfileServiceImpl implements ProfileService {
                         .flatMap(internalMandateDelegators ->
                                 mandateClient.listMandatesByDelegate(internalId)
                                         .collectList()
-                                        .switchIfEmpty(Mono.just(Collections.emptyList()))
                                         .onErrorResume(exception -> {
                                             log.error("errorReason = {}, error = {}, Error during retrieving", exception.getMessage(), exception);
                                             return Mono.error(new PnGenericException(ERROR_ON_MANDATE_CLIENT, exception.getMessage()));

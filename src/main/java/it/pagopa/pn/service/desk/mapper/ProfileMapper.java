@@ -14,22 +14,24 @@ public class ProfileMapper {
     public static ProfileResponse getAddress (List<LegalDigitalAddressDto> legalDigitalAddress, List<CourtesyDigitalAddressDto> courtesyDigitalAddress, ProfileResponse response){
 
         List<Address> addressList = new ArrayList<>();
-
-        legalDigitalAddress.forEach(legalDigitalAddressDto -> {
-            Address legalAddress = new Address();
-            legalAddress.setLegalAddressType(LegalAddressType.fromValue(legalDigitalAddressDto.getAddressType().getValue()));
-            legalAddress.setLegalChannelType(LegalChannelType.fromValue(legalDigitalAddressDto.getChannelType().getValue()));
-            legalAddress.setLegalValue(legalDigitalAddressDto.getValue());
-            addressList.add(legalAddress);
-        });
-
-        courtesyDigitalAddress.forEach(courtesyDigitalAddressDto -> {
-            Address courtesyAddress = new Address();
-            courtesyAddress.setCourtesyAddressType(CourtesyAddressType.fromValue(courtesyDigitalAddressDto.getAddressType().getValue()));
-            courtesyAddress.setCourtesyChannelType(CourtesyChannelType.fromValue(courtesyDigitalAddressDto.getChannelType().getValue()));
-            courtesyAddress.setCourtesyValue(courtesyDigitalAddressDto.getValue());
-            addressList.add(courtesyAddress);
-        });
+        if (!legalDigitalAddress.isEmpty()){
+            legalDigitalAddress.forEach(legalDigitalAddressDto -> {
+                Address legalAddress = new Address();
+                legalAddress.setLegalAddressType(LegalAddressType.fromValue(legalDigitalAddressDto.getAddressType().getValue()));
+                legalAddress.setLegalChannelType(LegalChannelType.fromValue(legalDigitalAddressDto.getChannelType().getValue()));
+                legalAddress.setLegalValue(legalDigitalAddressDto.getValue());
+                addressList.add(legalAddress);
+            });
+        }
+        if (!courtesyDigitalAddress.isEmpty()){
+            courtesyDigitalAddress.forEach(courtesyDigitalAddressDto -> {
+                Address courtesyAddress = new Address();
+                courtesyAddress.setCourtesyAddressType(CourtesyAddressType.fromValue(courtesyDigitalAddressDto.getAddressType().getValue()));
+                courtesyAddress.setCourtesyChannelType(CourtesyChannelType.fromValue(courtesyDigitalAddressDto.getChannelType().getValue()));
+                courtesyAddress.setCourtesyValue(courtesyDigitalAddressDto.getValue());
+                addressList.add(courtesyAddress);
+            });
+        }
 
         response.setUserAddresses(addressList);
 
@@ -40,29 +42,33 @@ public class ProfileMapper {
         List<Mandate> delegatorMandates = new ArrayList<>();
         List<Mandate> delegateMandates = new ArrayList<>();
 
-        internalMandateDelegators.forEach(internalMandateDto -> {
-            Mandate mandate = new Mandate();
-            mandate.setMandateId(internalMandateDto.getMandateId());
-            mandate.setDateFrom(OffsetDateTime.parse(internalMandateDto.getDatefrom()));
-            mandate.setDateTo(OffsetDateTime.parse(internalMandateDto.getDateto()));
-            mandate.setDelegatorInternalId(internalMandateDto.getDelegator());
-            mandate.setRecipientType(RecipientType.fromValue(internalMandateDto.getDelegator().split("-")[0]));
-            mandate.setDelegateInternalId(internalMandateDto.getDelegate());
-            delegatorMandates.add(mandate);
+        if (!internalMandateDelegators.isEmpty()){
+            internalMandateDelegators.forEach(internalMandateDto -> {
+                Mandate mandate = new Mandate();
+                mandate.setMandateId(internalMandateDto.getMandateId());
+                mandate.setDateFrom(OffsetDateTime.parse(internalMandateDto.getDatefrom()));
+                mandate.setDateTo(OffsetDateTime.parse(internalMandateDto.getDateto()));
+                mandate.setDelegatorInternalId(internalMandateDto.getDelegator());
+                mandate.setRecipientType(RecipientType.fromValue(internalMandateDto.getDelegator().split("-")[0]));
+                mandate.setDelegateInternalId(internalMandateDto.getDelegate());
+                delegatorMandates.add(mandate);
 
-        });
+            });
+        }
         response.setDelegatorMandates(delegatorMandates);
 
-        internalMandateDelegates.forEach(internalMandateDto -> {
-            Mandate mandate = new Mandate();
-            mandate.setMandateId(internalMandateDto.getMandateId());
-            mandate.setDateFrom(OffsetDateTime.parse(internalMandateDto.getDatefrom()));
-            mandate.setDateTo(OffsetDateTime.parse(internalMandateDto.getDateto()));
-            mandate.setDelegatorInternalId(internalMandateDto.getDelegate());
-            mandate.setRecipientType(RecipientType.fromValue(internalMandateDto.getDelegator().split("-")[0]));
-            delegateMandates.add(mandate);
+        if (!internalMandateDelegates.isEmpty()){
+            internalMandateDelegates.forEach(internalMandateDto -> {
+                Mandate mandate = new Mandate();
+                mandate.setMandateId(internalMandateDto.getMandateId());
+                mandate.setDateFrom(OffsetDateTime.parse(internalMandateDto.getDatefrom()));
+                mandate.setDateTo(OffsetDateTime.parse(internalMandateDto.getDateto()));
+                mandate.setDelegatorInternalId(internalMandateDto.getDelegate());
+                mandate.setRecipientType(RecipientType.fromValue(internalMandateDto.getDelegator().split("-")[0]));
+                delegateMandates.add(mandate);
 
-        });
+            });
+        }
         response.setDelegateMandates(delegateMandates);
 
         return response;
