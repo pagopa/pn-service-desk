@@ -482,6 +482,29 @@
 							<modelNameSuffix>Dto</modelNameSuffix>
 						</configuration>
 					</execution>
+					<execution>
+						<id>generate-client-pn-apikey-manager</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-apikey-manager/1e2439f3bb3fc0846ce25b570d78b7169f8f2a20/docs/openapi/pn-apikey-manager-bo.yaml</inputSpec>    //questo si prende da github facendo raw in alto a dx
+							<generatorName>java</generatorName>
+							<library>webclient</library>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<generateApiTests>false</generateApiTests>
+							<generateModelTests>false</generateModelTests>
+							<generateSupportingFiles>true</generateSupportingFiles>
+							<configOptions>
+								<swaggerAnnotations>false</swaggerAnnotations>
+								<openApiNullable>false</openApiNullable>
+							</configOptions>
+							<modelPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnapikeymanager.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnapikeymanager.v1.api</apiPackage>
+							<modelNameSuffix>Dto</modelNameSuffix>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>			 		 
 		</plugins>
