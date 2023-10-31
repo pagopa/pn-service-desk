@@ -1,6 +1,8 @@
 package it.pagopa.pn.service.desk.rest;
 
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.api.NotificationAndMessageApi;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.DocumentsRequest;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.DocumentsResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.TimelineResponse;
@@ -30,5 +32,13 @@ public class NotificationAndMessageController implements NotificationAndMessageA
     public Mono<ResponseEntity<TimelineResponse>> getTimelineOfIUN(String xPagopaPnUid, String iun, ServerWebExchange exchange) {
         return notificationAndMessageService.getTimelineOfIUN(xPagopaPnUid, iun)
                 .map(timelineResponse -> ResponseEntity.status(HttpStatus.OK).body(timelineResponse));
+    }
+
+    @Override
+    public Mono<ResponseEntity<DocumentsResponse>> getDocumentsOfIUN(String xPagopaPnUid, String iun, Mono<DocumentsRequest> documentsRequest, ServerWebExchange exchange) {
+        return documentsRequest
+                .flatMap(request -> notificationAndMessageService.getDocumentsOfIun(iun, request)
+                        .map(documentsResponse -> ResponseEntity.status(HttpStatus.OK).body(documentsResponse)));
+
     }
 }

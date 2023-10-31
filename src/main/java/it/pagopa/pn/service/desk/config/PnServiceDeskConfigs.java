@@ -22,6 +22,7 @@ public class PnServiceDeskConfigs {
     private String externalRegistriesBasePath;
     private String userAttributesBasePath;
     private String mandateBasePath;
+    private String apiKeyManagerBasePath;
     private String safeStorageCxId;
     private String paperChannelCxId;
     private String safeStorageDocumentType;

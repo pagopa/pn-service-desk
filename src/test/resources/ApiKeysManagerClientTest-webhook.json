@@ -1,0 +1,38 @@
+[
+  {
+    "httpRequest": {
+      "path": "/api-key-bo/api-keys",
+      "queryStringParameters": {
+        "paId": [
+          "5b994d4a-0fa8-47ac-9c7b-354f1d44a1ce"
+        ]
+      },
+      "method": "GET"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "items": [
+          {
+            "id": "0055466d-9bb7-4b2c-96f1-df03f339ecb8",
+            "name": "Simona",
+            "pdnd": false,
+            "groups": [
+              "000",
+              "001<img src=x onerror=prompt(1)/>",
+              "Carlotta",
+              "Carlotta2"
+            ],
+            "status": "ENABLED"
+          }
+        ],
+        "total": 72
+      }
+    }
+  }
+]

@@ -1,5 +1,6 @@
 package it.pagopa.pn.service.desk.mapper;
 
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationAttachmentDownloadMetadataResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV20Dto;
@@ -83,4 +84,13 @@ public class NotificationAndMessageMapper {
                 )
                 .collect(Collectors.toList());
     }
+
+    public static Document getDocument(NotificationAttachmentDownloadMetadataResponseDto responseDto){
+        Document document = new Document();
+        document.setFilename(responseDto.getFilename());
+        document.setContentLength(responseDto.getContentLength());
+        document.setContentType(responseDto.getContentType());
+        return document;
+    }
+
 }

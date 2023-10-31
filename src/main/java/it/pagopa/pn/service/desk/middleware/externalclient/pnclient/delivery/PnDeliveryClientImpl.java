@@ -1,6 +1,7 @@
 package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery;
 
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.api.InternalOnlyApi;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationAttachmentDownloadMetadataResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationDto;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,11 @@ public class PnDeliveryClientImpl implements PnDeliveryClient{
     @Override
     public Mono<NotificationSearchResponseDto> searchNotificationsPrivate(OffsetDateTime startDate, OffsetDateTime endDate, String recipientId, String senderId, Integer size, String nextPagesKey) {
         return internalOnlyApi.searchNotificationsPrivate(startDate, endDate, recipientId, null, senderId, null, size, nextPagesKey);
+    }
+
+    @Override
+    public Mono<NotificationAttachmentDownloadMetadataResponseDto> getReceivedNotificationDocumentPrivate(String iun, Integer docIdx, String recipientInternalId, String mandateId) {
+        return internalOnlyApi.getReceivedNotificationDocumentPrivate(iun, docIdx, recipientInternalId, mandateId);
     }
 
 }

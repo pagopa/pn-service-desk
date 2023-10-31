@@ -37,7 +37,8 @@ public enum ExceptionTypeEnum {
     ERROR_ON_ADDRESS_MANAGER_CLIENT("ERROR_ON_ADDRESS_MANAGER_CLIENT", "Error in Address Manager failed service"),
     IUNS_ALREADY_IN_PROGRESS("IUNS_ALREADY_IN_PROGRESS","Iuns already in progress"),
     ERROR_ON_USER_ATTRIBUTES_CLIENT("ERROR_ON_USER_ATTRIBUTES_CLIENT", "Error in User attribute failed service"),
-    ERROR_ON_MANDATE_CLIENT("ERROR_ON_MANDATE_CLIENT", "Error in Mandate failed service");
+    ERROR_ON_MANDATE_CLIENT("ERROR_ON_MANDATE_CLIENT", "Error in Mandate failed service"),
+    ERROR_ON_KEYS_MANAGER_CLIENT("ERROR_ON_KEYS_MANAGER_CLIENT","Error in Keys Manager failed service");
 
     private final String title;
     private final String message;

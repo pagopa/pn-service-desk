@@ -7,7 +7,6 @@ import reactor.core.publisher.Mono;
 
 public interface PnAddressManagerClient {
 
-
     Mono<DeduplicatesResponseDto> deduplicates(PnServiceDeskAddress address);
 
 }

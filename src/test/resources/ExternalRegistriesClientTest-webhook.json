@@ -1,0 +1,20 @@
+[
+  {
+    "httpRequest": {
+      "path": "/ext-registry/pa/v1/activated-on-pn",
+      "method": "GET"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "id": "4db741cf-17e1-4751-9b7b-7675ccca472b",
+        "name": "Agenzia delle Entrate"
+      }
+    }
+  }
+]
