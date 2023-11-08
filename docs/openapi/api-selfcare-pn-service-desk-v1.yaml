@@ -308,6 +308,8 @@ paths:
         - $ref: '#/components/parameters/searchDelegateInternalId'
         - $ref: '#/components/parameters/searchPageSize'
         - $ref: '#/components/parameters/searchNextPagesKey'
+        - $ref: '#/components/parameters/queryStartDate'
+        - $ref: '#/components/parameters/queryEndDate'
       responses:
         '200':
           description: OK
