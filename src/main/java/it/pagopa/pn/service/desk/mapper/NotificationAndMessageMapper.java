@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 
 public class NotificationAndMessageMapper {
 
+    private NotificationAndMessageMapper(){}
+
     private static final ModelMapper modelMapper = new ModelMapper();
 
     public static NotificationResponse getNotification (NotificationSearchRowDto notificationSearchRowDto, List<TimelineElementV20Dto> filteredElements){
