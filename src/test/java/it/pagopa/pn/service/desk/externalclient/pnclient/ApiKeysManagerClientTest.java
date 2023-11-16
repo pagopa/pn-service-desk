@@ -22,7 +22,7 @@ public class ApiKeysManagerClientTest extends BaseTest.WithMockServer{
     private final ResponseApiKeysDto expected = new ResponseApiKeysDto();
 
     @BeforeEach
-    public void init() {
+    public void setUp() {
         List<ApiKeyRowDto> apiKeyRowDtoList = new ArrayList<>();
 
         ApiKeyRowDto apiKeyRowDto = new ApiKeyRowDto();
