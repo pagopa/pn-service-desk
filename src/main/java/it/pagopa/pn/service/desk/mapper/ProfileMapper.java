@@ -53,7 +53,6 @@ public class ProfileMapper {
                 mandate.setRecipientType(RecipientType.fromValue(internalMandateDto.getDelegator().split("-")[0]));
                 mandate.setDelegateInternalId(internalMandateDto.getDelegate());
                 delegatorMandates.add(mandate);
-
             });
         }
         response.setDelegatorMandates(delegatorMandates);

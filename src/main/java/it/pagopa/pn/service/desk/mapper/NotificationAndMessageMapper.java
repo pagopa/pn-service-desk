@@ -10,7 +10,6 @@ import org.modelmapper.ModelMapper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class NotificationAndMessageMapper {
 
@@ -84,7 +83,7 @@ public class NotificationAndMessageMapper {
                         element.getCategory().equals(TimelineElementCategoryV20Dto.AAR_GENERATION) ||
                         element.getCategory().equals(TimelineElementCategoryV20Dto.NOT_HANDLED)
                 )
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public static Document getDocument(NotificationAttachmentDownloadMetadataResponseDto responseDto){
