@@ -4,6 +4,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pnmandate.v1.dto.Int
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnuserattributes.v1.dto.CourtesyDigitalAddressDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnuserattributes.v1.dto.LegalDigitalAddressDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
+import org.springframework.util.CollectionUtils;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -11,10 +12,11 @@ import java.util.List;
 
 public class ProfileMapper {
 
-    public static ProfileResponse getAddress (List<LegalDigitalAddressDto> legalDigitalAddress, List<CourtesyDigitalAddressDto> courtesyDigitalAddress, ProfileResponse response){
+    private ProfileMapper(){}
 
+    public static ProfileResponse getAddress (List<LegalDigitalAddressDto> legalDigitalAddress, List<CourtesyDigitalAddressDto> courtesyDigitalAddress, ProfileResponse response){
         List<Address> addressList = new ArrayList<>();
-        if (!legalDigitalAddress.isEmpty()){
+        if (!CollectionUtils.isEmpty(legalDigitalAddress)){
             legalDigitalAddress.forEach(legalDigitalAddressDto -> {
                 Address legalAddress = new Address();
                 legalAddress.setLegalAddressType(LegalAddressType.fromValue(legalDigitalAddressDto.getAddressType().getValue()));
@@ -23,7 +25,7 @@ public class ProfileMapper {
                 addressList.add(legalAddress);
             });
         }
-        if (!courtesyDigitalAddress.isEmpty()){
+        if (!CollectionUtils.isEmpty(courtesyDigitalAddress)){
             courtesyDigitalAddress.forEach(courtesyDigitalAddressDto -> {
                 Address courtesyAddress = new Address();
                 courtesyAddress.setCourtesyAddressType(CourtesyAddressType.fromValue(courtesyDigitalAddressDto.getAddressType().getValue()));
@@ -34,7 +36,6 @@ public class ProfileMapper {
         }
 
         response.setUserAddresses(addressList);
-
         return response;
     }
 
@@ -52,7 +53,6 @@ public class ProfileMapper {
                 mandate.setRecipientType(RecipientType.fromValue(internalMandateDto.getDelegator().split("-")[0]));
                 mandate.setDelegateInternalId(internalMandateDto.getDelegate());
                 delegatorMandates.add(mandate);
-
             });
         }
         response.setDelegatorMandates(delegatorMandates);
@@ -66,7 +66,6 @@ public class ProfileMapper {
                 mandate.setDelegatorInternalId(internalMandateDto.getDelegate());
                 mandate.setRecipientType(RecipientType.fromValue(internalMandateDto.getDelegator().split("-")[0]));
                 delegateMandates.add(mandate);
-
             });
         }
         response.setDelegateMandates(delegateMandates);
