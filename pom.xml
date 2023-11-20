@@ -228,15 +228,15 @@
 						</configuration>
 					</execution>
 
-					<!-- OPEN API SELFCARE PN-SERVICE_DESK-->
+					<!-- OPEN API CRUSCOTTO ASSISTENZA PN-SERVICE_DESK-->
 					<execution>
-						<id>api-selfcare-pn-service-desk-v1</id>
+						<id>api-cruscotto-assistenza-pn-service-desk-v1</id>
 						<goals>
 							<goal>generate</goal>
 						</goals>
 						<phase>process-resources</phase>
 						<configuration>
-							<inputSpec>${project.basedir}/docs/openapi/api-selfcare-pn-service-desk-v1.yaml</inputSpec>
+							<inputSpec>${project.basedir}/docs/openapi/api-cruscotto-assistenza-pn-service-desk-v1.yaml</inputSpec>
 							<generatorName>spring</generatorName>
 							<library>spring-boot</library>
 							<modelNameSuffix />
@@ -324,7 +324,7 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/7da4eaca9724a7b8a1696cb0c9efe537f23e8efb/docs/openapi/api-private.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/7291fd82572773eeca9793e7b464b786609b11f8/docs/openapi/api-private.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>

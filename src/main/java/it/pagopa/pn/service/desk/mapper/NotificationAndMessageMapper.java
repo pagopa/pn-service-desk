@@ -2,6 +2,7 @@ package it.pagopa.pn.service.desk.mapper;
 
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationAttachmentDownloadMetadataResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV21Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV20Dto;
@@ -94,4 +95,49 @@ public class NotificationAndMessageMapper {
         return document;
     }
 
+    public static NotificationDetailResponse getNotificationDetail(SentNotificationV21Dto SentNotificationV21Dto) {
+        NotificationDetailResponse notificationDetailResponse = new NotificationDetailResponse();
+        notificationDetailResponse.setPaProtocolNumber(SentNotificationV21Dto.getPaProtocolNumber());
+        notificationDetailResponse.setSubject(SentNotificationV21Dto.getSubject());
+        notificationDetailResponse.setAbstract(SentNotificationV21Dto.getAbstract());
+        notificationDetailResponse.setIsMultiRecipients(!SentNotificationV21Dto.getRecipients().isEmpty());
+        if(!SentNotificationV21Dto.getRecipients().isEmpty()){
+            notificationDetailResponse.setHasPayments(!SentNotificationV21Dto.getRecipients().get(0).getPayments().isEmpty());
+        }
+        notificationDetailResponse.setAmount(SentNotificationV21Dto.getAmount());
+        notificationDetailResponse.setHasDocuments(!SentNotificationV21Dto.getDocuments().isEmpty());
+        notificationDetailResponse.setPhysicalCommunicationType(NotificationDetailResponse.PhysicalCommunicationTypeEnum
+                .fromValue(SentNotificationV21Dto.getPhysicalCommunicationType().getValue()));
+        notificationDetailResponse.setSenderDenomination(SentNotificationV21Dto.getSenderDenomination());
+        notificationDetailResponse.setSenderTaxId(SentNotificationV21Dto.getSenderTaxId());
+        notificationDetailResponse.setSentAt(SentNotificationV21Dto.getSentAt());
+        notificationDetailResponse.setPaymentExpirationDate(SentNotificationV21Dto.getPaymentExpirationDate());
+        return notificationDetailResponse;
+    }
+
+    public static NotificationResponse getNotificationResponse(NotificationSearchRowDto notificationSearchRowDto, NotificationHistoryResponseDto notificationHistoryResponseDto) {
+        List<CourtesyMessage> courtesyMessages = new ArrayList<>();
+        if (notificationHistoryResponseDto.getTimeline() != null) {
+            notificationHistoryResponseDto.getTimeline().forEach(timelineElementV20Dto -> {
+                courtesyMessages.add(NotificationAndMessageMapper.getCourtesyMessage(timelineElementV20Dto));
+            });
+        }
+        NotificationResponse notificationResponse = new NotificationResponse();
+        notificationResponse.setIun(notificationSearchRowDto.getIun());
+        notificationResponse.setSender(notificationSearchRowDto.getSender());
+        notificationResponse.setSubject(notificationSearchRowDto.getSubject());
+        notificationResponse.setIunStatus(IunStatus.fromValue(notificationSearchRowDto.getNotificationStatus().getValue()));
+        notificationResponse.setCourtesyMessages(courtesyMessages);
+        notificationResponse.setSentAt(notificationSearchRowDto.getSentAt());
+        return notificationResponse;
+    }
+
+    public static CourtesyMessage getCourtesyMessage(TimelineElementV20Dto timelineElementV20Dto) {
+        CourtesyMessage courtesyMessage = new CourtesyMessage();
+        if (timelineElementV20Dto.getDetails() != null) {
+            courtesyMessage.setChannel(CourtesyChannelType.fromValue(timelineElementV20Dto.getDetails().getDigitalAddress().getType()));
+            courtesyMessage.setSentTimestamp(timelineElementV20Dto.getDetails().getSendDate());
+        }
+        return courtesyMessage;
+    }
 }

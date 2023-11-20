@@ -1,7 +1,7 @@
 package it.pagopa.pn.service.desk.externalclient.pnclient;
 
 import it.pagopa.pn.service.desk.config.BaseTest;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV21Dto;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
 
     @Test
     void getSentNotificationPrivate(){
-        SentNotificationDto sentNotificationDto = this.pnDeliveryClient.getSentNotificationPrivate("1234").block();
+        SentNotificationV21Dto sentNotificationDto = this.pnDeliveryClient.getSentNotificationPrivate("1234").block();
         Assertions.assertNotNull(sentNotificationDto);
     }
 }

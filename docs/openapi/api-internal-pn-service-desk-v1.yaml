@@ -48,7 +48,7 @@ paths:
       tags:
         - Notification
       parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
       requestBody:
         content:
           application/json:
@@ -85,7 +85,7 @@ paths:
       tags:
         - Operation
       parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
       requestBody:
         content:
           application/json:
@@ -119,7 +119,7 @@ paths:
       tags:
         - Operation
       parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
         - name: operationId
           description: Indica l'id dell'operazione a cui associare il video
           in: path
@@ -166,7 +166,7 @@ paths:
       tags:
         - Operation
       parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
       requestBody:
         content:
           application/json:
@@ -191,26 +191,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-
-
-components:
-  parameters:
-    cxOperatorClientAuthFleet:
-      name: x-pagopa-pn-uid
-      in: header
-      description: User Identifier
-      required: true
-      schema:
-        type: string
-        # ASCII printable characters
-        pattern: ^[ -~]*$
-        minLength: 1
-        maxLength: 64
-  securitySchemes:
-    ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: x-api-key
 
 security:                 # ONLY EXTERNAL
   - ApiKeyAuth: [] # use the same name as under securitySchemes    # ONLY EXTERNAL

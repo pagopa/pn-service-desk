@@ -144,6 +144,7 @@ components:
         - EMAIL
         - SMS
         - APPIO
+        - PEC
 
     LegalChannelType:
       type: string

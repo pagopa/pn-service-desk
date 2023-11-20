@@ -1,11 +1,7 @@
 package it.pagopa.pn.service.desk.rest;
 
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.api.NotificationAndMessageApi;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.DocumentsRequest;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.DocumentsResponse;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsRequest;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.TimelineResponse;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.service.NotificationAndMessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -41,4 +37,17 @@ public class NotificationAndMessageController implements NotificationAndMessageA
                         .map(documentsResponse -> ResponseEntity.status(HttpStatus.OK).body(documentsResponse)));
 
     }
+
+    @Override
+    public Mono<ResponseEntity<NotificationDetailResponse>> getNotificationFromIUN(String xPagopaPnUid, String iun, ServerWebExchange exchange){
+        return notificationAndMessageService.getNotificationFromIUN(iun)
+                .map(notificationDetailResponse -> ResponseEntity.status(HttpStatus.OK).body(notificationDetailResponse));
+    }
+
+    @Override
+    public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, Integer size, String nextPagesKey, OffsetDateTime startDate, OffsetDateTime endDate,  final ServerWebExchange exchange){
+        return notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(xPagopaPnUid, mandateId, delegateInternalId, size, nextPagesKey, startDate, endDate)
+                .map(searchNotificationsResponseResponseEntity -> ResponseEntity.status(HttpStatus.OK).body(searchNotificationsResponseResponseEntity));
+    }
+
 }

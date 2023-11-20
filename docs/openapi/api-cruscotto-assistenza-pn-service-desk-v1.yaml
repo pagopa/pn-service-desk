@@ -42,7 +42,7 @@ paths:
       tags:
         - PA
       parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
       responses:
         '200':
           description: OK
@@ -71,11 +71,11 @@ paths:
       tags:
         - NotificationAndMessage
       parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
-        - $ref: '#/components/parameters/searchPageSize'
-        - $ref: '#/components/parameters/searchNextPagesKey'
-        - $ref: '#/components/parameters/queryStartDate'
-        - $ref: '#/components/parameters/queryEndDate'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchPageSize'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchNextPagesKey'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/queryStartDate'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/queryEndDate'
       requestBody:
         content:
           application/json:
@@ -109,7 +109,7 @@ paths:
       tags:
         - Profile
       parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
       requestBody:
         content:
           application/json:
@@ -177,7 +177,7 @@ paths:
       tags:
         - NotificationAndMessage
       parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
         - name: iun
           in: path
           required: true
@@ -217,7 +217,7 @@ paths:
       tags:
         - NotificationAndMessage
       parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
         - name: iun
           in: path
           required: true
@@ -257,7 +257,7 @@ paths:
       tags:
         - NotificationAndMessage
       parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
         - name: iun
           in: path
           required: true
@@ -303,13 +303,13 @@ paths:
       tags:
         - NotificationAndMessage
       parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
-        - $ref: '#/components/parameters/searchMandateId'
-        - $ref: '#/components/parameters/searchDelegateInternalId'
-        - $ref: '#/components/parameters/searchPageSize'
-        - $ref: '#/components/parameters/searchNextPagesKey'
-        - $ref: '#/components/parameters/queryStartDate'
-        - $ref: '#/components/parameters/queryEndDate'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchMandateId'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchDelegateInternalId'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchPageSize'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchNextPagesKey'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/queryStartDate'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/queryEndDate'
       responses:
         '200':
           description: OK
@@ -338,9 +338,9 @@ paths:
       tags:
         - PA
       parameters:
-        - $ref: '#/components/parameters/cxOperatorClientAuthFleet'
-        - $ref: '#/components/parameters/searchPageSize'
-        - $ref: '#/components/parameters/searchNextPagesKey'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchPageSize'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchNextPagesKey'
       requestBody:
         content:
           application/json:
@@ -365,87 +365,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
-
-components:
-  parameters:
-    cxOperatorClientAuthFleet:
-      name: x-pagopa-pn-uid
-      in: header
-      description: User Identifier
-      required: true
-      schema:
-        type: string
-        # ASCII printable characters
-        pattern: ^[ -~]*$
-        minLength: 1
-        maxLength: 64
-
-    searchMandateId:
-      name: mandateId
-      description: >-
-        mandate internal id
-      in: query
-      required: true
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 64
-
-    searchDelegateInternalId:
-      name: delegateInternalId
-      description: >-
-        delegate internal id
-      in: query
-      required: true
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 64
-
-    searchPageSize:
-      name: size
-      description: >-
-        dimensione della pagina di risultati
-      in: query
-      required: false
-      schema:
-        type: integer
-        format: int32
-        maximum: 50
-        minimum: 1
-
-    searchNextPagesKey:
-      name: nextPagesKey
-      description: >-
-        Chiave indicante la pagina di risultati, da specificare solo se si vuole una pagina
-        diversa dalla prima.
-      in: query
-      required: false
-      schema:
-        type: string
-        maxLength: 50
-
-    queryStartDate:
-      name: startDate
-      in: query
-      required: false
-      schema:
-        type: string
-        format: date-time
-
-    queryEndDate:
-      name: endDate
-      in: query
-      required: false
-      schema:
-        type: string
-        format: date-time
-
-  securitySchemes:
-    ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: x-api-key
 
 security:
   - ApiKeyAuth: [] # use the same name as under securitySchemes
