@@ -1,0 +1,80 @@
+components:
+  parameters:
+    cxOperatorClientAuthFleet:
+      name: x-pagopa-pn-uid
+      in: header
+      description: User Identifier
+      required: true
+      schema:
+        type: string
+        # ASCII printable characters
+        pattern: ^[ -~]*$
+        minLength: 1
+        maxLength: 64
+
+    searchMandateId:
+      name: mandateId
+      description: >-
+        mandate internal id
+      in: query
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+
+    searchDelegateInternalId:
+      name: delegateInternalId
+      description: >-
+        delegate internal id
+      in: query
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+
+    searchPageSize:
+      name: size
+      description: >-
+        dimensione della pagina di risultati
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        maximum: 50
+        minimum: 1
+
+    searchNextPagesKey:
+      name: nextPagesKey
+      description: >-
+        Chiave indicante la pagina di risultati, da specificare solo se si vuole una pagina
+        diversa dalla prima.
+      in: query
+      required: false
+      schema:
+        type: string
+        maxLength: 50
+
+    queryStartDate:
+      name: startDate
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+
+    queryEndDate:
+      name: endDate
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key

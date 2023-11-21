@@ -1,0 +1,370 @@
+openapi: 3.0.3
+info:
+  title: PN Service-Desk BE Microservice
+  description: Documentation APIs v1.0 di Service Desk
+  termsOfService: https://termofservice.it
+  x-api-id: api-pn-service-desk
+  x-summary: 'Service Desk: API B2B per Cruscotto Assistenza'
+  version: '1.0.0'
+  contact:
+    email: pn@pagopa.it
+    name: PagoPA
+  license:
+    name: Licenza di PN
+    url: 'https://da-definire/'
+servers:
+  - url: https://api.pn.pagopa.it
+    description: Generated server url
+tags:
+  - name: HealthCheck
+    description: >-
+      Invocations to check the status of the microservice
+  - name: NotificationAndMessage
+    description: >-
+      Invocations to retrieve user notification and courtesy messages
+  - name: PA
+    description: >-
+      Invocations for PAs
+  - name: Profile
+    description: >-
+      Invocations to user profile
+  - name: ApiKeys
+    description: >-
+      Retrieve api keys for a given paId
+
+
+paths:
+  '/service-desk/pa/activated-on-pn':
+    get:
+      operationId: getListOfOnboardedPA
+      summary: List all PA that use PN
+      description: List all PA that use PN
+      tags:
+        - PA
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/PaSummariesResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+
+  '/service-desk/notifications':
+    post:
+      operationId: searchNotificationsFromTaxId
+      summary: Retrieve all notifications sent to recipient
+      description: Retrieve all notifications sent to recipient
+      tags:
+        - NotificationAndMessage
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchPageSize'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchNextPagesKey'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/queryStartDate'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/queryEndDate'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchNotificationsRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchNotificationsResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+
+  '/service-desk/profile':
+    post:
+      operationId: getProfileFromTaxId
+      summary: Retrieve profile of recipient
+      description: Retrieve profile of recipient
+      tags:
+        - Profile
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/ProfileRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/ProfileResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+
+  '/service-desk/api-keys':
+    get:
+      operationId: getApiKeys
+      summary: Retrieve api keys for a given paId
+      description: Retrieve api keys for a given paId
+      tags:
+        - ApiKeys
+      parameters:
+        - name: paId
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 50
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/ResponseApiKeys'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+
+  '/service-desk/notifications/{iun}':
+    get:
+      operationId: getNotificationFromIUN
+      summary: Retrieve notification detail by IUN
+      description: Retrieve notification detail by IUN
+      tags:
+        - NotificationAndMessage
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - name: iun
+          in: path
+          required: true
+          schema:
+            $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/IUN'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/NotificationDetailResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+
+  '/service-desk/notifications/{iun}/timeline':
+    get:
+      operationId: getTimelineOfIUN
+      summary: Retrieve entire timeline of IUN
+      description: Retrieve entire timeline of IUN
+      tags:
+        - NotificationAndMessage
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - name: iun
+          in: path
+          required: true
+          schema:
+            $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/IUN'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/TimelineResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '404':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+
+  '/service-desk/notifications/{iun}/documents':
+    post:
+      operationId: getDocumentsOfIUN
+      summary: Retrieve all documents of IUN
+      description: Retrieve all documents of IUN
+      tags:
+        - NotificationAndMessage
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - name: iun
+          in: path
+          required: true
+          schema:
+            $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/IUN'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/DocumentsRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/DocumentsResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '404':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+
+
+  '/service-desk/notifications/delegate':
+    get:
+      operationId: searchNotificationsAsDelegateFromInternalId
+      summary: Retrieve all notifications sent to recipient as delegate
+      description: Retrieve all notifications sent to recipient as delegate
+      tags:
+        - NotificationAndMessage
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchMandateId'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchDelegateInternalId'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchPageSize'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchNextPagesKey'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/queryStartDate'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/queryEndDate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchNotificationsResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+
+  '/service-desk/pa/notifications':
+    post:
+      operationId: searchNotificationsFromSenderId
+      summary: Retrieve all notifications sent from PA
+      description: Retrieve all notifications sent from PA
+      tags:
+        - PA
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchPageSize'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchNextPagesKey'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/PaNotificationsRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchNotificationsResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+
+security:
+  - ApiKeyAuth: [] # use the same name as under securitySchemes

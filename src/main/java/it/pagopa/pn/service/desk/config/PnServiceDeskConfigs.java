@@ -19,6 +19,10 @@ public class PnServiceDeskConfigs {
     private String deliveryPushBasePath;
     private String deliveryBasePath;
     private String paperChannelBasePath;
+    private String externalRegistriesBasePath;
+    private String userAttributesBasePath;
+    private String mandateBasePath;
+    private String apiKeyManagerBasePath;
     private String safeStorageCxId;
     private String paperChannelCxId;
     private String safeStorageDocumentType;

@@ -1,0 +1,80 @@
+[
+  {
+    "httpRequest": {
+      "path": "/mandate-private/api/v1/mandates-by-internaldelegator/PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+      "method": "GET"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": [
+        {
+          "mandateId": "49258827-a23d-4712-a46f-e23a67b4150f",
+          "delegator": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+          "delegate": "PF-37654561-446a-4c88-b328-6699a8322b33",
+          "visibilityIds": [
+            "026e8c72-7944-4dcd-8668-f596447fec6d"
+          ],
+          "datefrom": "2023-06-18T22:00:00Z",
+          "dateto": "2023-10-18T21:59:59Z"
+        },
+        {
+          "mandateId": "64270e52-b5d5-4cf3-bbe2-15e8ac750107",
+          "delegator": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+          "delegate": "PG-8f409ca6-fc3d-46c3-8da7-69cd9a1e9e62",
+          "visibilityIds": [
+            "026e8c72-7944-4dcd-8668-f596447fec6d"
+          ],
+          "datefrom": "2023-01-10T23:00:00Z",
+          "dateto": "2026-05-12T21:59:59Z",
+          "groups": [
+            "645cf38b2030541ce50153b5"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/mandate-private/api/v1/mandates-by-internaldelegate/PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+      "method": "GET"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": [
+        {
+          "mandateId": "49258827-a23d-4712-a46f-e23a67b4150f",
+          "delegator": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+          "delegate": "PF-37654561-446a-4c88-b328-6699a8322b33",
+          "visibilityIds": [
+            "026e8c72-7944-4dcd-8668-f596447fec6d"
+          ],
+          "datefrom": "2023-06-18T22:00:00Z",
+          "dateto": "2023-10-18T21:59:59Z"
+        },
+        {
+          "mandateId": "64270e52-b5d5-4cf3-bbe2-15e8ac750107",
+          "delegator": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+          "delegate": "PG-8f409ca6-fc3d-46c3-8da7-69cd9a1e9e62",
+          "visibilityIds": [
+            "026e8c72-7944-4dcd-8668-f596447fec6d"
+          ],
+          "datefrom": "2023-01-10T23:00:00Z",
+          "dateto": "2026-05-12T21:59:59Z",
+          "groups": [
+            "645cf38b2030541ce50153b5"
+          ]
+        }
+      ]
+    }
+  }
+]

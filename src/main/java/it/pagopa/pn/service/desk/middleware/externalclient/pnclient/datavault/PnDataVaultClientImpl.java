@@ -28,9 +28,14 @@ public class PnDataVaultClientImpl implements PnDataVaultClient {
 
     @Override
     public Mono<String> anonymized(String data) {
+        return anonymized(data, RecipientTypeDto.PF.toString());
+    }
+
+    @Override
+    public Mono<String> anonymized(String data, String recipientType) {
         String pnDataVaultDescription = "Data Vault encode";
         log.logInvokingExternalService(PnLogger.EXTERNAL_SERVICES.PN_DATA_VAULT, pnDataVaultDescription);
-        return this.recipientsApi.ensureRecipientByExternalId(RecipientTypeDto.PF, data)
+        return this.recipientsApi.ensureRecipientByExternalId(RecipientTypeDto.fromValue(recipientType), data)
                 .onErrorResume(exception -> {
                     log.error("errorReason = {}, An error occurred while calling the service inquiry api", exception.getMessage());
                     return Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR.getMessage()));

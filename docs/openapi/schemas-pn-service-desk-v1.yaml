@@ -1,0 +1,1649 @@
+components:
+  schemas:
+    SelfCarePaId:
+      title: The PA id used by self care
+      description: An unique ID that identify a Public Administration
+      type: string
+      minLength: 1
+      maxLength: 50
+      pattern: ^[ -~ ]*$
+
+    PaSummary:
+      title: PA in short
+      description: PA with minimal information
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          $ref: '#/components/schemas/SelfCarePaId'
+        name:
+          type: string
+
+    PaSummariesResponse:
+      title: Brief list of PAs
+      description: Contains a list of PA with minimal information
+      type: array
+      items:
+        $ref: '#/components/schemas/PaSummary'
+
+    SearchNotificationsRequest:
+      required:
+        - taxId
+        - recipientType
+      type: object
+      properties:
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude"
+        recipientType:
+          $ref: '#/components/schemas/RecipientType'
+      additionalProperties: false
+
+    CourtesyMessage:
+      type: object
+      required:
+        - sentTimestamp
+        - channel
+      properties:
+        sentTimestamp:
+          type: string
+          format: date-time
+          description: >-
+            Courtesy message UTC sent timestamp
+        channel:
+          $ref: '#/components/schemas/CourtesyChannelType'
+
+
+    ProfileRequest:
+      required:
+        - taxId
+        - recipientType
+      type: object
+      properties:
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude"
+        recipientType:
+          $ref: '#/components/schemas/RecipientType'
+      additionalProperties: false
+
+    ProfileResponse:
+      type: object
+      required:
+        - userAddresses
+      properties:
+        userAddresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        delegatorMandates:
+          type: array
+          description: elendo delle deleghe assegnate a terzi
+          items:
+            $ref: '#/components/schemas/Mandate'
+        delegateMandates:
+          type: array
+          description: Elenco delle deleghe ricevute da terzi
+          items:
+            $ref: '#/components/schemas/Mandate'
+
+    Address:
+      type: object
+      allOf:
+        - type: object
+          required:
+            - courtesyAddressType
+            - courtesyChannelType
+            - courtesyValue
+            - legalAddressType
+            - legalChannelType
+            - legalValue
+          properties:
+            courtesyAddressType:
+              $ref: '#/components/schemas/CourtesyAddressType'
+            courtesyValue:
+              type: string
+              x-field-extra-annotation: "@lombok.ToString.Exclude"
+              example: 'nome.utente@server.it'
+            courtesyChannelType:
+              $ref: '#/components/schemas/CourtesyChannelType'
+            legalAddressType:
+              $ref: '#/components/schemas/LegalAddressType'
+            legalValue:
+              type: string
+              x-field-extra-annotation: "@lombok.ToString.Exclude"
+              example: 'nome.utente@server.it'
+            legalChannelType:
+              $ref: '#/components/schemas/LegalChannelType'
+
+    RecipientType:
+      title: 'Tipo del destinatario: PF / PG'
+      description: >-
+        ### Tipo del destinatario
+          - PF: Persona Fisica
+          - PG: Persona Giuridica
+      type: string
+      enum:
+        - PF
+        - PG
+
+    CourtesyAddressType:
+      type: string
+      description: Valore addresstype per courtesy
+      enum:
+        - COURTESY
+
+    CourtesyChannelType:
+      type: string
+      description: Communication Channel types __without__ legal value
+      enum:
+        - EMAIL
+        - SMS
+        - APPIO
+        - PEC
+
+    LegalChannelType:
+      type: string
+      description: Communication Channel types __with__ legal value
+      enum:
+        - PEC
+        - APPIO
+
+    LegalAddressType:
+      type: string
+      description: Valore addresstype per legal
+      enum:
+        - LEGAL
+
+    Mandate:
+      type: object
+      properties:
+        mandateId:
+          description: internal identifier of mandate
+          type: string
+        taxId:
+          description: taxId of delegate in case of delegateMandates array or delegator in case of delegatorMandates array
+          type: string
+          x-field-extra-annotation: "@lombok.ToString.Exclude"
+        recipientType:
+          $ref: '#/components/schemas/RecipientType'
+        dateFrom:
+          description: mandate start date (ISO 8601 format)
+          type: string
+          format: date-time
+        dateTo:
+          description: mandate end date (ISO 8601 format)
+          type: string
+          format: date-time
+        delegatorInternalId:
+          description: delegator internalId
+          type: string
+        delegateInternalId:
+          description: delegate internalId
+          type: string
+
+    NotificationsRequest:
+      required:
+        - taxId
+        - recipientType
+      type: object
+      properties:
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude"
+        recipientType:
+          $ref: '#/components/schemas/RecipientType'
+      additionalProperties: false
+
+    SearchNotificationsResponse:
+      description: Get all Notifications response
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationResponse'
+        moreResult:
+          description: Indica se sono presenti ulteriori pagine di risultati
+          type: boolean
+        nextPagesKey:
+          description: >-
+            Elenco, non esaustivo, delle chiavi da usare per richiedere le
+            pagine di risultati successive a quella corrente. <br/>
+            Valorizzato solo se il campo __moreResult__ ha valore __true__.
+          type: array
+          items:
+            type: string
+      additionalProperties: false
+
+    NotificationResponse:
+      description: single notification
+      type: object
+      properties:
+        iun:
+          $ref: '#/components/schemas/IUN'
+        sender:
+          type: string
+          description: Denominazione della PA che ha inviato l'atto.
+        sentAt:
+          type: string
+          description: Data spedizione notifica
+          format: date-time
+        subject:
+          type: string
+          description: Oggetto della notifica
+        iunStatus:
+          $ref: '#/components/schemas/IunStatus'
+        courtesyMessages:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourtesyMessage'
+
+    IUN:
+      description: Identificativo Univoco Notifica
+      type: string
+      minLength: 25
+      maxLength: 25
+      pattern: ^[A-Z]{4}-[A-Z]{4}-[A-Z]{4}-[0-9]{6}-[A-Z]{1}-[0-9]{1}$
+
+    NotificationDetailResponse:
+      description: notification detail
+      type: object
+      required:
+        - paProtocolNumber
+        - subject
+        - recipients
+        - hasDocuments
+        - physicalCommunicationType
+        - senderDenomination
+        - senderTaxId
+        - sentAt
+        - hasPayments
+      properties:
+        paProtocolNumber:
+          description: >-
+            Numero di protocollo che la PA mittente assegna alla notifica stessa
+          type: string
+          # wide range of characters
+          pattern: ^.*$
+          maxLength: 256
+        subject:
+          type: string
+          description: titolo della notifica, NON inserire dati personali/sensibili
+          minLength: 10
+          maxLength: 134
+          # wide range of characters
+          pattern: ^.*$
+        abstract:
+          type: string
+          description: descrizione sintetica della notifica, NON inserire dati personali/sensibili
+          # wide range of characters
+          pattern: ^.*$
+          maxLength: 1024
+        isMultiRecipients:
+          type: boolean
+          description: Indica la presenza di altri destinatari
+        hasDocuments:
+          type: boolean
+          description: Indica la presenza di documenti
+        physicalCommunicationType:
+          type: string
+          description: Tipologia comunicazione fisica
+          enum:
+            - AR_REGISTERED_LETTER
+            - REGISTERED_LETTER_890
+        senderDenomination:
+          $ref: '#/components/schemas/Denomination'
+        senderTaxId:
+          $ref: '#/components/schemas/PaTaxId'
+        amount:
+          type: integer
+          format: int32
+          description: Importo della notifica in eurocent
+        paymentExpirationDate:
+          type: string
+          minLength: 10
+          maxLength: 10
+          pattern: "^([0-9]{4})-(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])$"
+          description: Data di scadenza del pagamento nel formato YYYY-MM-DD riferito all'Italia
+          # gestito come stringa e pattern perché con format: date open-api-generator non lo gestiva correttamente
+        sentAt:
+          type: string
+          description: Momento di ricezione della notifica da parte di PN
+          format: date-time
+        hasPayments:
+          type: boolean
+          description: Indica la presenza di avvisi di pagamento e/o F24
+
+    Denomination:
+      description: Denominazione ente o persona fisica / ragione sociale
+      type: string
+      x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+      minLength: 1
+      maxLength: 80
+      pattern: ^.*$
+
+    TaxId:
+      description: C.F. persona fisica o persona giuridica (Partita iva)
+      type: string
+      x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+      minLength: 11
+      maxLength: 16
+      pattern: ^([A-Z]{6}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{3}[A-Z]{1})|([0-9]{11})$
+
+    NotificationPhysicalAddress:
+      description: Indirizzo fisico
+      type: object
+      required:
+        - address
+        - municipality
+      properties:
+        at:
+          type: string
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          description: Campo "presso" dell'indirizzo
+          # wide range of characters
+          pattern: ^.*$
+          maxLength: 256
+        address:
+          type: string
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          description: Indirizzo del domicilio fisico
+          # wide range of characters
+          pattern: ^.*$
+          minLength: 2
+          maxLength: 1024
+        addressDetails:
+          type: string
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          description: Seconda riga dell'indirizzo fisico
+          # wide range of characters
+          pattern: ^.*$
+          maxLength: 1024
+        zip:
+          type: string
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          description: Codice di avviamento postale. In caso di invio estero diventa facoltativo
+          minLength: 0
+          maxLength: 15
+          pattern: ^(\w|\ |\-)*$
+        municipality:
+          type: string
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          description: Comune
+          # wide range of characters
+          pattern: ^.*$
+          minLength: 2
+          maxLength: 256
+        municipalityDetails:
+          type: string
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          description: Frazione o località
+          # wide range of characters
+          pattern: ^.*$
+          maxLength: 256
+        province:
+          type: string
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          description: Provincia
+          # wide range of characters
+          pattern: ^.*$
+          maxLength: 256
+        foreignState:
+          type: string
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          description: Denominazione paese estero
+          # wide range of characters
+          pattern: ^.*$
+          maxLength: 256
+
+    PaTaxId:
+      description: Payment PA fiscal code
+      example: '77777777777'
+      type: string
+      maxLength: 11
+      minLength: 11
+      pattern: '^\d+$'
+
+    TimelineResponse:
+      type: object
+      required:
+        - iunStatus
+        - timeline
+      description: Timeline IUN detail
+      properties:
+        iunStatus:
+          $ref: '#/components/schemas/IunStatus'
+        timeline:
+          description: >-
+            elenco dettagliato di tutto ciò che è accaduto durante il processo di notifica
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineElement'
+
+    TimelineElement:
+      type: object
+      required:
+        - timestamp
+        - category
+        - detail
+      properties:
+        timestamp:
+          type: string
+          description: Momento in cui avviene l'evento descritto in questo elemento
+            di timeline
+          format: date-time
+        category:
+          $ref: '#/components/schemas/TimelineElementCategory'
+        detail:
+          $ref: '#/components/schemas/TimelineElementDetail'
+
+    TimelineElementCategory:
+      type: string
+      description: >
+        stato di avanzamento del processo di notifica:`
+          * `SENDER_ACK_CREATION_REQUEST` - Invio della richiesta di creazione dell'atto opponibile a terzi di presa in carico per il mittente a safe storage
+          * `VALIDATE_NORMALIZE_ADDRESSES_REQUEST` - Invio della richiesta di validazione e normalizzazione indirizzi fisici presenti nella richiesta di notifica
+          * `NORMALIZED_ADDRESS` - Salvataggio indirizzi normalizzati
+          * `REQUEST_ACCEPTED` - Richiesta di notifica accettata a seguito dei controlli di validazione
+          * `REQUEST_REFUSED` - Richiesta di notifica rifiutata per fallimento di validazione
+          * `SEND_COURTESY_MESSAGE` - Invio di un messaggio di cortesia
+          * `GET_ADDRESS` - Disponibilità dell’indirizzo specifico (domicilio digitale di piattaforma, domicilio digitale speciale, domicilio digitale generale, indirizzo fisico sulla notifica o sui registri nazionali)
+          * `PUBLIC_REGISTRY_CALL` - Richiesta ai registri pubblici per ottenere domicilio digitale generale o per ottenere indirizzo fisico da ANPR, da registro della imprese, da anagrafe tributaria.
+          * `PUBLIC_REGISTRY_RESPONSE` - Ricevuta la risposta dei registri pubblici
+          * `SCHEDULE_ANALOG_WORKFLOW` - Pianificazione del workflow per invio cartaceo
+          * `SCHEDULE_DIGITAL_WORKFLOW` -Pianificazione del workflow per invio digitale (PEC) del secondo tentativo in caso di fallimento del primo.
+          * `PREPARE_DIGITAL_DOMICILE` - Preparazione per l’invio dell’avviso digitale.Va a valutare la timeline per capire quale sarà il prossimo indirizzo da usare.
+          * `SEND_DIGITAL_DOMICILE` - Invio digitale dell’avviso di notifica
+          * `SEND_DIGITAL_PROGRESS` - Tentativo di Invio PEC ad un determinato indirizzo.
+          * `SEND_DIGITAL_FEEDBACK` - Ottenuto esito ad un invio digitale
+          * `SCHEDULE_REFINEMENT` - Pianificato il perfezionamento per decorrenza termini
+          * `REFINEMENT` - Perfezionamento per decorrenza termini
+          * `DIGITAL_DELIVERY_CREATION_REQUEST` - Invio della richiesta di creazione dell'atto opponibile a terzi di chiusura del workflow digitale a safe storage
+          * `DIGITAL_SUCCESS_WORKFLOW` - Completato con successo il workflow di invio digitale
+          * `DIGITAL_FAILURE_WORKFLOW` - Completato con fallimento il workflow di invio digitale: tutti i tentativi di invio ai domicili digitali sono falliti.
+          * `ANALOG_SUCCESS_WORKFLOW` - Completato con successo il workflow di invio cartaceo
+          * `ANALOG_FAILURE_WORKFLOW` - Completato con fallimento il workflow di invio cartaceo NOTA: se per tutti i destinatari si conclude il workflow con fallimento verrà scatenato l’evento COMPLETELY_UNREACHABLE
+          * `PREPARE_SIMPLE_REGISTERED_LETTER` - Invio richiesta di prepare (preparazione ad invio) raccomandata semplice a paperChannel
+          * `SEND_SIMPLE_REGISTERED_LETTER` - Invio di raccomandata semplice
+          * `SEND_SIMPLE_REGISTERED_LETTER_PROGRESS` - Ricezione informazioni intermedia relative ad una notificazione cartacea semplice
+          * `NOTIFICATION_VIEWED_CREATION_REQUEST` - Invio della richiesta di creazione dell'atto opponibile a terzi di presa visione a safe storage
+          * `NOTIFICATION_VIEWED` - Visualizzazione della notifica (perfeziona la notifica se non già perfezionata per decorrenza termini o da altro destinatario)
+          * `PREPARE_ANALOG_DOMICILE` - Invio richiesta di prepare (preparazione ad invio) cartaceo a paperChannel
+          * `SEND_ANALOG_DOMICILE` - Invio cartaceo dell’avviso di notifica
+          * `SEND_ANALOG_PROGRESS` - Ricezione informazioni intermedia relative ad una notificazione cartacea
+          * `SEND_ANALOG_FEEDBACK` - Ricezione esito dell'invio cartaceo
+          * `COMPLETELY_UNREACHABLE_CREATION_REQUEST` - Invio della richiesta di creazione dell'atto (simile a opponibile a terzi) di completamento con fallimento del workflow di invio cartaceo
+          * `COMPLETELY_UNREACHABLE` - Tutti i destinatari risultano irraggiungibili
+          * `AAR_CREATION_REQUEST` - Invio della richiesta di creazione dell'AAR (Avviso di Avvenuta Ricezione) a safe storage
+          * `AAR_GENERATION` - Generazione dell’AAR (Avviso di Avvenuta Ricezione)
+          * `PAYMENT` - Ricezione pagamento della notifica
+          * `NOT_HANDLED` - Per la sperimentazione l'invio analogico non è previsto, viene inserito tale elemento di timeline
+          * `PROBABLE_SCHEDULING_ANALOG_DATE` - Data probabile di inizio del flusso analogico
+          * `NOTIFICATION_CANCELLATION_REQUEST` - Richiesta di annullamento di una notifica
+          * `NOTIFICATION_CANCELLED` - Notifica annullata
+          * `PREPARE_ANALOG_DOMICILE_FAILURE` - Fallimento della richiesta di prepare (preparazione ad invio) cartaceo a paperChannel
+      enum:
+        - SENDER_ACK_CREATION_REQUEST
+        - VALIDATE_NORMALIZE_ADDRESSES_REQUEST
+        - NORMALIZED_ADDRESS
+        - REQUEST_ACCEPTED
+        - SEND_COURTESY_MESSAGE
+        - GET_ADDRESS
+        - PUBLIC_REGISTRY_CALL
+        - PUBLIC_REGISTRY_RESPONSE
+        - SCHEDULE_ANALOG_WORKFLOW
+        - SCHEDULE_DIGITAL_WORKFLOW
+        - PREPARE_DIGITAL_DOMICILE
+        - SEND_DIGITAL_DOMICILE
+        - SEND_DIGITAL_PROGRESS
+        - SEND_DIGITAL_FEEDBACK
+        - REFINEMENT
+        - SCHEDULE_REFINEMENT
+        - DIGITAL_DELIVERY_CREATION_REQUEST
+        - DIGITAL_SUCCESS_WORKFLOW
+        - DIGITAL_FAILURE_WORKFLOW
+        - ANALOG_SUCCESS_WORKFLOW
+        - ANALOG_FAILURE_WORKFLOW
+        - PREPARE_SIMPLE_REGISTERED_LETTER
+        - SEND_SIMPLE_REGISTERED_LETTER
+        - SEND_SIMPLE_REGISTERED_LETTER_PROGRESS
+        - NOTIFICATION_VIEWED_CREATION_REQUEST
+        - NOTIFICATION_VIEWED
+        - PREPARE_ANALOG_DOMICILE
+        - SEND_ANALOG_DOMICILE
+        - SEND_ANALOG_PROGRESS
+        - SEND_ANALOG_FEEDBACK
+        - PAYMENT
+        - COMPLETELY_UNREACHABLE
+        - COMPLETELY_UNREACHABLE_CREATION_REQUEST
+        - REQUEST_REFUSED
+        - AAR_CREATION_REQUEST
+        - AAR_GENERATION
+        - NOT_HANDLED
+        - PROBABLE_SCHEDULING_ANALOG_DATE
+        - NOTIFICATION_CANCELLATION_REQUEST
+        - NOTIFICATION_CANCELLED
+        - PREPARE_ANALOG_DOMICILE_FAILURE
+
+    TimelineElementDetail:
+      description: The event payload that will be different based on the event.
+      oneOf:
+        # REQUEST_ACCEPTED
+        - "$ref": "#/components/schemas/NotificationRequestAcceptedDetails"
+        # SEND_COURTESY_MESSAGE
+        - "$ref": "#/components/schemas/SendCourtesyMessageDetails"
+        # SCHEDULE_DIGITAL_WORKFLOW
+        - "$ref": "#/components/schemas/ScheduleDigitalWorkflowDetails"
+        # SEND_DIGITAL_DOMICILE
+        - "$ref": "#/components/schemas/SendDigitalDetails"
+        # SEND_DIGITAL_PROGRESS
+        - "$ref": "#/components/schemas/SendDigitalProgressDetails"
+        # SEND_DIGITAL_FEEDBACK
+        - "$ref": "#/components/schemas/SendDigitalFeedbackDetails"
+        # DIGITAL_SUCCESS_WORKFLOW
+        - "$ref": "#/components/schemas/DigitalSuccessWorkflowDetails"
+        # DIGITAL_FAILURE_WORKFLOW
+        - "$ref": "#/components/schemas/DigitalFailureWorkflowDetails"
+        # ANALOG_FAILURE_WORKFLOW
+        - "$ref": "#/components/schemas/AnalogFailureWorkflowDetails"
+        # SEND_SIMPLE_REGISTERED_LETTER
+        - "$ref": "#/components/schemas/SimpleRegisteredLetterDetails"
+        # NOTIFICATION_VIEWED
+        - "$ref": "#/components/schemas/NotificationViewedDetails"
+        # PREPARE_ANALOG_DOMICILE_FAILURE
+        - "$ref": "#/components/schemas/PrepareAnalogDomicileFailureDetails"
+        # SEND_ANALOG_DOMICILE
+        - "$ref": "#/components/schemas/SendAnalogDetails"
+        # SEND_ANALOG_PROGRESS
+        - "$ref": "#/components/schemas/SendAnalogProgressDetails"
+        # SEND_ANALOG_FEEDBACK
+        - "$ref": "#/components/schemas/SendAnalogFeedbackDetails"
+        # COMPLETELY_UNREACHABLE
+        - "$ref": "#/components/schemas/CompletelyUnreachableDetails"
+        # AAR_GENERATION
+        - "$ref": "#/components/schemas/AarGenerationDetails"
+        # NOT_HANDLED
+        - "$ref": "#/components/schemas/NotHandledDetails"
+
+    NotificationRequestAcceptedDetails:
+      type: object
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+
+    SendCourtesyMessageDetails:
+      type: object
+      required:
+        - recIndex
+        - digitalAddress
+        - sendDate
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        digitalAddress:
+          $ref: "#/components/schemas/DigitalAddress"
+        sendDate:
+          type: string
+          description: data invio messaggio di cortesia
+          format: date-time
+        ioSendMessageResult:
+          $ref: '#/components/schemas/IoSendMessageResult'
+
+    DigitalAddress:
+      description: Indirizzo di invio della notifica
+      required:
+        - address
+        - type
+      type: object
+      properties:
+        type:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          description: tipo di indirizzo PEC, REM, SERCQ, ...
+        address:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          description: account@domain
+
+    IoSendMessageResult:
+      type: string
+      description: Risultato invio messaggio su IO
+      enum:
+        - NOT_SENT_OPTIN_ALREADY_SENT
+        - SENT_COURTESY
+        - SENT_OPTIN
+
+    ScheduleDigitalWorkflowDetails:
+      type: object
+      required:
+        - recIndex
+        - digitalAddressSource
+        - sentAttemptMade
+        - lastAttemptDate
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        digitalAddress:
+          $ref: "#/components/schemas/DigitalAddress"
+        digitalAddressSource:
+          $ref: '#/components/schemas/DigitalAddressSource'
+        sentAttemptMade:
+          type: integer
+          format: int32
+        lastAttemptDate:
+          type: string
+          format: date-time
+
+    DigitalAddressSource:
+      type: string
+      description: sorgente indirizzo di invio della notifica
+      enum:
+        - PLATFORM
+        - SPECIAL
+        - GENERAL
+
+    SendDigitalDetails:
+      type: object
+      required:
+        - recIndex
+        - digitalAddress
+        - digitalAddressSource
+        - retryNumber
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        digitalAddress:
+          $ref: "#/components/schemas/DigitalAddress"
+        digitalAddressSource:
+          $ref: '#/components/schemas/DigitalAddressSource'
+        retryNumber:
+          type: integer
+          description: numero dei tentativi effettuati
+          format: int32
+
+    SendDigitalProgressDetails:
+      type: object
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        deliveryFailureCause:
+          description: Codice errore, opzionale
+          type: string
+        deliveryDetailCode:
+          type: string
+          description: Vedi deliveryDetailCode in SendDigitalFeedbackDetails
+        shouldRetry:
+          type: boolean
+          description: indica se il progress ha dato luogo ad un ritentativo
+        digitalAddress:
+          $ref: "#/components/schemas/DigitalAddress"
+        digitalAddressSource:
+          $ref: '#/components/schemas/DigitalAddressSource'
+        notificationDate:
+          type: string
+          description: data notifica
+          format: date-time
+        sendingReceipts:
+          type: array
+          items:
+            $ref: '#/components/schemas/SendingReceipt'
+        retryNumber:
+          type: integer
+          description: numero dei tentativi effettuati
+          format: int32
+
+    SendDigitalFeedbackDetails:
+      type: object
+      required:
+        - recIndex
+        - digitalAddress
+        - responseStatus
+        - notificationDate
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        digitalAddress:
+          $ref: "#/components/schemas/DigitalAddress"
+        responseStatus:
+          $ref: '#/components/schemas/ResponseStatus'
+        notificationDate:
+          type: string
+          description: data notifica
+          format: date-time
+        deliveryFailureCause:
+          description: Codice errore, vuoto in caso di successo
+          type: string
+        deliveryDetailCode:
+          type: string
+          description: >
+            Stato - Codice relativo all'evento - Descrizione:
+              - PROGRESS   C000 = PREACCETTAZIONE
+              - PROGRESS   C001 = ACCETTAZIONE
+              - PROGRESS   C005 = PRESA_IN_CARICO
+              - PROGRESS   C007 = PREAVVISO_ERRORE_CONSEGNA
+              - PROGRESS   DP00 = RE-INVIO PEC CAUSA FALLIMENTO TEMPORANEO
+              - PROGRESS   DP10 = TIMEOUT RICEZIONE RISULTATO
+              - ERROR      C002 = NON_ACCETTAZIONE
+              - ERROR      C004 = ERRORE_CONSEGNA
+              - ERROR      C006 = RILEVAZIONE_VIRUS
+              - ERROR      C008 = ERRORE_COMUNICAZIONE_SERVER_PEC
+              - ERROR      C009 = ERRORE_DOMINIO_PEC_NON_VALIDO
+              - ERROR      C010 = ERROR_INVIO_PEC
+              - OK         C003 = AVVENUTA_CONSEGNA
+        sendingReceipts:
+          type: array
+          items:
+            $ref: '#/components/schemas/SendingReceipt'
+
+    ResponseStatus:
+      type: string
+      description: stato risposta ricevuta da externalChannel
+      enum:
+        - OK
+        - KO
+
+    SendingReceipt:
+      type: object
+      properties:
+        id:
+          type: string
+        system:
+          type: string
+
+    DocumentsRequest:
+      type: object
+      required:
+        - taxId
+        - recipientType
+      properties:
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude"
+        recipientType:
+          $ref: '#/components/schemas/RecipientType'
+      additionalProperties: false
+
+    DocumentsResponse:
+      type: object
+      description: IUN Documents
+      required:
+        - documentsAvailable
+      properties:
+        documentsAvailable:
+          type: boolean
+          description: Indica se i documenti notificati sono ancora disponibili.
+        totalSize:
+          type: integer
+          description: Indica la dimensione totale dei documenti
+        documents:
+          type: array
+          description: Documenti notificati
+          items:
+            $ref: "#/components/schemas/Document"
+
+    Document:
+      type: object
+      description: single document
+      required:
+        - filename
+        - contentType
+        - contentLength
+      properties:
+        filename:
+          type: string
+        contentType:
+          type: string
+          example: 'application/pdf'
+        contentLength:
+          type: integer
+          format: int32
+          example: 54092
+          description: dimensione, in byte, del contenuto.
+
+    NotificationsDelegateRequest:
+      required:
+        - mandateId
+        - taxId
+        - recipientType
+      type: object
+      properties:
+        mandateId:
+          description: internal identifier of mandate
+          type: string
+        taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+        recipientType:
+          $ref: '#/components/schemas/RecipientType'
+      additionalProperties: false
+
+    NotificationsDelegatorRequest:
+      required:
+        - mandateId
+        - taxId
+        - recipientType
+      type: object
+      properties:
+        mandateId:
+          description: internal identifier of mandate
+          type: string
+        taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+        recipientType:
+          $ref: '#/components/schemas/RecipientType'
+      additionalProperties: false
+
+    PaNotificationsRequest:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/SelfCarePaId'
+        startDate:
+          description: search interval start timestamp
+          type: string
+          format: date-time
+        endDate:
+          description: search interval end timestamp
+          type: string
+          format: date-time
+      additionalProperties: false
+
+    Problem:
+      $ref: 'https://raw.githubusercontent.com/pagopa/pn-commons/61cdf0712f133c8c69e056abfad6ce5223242ba0/docs/openapi/pn-errors.yaml#/components/schemas/Problem'
+
+    DigitalSuccessWorkflowDetails:
+      type: object
+      required:
+        - recIndex
+        - digitalAddress
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        digitalAddress:
+          $ref: "#/components/schemas/DigitalAddress"
+
+    DigitalFailureWorkflowDetails:
+      type: object
+      required:
+        - recIndex
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+
+    AnalogFailureWorkflowDetails:
+      type: object
+      required:
+        - recIndex
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        generatedAarUrl:
+          type: string
+          description: Chiave per recupero da safe-storage del documento aar
+
+    SimpleRegisteredLetterDetails:
+      type: object
+      required:
+        - recIndex
+        - physicalAddress
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        physicalAddress:
+          $ref: "#/components/schemas/PhysicalAddress"
+        productType:
+          type: string
+          description: >
+            Tipo di invio cartaceo effettivamente inviato
+              - __RS__: Raccomandata nazionale Semplice (per Avviso di mancato Recapito)
+              - __RIS__: Raccomandata internazionale Semplice
+        analogCost:
+          type: integer
+          description: costo in eurocent dell'invio
+          format: int32
+        numberOfPages:
+          type: integer
+          description: numero delle pagina che compongono la spedizione cartacea
+          format: int32
+        envelopeWeight:
+          type: integer
+          description: peso in grammi della busta
+          format: int32
+        prepareRequestId:
+          type: string
+          description: request id della relativa richiesta di prepare
+
+    PhysicalAddress:
+      type: object
+      required:
+        - address
+        - municipality
+      properties:
+        at:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          description: Campo "presso" dell'indirizzo
+        address:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          description: Indirizzo del domicilio fisico
+        addressDetails:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          description: Seconda riga dell'indirizzo fisico
+        zip:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          description: Codice di avviamento postale. In caso di invio estero diventa facoltativo
+        municipality:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          description: Comune in cui l'indirizzo si trova
+        municipalityDetails:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          description: Frazione o località
+        province:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          description: Provincia in cui si trova l'indirizzo
+        foreignState:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          description: Denominazione paese estero
+      description: Indirizzo fisico scoperto durante fase di consegna
+
+    NotificationViewedDetails:
+      type: object
+      required:
+        - recIndex
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        notificationCost:
+          description: costo notifica in euro cents, può essere nullo se la notifica si è perfezionata prima per decorrenza termini
+          example: 1220
+          type: integer
+          format: int64
+        raddType:
+          $ref: '#/components/schemas/RaddType'
+        raddTransactionId:
+          $ref: '#/components/schemas/RaddTransactionId'
+        delegateInfo:
+          $ref: '#/components/schemas/DelegateInfo'
+
+    RaddType:
+      type: string
+      description: |
+        tipo di Rete Anti Digital Divide <br/>
+        __FSU__: Fornitore Servizio Universale <br/>
+
+    RaddTransactionId:
+      type: string
+      description: Identificativo della pratica all'interno della rete RADD
+
+    DelegateInfo:
+      type: object
+      properties:
+        internalId:
+          type: string
+        taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+        operatorUuid:
+          type: string
+        mandateId:
+          type: string
+        denomination:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+        delegateType:
+          $ref: '#/components/schemas/RecipientType'
+
+    PrepareAnalogDomicileFailureDetails:
+      type: object
+      required:
+        - recIndex
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        foundAddress:
+          $ref: "#/components/schemas/PhysicalAddress"
+        failureCause:
+          type: string
+          description: >
+            __Motivazione fallimento prepare
+              - __D00__ Indirizzo non trovato
+              - __D01__ Indirizzo non valido
+              - __D02__ Indirizzo coincidente con quello del primo tentativo
+        prepareRequestId:
+          type: string
+          description: RequestId della richiesta di prepare
+
+    SendAnalogDetails:
+      type: object
+      required:
+        - recIndex
+        - physicalAddress
+        - serviceLevel
+        - sentAttemptMade
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        physicalAddress:
+          $ref: "#/components/schemas/PhysicalAddress"
+        serviceLevel:
+          "$ref": "#/components/schemas/ServiceLevel"
+        sentAttemptMade:
+          type: integer
+          description: numero dei tentativi effettuati
+          format: int32
+        relatedRequestId:
+          type: string
+          description: Id relativo alla eventuale precedente richiesta di invio cartaceo
+        productType:
+          type: string
+          description: >
+            Tipo di invio cartaceo effettivamente inviato
+              - __AR__: Raccomandata nazionale Andata e Ritorno
+              - __890__: Recapito a norma della legge 890/1982
+              - __RIR__: Raccomandata internazionale Andata e Ritorno
+        analogCost:
+          type: integer
+          description: costo in eurocent dell'invio
+          format: int32
+        numberOfPages:
+          type: integer
+          description: numero delle pagina che compongono la spedizione cartacea
+          format: int32
+        envelopeWeight:
+          type: integer
+          description: peso in grammi della busta
+          format: int32
+        prepareRequestId:
+          type: string
+          description: request id della relativa richiesta di prepare
+
+    ServiceLevel:
+      type: string
+      description: Livello Servizio
+      enum:
+        - AR_REGISTERED_LETTER
+        - REGISTERED_LETTER_890
+
+    SendAnalogProgressDetails:
+      type: object
+      required:
+        - recIndex
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario che ha effettuato il pagamento della notifica
+          format: int32
+        notificationDate:
+          type: string
+          format: date-time
+        deliveryFailureCause:
+          type: string
+          description: Vedi deliveryFailureCause in SendAnalogFeedbackDetails
+        deliveryDetailCode:
+          type: string
+          description: Vedi deliveryDetailCode in SendAnalogFeedbackDetails
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttachmentDetails'
+        sendRequestId:
+          type: string
+          description: RequestId della richiesta d'invio
+        registeredLetterCode:
+          type: string
+          description: Codice della raccomandata
+
+    AttachmentDetails:
+      type: object
+      properties:
+        id:
+          type: string
+        documentType:
+          type: string
+          description: >
+            Codici documentType:
+            - Plico: Indica il plico cartaceo
+            - AR: Indica la ricevuta di ritorno
+            - Indagine: Indica la ricevuta dell'analisi dell'indagine
+            - 23L: Indica la ricevuta 23L
+        url:
+          type: string
+        date:
+          type: string
+          format: date-time
+
+    SendAnalogFeedbackDetails:
+      type: object
+      required:
+        - recIndex
+        - physicalAddress
+        - serviceLevel
+        - sentAttemptMade
+        - responseStatus
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        physicalAddress:
+          $ref: "#/components/schemas/PhysicalAddress"
+        serviceLevel:
+          "$ref": "#/components/schemas/ServiceLevel"
+        sentAttemptMade:
+          type: integer
+          description: numero dei tentativi effettuati
+          format: int32
+        newAddress:
+          $ref: "#/components/schemas/PhysicalAddress"
+        responseStatus:
+          $ref: '#/components/schemas/ResponseStatus'
+        notificationDate:
+          type: string
+          format: date-time
+        deliveryFailureCause:
+          type: string
+          description: >
+            __Motivazione di mancata consegna__ obbligatorie negli stati di mancata consegna
+              - __M01__ destinatario irreperibile
+              - __M02__ destinatario deceduto
+              - __M03__ destinatario sconosciuto
+              - __M04__ destinatario trasferito
+              - __M05__ invio rifiutato
+              - __M06__ indirizzo inesatto
+              - __M07__ indirizzo inesistente
+              - __M08__ indirizzo insufficiente
+              - __F01__ - in caso di furto
+              - __F02__ - in caso di smarrimento
+              - __F03__ - in caso di deterioramento
+        deliveryDetailCode:
+          type: string
+          description: >
+            Formato: - __deliveryDetailCode__- [prodotto] - [statusCode] - statusDescription
+              - __CON080__- [ALL] - [PROGRESS] - Stampato ed Imbustato
+              - __RECRS001C__- [RS] - [OK] - Consegnato - Fascicolo Chiuso
+              - __RECRS002C__- [RS] - [KO] - Mancata consegna - Fascicolo Chiuso
+              - __RECRS002F__- [RS] - [KO] - Irreperibilità Assoluta - Fascicolo Chiuso
+              - __RECRS003C__- [RS] - [OK] - Consegnato presso Punti di Giacenza - Fascicolo Chiuso
+              - __RECRS004C__- [RS] - [OK] - Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso
+              - __RECRS005C__- [RS] - [OK] - Compiuta giacenza - Fascicolo Chiuso
+              - __RECRS006__- [RS] - [PROGRESS] - Furto/Smarrimento/deterioramento
+              - __RECRN001C__- [AR] - [OK] - Consegnato - Fascicolo Chiuso
+              - __RECRN002C__- [AR] - [KO] - Mancata consegna - Fascicolo Chiuso
+              - __RECRN002F__- [AR] - [KO] - Irreperibilità Assoluta - Fascicolo Chiuso
+              - __RECRN003C__- [AR] - [OK] - Consegnato presso Punti di Giacenza - Fascicolo Chiuso
+              - __RECRN004C__- [AR] - [KO] - Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso
+              - __RECRN005C__- [AR] - [OK] - Compiuta giacenza - Fascicolo Chiuso
+              - __RECRN006__- [AR] - [PROGRESS] - Furto/Smarrimento/deterioramento
+              - __RECAG001C__- [890] - [OK] - Consegnato - Fascicolo Chiuso
+              - __RECAG002C__- [890] - [OK] - Consegnato a persona abilitata - Fascicolo Chiuso
+              - __RECAG003C__- [890] - [KO] - Mancata consegna - Fascicolo Chiuso
+              - __RECAG003F__- [890] - [KO] - Irreperibilità Assoluta - Fascicolo Chiuso
+              - __RECAG004__- [890] - [PROGRESS] - Furto/Smarrimento/deterioramento
+              - __RECAG005C__- [890] - [OK | PROGRESS] - Consegnato presso Punti di Giacenza - Fascicolo Chiuso
+              - __RECAG006C__- [890] - [OK | PROGRESS] - Consegna a persona abilitata presso Punti di Giacenza - Fas. Ch.
+              - __RECAG007C__- [890] - [KO | PROGRESS] - Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso
+              - __RECAG008C__- [890] - [PROGRESS] - Compiuta giacenza - Fascicolo Chiuso
+              - __PNAG012__- [890] - [KO] - Distacco d'ufficio 23L - Fascicolo Chiuso
+              - __RECRI003C__- [RIR] - [OK] - Consegnato - Fascicolo Chiuso
+              - __RECRI004C__- [RIR] - [KO] - Non Consegnato - fascicolo Chiuso
+              - __RECRI005__- [RIR] - [PROGRESS] - Furto/Smarrimento/deterioramento
+              - __RECRSI003C__- [RIS] - [OK] - Consegnato - Fascicolo Chiuso
+              - __RECRSI004C__- [RIS] - [KO] - Non Consegnato - fascicolo Chiuso
+              - __RECRSI005__- [RIS] - [PROGRESS] - Furto/Smarrimento/deterioramento
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttachmentDetails'
+        sendRequestId:
+          type: string
+          description: RequestId della richiesta d'invio
+        registeredLetterCode:
+          type: string
+          description: Codice della raccomandata
+
+    CompletelyUnreachableDetails:
+      type: object
+      required:
+        - recIndex
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        legalFactGenerationDate:
+          type: string
+          description: Data generazione atto opponibile a terzi allegato
+          format: date-time
+
+    AarGenerationDetails:
+      type: object
+      required:
+        - recIndex
+        - generatedAarUrl
+        - numberOfPages
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        generatedAarUrl:
+          type: string
+          description: Chiave per recupero da safe-storage del documento aar
+        numberOfPages:
+          type: integer
+          description: numero di pagine del PDF generato
+          format: int32
+
+    NotHandledDetails:
+      type: object
+      required:
+        - recIndex
+        - reasonCode
+        - reason
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        reasonCode:
+          type: string
+          description: Codice motivazione casistica non gestita
+        reason:
+          type: string
+          description: Motivazione casistica non gestita
+
+    NotificationRequest:
+      description: Request per la verifica della presenza di notifiche in stato irreperibile
+      type: object
+      properties:
+        taxId:
+          type: string
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+      additionalProperties: false
+
+    NotificationsUnreachableResponse:
+      description: Reponse che ritorna 1 in caso di presenza di notifiche in stato irreperibile, altrimenti 0
+      type: object
+      required:
+        - notificationsCount
+      properties:
+        notificationsCount:
+          type: integer
+          format: int64
+          maximum: 1
+          minimum: 0
+      additionalProperties: false
+
+    CreateOperationRequest:
+      required:
+        - taxId
+        - address
+        - ticketId
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/AnalogAddress'
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+        ticketId:
+          type: string
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 32
+        ticketOperationId:
+          type: string
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 10
+      additionalProperties: false
+
+    OperationsResponse:
+      description: Reponse della creazione di un'operation
+      type: object
+      properties:
+        operationId:
+          type: string
+          format: '/[^A-Za-z0-9~]+/'
+          maxLength: 99999
+          description: >-
+            identificativo dell'operation appena creata sarà costituito da
+            _ticketId_ e _ticketOperationId_ separati dal carattere "~" se
+            _ticketOperationId_ non è stato specificato allora l'operationId
+            coinciderà con il _ticketId_
+      additionalProperties: false
+
+    VideoUploadRequest:
+      description: Request per l'upload
+      type: object
+      required:
+        - sha256
+        - preloadIdx
+        - contentType
+      properties:
+        preloadIdx:
+          title: Id della richiesta di precaricamento di un file
+          description: >-
+            Identificativo univoco all'interno della request HTTP, serve per correlare la risposta.
+          type: string
+        sha256:
+          type: string
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 99999
+          description: SHA256 del contenuto del file.
+        contentType:
+          type: string
+          maxLength: 99999
+          description: Il MIME format del contenuto del file che si intende caricare
+          example: 'application/octet-stream'
+      additionalProperties: false
+
+    VideoUploadResponse:
+      description: Response della richiesta di upload
+      type: object
+      properties:
+        url:
+          type: string
+          maxLength: 99999
+          example: "https://presignedurldemo.s3.eu-west-2.amazonaws.com/image.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=..."
+        fileKey:
+          type: string
+          maxLength: 99999
+          example: "PN_SERVICE_DESK_RECORDING-{UID}"
+        secret:
+          type: string
+          maxLength: 99999
+          example: "alow22ddw"
+      additionalProperties: false
+
+    SearchNotificationRequest:
+      required:
+        - taxId
+      type: object
+      properties:
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+      additionalProperties: false
+
+    SearchResponse:
+      description: Response della search
+      type: object
+      properties:
+        operations:
+          type: array
+          minItems: 0
+          maxItems: 999999999
+          items:
+            $ref: '#/components/schemas/OperationResponse'
+      additionalProperties: false
+
+    NotificationStatus:
+      required:
+        - status
+      type: object
+      properties:
+        status:
+          type: string
+          description: >
+            * `CREATING` - Operazione in attesa di caricamento del video
+            * `VALIDATION` - Operazione in fase di validazione di indirizzo e allegati
+            * `PREPARING` - Operazione in fase di preparazione di invio
+            * `PROGRESS` - Operazione in fase di processamento della spedizione
+            * `OK` - Notifica recapitata
+            * `KO` - Notifica in errore di spedizione o in errore di validazione
+          enum:
+            - CREATING
+            - VALIDATION
+            - PREPARING
+            - PROGRESS
+            - OK
+            - KO
+        statusCode:
+          type: string
+          maxLength: 99999
+          description: codice dello stato dell'operazione
+        statusDescription:
+          type: string
+          maxLength: 99999
+          description: descrizione dello stato dell'operazione
+        lastEventTimestamp:
+          type: string
+          format: date-time
+      additionalProperties: false
+
+    IunStatus:
+      type: string
+      description: >
+        stato di avanzamento del processo di notifica:
+          * `IN_VALIDATION` - notifica depositata in attesa di validazione
+          * `ACCEPTED` - L'ente ha depositato la notifica con successo
+          * `REFUSED` - Notifica rifiutata a seguito della validazione
+          * `DELIVERING` - L'invio della notifica è in corso
+          * `DELIVERED` - La notifica è stata consegnata a tutti i destinatari
+          * `VIEWED` - Il destinatario ha letto la notifica entro il termine stabilito
+          * `EFFECTIVE_DATE` - Il destinatario non ha letto la notifica entro il termine stabilito
+          * `PAID` - Uno dei destinatari ha pagato la notifica
+          * `UNREACHABLE` - Il destinatario non è reperibile
+          * `CANCELLED` - L'ente ha annullato l'invio della notifica
+      enum:
+        - IN_VALIDATION
+        - ACCEPTED
+        - REFUSED
+        - DELIVERING
+        - DELIVERED
+        - VIEWED
+        - EFFECTIVE_DATE
+        - PAID
+        - UNREACHABLE
+        - CANCELLED
+
+    OperationResponse:
+      required:
+        - operationId
+        - taxId
+        - notificationStatus
+        - operationCreateTimestamp
+        - operationUpdateTimestamp
+      properties:
+        operationId:
+          type: string
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+        iuns:
+          type: array
+          minItems: 1
+          maxItems: 999999999
+          items:
+            $ref: "#/components/schemas/SDNotificationSummary"
+        uncompletedIuns:
+          type: array
+          minItems: 1
+          maxItems: 999999999
+          items:
+            $ref: "#/components/schemas/SDNotificationSummary"
+        notificationStatus:
+          $ref: '#/components/schemas/NotificationStatus'
+        operationCreateTimestamp:
+          type: string
+          format: date-time
+          description: >-
+            Timestamp della richiesta in UTC
+        operationUpdateTimestamp:
+          type: string
+          format: date-time
+          description: >-
+            Timestamp della richiesta in UTC
+
+    AnalogAddress:
+      required:
+        - address
+        - city
+        - fullname
+        - cap
+      properties:
+        fullname:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Cognome e nome o ragione sociale del destinatario
+        nameRow2:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Seconda riga sulla busta.
+        address:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Indirizzo del destinatario.
+        addressRow2:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Specifica dell’indirizzo di residenza del destinatario (seconda
+            riga indirizzo sulla busta).
+        cap:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Cap del destinatario; in caso di invio estero diventa facoltativo.
+        city:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Comune del destinatario.
+        city2:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Frazione del destinatario. Potrebbe essere utile se il chiamante
+            non fornisce il cap.
+        pr:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Provincia del destinatario; in caso di invio estero diventa
+            facoltativo.
+        country:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: "In caso di destinatario estero, diventa obbligatoria l’indicazione\
+            \ della nazione di destinazione,  in standard UPU o altro standard condiviso."
+      description: Indirizzo analogico
+
+    SDNotificationSummary:
+      type: object
+      required:
+        - iun
+        - senderPaInternalId
+        - senderPaDescription
+      properties:
+        iun:
+          type: string
+          maxLength: 99999
+        senderPaInternalId:
+          type: string
+          description: "Identificativo Selfcare della PA mittente"
+          maxLength: 99999
+        senderPaDescription:
+          type: string
+          maxLength: 99999
+          description: "Descrizione breve della PA mittente"
+        senderPaIpaCode:
+          type: string
+          maxLength: 99999
+          description: "Codice IPA della PA mittente"
+        senderPaTaxCode:
+          type: string
+          maxLength: 99999
+          description: "Codice Fiscale della PA mittente"
+
+    ResponseApiKeys:
+      title: Elenco di api keys
+      description: >-
+        Dto contenente la lista delle api keys associate ad un utente.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiKeyRow'
+        total:
+          type: integer
+
+    ApiKeyRow:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Id dell'api key
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+        name:
+          type: string
+          description: Nome dell'api key
+        pdnd:
+          type: boolean
+          description: Pdnd dell'api key
+        groups:
+          type: array
+          description: Gruppi a cui appartiene l'api key
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/ApiKeyStatus'
+
+    ApiKeyStatus:
+      description: Stato dell'api key
+      type: string
+      enum: [ 'CREATED', 'ENABLED', 'BLOCKED', 'ROTATED' ]
