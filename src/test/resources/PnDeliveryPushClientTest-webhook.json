@@ -139,5 +139,102 @@
                 ]
             }
         }
+    },
+    {
+        "httpRequest": {
+            "path": "/delivery-push-private/ENEZ-VXZU-JDJQ-202309-L-1/history",
+            "queryStringParameters" : {
+                "createdAt" : [ "2023-09-29T14:02:08.203039228Z" ],
+                "numberOfRecipients": ["1"]
+            },
+            "method": "GET"
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "notificationStatusHistory": [],
+                "timeline": [
+                    {
+                        "elementId": "SEND_DIGITAL.IUN_PRVZ-NZKM-JEDK-202309-A-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0",
+                        "timestamp": "2023-09-29T14:04:11.354725545Z",
+                        "legalFactsIds": [],
+                        "category": "SEND_DIGITAL_DOMICILE",
+                        "details": {
+                            "legalFactId": null,
+                            "recIndex": 0,
+                            "oldAddress": null,
+                            "normalizedAddress": null,
+                            "generatedAarUrl": null,
+                            "physicalAddress": null,
+                            "legalfactId": null,
+                            "endWorkflowStatus": null,
+                            "completionWorkflowDate": null,
+                            "legalFactGenerationDate": null,
+                            "digitalAddress": {
+                                "type": "PEC",
+                                "address": "2c25227d-9835-42a2-a274-a462242a9619@pec.it"
+                            },
+                            "digitalAddressSource": "PLATFORM",
+                            "isAvailable": null,
+                            "attemptDate": null,
+                            "eventTimestamp": null,
+                            "raddType": null,
+                            "raddTransactionId": null,
+                            "delegateInfo": null,
+                            "notificationCost": null,
+                            "deliveryMode": null,
+                            "contactPhase": null,
+                            "sentAttemptMade": null,
+                            "sendDate": "2023-09-29T14:04:01.033478852Z",
+                            "refusalReasons": null,
+                            "lastAttemptDate": null,
+                            "schedulingDate": null,
+                            "ioSendMessageResult": null,
+                            "retryNumber": 0,
+                            "nextDigitalAddressSource": null,
+                            "nextSourceAttemptsMade": null,
+                            "nextLastAttemptMadeForSource": null,
+                            "responseStatus": null,
+                            "notificationDate": null,
+                            "deliveryFailureCause": null,
+                            "deliveryDetailCode": null,
+                            "sendingReceipts": null,
+                            "shouldRetry": null,
+                            "serviceLevel": null,
+                            "relatedRequestId": null,
+                            "productType": null,
+                            "analogCost": null,
+                            "numberOfPages": null,
+                            "envelopeWeight": null,
+                            "prepareRequestId": null,
+                            "newAddress": null,
+                            "attachments": null,
+                            "sendRequestId": null,
+                            "registeredLetterCode": null,
+                            "aarKey": null,
+                            "reasonCode": null,
+                            "reason": null,
+                            "recipientType": null,
+                            "amount": null,
+                            "creditorTaxId": null,
+                            "noticeCode": null,
+                            "idF24": null,
+                            "paymentSourceChannel": null,
+                            "uncertainPaymentDate": null,
+                            "schedulingAnalogDate": null,
+                            "cancellationRequestId": null,
+                            "notRefinedRecipientIndexes": null,
+                            "foundAddress": null,
+                            "failureCause": null
+                        }
+                    }
+                ]
+            }
+        }
     }
 ]

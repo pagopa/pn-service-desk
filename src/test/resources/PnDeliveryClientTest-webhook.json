@@ -53,5 +53,83 @@
                 "cancelledIun": "cancelledIun354"
             }
         }
+    },
+    {
+        "httpRequest":{
+            "path":"/delivery-private/search",
+            "queryStringParameters":{
+                "recipientId":["PF-4fc75df3-0913-407e-bdaa-e50329708b7d"],
+                "startDate":["2023-08-31T15:49:05.63Z"],
+                "endDate":["2023-10-10T15:49:05.63Z"],
+                "size":["1"]
+            },
+            "method":"GET"
+        },
+        "httpResponse":{
+            "statusCode":200,
+            "headers":{
+                "content-type":[
+                    "application/json"
+                ]
+            },
+            "body":{
+                "resultsPage":[
+                    {
+                        "iun":"PRVZ-NZKM-JEDK-202309-A-1",
+                        "paProtocolNumber":"202381856591695996128952",
+                        "sender":"Comune di Palermo",
+                        "sentAt":"2023-09-29T14:02:08.670718277Z",
+                        "subject":"Test-di-carico",
+                        "notificationStatus":"VIEWED",
+                        "recipients":[
+                            "GLLGLL64B15G702I"
+                        ],
+                        "requestAcceptedAt":"2023-09-29T14:03:02.807361187Z"
+                    },
+                    {
+                        "iun":"ENEZ-VXZU-JDJQ-202309-L-1",
+                        "paProtocolNumber":"202380813111695996128483",
+                        "sender":"Comune di Palermo",
+                        "sentAt":"2023-09-29T14:02:08.203039228Z",
+                        "subject":"Test-di-carico",
+                        "notificationStatus":"VIEWED",
+                        "recipients":[
+                            "GLLGLL64B15G702I"
+                        ],
+                        "requestAcceptedAt":"2023-09-29T14:03:10.91919327Z"
+                    }
+                ],
+                "moreResult":true,
+                "nextPagesKey":[
+                    "eyJlayI6IlBGLWIzY2NhYzMxLTM4ZWEtNDRjZC05NjAxLTlmMmQxOWU4NTNhZiMjMjAyMzA5IiwiaWsiOnsiaXVuX3JlY2lwaWVudElkIjoiWllXVC1HQVhELVhVR1YtMjAyMzA5LUgtMSMjUEYtYjNjY2FjMzEtMzhlYS00NGNkLTk2MDEtOWYyZDE5ZTg1M2FmIiwicmVjaXBpZW50SWRfY3JlYXRpb25Nb250aCI6IlBGLWIzY2NhYzMxLTM4ZWEtNDRjZC05NjAxLTlmMmQxOWU4NTNhZiMjMjAyMzA5Iiwic2VudEF0IjoiMjAyMy0wOS0yOVQxNDowMjowNC4yNTU1NTQwODBaIn19"
+                ]
+            }
+        }
+    },
+    {
+        "httpRequest": {
+            "path": "/delivery-private/notifications/received/PRVZ-NZKM-JEDK-202309-A-1/attachments/documents/0",
+            "queryStringParameters": {
+                "recipientInternalId": [
+                    "PF-4fc75df3-0913-407e-bdaa-e50329708b7d"
+                ]
+            },
+            "method": "GET"
+        },
+        "httpResponse": {
+            "statusCode": 200,
+            "headers": {
+                "content-type": [
+                    "application/json"
+                ]
+            },
+            "body": {
+                "filename": "PRVZ-NZKM-JEDK-202309-A-1__Test_PDF.pdf",
+                "contentType": "application/pdf",
+                "contentLength": 10431,
+                "sha256": "MN14AU6XWWCgGiRI0mENrK8LrKdi8FhkXB1fhRtoff8=",
+                "url": "https://pn-safestorage-eu-south-1-089813480515.s3.eu-south-1.amazonaws.com/PN_NOTIFICATION_ATTACHMENTS-b5eaf1d0b8584ad48fab5a52269f735d.pdf?x-amzn-trace-id=Self%3D1-6537c537-7151c7610d72113c05f72627%3BRoot%3D1-6537c537-1f3102c04816313f0c72cefa%3BParent%3D4cdf1151d3da40c1%3BSampled%3D1&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEBsaCmV1LXNvdXRoLTEiRzBFAiEAqYfDIukgnbyGoDYIX1h%2B19nRGkAx6HGY%2F7rbBBl3ozUCIGNwjxJmh5tYvL8Nkz9A0tPbaMZRDQ7Vam5QHP75LfvtKo4ECEQQABoMMDg5ODEzNDgwNTE1IgwtmV9TjWZ9ZqOSjPMq6wNQCJ15KZf54qce7T%2FKSQZ3e2pRXaTxdlswBqon8Qtp86wzS23RhCRGPAZPO4ksVFK34W7wN9HBgdHKwFmEr4tjVCyagti0NpFZ18hYY6b2wPNDYb%2Fzjj%2BCPSWEGzL%2BJU42WUyr%2Fq004LrLDx5CT9HL5p0Do9yglWU5KrymTAEe1Mhr6xAkgHamIDanJEJHkVYQXrRDJ0LQKaWQlwJECjYezLB9MrP5NZz22Peo%2BU8FKNZDbojCj54gRHwYXkzRwv%2F0ejH%2F7CTrow4lYmr3uSQboKHhJhY68q62MTZ%2Bq%2F%2BiYcRNevy%2F4xkt45ZE%2BYUIO7dD%2F8SeEPr9DfNCWIA%2FrXhBh%2BZy9UNZeDdwvrkwfvj%2Bq5pSEG5jOn%2FmDN8Ee2DBN9OptycZswrM6xZ8qp3nPNoRK1WSGmDmt9nLJ%2BKYAXyvshYbH5tpI0QsWCRGT8kqNz9PR68FMfLbjfWKnHL1gCFvWQm8uutf%2FV2Z70gmpiY4pAu%2F0ZoxM0LTUWMtg4SGYdtM9XMx0htyM1ZH4XKjZTJcTXWwYoFzZkzYON%2BkZqACgLidndvSr3LxsJuznDGbYh36IH8WeoLW%2FTC9xZyF8kxqtfxbMC8vO6BqW7OJNVbl8mtM3P9VehqVIeNrLJ1Mos0bhte6RpBzbwcjFjDjv96pBjqmAbGkC43JdB0ayYOhLo7SoFokfw%2FgBl6hr1MWb1gN8JU8NqlFB94tSF9moQWpOQF2KVEOHDsISAlABJBl97LJA%2BqzY0EqBJlwD8eENjqh9KckvxRRQpcX0OZoh5S5KCqoXe3nEvYxeQ4UEhGkSYSLtK%2F%2FQ2vurKjEd1CHnzpRtGVxrlqhukQ%2B3qBlp%2BGbuE%2FFBIJhtfuU5nq7uqStPVvjbAq2BHMif80%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20231024T132303Z&X-Amz-SignedHeaders=host&X-Amz-Expires=3600&X-Amz-Credential=ASIARJ2KM6RBQBZGT3MO%2F20231024%2Feu-south-1%2Fs3%2Faws4_request&X-Amz-Signature=feef90ebbea0bd69bda117951806342f063c08fe94a98151c9383bb3d074ca20"
+            }
+        }
     }
 ]

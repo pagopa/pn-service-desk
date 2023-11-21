@@ -1,16 +1,16 @@
 package it.pagopa.pn.service.desk.externalclient.pnclient;
 
 import it.pagopa.pn.service.desk.config.BaseTest;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponseNotificationViewedDtoDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.test.StepVerifier;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
@@ -24,8 +24,27 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
 
     private static final String OPERATION_ID = "test12345";
 
+    private final TimelineElementV20Dto expectedTimeline = new TimelineElementV20Dto();
+
     @Autowired
     private PnDeliveryPushClient pnDeliveryPushClient;
+
+    @BeforeEach
+    public void setUp(){
+        expectedTimeline.setElementId("SEND_DIGITAL.IUN_PRVZ-NZKM-JEDK-202309-A-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
+        expectedTimeline.setTimestamp(OffsetDateTime.parse("2023-09-29T14:04:11.354725545Z"));
+        expectedTimeline.setCategory(TimelineElementCategoryV20Dto.SEND_DIGITAL_DOMICILE);
+
+        TimelineElementDetailsV20Dto categoryV20Dto = new TimelineElementDetailsV20Dto();
+        categoryV20Dto.setSendDate(OffsetDateTime.parse("2023-09-29T14:04:01.033478852Z"));
+        categoryV20Dto.setDigitalAddressSource(DigitalAddressSourceDto.PLATFORM);
+        DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
+        digitalAddressDto.setType("PEC");
+        digitalAddressDto.setAddress("2c25227d-9835-42a2-a274-a462242a9619@pec.it");
+        categoryV20Dto.setDigitalAddress(digitalAddressDto);
+
+        expectedTimeline.setDetails(categoryV20Dto);
+    }
 
     @Test
     void paperNotificationFailed(){
@@ -84,4 +103,27 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
 
         Assertions.assertNull(responseNotificationViewedDtoDto);
     }
+
+    @Test
+    void getNotificationHistory(){
+        NotificationHistoryResponseDto actual = this.pnDeliveryPushClient
+                .getNotificationHistory(
+                        "ENEZ-VXZU-JDJQ-202309-L-1",
+                        1,
+                        OffsetDateTime.parse("2023-09-29T14:02:08.203039228Z")
+                ).block();
+
+        Assertions.assertNotNull(actual);
+        Assertions.assertNotNull(actual.getTimeline());
+        Assertions.assertNotNull(actual.getTimeline().get(0));
+
+        TimelineElementV20Dto actualTimeline = actual.getTimeline().get(0);
+        Assertions.assertEquals(expectedTimeline.getElementId(), actualTimeline.getElementId());
+        Assertions.assertEquals(expectedTimeline.getTimestamp(), actualTimeline.getTimestamp());
+        Assertions.assertEquals(expectedTimeline.getCategory(), actualTimeline.getCategory());
+        Assertions.assertEquals(expectedTimeline.getDetails().getDigitalAddress().getType(), actualTimeline.getDetails().getDigitalAddress().getType());
+        Assertions.assertEquals(expectedTimeline.getDetails().getDigitalAddressSource(), actualTimeline.getDetails().getDigitalAddressSource());
+        Assertions.assertEquals(expectedTimeline.getDetails().getSendDate(), actualTimeline.getDetails().getSendDate());
+    }
+
 }
