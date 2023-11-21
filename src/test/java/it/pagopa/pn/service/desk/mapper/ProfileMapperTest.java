@@ -13,7 +13,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProfileMapperTest {
+class ProfileMapperTest {
 
     @Test
     void getAddress(){
@@ -86,7 +86,7 @@ public class ProfileMapperTest {
         Assertions.assertEquals(actualDelegate.getDateFrom(), OffsetDateTime.parse(internalDelegateDtoDto.getDatefrom()));
         Assertions.assertEquals(actualDelegate.getDateTo(), OffsetDateTime.parse(internalDelegateDtoDto.getDateto()));
         Assertions.assertEquals(actualDelegate.getMandateId(), internalDelegateDtoDto.getMandateId());
-        Assertions.assertEquals(actualDelegate.getDelegateInternalId(), null);
+        Assertions.assertEquals(null, actualDelegate.getDelegateInternalId());
         Assertions.assertEquals(actualDelegate.getDelegatorInternalId(), internalDelegateDtoDto.getDelegate());
     }
 

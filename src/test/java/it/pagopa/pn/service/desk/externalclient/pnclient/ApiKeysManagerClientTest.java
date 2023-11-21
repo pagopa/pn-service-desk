@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ApiKeysManagerClientTest extends BaseTest.WithMockServer{
+class ApiKeysManagerClientTest extends BaseTest.WithMockServer{
 
     @Autowired
     private ApiKeysManagerClientImpl apiKeysManagerClient;

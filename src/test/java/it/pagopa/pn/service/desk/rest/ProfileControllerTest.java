@@ -16,7 +16,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
 @WebFluxTest(controllers = {ProfileController.class})
-public class ProfileControllerTest {
+class ProfileControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;

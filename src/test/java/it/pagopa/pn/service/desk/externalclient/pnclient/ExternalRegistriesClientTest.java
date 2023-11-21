@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
 
-public class ExternalRegistriesClientTest extends BaseTest.WithMockServer{
+class ExternalRegistriesClientTest extends BaseTest.WithMockServer{
 
     @Autowired
     private ExternalRegistriesClientImpl externalRegistriesClient;

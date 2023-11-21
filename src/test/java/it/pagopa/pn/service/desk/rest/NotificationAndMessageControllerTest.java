@@ -16,7 +16,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
 @WebFluxTest(controllers = {NotificationAndMessageController.class})
-public class NotificationAndMessageControllerTest {
+class NotificationAndMessageControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;

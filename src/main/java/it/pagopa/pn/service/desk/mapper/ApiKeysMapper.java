@@ -11,6 +11,8 @@ import java.util.List;
 
 public class ApiKeysMapper {
 
+    private ApiKeysMapper(){}
+
     public static ResponseApiKeys responseApiKeys(ResponseApiKeysDto responseApiKeysDto){
         ResponseApiKeys responseApiKeys = new ResponseApiKeys();
 

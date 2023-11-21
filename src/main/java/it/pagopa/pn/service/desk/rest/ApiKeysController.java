@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 public class ApiKeysController implements ApiKeysApi {
 
     @Autowired
-    ApiKeysService apiKeysService;
+    private ApiKeysService apiKeysService;
 
     @Override
     public Mono<ResponseEntity<ResponseApiKeys>> getApiKeys(String paId, ServerWebExchange exchange) {

@@ -91,7 +91,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
             filteredElements = notificationHistoryResponseDto.getTimeline()
                     .stream()
                     .filter(element -> element.getCategory().equals(TimelineElementCategoryV20Dto.SEND_COURTESY_MESSAGE))
-                    .collect(Collectors.toList());
+                    .toList();
         }
         return filteredElements;
     }

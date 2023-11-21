@@ -19,7 +19,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProfileServiceImplTest extends BaseTest {
+class ProfileServiceImplTest extends BaseTest {
 
     @MockBean
     private PnDataVaultClient dataVaultClient;

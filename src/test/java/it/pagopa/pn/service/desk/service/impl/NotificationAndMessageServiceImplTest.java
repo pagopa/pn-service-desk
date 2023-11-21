@@ -29,7 +29,7 @@ import java.util.List;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_PUSH_CLIENT;
 
-public class NotificationAndMessageServiceImplTest extends BaseTest {
+class NotificationAndMessageServiceImplTest extends BaseTest {
 
     @MockBean
     private PnDataVaultClient dataVaultClient;

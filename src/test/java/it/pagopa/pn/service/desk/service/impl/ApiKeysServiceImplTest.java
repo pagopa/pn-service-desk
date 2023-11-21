@@ -23,7 +23,7 @@ import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_KEYS_MANAGER_CLIENT;
 
-public class ApiKeysServiceImplTest extends BaseTest {
+class ApiKeysServiceImplTest extends BaseTest {
 
     @MockBean
     private ApiKeysManagerClient apiKeysManagerClient;

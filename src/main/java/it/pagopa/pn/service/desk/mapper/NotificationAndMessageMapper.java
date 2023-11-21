@@ -118,9 +118,9 @@ public class NotificationAndMessageMapper {
     public static NotificationResponse getNotificationResponse(NotificationSearchRowDto notificationSearchRowDto, NotificationHistoryResponseDto notificationHistoryResponseDto) {
         List<CourtesyMessage> courtesyMessages = new ArrayList<>();
         if (notificationHistoryResponseDto.getTimeline() != null) {
-            notificationHistoryResponseDto.getTimeline().forEach(timelineElementV20Dto -> {
-                courtesyMessages.add(NotificationAndMessageMapper.getCourtesyMessage(timelineElementV20Dto));
-            });
+            notificationHistoryResponseDto.getTimeline().forEach(timelineElementV20Dto ->
+                    courtesyMessages.add(NotificationAndMessageMapper.getCourtesyMessage(timelineElementV20Dto))
+            );
         }
         NotificationResponse notificationResponse = new NotificationResponse();
         notificationResponse.setIun(notificationSearchRowDto.getIun());
