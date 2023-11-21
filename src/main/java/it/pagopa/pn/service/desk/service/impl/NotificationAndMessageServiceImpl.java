@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_PUSH_CLIENT;
@@ -38,6 +37,8 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     private final PnDataVaultClient dataVaultClient;
     private final PnDeliveryClient pnDeliveryClient;
     private final PnDeliveryPushClient pnDeliveryPushClient;
+    private static final String ERROR_MESSAGE_NOTIFICATION_HISTORY = "errorReason = {}, An error occurred while call service for obtain notification history";
+    private static final String ERROR_MESSAGE_SENT_NOTIFICATIONS = "errorReason = {}, An error occurred while calling the service to obtain sent notifications";
 
     public NotificationAndMessageServiceImpl(PnDataVaultClient dataVaultClient, PnDeliveryClient pnDeliveryClient, PnDeliveryPushClient pnDeliveryPushClient) {
         this.dataVaultClient = dataVaultClient;
@@ -52,7 +53,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 .flatMap(internalId ->
                         pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, internalId, null, size, nextPagesKey)
                                 .onErrorResume(exception -> {
-                                    log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());
+                                    log.error(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage());
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
                                 })
                 )
@@ -61,7 +62,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 .flatMap(notificationSearchRowDto ->
                         this.pnDeliveryPushClient.getNotificationHistory(notificationSearchRowDto.getIun(), notificationSearchRowDto.getRecipients().size(), notificationSearchRowDto.getSentAt())
                                 .onErrorResume(exception -> {
-                                    log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());
+                                    log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
                                 })
                                 .map(notificationHistoryResponseDto -> NotificationAndMessageMapper
@@ -103,11 +104,11 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                     log.error("errorReason = {}, An error occurred while call service for obtain notification sent", exception.getMessage());
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
                 })
-                .flatMap(SentNotificationV21Dto ->
-                        pnDeliveryPushClient.getNotificationHistory(iun, SentNotificationV21Dto.getRecipients().size(), SentNotificationV21Dto.getSentAt())
+                .flatMap(sentNotificationV21Dto ->
+                        pnDeliveryPushClient.getNotificationHistory(iun, sentNotificationV21Dto.getRecipients().size(), sentNotificationV21Dto.getSentAt())
                                 .switchIfEmpty(Mono.empty())
                                 .onErrorResume(exception -> {
-                                    log.error("errorReason = {}, An error occurred while call service for obtain notification history", exception.getMessage());
+                                    log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
                                 })
                                 .map(NotificationAndMessageMapper::getTimeline)
@@ -122,7 +123,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 .zipWhen(internalId -> pnDeliveryClient.getSentNotificationPrivate(iun)
                         .switchIfEmpty(Mono.empty())
                         .onErrorResume(exception -> {
-                            log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());
+                            log.error(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage());
                             return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
                         })
                 )
@@ -147,7 +148,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                             pnDeliveryClient.getReceivedNotificationDocumentPrivate(iun, Integer.parseInt(notificationDocumentDto.getDocIdx()), internalIdAndSentNotificationV21Dto.getT1(), null)
                                     .switchIfEmpty(Mono.empty())
                                     .onErrorResume(exception -> {
-                                        log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());
+                                        log.error("errorReason = {}, An error occurred while calling the service to obtain notification document", exception.getMessage());
                                         return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
                                     }))
                     .map(notificationAttachmentDownloadMetadataResponseDto -> {
@@ -181,7 +182,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 .flatMapMany(notificationSearchResponseDto -> getNotificationSearchRowFlux(notificationSearchResponseDto, searchNotificationsResponse))
                 .flatMap(notificationSearchRowDto -> pnDeliveryPushClient.getNotificationHistory(notificationSearchRowDto.getIun(), notificationSearchRowDto.getRecipients().size(), notificationSearchRowDto.getSentAt())
                         .onErrorResume(exception -> {
-                            log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());
+                            log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
                             return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
                         })
                         .map(notificationHistoryResponseDto -> NotificationAndMessageMapper
@@ -193,12 +194,12 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 });
     }
 
-    private boolean isNotificationCancelled(SentNotificationV21Dto SentNotificationV21Dto, String iun) {
+    private boolean isNotificationCancelled(SentNotificationV21Dto sentNotificationV21Dto, String iun) {
         AtomicBoolean cancellationTimelineIsPresent = new AtomicBoolean();
-        return pnDeliveryPushClient.getNotificationHistory(iun, SentNotificationV21Dto.getRecipients().size(), SentNotificationV21Dto.getSentAt())
+        return pnDeliveryPushClient.getNotificationHistory(iun, sentNotificationV21Dto.getRecipients().size(), sentNotificationV21Dto.getSentAt())
                 .switchIfEmpty(Mono.empty())
                 .onErrorResume(exception -> {
-                    log.error("errorReason = {}, An error occurred while call service for obtain notification history", exception.getMessage());
+                    log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
                 }).map(notificationHistoryResponseDto ->
                         cancellationTimelineIsPresent(iun, notificationHistoryResponseDto, cancellationTimelineIsPresent)
