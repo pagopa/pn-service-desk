@@ -55,7 +55,6 @@ components:
       required: false
       schema:
         type: string
-        maxLength: 50
 
     queryStartDate:
       name: startDate
