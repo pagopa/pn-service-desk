@@ -28,14 +28,9 @@ public class NotificationAndMessageMapper {
 
         if (!filteredElements.isEmpty()){
             List<CourtesyMessage> courtesyMessages = new ArrayList<>();
-            filteredElements.forEach(timelineElementDto -> {
-                CourtesyMessage courtesyMessage = new CourtesyMessage();
-                if (timelineElementDto.getDetails() != null){
-                    courtesyMessage.setSentTimestamp(timelineElementDto.getDetails().getSendDate());
-                }
-                courtesyMessage.setChannel(CourtesyChannelType.fromValue(timelineElementDto.getDetails().getDigitalAddress().getType()));
-                courtesyMessages.add(courtesyMessage);
-            });
+            filteredElements.forEach(timelineElementDto ->
+                    courtesyMessages.add(getCourtesyMessage(timelineElementDto))
+            );
             notification.setCourtesyMessages(courtesyMessages);
         }
         return notification;
@@ -119,7 +114,7 @@ public class NotificationAndMessageMapper {
         List<CourtesyMessage> courtesyMessages = new ArrayList<>();
         if (notificationHistoryResponseDto.getTimeline() != null) {
             notificationHistoryResponseDto.getTimeline().forEach(timelineElementV20Dto ->
-                    courtesyMessages.add(NotificationAndMessageMapper.getCourtesyMessage(timelineElementV20Dto))
+                    courtesyMessages.add(getCourtesyMessage(timelineElementV20Dto))
             );
         }
         NotificationResponse notificationResponse = new NotificationResponse();
@@ -132,7 +127,7 @@ public class NotificationAndMessageMapper {
         return notificationResponse;
     }
 
-    public static CourtesyMessage getCourtesyMessage(TimelineElementV20Dto timelineElementV20Dto) {
+    private static CourtesyMessage getCourtesyMessage(TimelineElementV20Dto timelineElementV20Dto) {
         CourtesyMessage courtesyMessage = new CourtesyMessage();
         if (timelineElementV20Dto.getDetails() != null) {
             courtesyMessage.setChannel(CourtesyChannelType.fromValue(timelineElementV20Dto.getDetails().getDigitalAddress().getType()));

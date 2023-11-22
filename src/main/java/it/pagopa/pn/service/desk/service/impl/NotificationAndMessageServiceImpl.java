@@ -109,7 +109,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                 .switchIfEmpty(Mono.empty())
                                 .onErrorResume(exception -> {
                                     log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
-                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
                                 })
                                 .map(NotificationAndMessageMapper::getTimeline)
                 );
@@ -200,7 +200,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 .switchIfEmpty(Mono.empty())
                 .onErrorResume(exception -> {
                     log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
                 }).map(notificationHistoryResponseDto ->
                         cancellationTimelineIsPresent(iun, notificationHistoryResponseDto, cancellationTimelineIsPresent)
                 )
