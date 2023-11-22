@@ -57,7 +57,7 @@ class ProfileServiceImplTest extends BaseTest {
         Assertions.assertEquals(OffsetDateTime.parse("2023-01-10T23:00Z"), mandate.getDateFrom());
         Assertions.assertEquals(OffsetDateTime.parse("2026-05-12T21:59:59Z"), mandate.getDateTo());
         Assertions.assertEquals("PF-4fc75df3-0913-407e-bdaa-e50329708b7d", mandate.getDelegatorInternalId());
-        Assertions.assertNull(mandate.getDelegateInternalId());
+        Assertions.assertEquals("PG-8f409ca6-fc3d-46c3-8da7-69cd9a1e9e62", mandate.getDelegateInternalId());
         Assertions.assertEquals(RecipientType.PG.getValue(),mandate.getRecipientType().getValue());
 
         Assertions.assertEquals("49258827-a23d-4712-a46f-e23a67b4150f", delegate.getMandateId());
