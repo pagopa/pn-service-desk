@@ -156,6 +156,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 .map(documentList -> {
                     response.setDocuments(documentList);
                     response.setTotalSize(documentsSize.get());
+                    logEvent.generateSuccess("getDocumentsOfIun response = {}", response);
                     return response;
                 });
     }
