@@ -34,9 +34,10 @@ public class ApiKeysServiceImpl implements ApiKeysService {
             log.error("errorReason = {}, An error occurred while calling the service to obtain api keys", exception.getMessage());
             logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain api keys" + exception.getMessage()).log();
             return Mono.error(new PnGenericException(ERROR_ON_KEYS_MANAGER_CLIENT, exception.getMessage()));
-        }).flatMap(responseApiKeysDto ->{
-            logEvent.generateSuccess("getApiKeys responseApiKeys: items={}, totalElement={}", responseApiKeysDto.getItems(), responseApiKeysDto.getTotal()).log();
-            return Mono.just(ApiKeysMapper.responseApiKeys(responseApiKeysDto));
-                });
+        }).map(responseApiKeysDto -> {
+            ResponseApiKeys responseApiKeys = ApiKeysMapper.responseApiKeys(responseApiKeysDto);
+            logEvent.generateSuccess("getApiKeys responseApiKeys = {}", responseApiKeys).log();
+            return responseApiKeys;
+        });
     }
 }
