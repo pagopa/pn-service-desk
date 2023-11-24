@@ -1,10 +1,8 @@
 package it.pagopa.pn.service.desk.externalclient.pnclient;
 
 import it.pagopa.pn.service.desk.config.BaseTest;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnuserattributes.v1.dto.LegalAddressTypeDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnuserattributes.v1.dto.LegalChannelTypeDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnuserattributes.v1.dto.LegalDigitalAddressDto;
-import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.userattributes.PnUserAttributesClientImpl;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnuserattributes.v1.dto.*;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.userattributes.PnUserAttributesClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,9 +12,10 @@ import reactor.core.publisher.Flux;
 class PnUserAttributesClientTest extends BaseTest.WithMockServer {
 
     @Autowired
-    private PnUserAttributesClientImpl pnUserAttributesClient;
+    private PnUserAttributesClient pnUserAttributesClient;
 
     private final LegalDigitalAddressDto expected = new LegalDigitalAddressDto();
+    private final CourtesyDigitalAddressDto expectedCourtesy = new CourtesyDigitalAddressDto();
 
     @BeforeEach
     public void setUp(){
@@ -25,6 +24,12 @@ class PnUserAttributesClientTest extends BaseTest.WithMockServer {
         expected.setSenderId("default");
         expected.setChannelType(LegalChannelTypeDto.PEC);
         expected.setValue("example@pecSuccess.it");
+
+        expectedCourtesy.setAddressType(CourtesyAddressTypeDto.COURTESY);
+        expectedCourtesy.setRecipientId("PF-4fc75df3-0913-407e-bdaa-e50329708b7d");
+        expectedCourtesy.setSenderId("default");
+        expectedCourtesy.setChannelType(CourtesyChannelTypeDto.SMS);
+        expectedCourtesy.setValue("example@pecSuccess.it");
     }
 
     @Test
@@ -41,6 +46,20 @@ class PnUserAttributesClientTest extends BaseTest.WithMockServer {
         Assertions.assertEquals(legalDigitalAddressDto.getChannelType(), expected.getChannelType());
         Assertions.assertEquals(legalDigitalAddressDto.getValue(), expected.getValue());
 
+    }
+
+    @Test
+    void getCourtesyAddressBySender(){
+        CourtesyDigitalAddressDto actual = this.pnUserAttributesClient
+                .getCourtesyAddressBySender("PF-4fc75df3-0913-407e-bdaa-e50329708b7d","default")
+                .blockFirst();
+
+        Assertions.assertNotNull(actual);
+        Assertions.assertEquals(expectedCourtesy.getAddressType(), actual.getAddressType());
+        Assertions.assertEquals(expectedCourtesy.getRecipientId(), actual.getRecipientId());
+        Assertions.assertEquals(expectedCourtesy.getSenderId(), actual.getSenderId());
+        Assertions.assertEquals(expectedCourtesy.getChannelType(), actual.getChannelType());
+        Assertions.assertEquals(expectedCourtesy.getValue(), actual.getValue());
     }
 
 }

@@ -46,5 +46,29 @@
         }
       ]
     }
+  },
+  {
+    "httpRequest": {
+      "path": "/address-book-private/v1/digital-address/courtesy/PF-4fc75df3-0913-407e-bdaa-e50329708b7d/default",
+      "method": "GET"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": [
+        {
+          "addressType": "COURTESY",
+          "recipientId": "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+          "senderId": "default",
+          "senderName": null,
+          "channelType": "SMS",
+          "value": "example@pecSuccess.it"
+        }
+      ]
+    }
   }
 ]

@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-public class MandateClientTest extends BaseTest.WithMockServer{
+class MandateClientTest extends BaseTest.WithMockServer{
 
     @Autowired
     private MandateClientImpl mandateClient;

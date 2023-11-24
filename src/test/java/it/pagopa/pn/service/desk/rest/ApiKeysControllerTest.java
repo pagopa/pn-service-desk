@@ -1,11 +1,9 @@
 package it.pagopa.pn.service.desk.rest;
 
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.ProfileRequest;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.ProfileResponse;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.RecipientType;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.ResponseApiKeys;
 import it.pagopa.pn.service.desk.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnClientID;
-import it.pagopa.pn.service.desk.service.ProfileService;
+import it.pagopa.pn.service.desk.service.ApiKeysService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -15,13 +13,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
-@WebFluxTest(controllers = {ProfileController.class})
-class ProfileControllerTest {
+@WebFluxTest(controllers = {ApiKeysController.class})
+public class ApiKeysControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;
     @MockBean
-    private ProfileService profileService;
+    private ApiKeysService apiKeysService;
     @MockBean
     private PnClientDAO pnClientDAO;
 
@@ -32,27 +30,18 @@ class ProfileControllerTest {
     }
 
     @Test
-    void getProfileFromTaxIdTest(){
-        ProfileResponse response = new ProfileResponse();
-        String path = "/service-desk/profile";
-        Mockito.when(profileService.getProfileFromTaxId(Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(response));
+    void getApiKeysTest (){
+        ResponseApiKeys responseApiKeys = new ResponseApiKeys();
+        String path = "/service-desk/api-keys";
+        Mockito.when(apiKeysService.getApiKeys(Mockito.anyString())).thenReturn(Mono.just(responseApiKeys));
 
-        webTestClient.post()
+        webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path(path)
+                        .queryParam("paId", "ahdk-213124-4das")
                         .build())
                 .header("x-pagopa-pn-uid", "test")
                 .header("x-api-key", "test")
-                .bodyValue(getProfileRequest())
                 .exchange()
                 .expectStatus().isOk();
     }
-
-    private ProfileRequest getProfileRequest(){
-        ProfileRequest profileRequest = new ProfileRequest();
-        profileRequest.setTaxId("123");
-        profileRequest.setRecipientType(RecipientType.PF);
-        return profileRequest;
-    }
-
 }

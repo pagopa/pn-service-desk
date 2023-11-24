@@ -10,6 +10,8 @@ import java.util.List;
 
 public class InfoPaMapper {
 
+    private InfoPaMapper(){}
+
     public static SearchNotificationsResponse getSearchNotificationResponse(NotificationSearchResponseDto notificationSearchResponseDto) {
         SearchNotificationsResponse searchNotificationsResponse = new SearchNotificationsResponse();
         searchNotificationsResponse.setNextPagesKey(notificationSearchResponseDto.getNextPagesKey());
