@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
@@ -12,9 +11,11 @@ import it.pagopa.pn.service.desk.mapper.common.BaseMapper;
 import it.pagopa.pn.service.desk.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregistries.ExternalRegistriesClient;
+import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.InfoPaService;
 import it.pagopa.pn.service.desk.mapper.InfoPaMapper;
 import lombok.CustomLog;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,11 +29,13 @@ public class InfoPaServiceImpl implements InfoPaService {
     private final ExternalRegistriesClient externalRegistriesClient;
     private final PnDeliveryClient pnDeliveryClient;
     private static final BaseMapper<PaSummary, PaSummaryDto> baseMapper = new BaseMapperImpl<>(PaSummary.class, PaSummaryDto.class);
-    private final PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
+    @Autowired
+    private final AuditLogService auditLogService;
 
-    public InfoPaServiceImpl(ExternalRegistriesClient externalRegistriesClient, PnDeliveryClient pnDeliveryClient) {
+    public InfoPaServiceImpl(ExternalRegistriesClient externalRegistriesClient, PnDeliveryClient pnDeliveryClient, AuditLogService auditLogService) {
         this.externalRegistriesClient = externalRegistriesClient;
         this.pnDeliveryClient = pnDeliveryClient;
+        this.auditLogService = auditLogService;
     }
 
     @Override
@@ -43,8 +46,7 @@ public class InfoPaServiceImpl implements InfoPaService {
 
     @Override
     public Mono<SearchNotificationsResponse> searchNotificationsFromSenderId(String xPagopaPnUid, Integer size, String nextPagesKey, PaNotificationsRequest paNotificationsRequest) {
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsFromSenderId for senderId = {}", paNotificationsRequest.getId())
-                .build().log();
+        PnAuditLogEvent logEvent =  auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsFromSenderId for senderId = {}", paNotificationsRequest.getId());
         return this.pnDeliveryClient.searchNotificationsPrivate(paNotificationsRequest.getStartDate(), paNotificationsRequest.getEndDate(), null, paNotificationsRequest.getId(), size, nextPagesKey)
                 .onErrorResume(exception -> {
                     log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());

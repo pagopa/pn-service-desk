@@ -1,6 +1,6 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
@@ -16,18 +16,19 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
+import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import it.pagopa.pn.service.desk.service.OperationsService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -44,7 +45,8 @@ public class OperationsServiceImpl implements OperationsService {
     private OperationDAO operationDAO;
     private OperationsFileKeyDAO operationsFileKeyDAO;
     private PnServiceDeskConfigs cfn;
-    private final PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
+    @Autowired
+    private final AuditLogService auditLogService;
     private static final String ERROR_MESSAGE_NO_UNREACHABLE_NOTIFICATIONS = "errorReason = {}, no unreachable notifications found";
     private static final String ERROR_MESSAGE_OPERATION_ALREADY_PRESENT = "errorReason = {}, no unreachable notifications found";
     private static final String ERROR_MESSAGE_INVALID_CONTENT_TYPE = "errorReason = {}, invalid content type";
@@ -56,8 +58,7 @@ public class OperationsServiceImpl implements OperationsService {
     public Mono<OperationsResponse> createOperation(String xPagopaPnUid, CreateOperationRequest createOperationRequest) {
         log.debug("xPagopaPnUid = {}, createOperationRequest = {}, CreateOperation received input", xPagopaPnUid, createOperationRequest);
 
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "creating operation = {}", createOperationRequest.getTaxId())
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "creating operation = {}", createOperationRequest.getTaxId());
 
         OperationsResponse response = new OperationsResponse();
         NotificationRequest notificationRequest = new NotificationRequest();
@@ -88,8 +89,7 @@ public class OperationsServiceImpl implements OperationsService {
     private Mono<PnServiceDeskOperations> checkAndSaveOperation(Tuple2<PnServiceDeskOperations, PnServiceDeskAddress> operationAndAddress){
         log.debug("entityOperation = {}, entityAddress = {}, CheckAndSaveOperation received input", operationAndAddress.getT1(), operationAndAddress.getT2());
 
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "isNotificationCancelled")
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "checkAndSaveOperation, operationId = {}", operationAndAddress.getT1().getOperationId());
 
         PnServiceDeskOperations entityOperation = operationAndAddress.getT1();
         PnServiceDeskAddress entityAddress = operationAndAddress.getT2();
@@ -113,8 +113,7 @@ public class OperationsServiceImpl implements OperationsService {
     public Mono<SearchResponse> searchOperationsFromRecipientInternalId(String xPagopaPnUid, SearchNotificationRequest searchNotificationRequest) {
         SearchResponse response = new SearchResponse();
 
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "searchOperationsFromRecipientInternalId for taxId = {}", searchNotificationRequest.getTaxId())
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchOperationsFromRecipientInternalId for taxId = {}", searchNotificationRequest.getTaxId());
 
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
                 .flatMapMany(taxId -> operationDAO.searchOperationsFromRecipientInternalId(taxId))
@@ -131,8 +130,7 @@ public class OperationsServiceImpl implements OperationsService {
 
     @Override
     public Mono<VideoUploadResponse> presignedUrlVideoUpload(String xPagopaPnUid, String operationId, VideoUploadRequest videoUploadRequest) {
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "presignedUrlVideoUpload for operationId = {}", operationId)
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "presignedUrlVideoUpload for operationId = {}", operationId);
 
         if (!StringUtils.equalsIgnoreCase(CONTENT_TYPE_VALUE, videoUploadRequest.getContentType())) {
             PnGenericException ex = new PnGenericException(ERROR_CONTENT_TYPE, ERROR_CONTENT_TYPE.getMessage());
@@ -153,8 +151,7 @@ public class OperationsServiceImpl implements OperationsService {
     }
 
     private Mono<String> manageOperationFileKey(String operationId){
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "manageOperationFileKey for operationId = {}", operationId)
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "manageOperationFileKey for operationId = {}", operationId);
         return operationsFileKeyDAO.getFileKeyByOperationId(operationId)
                 .flatMap(operationFileKey -> safeStorageClient.getFile(operationFileKey.getFileKey()))
                 .map(response -> {

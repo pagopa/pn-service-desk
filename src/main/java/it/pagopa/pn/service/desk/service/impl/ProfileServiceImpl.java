@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
@@ -10,9 +9,11 @@ import it.pagopa.pn.service.desk.mapper.ProfileMapper;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.mandate.MandateClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.userattributes.PnUserAttributesClient;
+import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.ProfileService;
 import lombok.CustomLog;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,22 +29,23 @@ public class ProfileServiceImpl implements ProfileService {
     private final PnUserAttributesClient userAttributesClient;
     private final MandateClient mandateClient;
     public static final String SENDER_ID_DEFAULT = "default";
-    private final PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
+    @Autowired
+    private final AuditLogService auditLogService;
     private static final String ERROR_MESSAGE_SENDER_LEGAL_ADDRESS = "errorReason = {}, An error occurred while call service for obtain legal address by sender";
     private static final String ERROR_MESSAGE_SENDER_COURTESY_ADDRESS = "errorReason = {}, An error occurred while call service for obtain courtesy address by sender";
     private static final String ERROR_MESSAGE_LIST_MANDATES_BY_DELEGATOR = "errorReason = {}, An error occurred while call service for obtain mandates by delegator";
     private static final String ERROR_MESSAGE_LIST_MANDATES_BY_DELEGATE = "errorReason = {}, An error occurred while call service for obtain mandates by delegate";
 
-    public ProfileServiceImpl(PnDataVaultClient dataVaultClient, PnUserAttributesClient userAttributesClient, MandateClient mandateClient) {
+    public ProfileServiceImpl(PnDataVaultClient dataVaultClient, PnUserAttributesClient userAttributesClient, MandateClient mandateClient, AuditLogService auditLogService) {
         this.dataVaultClient = dataVaultClient;
         this.userAttributesClient = userAttributesClient;
         this.mandateClient = mandateClient;
+        this.auditLogService = auditLogService;
     }
 
     @Override
     public Mono<ProfileResponse> getProfileFromTaxId(String xPagopaPnUid, ProfileRequest profileRequest) {
-        auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "getProfileFromTaxId for taxId = {}", profileRequest.getTaxId())
-                .build().log();
+        auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getProfileFromTaxId for taxId = {}", profileRequest.getTaxId());
 
         ProfileResponse response = new ProfileResponse();
         return dataVaultClient.anonymized(profileRequest.getTaxId(), profileRequest.getRecipientType().getValue())
@@ -56,8 +58,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @NotNull
     private Mono<ProfileResponse> getMandate(String internalId, ProfileResponse response) {
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "getAddress for internalId = {}", internalId)
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getMandate for internalId = {}", internalId);
         return mandateClient.listMandatesByDelegator(internalId)
                 .collectList()
                 .onErrorResume(exception -> {
@@ -79,8 +80,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @NotNull
     private Mono<String> getAddress(String internalId, ProfileResponse response) {
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "getAddress for internalId = {}", internalId)
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getAddress for internalId = {}", internalId);
         return userAttributesClient.getLegalAddressBySender(internalId, SENDER_ID_DEFAULT)
                 .onErrorResume(exception -> {
                     log.error("errorReason = {}, error = {}, Error during getLegalAddressBySender", exception.getMessage(), exception);
@@ -118,8 +118,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @NotNull
     private Mono<ProfileResponse> updateDelegatorMandates(ProfileResponse profileResponse) {
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "updateDelegatorMandates")
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "updateDelegatorMandates");
         return Flux.fromIterable(profileResponse.getDelegatorMandates())
                 .flatMap(mandate -> dataVaultClient.deAnonymized(mandate.getDelegateInternalId())
                         .map(taxId -> {

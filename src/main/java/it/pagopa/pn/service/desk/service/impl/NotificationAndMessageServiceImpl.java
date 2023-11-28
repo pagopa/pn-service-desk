@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
@@ -15,9 +14,11 @@ import it.pagopa.pn.service.desk.mapper.NotificationAndMessageMapper;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
+import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationAndMessageService;
 import lombok.CustomLog;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -40,22 +41,23 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     private final PnDataVaultClient dataVaultClient;
     private final PnDeliveryClient pnDeliveryClient;
     private final PnDeliveryPushClient pnDeliveryPushClient;
-    private final PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
+    @Autowired
+    private final AuditLogService auditLogService;
     private static final String ERROR_MESSAGE_NOTIFICATION_HISTORY = "errorReason = {}, An error occurred while call service for obtain notification history";
     private static final String ERROR_MESSAGE_SENT_NOTIFICATIONS = "errorReason = {}, An error occurred while calling the service to obtain sent notifications";
     private static final String ERROR_MESSAGE_SEARCH_NOTIFICATIONS = "errorReason = {}, An error occurred while calling the service to obtain sent notifications";
 
-    public NotificationAndMessageServiceImpl(PnDataVaultClient dataVaultClient, PnDeliveryClient pnDeliveryClient, PnDeliveryPushClient pnDeliveryPushClient) {
+    public NotificationAndMessageServiceImpl(PnDataVaultClient dataVaultClient, PnDeliveryClient pnDeliveryClient, PnDeliveryPushClient pnDeliveryPushClient, AuditLogService auditLogService) {
         this.dataVaultClient = dataVaultClient;
         this.pnDeliveryClient = pnDeliveryClient;
         this.pnDeliveryPushClient = pnDeliveryPushClient;
+        this.auditLogService = auditLogService;
     }
 
     @Override
     public Mono<SearchNotificationsResponse> searchNotificationsFromTaxId(String xPagopaPnUid, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, SearchNotificationsRequest request) {
         SearchNotificationsResponse response = new SearchNotificationsResponse();
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsFromTaxId for taxId = {}", request.getTaxId())
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsFromTaxId for taxId = {}", request.getTaxId());
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
                 .flatMap(internalId ->
                         pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, internalId, null, size, nextPagesKey)
@@ -109,8 +111,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     @Override
     public Mono<TimelineResponse> getTimelineOfIUN(String xPagopaPnUid, String iun) {
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "getTimelineOfIUN for IUN = {}", iun)
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getTimelineOfIUN for");
         return pnDeliveryClient.getSentNotificationPrivate(iun)
                 .onErrorResume(exception -> {
                     log.error(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage());
@@ -135,8 +136,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     @Override
     public Mono<DocumentsResponse> getDocumentsOfIun(String iun, DocumentsRequest request) {
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "getDocumentsOfIun for IUN = {}", iun)
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getDocumentsOfIun for");
         DocumentsResponse response = new DocumentsResponse();
         AtomicInteger documentsSize = new AtomicInteger(0);
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
@@ -163,8 +163,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     @NotNull
     private Flux<Document> getDocuments(String iun, Tuple2<String, SentNotificationV21Dto> internalIdAndSentNotificationV21Dto, DocumentsResponse response, AtomicInteger documentsSize) {
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "mapping getDocuments")
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "mapping getDocuments");
         if (!isNotificationCancelled(internalIdAndSentNotificationV21Dto.getT2(), iun)) {
             logEvent.generateSuccess("isNotificationCancelled = false");
             response.setDocumentsAvailable(true);
@@ -190,8 +189,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     @Override
     public Mono<NotificationDetailResponse> getNotificationFromIUN(String iun) {
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "getNotificationFromIUN for IUN = {}", iun)
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getNotificationFromIUN for");
         return this.pnDeliveryClient.getSentNotificationPrivate(iun)
                 .switchIfEmpty(Mono.empty())
                 .onErrorResume(exception -> {
@@ -208,8 +206,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     @Override
     public Mono<SearchNotificationsResponse> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, Integer size, String nextPagesKey, OffsetDateTime startDate, OffsetDateTime endDate) {
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsAsDelegateFromInternalId for delegateInternalId = {}", delegateInternalId)
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsAsDelegateFromInternalId for delegateInternalId = {}", delegateInternalId);
         SearchNotificationsResponse searchNotificationsResponse = new SearchNotificationsResponse();
         return pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, delegateInternalId, mandateId, size, nextPagesKey)
                 .onErrorResume(exception -> {
@@ -236,8 +233,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     private boolean isNotificationCancelled(SentNotificationV21Dto sentNotificationV21Dto, String iun) {
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "isNotificationCancelled")
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "isNotificationCancelled");
         AtomicBoolean cancellationTimelineIsPresent = new AtomicBoolean();
         return pnDeliveryPushClient.getNotificationHistory(iun, sentNotificationV21Dto.getRecipients().size(), sentNotificationV21Dto.getSentAt())
                 .switchIfEmpty(Mono.empty())

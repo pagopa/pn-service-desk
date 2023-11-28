@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
@@ -9,13 +8,12 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsUn
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
+import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationService;
-import lombok.AllArgsConstructor;
 import lombok.CustomLog;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import java.util.stream.Collectors;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_GET_UNREACHABLE_NOTIFICATION;
 
@@ -25,21 +23,22 @@ public class NotificationServiceImpl extends BaseService implements Notification
 
     private final PnDataVaultClient dataVaultClient;
     private final PnDeliveryPushClient pnDeliveryPushClient;
-    private final PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
+    @Autowired
+    private final AuditLogService auditLogService;
     private static final String ERROR_MESSAGE_PAPER_NOTIFICATION_FAILED = "errorReason = {}, An error occurred while calling the service to obtain unreachable notifications";
 
-    public NotificationServiceImpl(OperationDAO operationDAO, PnDataVaultClient dataVaultClient, PnDeliveryPushClient pnDeliveryPushClient) {
+    public NotificationServiceImpl(OperationDAO operationDAO, PnDataVaultClient dataVaultClient, PnDeliveryPushClient pnDeliveryPushClient, AuditLogService auditLogService) {
         super(operationDAO);
         this.dataVaultClient = dataVaultClient;
         this.pnDeliveryPushClient = pnDeliveryPushClient;
+        this.auditLogService = auditLogService;
     }
 
     @Override
     public Mono<NotificationsUnreachableResponse> getUnreachableNotification(String xPagopaPnUid, NotificationRequest notificationRequest) {
         log.debug("xPagopaPnUid = {}, notificationRequest = {}, GetUnreachableNotification received input", xPagopaPnUid, notificationRequest);
 
-        PnAuditLogEvent logEvent = auditLogBuilder.before(PnAuditLogEventType.AUD_NT_INSERT, "getting unreachable notification for taxId = {}", notificationRequest.getTaxId())
-                .build().log();
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getting unreachable notification for taxId = {}", notificationRequest.getTaxId());
 
         NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
         return dataVaultClient.anonymized(notificationRequest.getTaxId())
