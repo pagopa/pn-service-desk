@@ -9,7 +9,6 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.apikeysmanag
 import it.pagopa.pn.service.desk.service.ApiKeysService;
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import lombok.CustomLog;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -20,7 +19,6 @@ import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_KEY
 public class ApiKeysServiceImpl implements ApiKeysService {
 
     private final ApiKeysManagerClient apiKeysManagerClient;
-    @Autowired
     private final AuditLogService auditLogService;
 
     public ApiKeysServiceImpl(ApiKeysManagerClient apiKeysManagerClient, AuditLogService auditLogService) {

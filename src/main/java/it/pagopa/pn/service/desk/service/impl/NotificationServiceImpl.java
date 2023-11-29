@@ -11,7 +11,6 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import lombok.CustomLog;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -23,7 +22,6 @@ public class NotificationServiceImpl extends BaseService implements Notification
 
     private final PnDataVaultClient dataVaultClient;
     private final PnDeliveryPushClient pnDeliveryPushClient;
-    @Autowired
     private final AuditLogService auditLogService;
     private static final String ERROR_MESSAGE_PAPER_NOTIFICATION_FAILED = "errorReason = {}, An error occurred while calling the service to obtain unreachable notifications";
 

@@ -13,7 +13,6 @@ import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.ProfileService;
 import lombok.CustomLog;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -29,7 +28,6 @@ public class ProfileServiceImpl implements ProfileService {
     private final PnUserAttributesClient userAttributesClient;
     private final MandateClient mandateClient;
     public static final String SENDER_ID_DEFAULT = "default";
-    @Autowired
     private final AuditLogService auditLogService;
     private static final String ERROR_MESSAGE_SENDER_LEGAL_ADDRESS = "errorReason = {}, An error occurred while call service for obtain legal address by sender";
     private static final String ERROR_MESSAGE_SENDER_COURTESY_ADDRESS = "errorReason = {}, An error occurred while call service for obtain courtesy address by sender";

@@ -19,10 +19,8 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import it.pagopa.pn.service.desk.service.OperationsService;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -37,15 +35,13 @@ import static it.pagopa.pn.service.desk.utility.Utility.CONTENT_TYPE_VALUE;
 
 @Slf4j
 @Service
-@AllArgsConstructor
 public class OperationsServiceImpl implements OperationsService {
-    private NotificationService notificationService;
-    private PnDataVaultClient dataVaultClient;
-    private PnSafeStorageClient safeStorageClient;
-    private OperationDAO operationDAO;
-    private OperationsFileKeyDAO operationsFileKeyDAO;
-    private PnServiceDeskConfigs cfn;
-    @Autowired
+    private final NotificationService notificationService;
+    private final PnDataVaultClient dataVaultClient;
+    private final PnSafeStorageClient safeStorageClient;
+    private final OperationDAO operationDAO;
+    private final OperationsFileKeyDAO operationsFileKeyDAO;
+    private final PnServiceDeskConfigs cfn;
     private final AuditLogService auditLogService;
     private static final String ERROR_MESSAGE_NO_UNREACHABLE_NOTIFICATIONS = "errorReason = {}, no unreachable notifications found";
     private static final String ERROR_MESSAGE_OPERATION_ALREADY_PRESENT = "errorReason = {}, no unreachable notifications found";
@@ -53,6 +49,18 @@ public class OperationsServiceImpl implements OperationsService {
     private static final String ERROR_MESSAGE_SAFE_STORAGE_FILE_LOADING = "errorReason = {}, file loading";
     private static final String ERROR_MESSAGE_RECOVERING_FILE = "errorReason = {}, error during file recover";
 
+    public OperationsServiceImpl(NotificationService notificationService, PnDataVaultClient dataVaultClient,
+                                 PnSafeStorageClient safeStorageClient, OperationDAO operationDAO,
+                                 OperationsFileKeyDAO operationsFileKeyDAO, PnServiceDeskConfigs cfn,
+                                 AuditLogService auditLogService) {
+        this.notificationService = notificationService;
+        this.dataVaultClient = dataVaultClient;
+        this.safeStorageClient = safeStorageClient;
+        this.operationDAO = operationDAO;
+        this.operationsFileKeyDAO = operationsFileKeyDAO;
+        this.cfn = cfn;
+        this.auditLogService = auditLogService;
+    }
 
     @Override
     public Mono<OperationsResponse> createOperation(String xPagopaPnUid, CreateOperationRequest createOperationRequest) {

@@ -15,7 +15,6 @@ import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.InfoPaService;
 import it.pagopa.pn.service.desk.mapper.InfoPaMapper;
 import lombok.CustomLog;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -29,7 +28,6 @@ public class InfoPaServiceImpl implements InfoPaService {
     private final ExternalRegistriesClient externalRegistriesClient;
     private final PnDeliveryClient pnDeliveryClient;
     private static final BaseMapper<PaSummary, PaSummaryDto> baseMapper = new BaseMapperImpl<>(PaSummary.class, PaSummaryDto.class);
-    @Autowired
     private final AuditLogService auditLogService;
 
     public InfoPaServiceImpl(ExternalRegistriesClient externalRegistriesClient, PnDeliveryClient pnDeliveryClient, AuditLogService auditLogService) {
