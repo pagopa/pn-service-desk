@@ -9,6 +9,7 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
+import it.pagopa.pn.service.desk.service.NotificationAndMessageService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -35,7 +36,7 @@ class NotificationAndMessageServiceImplTest extends BaseTest {
     @MockBean
     private PnDeliveryPushClient pnDeliveryPushClient;
     @Autowired
-    private NotificationAndMessageServiceImpl notificationAndMessageService;
+    private NotificationAndMessageService notificationAndMessageService;
 
     @Test
     void searchNotificationsFromTaxId(){
