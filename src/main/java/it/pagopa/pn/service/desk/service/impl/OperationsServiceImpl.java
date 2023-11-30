@@ -124,7 +124,7 @@ public class OperationsServiceImpl implements OperationsService {
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchOperationsFromRecipientInternalId for taxId = {}", searchNotificationRequest.getTaxId());
 
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
-                .flatMapMany(taxId -> operationDAO.searchOperationsFromRecipientInternalId(taxId))
+                .flatMapMany(operationDAO::searchOperationsFromRecipientInternalId)
                 .map(operationResponseMapper -> OperationMapper.operationResponseMapper(cfn, operationResponseMapper, searchNotificationRequest.getTaxId()))
                 .collectSortedList((op1, op2) ->
                         (op2.getOperationUpdateTimestamp() != null ? op2.getOperationUpdateTimestamp()  : OffsetDateTime.now())
