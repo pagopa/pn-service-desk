@@ -43,7 +43,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public Mono<ProfileResponse> getProfileFromTaxId(String xPagopaPnUid, ProfileRequest profileRequest) {
-        auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getProfileFromTaxId for taxId = {}", profileRequest.getTaxId());
+        auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getProfileFromTaxId for taxId = {}", profileRequest.getTaxId()); //FIXME mascherare il taxID
 
         ProfileResponse response = new ProfileResponse();
         return dataVaultClient.anonymized(profileRequest.getTaxId(), profileRequest.getRecipientType().getValue())
@@ -52,24 +52,26 @@ public class ProfileServiceImpl implements ProfileService {
                 .flatMap(internalId -> getMandate(internalId, response)
                 )
                 .flatMap(this::deAnonymizedInternalId);
+        //FIXME i due flatMap, posso essere fatti in parallelo? Magari utilizzando Mono.zip() e valorizzando ProfileRequest alla fine e noi in getAddress e getMandate
+        //FIXME inserire qui gli audit log di failure e quello di success
     }
 
     @NotNull
     private Mono<ProfileResponse> getMandate(String internalId, ProfileResponse response) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getMandate for internalId = {}", internalId);
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getMandate for internalId = {}", internalId); //FIXME da eliminare
         return mandateClient.listMandatesByDelegator(internalId)
                 .collectList()
                 .onErrorResume(exception -> {
-                    log.error("errorReason = {}, error = {}, Error during listMandatesByDelegator", exception.getMessage(), exception);
-                    logEvent.generateFailure(ERROR_MESSAGE_LIST_MANDATES_BY_DELEGATOR, exception.getMessage()).log();
+                    log.error("errorReason = {}, error = {}, Error during listMandatesByDelegator", exception.getMessage(), exception); //FIXME log da correggere
+                    logEvent.generateFailure(ERROR_MESSAGE_LIST_MANDATES_BY_DELEGATOR, exception.getMessage()).log(); //FIXME da eliminare
                     return Mono.error(new PnGenericException(ERROR_ON_MANDATE_CLIENT, exception.getMessage()));
                 })
                 .flatMap(internalMandateDelegators ->
                         mandateClient.listMandatesByDelegate(internalId)
                                 .collectList()
                                 .onErrorResume(exception -> {
-                                    log.error("errorReason = {}, error = {}, Error during listMandatesByDelegate", exception.getMessage(), exception);
-                                    logEvent.generateFailure(ERROR_MESSAGE_LIST_MANDATES_BY_DELEGATE, exception.getMessage()).log();
+                                    log.error("errorReason = {}, error = {}, Error during listMandatesByDelegate", exception.getMessage(), exception); //FIXME log da correggere
+                                    logEvent.generateFailure(ERROR_MESSAGE_LIST_MANDATES_BY_DELEGATE, exception.getMessage()).log(); //FIXME da eliminare
                                     return Mono.error(new PnGenericException(ERROR_ON_MANDATE_CLIENT, exception.getMessage()));
                                 })
                                 .map(internalMandateDelegates -> ProfileMapper.getMandate(internalMandateDelegators, internalMandateDelegates, response))
@@ -78,11 +80,11 @@ public class ProfileServiceImpl implements ProfileService {
 
     @NotNull
     private Mono<String> getAddress(String internalId, ProfileResponse response) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getAddress for internalId = {}", internalId);
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getAddress for internalId = {}", internalId); //FIXME da eliminare, già è presente nel chiamante
         return userAttributesClient.getLegalAddressBySender(internalId, SENDER_ID_DEFAULT)
                 .onErrorResume(exception -> {
-                    log.error("errorReason = {}, error = {}, Error during getLegalAddressBySender", exception.getMessage(), exception);
-                    logEvent.generateFailure(ERROR_MESSAGE_SENDER_LEGAL_ADDRESS, exception.getMessage());
+                    log.error("errorReason = {}, error = {}, Error during getLegalAddressBySender", exception.getMessage(), exception); //FIXME log sbagliato, eliminare la seconda parentesi e modificare il messaggio
+                    logEvent.generateFailure(ERROR_MESSAGE_SENDER_LEGAL_ADDRESS, exception.getMessage()); //FIXME i log di autit vanno solo nel service "padre"
                     return Mono.error(new PnGenericException(ERROR_ON_USER_ATTRIBUTES_CLIENT, exception.getMessage()));
                 })
                 .collectList()
@@ -90,8 +92,8 @@ public class ProfileServiceImpl implements ProfileService {
                         userAttributesClient.getCourtesyAddressBySender(internalId, SENDER_ID_DEFAULT)
                                 .collectList()
                                 .onErrorResume(exception -> {
-                                    log.error("errorReason = {}, error = {}, Error during getCourtesyAddressBySender", exception.getMessage(), exception);
-                                    logEvent.generateFailure(ERROR_MESSAGE_SENDER_COURTESY_ADDRESS, exception.getMessage()).log();
+                                    log.error("errorReason = {}, error = {}, Error during getCourtesyAddressBySender", exception.getMessage(), exception); //FIXME log sbagliato, eliminare la seconda parentesi e modificare il messaggio
+                                    logEvent.generateFailure(ERROR_MESSAGE_SENDER_COURTESY_ADDRESS, exception.getMessage()).log(); //FIXME i log di autit vanno solo nel service "padre"
                                     return Mono.error(new PnGenericException(ERROR_ON_USER_ATTRIBUTES_CLIENT, exception.getMessage()));
                                 })
                                 .map(courtesyDigitalAddressDtos -> ProfileMapper.getAddress(legalDigitalAddressDtos, courtesyDigitalAddressDtos, response))
@@ -116,7 +118,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @NotNull
     private Mono<ProfileResponse> updateDelegatorMandates(ProfileResponse profileResponse) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "updateDelegatorMandates");
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "updateDelegatorMandates"); //FIXME da eliminare
         return Flux.fromIterable(profileResponse.getDelegatorMandates())
                 .flatMap(mandate -> dataVaultClient.deAnonymized(mandate.getDelegateInternalId())
                         .map(taxId -> {
@@ -126,7 +128,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .collectList()
                 .map(updatedMandates -> {
                     profileResponse.setDelegatorMandates(updatedMandates);
-                    logEvent.generateSuccess("getProfileFromTaxId response = {}", profileResponse).log();
+                    logEvent.generateSuccess("getProfileFromTaxId response = {}", profileResponse).log(); //FIXME da eliminare
                     return profileResponse;
                 });
     }

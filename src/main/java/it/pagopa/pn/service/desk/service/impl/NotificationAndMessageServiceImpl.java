@@ -65,12 +65,12 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
                                 })
                 )
-                .switchIfEmpty(Mono.empty())
+                .switchIfEmpty(Mono.empty()) //FIXME, inutile, da cancellare
                 .flatMapMany(notificationSearchResponseDto -> getNotificationSearchRowFlux(notificationSearchResponseDto, response))
                 .flatMap(notificationSearchRowDto ->
                         this.pnDeliveryPushClient.getNotificationHistory(notificationSearchRowDto.getIun(), notificationSearchRowDto.getRecipients().size(), notificationSearchRowDto.getSentAt())
                                 .onErrorResume(exception -> {
-                                    log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
+                                    log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()); //FIXME logghiamo l'eccezione completa
                                     logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()).log();
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
                                 })
@@ -101,7 +101,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         if (notificationHistoryResponseDto.getTimeline() != null) {
             filteredElements = notificationHistoryResponseDto.getTimeline()
                     .stream()
-                    .filter(element -> element.getCategory().equals(TimelineElementCategoryV20Dto.SEND_COURTESY_MESSAGE))
+                    .filter(element -> element.getCategory().equals(TimelineElementCategoryV20Dto.SEND_COURTESY_MESSAGE)) //FIXME qui dovremmo aggiungere anche il filtro per recipientId, altrimenti avremmo i messaggi di cortesia anche di altri destinatari
                     .toList();
         }
         return filteredElements;
@@ -112,7 +112,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getTimelineOfIUN for");
         return pnDeliveryClient.getSentNotificationPrivate(iun)
                 .onErrorResume(exception -> {
-                    log.error(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage());
+                    log.error(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()); //FIXME loggare tutta l'eccezione
                     logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
                 })
@@ -120,7 +120,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                         pnDeliveryPushClient.getNotificationHistory(iun, sentNotificationV21Dto.getRecipients().size(), sentNotificationV21Dto.getSentAt())
                                 .switchIfEmpty(Mono.empty())
                                 .onErrorResume(exception -> {
-                                    log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
+                                    log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()); //FIXME loggare tutta l'eccezione
                                     logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()).log();
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
                                 })
@@ -189,9 +189,9 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     public Mono<NotificationDetailResponse> getNotificationFromIUN(String iun) {
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getNotificationFromIUN for");
         return this.pnDeliveryClient.getSentNotificationPrivate(iun)
-                .switchIfEmpty(Mono.empty())
+                .switchIfEmpty(Mono.empty()) //FIXME inutile, da eliminare
                 .onErrorResume(exception -> {
-                    log.error(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage());
+                    log.error(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()); //FIXME loggare tutta l'eccezione
                     logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage());
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
                 })

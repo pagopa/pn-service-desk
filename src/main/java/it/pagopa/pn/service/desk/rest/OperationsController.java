@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
 public class OperationsController implements OperationApi {
 
     @Autowired
-    private OperationsService operationsService;
+    private OperationsService operationsService; //FIXME constructor injection
 
     @Override
     public Mono<ResponseEntity<OperationsResponse>> createOperation(String xPagopaPnUid, Mono<CreateOperationRequest> createOperationRequest, ServerWebExchange exchange) {

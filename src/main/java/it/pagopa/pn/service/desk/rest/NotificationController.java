@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 public class NotificationController implements NotificationApi {
 
     @Autowired
-    private NotificationService notificationService;
+    private NotificationService notificationService; //FIXME constructor injection
 
     @Override
     public Mono<ResponseEntity<NotificationsUnreachableResponse>> numberOfUnreachableNotifications(String xPagopaPnUid, Mono<NotificationRequest> notificationRequest, ServerWebExchange exchange) {

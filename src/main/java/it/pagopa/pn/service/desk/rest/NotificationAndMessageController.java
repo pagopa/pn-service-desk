@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
 @RestController
 public class NotificationAndMessageController implements NotificationAndMessageApi {
    @Autowired
-    private NotificationAndMessageService notificationAndMessageService;
+    private NotificationAndMessageService notificationAndMessageService; //FIXME constructor injection
 
     @Override
     public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsFromTaxId(String xPagopaPnUid, Integer size, String nextPagesKey, OffsetDateTime startDate, OffsetDateTime endDate, Mono<SearchNotificationsRequest> searchNotificationsRequest, final ServerWebExchange exchange) {

@@ -59,7 +59,7 @@ components:
     queryStartDate:
       name: startDate
       in: query
-      required: false
+      required: false #FIXME vedo che su delivery questo campo è obbligatorio, dovremmo quindi anche noi fare lo stesso
       schema:
         type: string
         format: date-time
@@ -67,7 +67,7 @@ components:
     queryEndDate:
       name: endDate
       in: query
-      required: false
+      required: false #FIXME vedo che su delivery questo campo è obbligatorio, dovremmo quindi anche noi fare lo stesso
       schema:
         type: string
         format: date-time

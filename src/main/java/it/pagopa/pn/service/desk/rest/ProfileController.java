@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 public class ProfileController implements ProfileApi {
 
     @Autowired
-    ProfileService profileService;
+    ProfileService profileService; //FIXME constructor injection
     @Override
     public Mono<ResponseEntity<ProfileResponse>> getProfileFromTaxId(String xPagopaPnUid, Mono<ProfileRequest> profileRequest, ServerWebExchange exchange) {
         return profileRequest.flatMap(request -> profileService.getProfileFromTaxId(xPagopaPnUid, request)

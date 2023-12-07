@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
 public class InfoPaController implements PaApi {
 
     @Autowired
-    private InfoPaService infoPaService;
+    private InfoPaService infoPaService; //FIXME constructor injection
 
     @Override
     public Mono<ResponseEntity<Flux<PaSummary>>> getListOfOnboardedPA(String xPagopaPnUid, final ServerWebExchange exchange) {
