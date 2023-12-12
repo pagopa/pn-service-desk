@@ -71,7 +71,7 @@ public class InfoPaServiceImplTest extends BaseTest {
 
     @Test
     void searchNotificationsFromSenderId(){
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(expectedNotificationSearchResponse));
 
         SearchNotificationsResponse actual = this.infoPaService.searchNotificationsFromSenderId(null, 1, null, this.getPaNotificationsRequest())

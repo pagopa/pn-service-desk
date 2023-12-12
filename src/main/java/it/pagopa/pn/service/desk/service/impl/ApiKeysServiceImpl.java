@@ -30,7 +30,7 @@ public class ApiKeysServiceImpl implements ApiKeysService {
     public Mono<ResponseApiKeys> getApiKeys(String paId) {
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getApiKeys for paId={}", paId);
         return apiKeysManagerClient.getBoApiKeys(paId).switchIfEmpty(Mono.empty()).onErrorResume(exception -> {
-            log.error("errorReason = {}, An error occurred while calling the service to obtain api keys", exception.getMessage());
+            log.error("errorReason = {}, An error occurred while calling the service to obtain api keys", exception.getMessage(), exception);
             logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain api keys" + exception.getMessage()).log();
             return Mono.error(new PnGenericException(ERROR_ON_KEYS_MANAGER_CLIENT, exception.getMessage()));
         }).map(responseApiKeysDto -> {

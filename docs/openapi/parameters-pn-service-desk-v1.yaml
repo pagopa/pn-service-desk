@@ -59,7 +59,7 @@ components:
     queryStartDate:
       name: startDate
       in: query
-      required: false
+      required: true
       schema:
         type: string
         format: date-time
@@ -67,7 +67,7 @@ components:
     queryEndDate:
       name: endDate
       in: query
-      required: false
+      required: true
       schema:
         type: string
         format: date-time

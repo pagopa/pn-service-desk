@@ -8,7 +8,7 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadResp
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchResponse;
 import it.pagopa.pn.service.desk.service.OperationsService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,10 +16,10 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @RestController
+@AllArgsConstructor
 public class OperationsController implements OperationApi {
 
-    @Autowired
-    private OperationsService operationsService;
+    private final OperationsService operationsService;
 
     @Override
     public Mono<ResponseEntity<OperationsResponse>> createOperation(String xPagopaPnUid, Mono<CreateOperationRequest> createOperationRequest, ServerWebExchange exchange) {

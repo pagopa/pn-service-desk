@@ -3,7 +3,7 @@ package it.pagopa.pn.service.desk.rest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.api.ApiKeysApi;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.ResponseApiKeys;
 import it.pagopa.pn.service.desk.service.ApiKeysService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,10 +11,10 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @RestController
+@AllArgsConstructor
 public class ApiKeysController implements ApiKeysApi {
 
-    @Autowired
-    private ApiKeysService apiKeysService;
+    private final ApiKeysService apiKeysService;
 
     @Override
     public Mono<ResponseEntity<ResponseApiKeys>> getApiKeys(String paId, ServerWebExchange exchange) {

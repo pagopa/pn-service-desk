@@ -43,7 +43,7 @@ class NotificationAndMessageServiceImplTest extends BaseTest {
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("taxId"));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNotificationHistoryResponseDto()));
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
         SearchNotificationsResponse actualResponse = notificationAndMessageService.searchNotificationsFromTaxId("fkdokm",
                 OffsetDateTime.parse("2023-08-15T15:49:05.63Z"),
@@ -73,7 +73,7 @@ class NotificationAndMessageServiceImplTest extends BaseTest {
     void searchNotificationsFromTaxIdWhenPnDeliveryClientError(){
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_CLIENT, ERROR_ON_DELIVERY_CLIENT.getMessage());
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("taxId"));
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(pnGenericException));
 
         StepVerifier.create(notificationAndMessageService.searchNotificationsFromTaxId("fkdokm",
@@ -92,7 +92,7 @@ class NotificationAndMessageServiceImplTest extends BaseTest {
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("taxId"));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(pnGenericException));
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
 
         StepVerifier.create(notificationAndMessageService.searchNotificationsFromTaxId("fkdokm",
@@ -196,7 +196,7 @@ class NotificationAndMessageServiceImplTest extends BaseTest {
 
     @Test
     void searchNotificationsAsDelegateFromInternalIdTest(){
-        Mockito.when(pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getNotificationSearchResponseDto()));
+        Mockito.when(pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getNotificationSearchResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getNotificationHistoryResponseDto()));
 
         SearchNotificationsResponse response = notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", "", "", 1, "", OffsetDateTime.now(), OffsetDateTime.now()).block();
@@ -206,7 +206,7 @@ class NotificationAndMessageServiceImplTest extends BaseTest {
     @Test
     void searchNotificationsAsDelegateFromInternalIdDeliveryClientError(){
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_CLIENT, ERROR_ON_DELIVERY_CLIENT.getMessage());
-        Mockito.when(pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.error(pnGenericException));
+        Mockito.when(pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.error(pnGenericException));
 
 
         StepVerifier.create(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", "", "", 1, "", OffsetDateTime.now(), OffsetDateTime.now()))
@@ -217,7 +217,7 @@ class NotificationAndMessageServiceImplTest extends BaseTest {
     @Test
     void searchNotificationsAsDelegateFromInternalIdDeliveryPushClientError(){
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ERROR_ON_DELIVERY_PUSH_CLIENT.getMessage());
-        Mockito.when(pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getNotificationSearchResponseDto()));
+        Mockito.when(pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getNotificationSearchResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.error(pnGenericException));
 
 
