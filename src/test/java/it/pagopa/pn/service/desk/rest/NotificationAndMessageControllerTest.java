@@ -32,7 +32,6 @@ class NotificationAndMessageControllerTest {
                 .thenReturn(Mono.just(new PnClientID()));
     }
 
-    //FIXME aggiungere qualche test anche di KO, ad esempio se pnDeliveryClient.searchNotificationsPrivate restituisce 400, quale status http restituiamo al client?
     @Test
     void searchCourtesyMessagesFromTaxIdTest(){
         SearchNotificationsResponse response = new SearchNotificationsResponse();

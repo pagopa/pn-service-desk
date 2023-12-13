@@ -116,7 +116,9 @@ class NotificationAndMessageServiceImplTest  { //FIXME i test unitari sui Servic
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getHistory()));
 
         TimelineResponse response = notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1").block();
-        Assertions.assertNotNull(response); //FIXME aggiungere qualche assert in più su qualche campo... in generale vale anche per gli altri test
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(IunStatus.ACCEPTED, response.getIunStatus());
+        Assertions.assertEquals(1, response.getTimeline().size());
 
     }
 
@@ -146,6 +148,7 @@ class NotificationAndMessageServiceImplTest  { //FIXME i test unitari sui Servic
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("taxId"));
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV21Dto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getHistory()));
+        Mockito.when(this.pnDeliveryClient.getReceivedNotificationDocumentPrivate("PRVZ-NZKM-JEDK-202309-A-1", 0, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", null)).thenReturn(Mono.just(getDocuments()));
         DocumentsRequest request = new DocumentsRequest();
         request.setRecipientType(RecipientType.PF);
         request.setTaxId("FRMTTR76M06B715E");
@@ -186,6 +189,10 @@ class NotificationAndMessageServiceImplTest  { //FIXME i test unitari sui Servic
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV21Dto()));
         NotificationDetailResponse response = notificationAndMessageService.getNotificationFromIUN("PRVZ-NZKM-JEDK-202309-A-1").block();
         Assertions.assertNotNull(response);
+        Assertions.assertEquals("FRMTTR76M06B715E", response.getSenderTaxId());
+        Assertions.assertEquals("31/12/2023", response.getPaymentExpirationDate());
+        Assertions.assertEquals("comune", response.getSenderDenomination());
+        Assertions.assertEquals("AR_REGISTERED_LETTER", response.getPhysicalCommunicationType().getValue());
     }
 
     @Test
@@ -205,6 +212,11 @@ class NotificationAndMessageServiceImplTest  { //FIXME i test unitari sui Servic
 
         SearchNotificationsResponse response = notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", "", "", 1, "", OffsetDateTime.now(), OffsetDateTime.now()).block();
         Assertions.assertNotNull(response);
+        Assertions.assertEquals(1, response.getNextPagesKey().size());
+        Assertions.assertEquals(1, response.getResults().size());
+        Assertions.assertEquals(true, response.getMoreResult());
+
+
     }
 
     @Test
