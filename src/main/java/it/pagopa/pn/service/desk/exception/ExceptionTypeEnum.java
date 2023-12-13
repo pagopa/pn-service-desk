@@ -38,7 +38,8 @@ public enum ExceptionTypeEnum {
     IUNS_ALREADY_IN_PROGRESS("IUNS_ALREADY_IN_PROGRESS","Iuns already in progress"),
     ERROR_ON_USER_ATTRIBUTES_CLIENT("ERROR_ON_USER_ATTRIBUTES_CLIENT", "Error in User attribute failed service"),
     ERROR_ON_MANDATE_CLIENT("ERROR_ON_MANDATE_CLIENT", "Error in Mandate failed service"),
-    ERROR_ON_KEYS_MANAGER_CLIENT("ERROR_ON_KEYS_MANAGER_CLIENT","Error in Keys Manager failed service");
+    ERROR_ON_KEYS_MANAGER_CLIENT("ERROR_ON_KEYS_MANAGER_CLIENT","Error in Keys Manager failed service"),
+    ERROR_ON_EXTERNAL_REGISTRIES_CLIENT("ERROR_ON_EXTERNAL_REGISTRIES_CLIENT","Error in External Registries failed service");
 
     private final String title;
     private final String message;

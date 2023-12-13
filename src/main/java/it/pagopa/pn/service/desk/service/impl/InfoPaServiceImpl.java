@@ -21,6 +21,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_EXTERNAL_REGISTRIES_CLIENT;
 
 @Service
 @CustomLog
@@ -39,7 +40,13 @@ public class InfoPaServiceImpl implements InfoPaService {
 
     @Override
     public Flux<PaSummary> getListOfOnboardedPA(String xPagopaPnUid) {
+        PnAuditLogEvent logEvent =  auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getListOfOnboardedPA");
         return externalRegistriesClient.listOnboardedPa()
+                .onErrorResume(WebClientResponseException.class, exception -> {
+                    log.error("errorReason = {}, An error occurred while calling the service to obtain list onboarded PA", exception.getMessage());
+                    logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain list onboarded PA", exception.getMessage()).log();
+                    return Mono.error(new PnGenericException(ERROR_ON_EXTERNAL_REGISTRIES_CLIENT, exception.getStatusCode()));
+                })
                 .map(baseMapper::toEntity);
     }
 

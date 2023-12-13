@@ -1,5 +1,7 @@
 package it.pagopa.pn.service.desk.rest;
 
+import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
+import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.ResponseApiKeys;
 import it.pagopa.pn.service.desk.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnClientID;
@@ -10,6 +12,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
@@ -43,5 +46,20 @@ public class ApiKeysControllerTest {
                 .header("x-api-key", "test")
                 .exchange()
                 .expectStatus().isOk();
+    }
+
+    @Test
+    void getApiKeysOkTest (){
+        String path = "/service-desk/api-keys";
+        Mockito.when(apiKeysService.getApiKeys(Mockito.anyString())).thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.API_KEY_EMPTY, HttpStatus.BAD_REQUEST)));
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path(path)
+                        .queryParam("paId", "ahdk-213124-4das")
+                        .build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 }

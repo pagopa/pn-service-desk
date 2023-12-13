@@ -1,5 +1,7 @@
 package it.pagopa.pn.service.desk.rest;
 
+import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
+import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.ProfileRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.ProfileResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.RecipientType;
@@ -46,6 +48,23 @@ class ProfileControllerTest {
                 .bodyValue(getProfileRequest())
                 .exchange()
                 .expectStatus().isOk();
+    }
+
+    @Test
+    void getProfileFromTaxIdTestKO(){
+        ProfileResponse response = new ProfileResponse();
+        String path = "/service-desk/profile";
+        Mockito.when(profileService.getProfileFromTaxId(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR.getMessage())));
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path(path)
+                        .build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .bodyValue(getProfileRequest())
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 
     private ProfileRequest getProfileRequest(){

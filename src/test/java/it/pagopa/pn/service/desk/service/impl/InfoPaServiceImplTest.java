@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusDto;
@@ -10,27 +9,31 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaSummary;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregistries.ExternalRegistriesClient;
-import it.pagopa.pn.service.desk.service.InfoPaService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+@ExtendWith(MockitoExtension.class)
+class InfoPaServiceImplTest {
 
-public class InfoPaServiceImplTest extends BaseTest {
-
-    @MockBean
+    @Mock
     private ExternalRegistriesClient externalRegistriesClient;
-    @MockBean
+    @Mock
     private PnDeliveryClient pnDeliveryClient;
-    @Autowired
-    private InfoPaService infoPaService;
+    @InjectMocks
+    private InfoPaServiceImpl infoPaService;
+    @Spy
+    private AuditLogServiceImpl auditLogService;
 
     private final PaSummaryDto expectedPaSummary = new PaSummaryDto();
     private final NotificationSearchResponseDto expectedNotificationSearchResponse = new NotificationSearchResponseDto();

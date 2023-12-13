@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnapikeymanager.v1.dto.ApiKeyRowDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnapikeymanager.v1.dto.ApiKeyStatusDto;
@@ -11,9 +10,12 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.apikeysmanag
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -22,14 +24,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_KEYS_MANAGER_CLIENT;
+@ExtendWith(MockitoExtension.class)
+class ApiKeysServiceImplTest {
 
-class ApiKeysServiceImplTest extends BaseTest {
-
-    @MockBean
+    @Mock
     private ApiKeysManagerClient apiKeysManagerClient;
-    @Autowired
+    @InjectMocks
     private ApiKeysServiceImpl apiKeysService;
-
+    @Spy
+    private AuditLogServiceImpl auditLogService;
     private final ResponseApiKeysDto responseApiKeysDto = new ResponseApiKeysDto();
 
     @BeforeEach
