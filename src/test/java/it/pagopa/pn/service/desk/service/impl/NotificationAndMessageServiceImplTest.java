@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.*;
@@ -9,12 +8,14 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
-import it.pagopa.pn.service.desk.service.NotificationAndMessageService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -27,19 +28,23 @@ import java.util.List;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_PUSH_CLIENT;
 
-class NotificationAndMessageServiceImplTest extends BaseTest {
+@ExtendWith(MockitoExtension.class)
+class NotificationAndMessageServiceImplTest  { //FIXME i test unitari sui Service, rendiamoli "unitari", non dovremmo creare nè il contesto di Spring nè a maggior ragione LocalStack. Prendere esempio dalla modifica di questo test
 
-    @MockBean
+    @Mock
     private PnDataVaultClient dataVaultClient;
-    @MockBean
+    @Mock
     private PnDeliveryClient pnDeliveryClient;
-    @MockBean
+    @Mock
     private PnDeliveryPushClient pnDeliveryPushClient;
-    @Autowired
-    private NotificationAndMessageService notificationAndMessageService;
+
+    @Spy
+    private AuditLogServiceImpl auditLogService;
+    @InjectMocks
+    private NotificationAndMessageServiceImpl notificationAndMessageService;
 
     @Test
-    void searchNotificationsFromTaxId(){
+    void searchNotificationsFromTaxId(){ //FIXME troppi Mockito.any, rendiamo i test più robusti mettendo gli input e gli output che ci aspettiamo (quando possibile). PS: vale anche per gli altri test sui service
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("taxId"));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNotificationHistoryResponseDto()));
@@ -111,7 +116,7 @@ class NotificationAndMessageServiceImplTest extends BaseTest {
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getHistory()));
 
         TimelineResponse response = notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1").block();
-        Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response); //FIXME aggiungere qualche assert in più su qualche campo... in generale vale anche per gli altri test
 
     }
 
@@ -141,7 +146,6 @@ class NotificationAndMessageServiceImplTest extends BaseTest {
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("taxId"));
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV21Dto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getHistory()));
-        Mockito.when(this.pnDeliveryClient.getReceivedNotificationDocumentPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getDocuments()));
         DocumentsRequest request = new DocumentsRequest();
         request.setRecipientType(RecipientType.PF);
         request.setTaxId("FRMTTR76M06B715E");
