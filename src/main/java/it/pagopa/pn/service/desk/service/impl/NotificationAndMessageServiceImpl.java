@@ -19,6 +19,7 @@ import it.pagopa.pn.service.desk.service.NotificationAndMessageService;
 import lombok.CustomLog;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -59,22 +60,23 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
                 .flatMap(internalId ->
                         pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, internalId, null, null, size, nextPagesKey)
-                                .onErrorResume(exception -> {
+                                .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage());
                                     logEvent.generateFailure(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage()).log();
-                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                                 })
                 )
                 .flatMapMany(notificationSearchResponseDto -> getNotificationSearchRowFlux(notificationSearchResponseDto, response))
                 .flatMap(notificationSearchRowDto ->
                         this.pnDeliveryPushClient.getNotificationHistory(notificationSearchRowDto.getIun(), notificationSearchRowDto.getRecipients().size(), notificationSearchRowDto.getSentAt())
-                                .onErrorResume(exception -> {
+                                .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error("An error occurred while call service for obtain notification history: ", exception);
                                     logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()).log();
-                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
+                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getStatusCode()));
                                 })
                                 .map(notificationHistoryResponseDto -> NotificationAndMessageMapper
-                                        .getNotification(notificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto)))
+                                        .getNotification(notificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto, getIndexTaxId(request.getTaxId(), notificationSearchRowDto.getRecipients())))
+                                )
                 )
                 .collectList()
                 .map(notifications -> {
@@ -82,6 +84,10 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                     logEvent.generateSuccess("searchNotificationsFromTaxId response = {}", response).log();
                     return response;
                 });
+    }
+
+    private Integer getIndexTaxId(String taxId, List<String> recipients) {
+        return recipients.indexOf(taxId);
     }
 
     @NotNull
@@ -95,12 +101,18 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @NotNull
-    private static List<TimelineElementV20Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto) {
+    private static List<TimelineElementV20Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, Integer indexTaxId) {
         List<TimelineElementV20Dto> filteredElements = new ArrayList<>();
         if (notificationHistoryResponseDto.getTimeline() != null) {
             filteredElements = notificationHistoryResponseDto.getTimeline()
                     .stream()
-                    .filter(element -> element.getCategory().equals(TimelineElementCategoryV20Dto.SEND_COURTESY_MESSAGE))
+                    .filter(element -> {
+                        if(element.getCategory() != null && element.getDetails() != null){
+                            return element.getCategory().equals(TimelineElementCategoryV20Dto.SEND_COURTESY_MESSAGE) &&
+                                    element.getDetails().getRecIndex().equals(indexTaxId);
+                        }
+                        return false;
+                    })
                     .toList();
         }
         return filteredElements;
@@ -110,18 +122,18 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     public Mono<TimelineResponse> getTimelineOfIUN(String xPagopaPnUid, String iun) {
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getTimelineOfIUN for");
         return pnDeliveryClient.getSentNotificationPrivate(iun)
-                .onErrorResume(exception -> {
+                .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
                     logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                 })
                 .flatMap(sentNotificationV21Dto ->
                         pnDeliveryPushClient.getNotificationHistory(iun, sentNotificationV21Dto.getRecipients().size(), sentNotificationV21Dto.getSentAt())
                                 .switchIfEmpty(Mono.empty())
-                                .onErrorResume(exception -> {
+                                .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error("An error occurred while call service for obtain notification history: ", exception);
                                     logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()).log();
-                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
+                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getStatusCode()));
                                 })
                                 .map(historyResponseDto -> {
                                     TimelineResponse response = NotificationAndMessageMapper.getTimeline(historyResponseDto);
@@ -139,10 +151,10 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
                 .zipWhen(internalId -> pnDeliveryClient.getSentNotificationPrivate(iun)
                         .switchIfEmpty(Mono.empty())
-                        .onErrorResume(exception -> {
+                        .onErrorResume(WebClientResponseException.class, exception -> {
                             log.error(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage());
                             logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
-                            return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                            return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                         })
                 )
                 .flatMapMany(internalIdAndSentNotificationV21Dto ->
@@ -168,10 +180,10 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                     .flatMap(notificationDocumentDto ->
                             pnDeliveryClient.getReceivedNotificationDocumentPrivate(iun, Integer.parseInt(notificationDocumentDto.getDocIdx()), internalIdAndSentNotificationV21Dto.getT1(), null)
                                     .switchIfEmpty(Mono.empty())
-                                    .onErrorResume(exception -> {
+                                    .onErrorResume(WebClientResponseException.class, exception -> {
                                         log.error("errorReason = {}, An error occurred while calling the service to obtain notification document", exception.getMessage());
                                         logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain notification document", exception.getMessage());
-                                        return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                                        return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                                     }))
                     .map(notificationAttachmentDownloadMetadataResponseDto -> {
                         documentsSize.set(documentsSize.get() + notificationAttachmentDownloadMetadataResponseDto.getContentLength());
@@ -188,10 +200,10 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     public Mono<NotificationDetailResponse> getNotificationFromIUN(String iun) {
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getNotificationFromIUN for");
         return this.pnDeliveryClient.getSentNotificationPrivate(iun)
-                .onErrorResume(exception -> {
+                .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
                     logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage());
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                 })
                 .map(sentNotificationV21Dto -> {
                     NotificationDetailResponse response = NotificationAndMessageMapper.getNotificationDetail(sentNotificationV21Dto);
@@ -205,17 +217,17 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsAsDelegateFromInternalId for delegateInternalId = {}", delegateInternalId);
         SearchNotificationsResponse searchNotificationsResponse = new SearchNotificationsResponse();
         return pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, delegateInternalId, null, mandateId, size, nextPagesKey)
-                .onErrorResume(exception -> {
+                .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage());
                     logEvent.generateFailure(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage());
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                 })
                 .flatMapMany(notificationSearchResponseDto -> getNotificationSearchRowFlux(notificationSearchResponseDto, searchNotificationsResponse))
                 .flatMap(notificationSearchRowDto -> pnDeliveryPushClient.getNotificationHistory(notificationSearchRowDto.getIun(), notificationSearchRowDto.getRecipients().size(), notificationSearchRowDto.getSentAt())
-                        .onErrorResume(exception -> {
+                        .onErrorResume(WebClientResponseException.class, exception -> {
                             log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
                             logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
-                            return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
+                            return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getStatusCode()));
                         })
                         .map(notificationHistoryResponseDto -> NotificationAndMessageMapper
                                 .getNotificationResponse(notificationSearchRowDto, notificationHistoryResponseDto)))
@@ -231,10 +243,10 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "isNotificationCancelled");
         AtomicBoolean cancellationTimelineIsPresent = new AtomicBoolean();
         return pnDeliveryPushClient.getNotificationHistory(iun, sentNotificationV21Dto.getRecipients().size(), sentNotificationV21Dto.getSentAt())
-                .onErrorResume(exception -> {
+                .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
                     logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getStatusCode()));
                 }).map(notificationHistoryResponseDto ->
                         cancellationTimelineIsPresent(iun, notificationHistoryResponseDto, cancellationTimelineIsPresent)
                 )

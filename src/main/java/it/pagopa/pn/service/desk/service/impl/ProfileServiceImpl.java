@@ -15,6 +15,7 @@ import it.pagopa.pn.service.desk.service.ProfileService;
 import lombok.CustomLog;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -57,16 +58,16 @@ public class ProfileServiceImpl implements ProfileService {
     private Mono<ProfileResponse> getMandate(String internalId, ProfileResponse response) {
         return mandateClient.listMandatesByDelegator(internalId)
                 .collectList()
-                .onErrorResume(exception -> {
+                .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, Error during listMandatesByDelegator", exception.getMessage(), exception);
-                    return Mono.error(new PnGenericException(ERROR_ON_MANDATE_CLIENT, exception.getMessage()));
+                    return Mono.error(new PnGenericException(ERROR_ON_MANDATE_CLIENT, exception.getStatusCode()));
                 })
                 .flatMap(internalMandateDelegators ->
                         mandateClient.listMandatesByDelegate(internalId)
                                 .collectList()
-                                .onErrorResume(exception -> {
+                                .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error("errorReason = {}, Error during listMandatesByDelegate", exception.getMessage(), exception);
-                                    return Mono.error(new PnGenericException(ERROR_ON_MANDATE_CLIENT, exception.getMessage()));
+                                    return Mono.error(new PnGenericException(ERROR_ON_MANDATE_CLIENT, exception.getStatusCode()));
                                 })
                                 .map(internalMandateDelegates -> ProfileMapper.getMandate(internalMandateDelegators, internalMandateDelegates, response))
                 );
@@ -75,17 +76,17 @@ public class ProfileServiceImpl implements ProfileService {
     @NotNull
     private Mono<String> getAddress(String internalId, ProfileResponse response) {
         return userAttributesClient.getLegalAddressBySender(internalId, SENDER_ID_DEFAULT)
-                .onErrorResume(exception -> {
+                .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, Error during getLegalAddressBySender", exception.getMessage(), exception);
-                    return Mono.error(new PnGenericException(ERROR_ON_USER_ATTRIBUTES_CLIENT, exception.getMessage()));
+                    return Mono.error(new PnGenericException(ERROR_ON_USER_ATTRIBUTES_CLIENT, exception.getStatusCode()));
                 })
                 .collectList()
                 .flatMap(legalDigitalAddressDtos ->
                         userAttributesClient.getCourtesyAddressBySender(internalId, SENDER_ID_DEFAULT)
                                 .collectList()
-                                .onErrorResume(exception -> {
+                                .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error("errorReason = {}, Error during getCourtesyAddressBySender", exception.getMessage(), exception);
-                                    return Mono.error(new PnGenericException(ERROR_ON_USER_ATTRIBUTES_CLIENT, exception.getMessage()));
+                                    return Mono.error(new PnGenericException(ERROR_ON_USER_ATTRIBUTES_CLIENT, exception.getStatusCode()));
                                 })
                                 .map(courtesyDigitalAddressDtos -> ProfileMapper.getAddress(legalDigitalAddressDtos, courtesyDigitalAddressDtos, response))
                                 .map(profileResponse -> internalId)
