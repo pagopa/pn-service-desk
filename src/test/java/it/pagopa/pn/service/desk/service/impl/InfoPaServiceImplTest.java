@@ -74,10 +74,12 @@ class InfoPaServiceImplTest {
 
     @Test
     void searchNotificationsFromSenderId(){
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-31T15:49:05.630Z"),
+                        OffsetDateTime.parse("2023-10-10T15:49:05.630Z"), null,
+                        "PA-oihdsojn120u", null, 50, "nextPageKey"))
                 .thenReturn(Mono.just(expectedNotificationSearchResponse));
 
-        SearchNotificationsResponse actual = this.infoPaService.searchNotificationsFromSenderId(null, 1, null, this.getPaNotificationsRequest())
+        SearchNotificationsResponse actual = this.infoPaService.searchNotificationsFromSenderId(null, 50, "nextPageKey", this.getPaNotificationsRequest())
                 .block();
 
         Assertions.assertNotNull(actual);
@@ -92,7 +94,7 @@ class InfoPaServiceImplTest {
 
     private PaNotificationsRequest getPaNotificationsRequest() {
         PaNotificationsRequest paNotificationsRequest = new PaNotificationsRequest();
-        paNotificationsRequest.setId("PF-4fc75df3-0913-407e-bdaa-e50329708b7d");
+        paNotificationsRequest.setId("PA-oihdsojn120u");
         paNotificationsRequest.setStartDate(OffsetDateTime.parse("2023-08-31T15:49:05.63Z"));
         paNotificationsRequest.setEndDate(OffsetDateTime.parse("2023-10-10T15:49:05.63Z"));
         return paNotificationsRequest;
