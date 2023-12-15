@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnmandate.v1.dto.InternalMandateDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnuserattributes.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
@@ -9,26 +8,31 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.mandate.Mand
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.userattributes.PnUserAttributesClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+@ExtendWith(MockitoExtension.class)
+class ProfileServiceImplTest {
 
-class ProfileServiceImplTest extends BaseTest {
-
-    @MockBean
+    @Mock
     private PnDataVaultClient dataVaultClient;
-    @MockBean
+    @Mock
     private PnUserAttributesClient userAttributesClient;
-    @MockBean
+    @Mock
     private MandateClient mandateClient;
-    @Autowired
+    @InjectMocks
     private ProfileServiceImpl profileService;
+    @Spy
+    private AuditLogServiceImpl auditLogService;
 
     @Test
     void getProfileFromTaxId(){

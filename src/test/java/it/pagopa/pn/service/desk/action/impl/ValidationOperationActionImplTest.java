@@ -245,7 +245,7 @@ class ValidationOperationActionImplTest {
 
     @Test
     void executeGetNotificationLegalFactsPrivateEmpty() {
-        PnGenericException exception = new PnGenericException(null, null);
+        PnGenericException exception = new PnGenericException(null, "");
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
         Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));
@@ -263,7 +263,7 @@ class ValidationOperationActionImplTest {
     @Test
     void executeGetNotificationLegalFactsPrivateEmptyAndIsAvailableFalse() {
         pnServiceDeskOperations.getAttachments().get(0).setIsAvailable(Boolean.FALSE);
-        PnGenericException exception = new PnGenericException(null, null);
+        PnGenericException exception = new PnGenericException(null, "");
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
         Mockito.when(this.addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(new DeduplicatesResponseDto()));

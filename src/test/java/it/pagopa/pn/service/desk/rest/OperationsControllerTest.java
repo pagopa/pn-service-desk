@@ -1,5 +1,6 @@
 package it.pagopa.pn.service.desk.rest;
 
+import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnClientID;
@@ -13,7 +14,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_CONTENT_TYPE;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.NO_UNREACHABLE_NOTIFICATION;
 
 @WebFluxTest(controllers = {OperationsController.class})
 class OperationsControllerTest {
@@ -51,6 +53,22 @@ class OperationsControllerTest {
     }
 
     @Test
+    void createOperationKO() {
+        String path = "/service-desk/operations";
+        Mockito.when(operationsService.createOperation(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.error(new PnGenericException(NO_UNREACHABLE_NOTIFICATION,NO_UNREACHABLE_NOTIFICATION.getMessage())));
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path(path)
+                        .build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .bodyValue(getCreateOperationRequest())
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
     void searchOperationsFromTaxId() {
         SearchResponse response = new SearchResponse();
         String path = "/service-desk/operations/search";
@@ -82,6 +100,22 @@ class OperationsControllerTest {
                 .bodyValue(getVideoUploadRequest())
                 .exchange()
                 .expectStatus().isOk();
+    }
+
+    @Test
+    void presignedUrlVideoUploadKO() {
+        String path = "/service-desk/1234/video-upload";
+        Mockito.when(operationsService.presignedUrlVideoUpload(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.error(new PnGenericException(ERROR_CONTENT_TYPE, ERROR_CONTENT_TYPE.getMessage())));
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path(path)
+                        .build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .bodyValue(getVideoUploadRequest())
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 
     private CreateOperationRequest getCreateOperationRequest(){

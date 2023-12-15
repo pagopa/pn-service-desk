@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationRequest;
@@ -13,9 +12,12 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -26,17 +28,19 @@ import java.util.List;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_RADD_INQUIRY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+@ExtendWith(MockitoExtension.class)
+class NotificationServiceImplTest {
 
-class NotificationServiceImplTest extends BaseTest {
-
-    @MockBean
+    @Mock
     private PnDeliveryPushClient pnDeliveryPushClient;
-    @MockBean
+    @Mock
     private PnDataVaultClient pnDataVaultClient;
-    @Autowired
+    @InjectMocks
     private NotificationServiceImpl service;
-    @MockBean
+    @Mock
     private OperationDAO operationDAO;
+    @Spy
+    private AuditLogServiceImpl auditLogService;
     private final NotificationRequest notificationRequest = new NotificationRequest();
 
     @BeforeEach

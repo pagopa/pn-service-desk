@@ -3,7 +3,7 @@ package it.pagopa.pn.service.desk.rest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.api.NotificationAndMessageApi;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.service.NotificationAndMessageService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,12 +13,13 @@ import reactor.core.publisher.Mono;
 import java.time.OffsetDateTime;
 
 @RestController
+@AllArgsConstructor
 public class NotificationAndMessageController implements NotificationAndMessageApi {
-   @Autowired
-    private NotificationAndMessageService notificationAndMessageService;
+
+    private final NotificationAndMessageService notificationAndMessageService;
 
     @Override
-    public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsFromTaxId(String xPagopaPnUid, Integer size, String nextPagesKey, OffsetDateTime startDate, OffsetDateTime endDate, Mono<SearchNotificationsRequest> searchNotificationsRequest, final ServerWebExchange exchange) {
+    public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsFromTaxId(String xPagopaPnUid, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, Mono<SearchNotificationsRequest> searchNotificationsRequest, ServerWebExchange exchange) {
         return searchNotificationsRequest
                 .flatMap(searchMessages -> notificationAndMessageService.searchNotificationsFromTaxId(xPagopaPnUid, startDate, endDate, size, nextPagesKey, searchMessages)
                         .map(searchMessagesResponse -> ResponseEntity.status(HttpStatus.OK).body(searchMessagesResponse)));
@@ -26,8 +27,15 @@ public class NotificationAndMessageController implements NotificationAndMessageA
 
     @Override
     public Mono<ResponseEntity<TimelineResponse>> getTimelineOfIUN(String xPagopaPnUid, String iun, ServerWebExchange exchange) {
-        return notificationAndMessageService.getTimelineOfIUN(xPagopaPnUid, iun)
+        return notificationAndMessageService.getTimelineOfIUN(xPagopaPnUid, iun, null)
                 .map(timelineResponse -> ResponseEntity.status(HttpStatus.OK).body(timelineResponse));
+    }
+
+    @Override
+    public Mono<ResponseEntity<TimelineResponse>> getTimelineOfIUNAndTaxId(String xPagopaPnUid, String iun, Mono<SearchNotificationsRequest> searchNotificationsRequest, ServerWebExchange exchange) {
+        return searchNotificationsRequest
+                .flatMap(request -> notificationAndMessageService.getTimelineOfIUN(xPagopaPnUid, iun, request)
+                        .map(timelineResponse -> ResponseEntity.status(HttpStatus.OK).body(timelineResponse)));
     }
 
     @Override
@@ -45,7 +53,7 @@ public class NotificationAndMessageController implements NotificationAndMessageA
     }
 
     @Override
-    public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, Integer size, String nextPagesKey, OffsetDateTime startDate, OffsetDateTime endDate,  final ServerWebExchange exchange){
+    public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, ServerWebExchange exchange) {
         return notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(xPagopaPnUid, mandateId, delegateInternalId, size, nextPagesKey, startDate, endDate)
                 .map(searchNotificationsResponseResponseEntity -> ResponseEntity.status(HttpStatus.OK).body(searchNotificationsResponseResponseEntity));
     }

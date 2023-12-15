@@ -16,10 +16,12 @@ import it.pagopa.pn.service.desk.service.InfoPaService;
 import it.pagopa.pn.service.desk.mapper.InfoPaMapper;
 import lombok.CustomLog;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_EXTERNAL_REGISTRIES_CLIENT;
 
 @Service
 @CustomLog
@@ -38,18 +40,24 @@ public class InfoPaServiceImpl implements InfoPaService {
 
     @Override
     public Flux<PaSummary> getListOfOnboardedPA(String xPagopaPnUid) {
+        PnAuditLogEvent logEvent =  auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getListOfOnboardedPA");
         return externalRegistriesClient.listOnboardedPa()
+                .onErrorResume(WebClientResponseException.class, exception -> {
+                    log.error("errorReason = {}, An error occurred while calling the service to obtain list onboarded PA", exception.getMessage());
+                    logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain list onboarded PA", exception.getMessage()).log();
+                    return Mono.error(new PnGenericException(ERROR_ON_EXTERNAL_REGISTRIES_CLIENT, exception.getStatusCode()));
+                })
                 .map(baseMapper::toEntity);
     }
 
     @Override
     public Mono<SearchNotificationsResponse> searchNotificationsFromSenderId(String xPagopaPnUid, Integer size, String nextPagesKey, PaNotificationsRequest paNotificationsRequest) {
         PnAuditLogEvent logEvent =  auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsFromSenderId for senderId = {}", paNotificationsRequest.getId());
-        return this.pnDeliveryClient.searchNotificationsPrivate(paNotificationsRequest.getStartDate(), paNotificationsRequest.getEndDate(), null, paNotificationsRequest.getId(), size, nextPagesKey)
-                .onErrorResume(exception -> {
+        return this.pnDeliveryClient.searchNotificationsPrivate(paNotificationsRequest.getStartDate(), paNotificationsRequest.getEndDate(), null, paNotificationsRequest.getId(), null, size, nextPagesKey)
+                .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());
                     logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage()).log();
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                 })
                 .map(notificationSearchResponseDto -> {
                     SearchNotificationsResponse response = InfoPaMapper.getSearchNotificationResponse(notificationSearchResponseDto);

@@ -1,5 +1,7 @@
 package it.pagopa.pn.service.desk.rest;
 
+import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
+import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaNotificationsRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaSummary;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
@@ -12,6 +14,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -35,7 +38,7 @@ public class InfoPaControllerTest {
     }
 
     @Test
-    void getListOfOnboardedPA(){
+    void getListOfOnboardedPATest(){
         PaSummary response = new PaSummary();
         String path = "/service-desk/pa/activated-on-pn";
         Mockito.when(infoPaService.getListOfOnboardedPA(Mockito.any()))
@@ -48,6 +51,21 @@ public class InfoPaControllerTest {
                 .header("x-api-key", "test")
                 .exchange()
                 .expectStatus().isOk();
+    }
+
+    @Test
+    void getListOfOnboardedPAKOTest(){
+        String path = "/service-desk/pa/activated-on-pn";
+        Mockito.when(infoPaService.getListOfOnboardedPA(Mockito.any()))
+                .thenReturn(Flux.error(new PnGenericException(ExceptionTypeEnum.ERROR_ON_EXTERNAL_REGISTRIES_CLIENT, HttpStatus.BAD_REQUEST)));
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path(path)
+                        .build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .exchange()
+                .expectStatus().isBadRequest();
     }
     
     @Test
@@ -65,6 +83,23 @@ public class InfoPaControllerTest {
                 .bodyValue(getPaNotificationRequest())
                 .exchange()
                 .expectStatus().isOk();
+    }
+
+    @Test
+    void searchNotificationsFromSenderIdKO(){
+        SearchNotificationsResponse response = new SearchNotificationsResponse();
+        String path = "/service-desk/pa/notifications";
+        Mockito.when(infoPaService.searchNotificationsFromSenderId(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT, HttpStatus.BAD_REQUEST)));
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path(path)
+                        .build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .bodyValue(getPaNotificationRequest())
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 
     private PaNotificationsRequest getPaNotificationRequest() {

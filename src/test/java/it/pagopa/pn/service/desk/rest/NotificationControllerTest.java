@@ -1,5 +1,7 @@
 package it.pagopa.pn.service.desk.rest;
 
+import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
+import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationsUnreachableResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationRequest;
 import it.pagopa.pn.service.desk.middleware.db.dao.PnClientDAO;
@@ -14,7 +16,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_GET_UNREACHABLE_NOTIFICATION;
 
 @WebFluxTest(controllers = {NotificationController.class})
 class NotificationControllerTest {
@@ -48,6 +50,23 @@ class NotificationControllerTest {
                 .exchange()
                 .expectStatus().isOk();
     }
+
+    @Test
+    void numberOfUnreachableNotificationsKO() {
+        String path = "/service-desk/notification/unreachable";
+        Mockito.when(notificationService.getUnreachableNotification(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.ERROR_GET_UNREACHABLE_NOTIFICATION, ERROR_GET_UNREACHABLE_NOTIFICATION.getMessage())));
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path(path)
+                        .build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .bodyValue(getNotificationRequest())
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
 
     private SearchNotificationRequest getNotificationRequest(){
         SearchNotificationRequest request = new SearchNotificationRequest();

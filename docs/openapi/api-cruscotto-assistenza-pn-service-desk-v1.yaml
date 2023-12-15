@@ -248,6 +248,49 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+    post:
+      description: Retrieve entire timeline of IUN and recipient tax id
+      operationId: getTimelineOfIUNAndTaxId
+      tags:
+        - NotificationAndMessage
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - in: path
+          name: iun
+          required: true
+          schema:
+            $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/IUN'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/SearchNotificationsRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/TimelineResponse'
+          description: OK
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+          description: Invalid input
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+          description: Invalid input
+        '500':
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+          description: Internal server error
+      summary: Retrieve entire timeline of IUN and recipient tax id
 
   '/service-desk/notifications/{iun}/documents':
     post:

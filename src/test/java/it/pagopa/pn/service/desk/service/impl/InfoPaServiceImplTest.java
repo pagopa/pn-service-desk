@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusDto;
@@ -10,27 +9,31 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaSummary;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregistries.ExternalRegistriesClient;
-import it.pagopa.pn.service.desk.service.InfoPaService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+@ExtendWith(MockitoExtension.class)
+class InfoPaServiceImplTest {
 
-public class InfoPaServiceImplTest extends BaseTest {
-
-    @MockBean
+    @Mock
     private ExternalRegistriesClient externalRegistriesClient;
-    @MockBean
+    @Mock
     private PnDeliveryClient pnDeliveryClient;
-    @Autowired
-    private InfoPaService infoPaService;
+    @InjectMocks
+    private InfoPaServiceImpl infoPaService;
+    @Spy
+    private AuditLogServiceImpl auditLogService;
 
     private final PaSummaryDto expectedPaSummary = new PaSummaryDto();
     private final NotificationSearchResponseDto expectedNotificationSearchResponse = new NotificationSearchResponseDto();
@@ -71,10 +74,12 @@ public class InfoPaServiceImplTest extends BaseTest {
 
     @Test
     void searchNotificationsFromSenderId(){
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-31T15:49:05.630Z"),
+                        OffsetDateTime.parse("2023-10-10T15:49:05.630Z"), null,
+                        "PA-oihdsojn120u", null, 50, "nextPageKey"))
                 .thenReturn(Mono.just(expectedNotificationSearchResponse));
 
-        SearchNotificationsResponse actual = this.infoPaService.searchNotificationsFromSenderId(null, 1, null, this.getPaNotificationsRequest())
+        SearchNotificationsResponse actual = this.infoPaService.searchNotificationsFromSenderId(null, 50, "nextPageKey", this.getPaNotificationsRequest())
                 .block();
 
         Assertions.assertNotNull(actual);
@@ -89,7 +94,7 @@ public class InfoPaServiceImplTest extends BaseTest {
 
     private PaNotificationsRequest getPaNotificationsRequest() {
         PaNotificationsRequest paNotificationsRequest = new PaNotificationsRequest();
-        paNotificationsRequest.setId("PF-4fc75df3-0913-407e-bdaa-e50329708b7d");
+        paNotificationsRequest.setId("PA-oihdsojn120u");
         paNotificationsRequest.setStartDate(OffsetDateTime.parse("2023-08-31T15:49:05.63Z"));
         paNotificationsRequest.setEndDate(OffsetDateTime.parse("2023-10-10T15:49:05.63Z"));
         return paNotificationsRequest;

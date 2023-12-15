@@ -5,7 +5,7 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaNotifications
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaSummary;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
 import it.pagopa.pn.service.desk.service.InfoPaService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,10 +14,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
+@AllArgsConstructor
 public class InfoPaController implements PaApi {
 
-    @Autowired
-    private InfoPaService infoPaService;
+    private final InfoPaService infoPaService;
 
     @Override
     public Mono<ResponseEntity<Flux<PaSummary>>> getListOfOnboardedPA(String xPagopaPnUid, final ServerWebExchange exchange) {

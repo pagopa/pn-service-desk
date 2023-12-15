@@ -9,7 +9,7 @@ import java.time.OffsetDateTime;
 public interface NotificationAndMessageService {
 
     Mono<SearchNotificationsResponse> searchNotificationsFromTaxId(String xPagopaPnUid, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, SearchNotificationsRequest searchMessagesRequest);
-    Mono<TimelineResponse> getTimelineOfIUN(String xPagopaPnUid, String iun);
+    Mono<TimelineResponse> getTimelineOfIUN(String xPagopaPnUid, String iun, SearchNotificationsRequest searchNotificationsRequest);
     Mono<DocumentsResponse> getDocumentsOfIun(String iun, DocumentsRequest request);
     Mono<NotificationDetailResponse> getNotificationFromIUN(String iun);
     Mono<SearchNotificationsResponse> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, Integer size, String nextPagesKey, OffsetDateTime startDate, OffsetDateTime endDate);
