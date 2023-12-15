@@ -120,7 +120,7 @@ class NotificationAndMessageServiceImplTest  {
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV21Dto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getHistory()));
 
-        TimelineResponse response = notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1").block();
+        TimelineResponse response = notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1", null).block();
         Assertions.assertNotNull(response);
         Assertions.assertEquals(IunStatus.ACCEPTED, response.getIunStatus());
         Assertions.assertEquals(1, response.getTimeline().size());
@@ -132,7 +132,7 @@ class NotificationAndMessageServiceImplTest  {
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_CLIENT, ERROR_ON_DELIVERY_CLIENT.getMessage());
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.error(pnGenericException));
 
-        StepVerifier.create(notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1"))
+        StepVerifier.create(notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1", null))
                 .expectError(PnGenericException.class)
                 .verify();
     }
@@ -143,7 +143,7 @@ class NotificationAndMessageServiceImplTest  {
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV21Dto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.error(pnGenericException));
 
-        StepVerifier.create(notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1"))
+        StepVerifier.create(notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1", null))
                 .expectError(PnGenericException.class)
                 .verify();
     }

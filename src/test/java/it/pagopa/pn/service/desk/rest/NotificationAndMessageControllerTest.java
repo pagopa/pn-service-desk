@@ -77,7 +77,7 @@ class NotificationAndMessageControllerTest {
     void getTimelineOfIUNTest() {
         TimelineResponse response = new TimelineResponse();
         String path ="/service-desk/notifications/PRVZ-NZKM-JEDK-202309-A-1/timeline";
-        Mockito.when(notificationAndMessageService.getTimelineOfIUN(Mockito.anyString(), Mockito.any())).thenReturn(Mono.just(response));
+        Mockito.when(notificationAndMessageService.getTimelineOfIUN(Mockito.anyString(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(response));
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path(path).build())
@@ -91,7 +91,7 @@ class NotificationAndMessageControllerTest {
     @Test
     void getTimelineOfIUNKOTest() {
         String path ="/service-desk/notifications/PRVZ-NZKM-JEDK-202309-A-1/timeline";
-        Mockito.when(notificationAndMessageService.getTimelineOfIUN(Mockito.anyString(), Mockito.any()))
+        Mockito.when(notificationAndMessageService.getTimelineOfIUN(Mockito.anyString(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT, HttpStatus.BAD_REQUEST)));
 
         webTestClient.get()

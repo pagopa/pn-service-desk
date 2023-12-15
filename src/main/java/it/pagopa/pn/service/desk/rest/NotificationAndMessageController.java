@@ -27,8 +27,15 @@ public class NotificationAndMessageController implements NotificationAndMessageA
 
     @Override
     public Mono<ResponseEntity<TimelineResponse>> getTimelineOfIUN(String xPagopaPnUid, String iun, ServerWebExchange exchange) {
-        return notificationAndMessageService.getTimelineOfIUN(xPagopaPnUid, iun)
+        return notificationAndMessageService.getTimelineOfIUN(xPagopaPnUid, iun, null)
                 .map(timelineResponse -> ResponseEntity.status(HttpStatus.OK).body(timelineResponse));
+    }
+
+    @Override
+    public Mono<ResponseEntity<TimelineResponse>> getTimelineOfIUNAndTaxId(String xPagopaPnUid, String iun, Mono<SearchNotificationsRequest> searchNotificationsRequest, ServerWebExchange exchange) {
+        return searchNotificationsRequest
+                .flatMap(request -> notificationAndMessageService.getTimelineOfIUN(xPagopaPnUid, iun, request)
+                        .map(timelineResponse -> ResponseEntity.status(HttpStatus.OK).body(timelineResponse)));
     }
 
     @Override

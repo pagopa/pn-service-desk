@@ -3,6 +3,7 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationRecipientV21Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV21Dto;
@@ -75,7 +76,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getStatusCode()));
                                 })
                                 .map(notificationHistoryResponseDto -> NotificationAndMessageMapper
-                                        .getNotification(notificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto, getIndexTaxId(request.getTaxId(), notificationSearchRowDto.getRecipients())))
+                                        .getNotification(notificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto, TimelineElementCategoryV20Dto.SEND_COURTESY_MESSAGE, getIndexTaxId(request.getTaxId(), notificationSearchRowDto.getRecipients())))
                                 )
                 )
                 .collectList()
@@ -101,14 +102,16 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @NotNull
-    private static List<TimelineElementV20Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, Integer indexTaxId) {
+    private static List<TimelineElementV20Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, TimelineElementCategoryV20Dto category,  Integer indexTaxId) {
         List<TimelineElementV20Dto> filteredElements = new ArrayList<>();
         if (notificationHistoryResponseDto.getTimeline() != null) {
             filteredElements = notificationHistoryResponseDto.getTimeline()
                     .stream()
                     .filter(element -> {
                         if(element.getCategory() != null && element.getDetails() != null){
-                            return element.getCategory().equals(TimelineElementCategoryV20Dto.SEND_COURTESY_MESSAGE) &&
+                            if (category == null)
+                                return element.getDetails().getRecIndex().equals(indexTaxId);
+                            return element.getCategory().equals(category) &&
                                     element.getDetails().getRecIndex().equals(indexTaxId);
                         }
                         return false;
@@ -119,8 +122,9 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @Override
-    public Mono<TimelineResponse> getTimelineOfIUN(String xPagopaPnUid, String iun) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getTimelineOfIUN for");
+    public Mono<TimelineResponse> getTimelineOfIUN(String xPagopaPnUid, String iun, SearchNotificationsRequest searchNotificationsRequest) {
+        String logInfo = searchNotificationsRequest == null ? "getTimelineOfIUN for " : "getTimelineOfIUNAndTaxId for ";
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, logInfo);
         return pnDeliveryClient.getSentNotificationPrivate(iun)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
@@ -135,12 +139,32 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                     logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()).log();
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getStatusCode()));
                                 })
+                                .flatMap(notificationHistoryResponse -> filterElementFromTaxId(notificationHistoryResponse, searchNotificationsRequest, sentNotificationV21Dto))
                                 .map(historyResponseDto -> {
                                     TimelineResponse response = NotificationAndMessageMapper.getTimeline(historyResponseDto);
-                                    logEvent.generateSuccess("getTimelineOfIUN response = {}", response).log();
+                                    logEvent.generateSuccess(logInfo.concat("response = {}"), response).log();
                                     return response;
                                 })
                 );
+    }
+
+    private Mono<NotificationHistoryResponseDto> filterElementFromTaxId(NotificationHistoryResponseDto response, SearchNotificationsRequest request, SentNotificationV21Dto sentNotificationV21Dto) {
+        if (request == null) return Mono.just(response);
+        return getIndexTaxIdFromSentNotification(request.getTaxId(), sentNotificationV21Dto.getRecipients())
+                .map(indexTaxId -> {
+            List<TimelineElementV20Dto> list = getFilteredElements(response, null, indexTaxId);
+            response.setTimeline(list);
+            return response;
+        });
+    }
+
+    public Mono<Integer> getIndexTaxIdFromSentNotification(String taxId, List<NotificationRecipientV21Dto> notificationRecipientV21Dto) {
+        return Flux.fromIterable(notificationRecipientV21Dto)
+                .index()
+                .filter(tuple -> tuple.getT2().getTaxId().equals(taxId))
+                .map(Tuple2::getT1)
+                .next()
+                .map(index -> index != null ? index.intValue() : -1);
     }
 
     @Override
