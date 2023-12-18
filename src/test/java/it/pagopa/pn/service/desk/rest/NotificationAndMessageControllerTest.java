@@ -33,7 +33,7 @@ class NotificationAndMessageControllerTest {
     }
 
     @Test
-    void searchCourtesyMessagesFromTaxIdTest(){
+    void searchNotificationsFromTaxIdTest(){
         SearchNotificationsResponse response = new SearchNotificationsResponse();
         String path = "/service-desk/notifications";
         Mockito.when(notificationAndMessageService.searchNotificationsFromTaxId(Mockito.any(), Mockito.any(),Mockito.any(),
@@ -54,7 +54,7 @@ class NotificationAndMessageControllerTest {
     }
 
     @Test
-    void searchCourtesyMessagesFromTaxIdKOTest(){
+    void searchNotificationsFromTaxIdKOTest(){
         String path = "/service-desk/notifications";
         Mockito.when(notificationAndMessageService.searchNotificationsFromTaxId(Mockito.any(), Mockito.any(),Mockito.any(),
                 Mockito.any(), Mockito.any(),Mockito.any())).thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT, HttpStatus.BAD_REQUEST)));
@@ -210,7 +210,7 @@ class NotificationAndMessageControllerTest {
 
     private SearchNotificationsRequest getSearchMessageRequest(){
         SearchNotificationsRequest searchMessagesRequest = new SearchNotificationsRequest();
-        searchMessagesRequest.setTaxId("123");
+        searchMessagesRequest.setTaxId("FRMTTR76M06B715E");
         searchMessagesRequest.setRecipientType(RecipientType.PF);
         return searchMessagesRequest;
     }

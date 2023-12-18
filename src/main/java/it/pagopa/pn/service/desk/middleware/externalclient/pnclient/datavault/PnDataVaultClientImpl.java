@@ -11,13 +11,8 @@ import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
-
-import java.net.ConnectException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 @CustomLog
 @Component
@@ -51,10 +46,6 @@ public class PnDataVaultClientImpl implements PnDataVaultClient {
         String pnDataVaultDescription = "Data Vault decode";
         log.logInvokingExternalService(PnLogger.EXTERNAL_SERVICES.PN_DATA_VAULT, pnDataVaultDescription);
         return this.recipientsApi.getRecipientDenominationByInternalId(toDecode)
-                .retryWhen(
-                        Retry.backoff(2, Duration.ofMillis(25))
-                                .filter(throwable ->throwable instanceof TimeoutException || throwable instanceof ConnectException)
-                )
                 .map(BaseRecipientDtoDto::getTaxId)
                 .collectList()
                 .map(fiscalCodes -> fiscalCodes.get(0))

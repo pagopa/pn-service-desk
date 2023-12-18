@@ -42,6 +42,8 @@ class NotificationAndMessageServiceImplTest  {
     @InjectMocks
     private NotificationAndMessageServiceImpl notificationAndMessageService;
 
+    private final SearchNotificationsRequest searchNotificationsRequest = new SearchNotificationsRequest();
+
     @Test
     void searchNotificationsFromTaxId() {
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("PF-4fc75df3-0913-407e-bdaa-e50329708b7d"));
@@ -131,6 +133,7 @@ class NotificationAndMessageServiceImplTest  {
     void getTimelineOfIUNPnDeliveryClientError(){
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_CLIENT, ERROR_ON_DELIVERY_CLIENT.getMessage());
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.error(pnGenericException));
+
 
         StepVerifier.create(notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1", null))
                 .expectError(PnGenericException.class)
