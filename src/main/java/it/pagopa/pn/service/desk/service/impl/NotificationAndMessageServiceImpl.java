@@ -19,6 +19,7 @@ import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationAndMessageService;
 import lombok.CustomLog;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
@@ -32,8 +33,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_PUSH_CLIENT;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 
 @Service
 @CustomLog
@@ -109,8 +109,12 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                     .stream()
                     .filter(element -> {
                         if(element.getCategory() != null && element.getDetails() != null){
-                            if (category == null)
+                            if (category == null){
+                                if (element.getDetails().getRecIndex() == null){
+                                    return true;
+                                }
                                 return element.getDetails().getRecIndex().equals(indexTaxId);
+                            }
                             return element.getCategory().equals(category) &&
                                     element.getDetails().getRecIndex().equals(indexTaxId);
                         }
@@ -131,9 +135,14 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                     logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                 })
+                .flatMap(sentNotificationV21Dto -> {
+                    if (searchNotificationsRequest != null){
+                        return checkTaxId(sentNotificationV21Dto, searchNotificationsRequest.getTaxId());
+                    }
+                    return Mono.just(sentNotificationV21Dto);
+                })
                 .flatMap(sentNotificationV21Dto ->
                         pnDeliveryPushClient.getNotificationHistory(iun, sentNotificationV21Dto.getRecipients().size(), sentNotificationV21Dto.getSentAt())
-                                .switchIfEmpty(Mono.empty())
                                 .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error("An error occurred while call service for obtain notification history: ", exception);
                                     logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()).log();
@@ -146,6 +155,18 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                     return response;
                                 })
                 );
+    }
+
+    private Mono<SentNotificationV21Dto> checkTaxId(SentNotificationV21Dto sentNotificationV21Dto, String taxId) {
+        boolean taxIdMatch = sentNotificationV21Dto.getRecipients()
+                .stream()
+                .anyMatch(notificationRecipientV21Dto -> notificationRecipientV21Dto.getTaxId().equalsIgnoreCase(taxId));
+
+        if (taxIdMatch) {
+            return Mono.just(sentNotificationV21Dto);
+        } else {
+            return Mono.error(new PnGenericException(TAX_ID_NOT_FOUND, HttpStatus.NOT_FOUND));
+        }
     }
 
     private Mono<NotificationHistoryResponseDto> filterElementFromTaxId(NotificationHistoryResponseDto response, SearchNotificationsRequest request, SentNotificationV21Dto sentNotificationV21Dto) {
