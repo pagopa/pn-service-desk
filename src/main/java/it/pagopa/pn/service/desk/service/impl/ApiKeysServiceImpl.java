@@ -29,7 +29,7 @@ public class ApiKeysServiceImpl implements ApiKeysService {
 
     @Override
     public Mono<ResponseApiKeys> getApiKeys(String paId) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getApiKeys for paId={}", paId);
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_AK_VIEW, "getApiKeys for paId={}", paId);
         return apiKeysManagerClient.getBoApiKeys(paId)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, An error occurred while calling the service to obtain api keys", exception.getMessage(), exception);

@@ -42,7 +42,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public Mono<ProfileResponse> getProfileFromTaxId(String xPagopaPnUid, ProfileRequest profileRequest) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "getProfileFromTaxId for taxId = {}", LogUtils.maskTaxId(profileRequest.getTaxId()));
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_VIEW_USERPROFILE, "getProfileFromTaxId for taxId = {}", LogUtils.maskTaxId(profileRequest.getTaxId()));
 
         ProfileResponse response = new ProfileResponse();
         return dataVaultClient.anonymized(profileRequest.getTaxId(), profileRequest.getRecipientType().getValue())
