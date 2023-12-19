@@ -69,7 +69,7 @@ class ProfileControllerTest {
 
     private ProfileRequest getProfileRequest(){
         ProfileRequest profileRequest = new ProfileRequest();
-        profileRequest.setTaxId("123");
+        profileRequest.setTaxId("FRMTTR76M06B715E");
         profileRequest.setRecipientType(RecipientType.PF);
         return profileRequest;
     }

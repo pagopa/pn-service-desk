@@ -66,6 +66,7 @@ components:
       properties:
         taxId:
           type: string
+          minLength: 11
           maxLength: 32
           x-field-extra-annotation: "@lombok.ToString.Exclude"
         recipientType:
