@@ -1,11 +1,13 @@
 package it.pagopa.pn.service.desk.filter;
 
+import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.service.desk.exception.PnFilterClientIdException;
 import it.pagopa.pn.service.desk.middleware.db.dao.PnClientDAO;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -42,6 +44,13 @@ public class ClientIdWebFilter implements WebFilter {
         String apiKey = valuesHeader.get(0);
         if (StringUtils.isBlank(apiKey)){
             throw new PnFilterClientIdException(API_KEY_EMPTY.getTitle(), API_KEY_EMPTY.getMessage());
+        }
+
+        String ticket = requestHeaders.getFirst(CX_ID_HEADER);
+        if (StringUtils.isNotBlank(ticket)){
+            MDC.put("cx_type","SD");
+            MDC.put("cx_id", ticket.replace("SD-",""));
+            MDC.put("uid", ticket);
         }
 
         return pnClientDAO.getByApiKey(apiKey)

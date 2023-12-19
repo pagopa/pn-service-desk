@@ -57,7 +57,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     @Override
     public Mono<SearchNotificationsResponse> searchNotificationsFromTaxId(String xPagopaPnUid, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, SearchNotificationsRequest request) {
         SearchNotificationsResponse response = new SearchNotificationsResponse();
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsFromTaxId for taxId = {}", request.getTaxId());
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_SEARCH_NOTIFICATION, "searchNotificationsFromTaxId for taxId = {}", request.getTaxId());
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
                 .flatMap(internalId ->
                         pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, internalId, null, null, size, nextPagesKey)
@@ -128,7 +128,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     @Override
     public Mono<TimelineResponse> getTimelineOfIUN(String xPagopaPnUid, String iun, SearchNotificationsRequest searchNotificationsRequest) {
         String logInfo = searchNotificationsRequest == null ? "getTimelineOfIUN for " : "getTimelineOfIUNAndTaxId for ";
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, logInfo);
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_VIEW_NOTIFICATION, logInfo);
         return pnDeliveryClient.getSentNotificationPrivate(iun)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
@@ -190,7 +190,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     @Override
     public Mono<DocumentsResponse> getDocumentsOfIun(String iun, DocumentsRequest request) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getDocumentsOfIun for");
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_DOC_AVAILABLE, "getDocumentsOfIun for");
         DocumentsResponse response = new DocumentsResponse();
         AtomicInteger documentsSize = new AtomicInteger(0);
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
@@ -239,7 +239,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     @Override
     public Mono<NotificationDetailResponse> getNotificationFromIUN(String iun) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getNotificationFromIUN for");
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_SEARCH_NOTIFICATION, "getNotificationFromIUN for");
         return this.pnDeliveryClient.getSentNotificationPrivate(iun)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
@@ -255,7 +255,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     @Override
     public Mono<SearchNotificationsResponse> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, Integer size, String nextPagesKey, OffsetDateTime startDate, OffsetDateTime endDate) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsAsDelegateFromInternalId for delegateInternalId = {}", delegateInternalId);
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_SEARCH_NOTIFICATION, "searchNotificationsAsDelegateFromInternalId for delegateInternalId = {}", delegateInternalId);
         SearchNotificationsResponse searchNotificationsResponse = new SearchNotificationsResponse();
         return pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, delegateInternalId, null, mandateId, size, nextPagesKey)
                 .onErrorResume(WebClientResponseException.class, exception -> {
