@@ -37,6 +37,7 @@ components:
         taxId:
           type: string
           maxLength: 32
+          minLength: 11
           x-field-extra-annotation: "@lombok.ToString.Exclude"
         recipientType:
           $ref: '#/components/schemas/RecipientType'
@@ -65,6 +66,7 @@ components:
       properties:
         taxId:
           type: string
+          minLength: 11
           maxLength: 32
           x-field-extra-annotation: "@lombok.ToString.Exclude"
         recipientType:

@@ -19,6 +19,7 @@ import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationAndMessageService;
 import lombok.CustomLog;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
@@ -32,8 +33,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
-import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_PUSH_CLIENT;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 
 @Service
 @CustomLog
@@ -57,7 +57,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     @Override
     public Mono<SearchNotificationsResponse> searchNotificationsFromTaxId(String xPagopaPnUid, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, SearchNotificationsRequest request) {
         SearchNotificationsResponse response = new SearchNotificationsResponse();
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_SEARCH_NOTIFICATION, "searchNotificationsFromTaxId for taxId = {}", request.getTaxId());
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsFromTaxId for taxId = {}", request.getTaxId());
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
                 .flatMap(internalId ->
                         pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, internalId, null, null, size, nextPagesKey)
@@ -109,8 +109,12 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                     .stream()
                     .filter(element -> {
                         if(element.getCategory() != null && element.getDetails() != null){
-                            if (category == null)
+                            if (category == null){
+                                if (element.getDetails().getRecIndex() == null){
+                                    return true;
+                                }
                                 return element.getDetails().getRecIndex().equals(indexTaxId);
+                            }
                             return element.getCategory().equals(category) &&
                                     element.getDetails().getRecIndex().equals(indexTaxId);
                         }
@@ -124,16 +128,21 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     @Override
     public Mono<TimelineResponse> getTimelineOfIUN(String xPagopaPnUid, String iun, SearchNotificationsRequest searchNotificationsRequest) {
         String logInfo = searchNotificationsRequest == null ? "getTimelineOfIUN for " : "getTimelineOfIUNAndTaxId for ";
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_VIEW_NOTIFICATION, logInfo);
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, logInfo);
         return pnDeliveryClient.getSentNotificationPrivate(iun)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
                     logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                 })
+                .flatMap(sentNotificationV21Dto -> {
+                    if (searchNotificationsRequest != null){
+                        return checkTaxId(sentNotificationV21Dto, searchNotificationsRequest.getTaxId());
+                    }
+                    return Mono.just(sentNotificationV21Dto);
+                })
                 .flatMap(sentNotificationV21Dto ->
                         pnDeliveryPushClient.getNotificationHistory(iun, sentNotificationV21Dto.getRecipients().size(), sentNotificationV21Dto.getSentAt())
-                                .switchIfEmpty(Mono.empty())
                                 .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error("An error occurred while call service for obtain notification history: ", exception);
                                     logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()).log();
@@ -146,6 +155,18 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                     return response;
                                 })
                 );
+    }
+
+    private Mono<SentNotificationV21Dto> checkTaxId(SentNotificationV21Dto sentNotificationV21Dto, String taxId) {
+        boolean taxIdMatch = sentNotificationV21Dto.getRecipients()
+                .stream()
+                .anyMatch(notificationRecipientV21Dto -> notificationRecipientV21Dto.getTaxId().equalsIgnoreCase(taxId));
+
+        if (taxIdMatch) {
+            return Mono.just(sentNotificationV21Dto);
+        } else {
+            return Mono.error(new PnGenericException(TAX_ID_NOT_FOUND, HttpStatus.NOT_FOUND));
+        }
     }
 
     private Mono<NotificationHistoryResponseDto> filterElementFromTaxId(NotificationHistoryResponseDto response, SearchNotificationsRequest request, SentNotificationV21Dto sentNotificationV21Dto) {
@@ -184,21 +205,20 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 .flatMapMany(internalIdAndSentNotificationV21Dto ->
                         getDocuments(iun, internalIdAndSentNotificationV21Dto, response, documentsSize)
                 )
+                .doOnError(exception -> logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain notification document", exception.getMessage()).log())
                 .switchIfEmpty(Mono.empty())
                 .collectList()
                 .map(documentList -> {
                     response.setDocuments(documentList);
                     response.setTotalSize(documentsSize.get());
-                    logEvent.generateSuccess("getDocumentsOfIun response = {}", response);
+                    logEvent.generateSuccess("getDocumentsOfIun response = {}", response).log();
                     return response;
                 });
     }
 
     @NotNull
     private Flux<Document> getDocuments(String iun, Tuple2<String, SentNotificationV21Dto> internalIdAndSentNotificationV21Dto, DocumentsResponse response, AtomicInteger documentsSize) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_VIEW_NOTIFICATION, "mapping getDocuments");
         if (!isNotificationCancelled(internalIdAndSentNotificationV21Dto.getT2(), iun)) {
-            logEvent.generateSuccess("isNotificationCancelled = false");
             response.setDocumentsAvailable(true);
             return Flux.fromIterable(internalIdAndSentNotificationV21Dto.getT2().getDocuments())
                     .flatMap(notificationDocumentDto ->
@@ -206,51 +226,48 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                     .switchIfEmpty(Mono.empty())
                                     .onErrorResume(WebClientResponseException.class, exception -> {
                                         log.error("errorReason = {}, An error occurred while calling the service to obtain notification document", exception.getMessage());
-                                        logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain notification document", exception.getMessage());
                                         return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                                     }))
                     .map(notificationAttachmentDownloadMetadataResponseDto -> {
                         documentsSize.set(documentsSize.get() + notificationAttachmentDownloadMetadataResponseDto.getContentLength());
                         Document document = NotificationAndMessageMapper.getDocument(notificationAttachmentDownloadMetadataResponseDto);
-                        logEvent.generateSuccess("mapping Document = {}", document);
                         return document;
                     });
         }
-        logEvent.generateSuccess("isNotificationCancelled = true");
         return Flux.empty();
     }
 
     @Override
     public Mono<NotificationDetailResponse> getNotificationFromIUN(String iun) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_VIEW_NOTIFICATION, "getNotificationFromIUN for");
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getNotificationFromIUN for");
         return this.pnDeliveryClient.getSentNotificationPrivate(iun)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
-                    logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage());
+                    logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                 })
                 .map(sentNotificationV21Dto -> {
                     NotificationDetailResponse response = NotificationAndMessageMapper.getNotificationDetail(sentNotificationV21Dto);
-                    logEvent.generateSuccess("getNotificationFromIUN response = {}", response);
+                    logEvent.generateSuccess("getNotificationFromIUN response = {}", response).log();
                     return response;
                 });
     }
 
     @Override
     public Mono<SearchNotificationsResponse> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, Integer size, String nextPagesKey, OffsetDateTime startDate, OffsetDateTime endDate) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_VIEW_NOTIFICATION, "searchNotificationsAsDelegateFromInternalId for delegateInternalId = {}", delegateInternalId);
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsAsDelegateFromInternalId for delegateInternalId = {}", delegateInternalId);
         SearchNotificationsResponse searchNotificationsResponse = new SearchNotificationsResponse();
         return pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, delegateInternalId, null, mandateId, size, nextPagesKey)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage());
-                    logEvent.generateFailure(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage());
+                    logEvent.generateFailure(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage()).log();
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                 })
                 .flatMapMany(notificationSearchResponseDto -> getNotificationSearchRowFlux(notificationSearchResponseDto, searchNotificationsResponse))
                 .flatMap(notificationSearchRowDto -> pnDeliveryPushClient.getNotificationHistory(notificationSearchRowDto.getIun(), notificationSearchRowDto.getRecipients().size(), notificationSearchRowDto.getSentAt())
                         .onErrorResume(WebClientResponseException.class, exception -> {
                             log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
-                            logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
+                            logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()).log();
                             return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getStatusCode()));
                         })
                         .map(notificationHistoryResponseDto -> NotificationAndMessageMapper
@@ -258,18 +275,16 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 .collectList()
                 .map(notificationResponses -> {
                     searchNotificationsResponse.setResults(notificationResponses);
-                    logEvent.generateSuccess("searchNotificationsAsDelegateFromInternalId response = {}", searchNotificationsResponse);
+                    logEvent.generateSuccess("searchNotificationsAsDelegateFromInternalId response = {}", searchNotificationsResponse).log();
                     return searchNotificationsResponse;
                 });
     }
 
     private boolean isNotificationCancelled(SentNotificationV21Dto sentNotificationV21Dto, String iun) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "isNotificationCancelled");
         AtomicBoolean cancellationTimelineIsPresent = new AtomicBoolean();
         return pnDeliveryPushClient.getNotificationHistory(iun, sentNotificationV21Dto.getRecipients().size(), sentNotificationV21Dto.getSentAt())
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
-                    logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getStatusCode()));
                 }).map(notificationHistoryResponseDto ->
                         cancellationTimelineIsPresent(iun, notificationHistoryResponseDto, cancellationTimelineIsPresent)

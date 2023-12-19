@@ -49,7 +49,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .flatMap(internalId ->
                         Mono.zip(getAddress(internalId, response), getMandate(internalId, response), (a, b) -> b)
                 )
-                .doOnError(exception -> logEvent.generateFailure(ERROR_MESSAGE_LIST_MANDATES, exception))
+                .doOnError(exception -> logEvent.generateFailure(ERROR_MESSAGE_LIST_MANDATES, exception).log())
                 .doOnSuccess(profileResponse -> logEvent.generateSuccess("profileResponse = {}", profileResponse).log())
                 .flatMap(this::deAnonymizedInternalId);
     }
