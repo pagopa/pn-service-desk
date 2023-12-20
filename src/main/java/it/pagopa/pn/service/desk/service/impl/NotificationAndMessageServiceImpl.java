@@ -57,7 +57,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     @Override
     public Mono<SearchNotificationsResponse> searchNotificationsFromTaxId(String xPagopaPnUid, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, SearchNotificationsRequest request) {
         SearchNotificationsResponse response = new SearchNotificationsResponse();
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsFromTaxId for taxId = {}", request.getTaxId());
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_SEARCH_NOTIFICATION, "searchNotificationsFromTaxId for taxId = {}", request.getTaxId());
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
                 .flatMap(internalId ->
                         pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, internalId, null, null, null, size, nextPagesKey)
@@ -254,7 +254,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     @Override
     public Mono<SearchNotificationsResponse> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, RecipientType recipientType, Integer size, String nextPagesKey, OffsetDateTime startDate, OffsetDateTime endDate) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsAsDelegateFromInternalId for delegateInternalId = {}", delegateInternalId);
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_SEARCH_NOTIFICATION, "searchNotificationsAsDelegateFromInternalId for delegateInternalId = {}", delegateInternalId);
         SearchNotificationsResponse searchNotificationsResponse = new SearchNotificationsResponse();
         return pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, delegateInternalId, null, mandateId, recipientType.getValue(), size, nextPagesKey)
                 .onErrorResume(WebClientResponseException.class, exception -> {

@@ -1,13 +1,14 @@
 package it.pagopa.pn.service.desk.filter;
 
+import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.service.desk.exception.PnFilterClientIdException;
 import it.pagopa.pn.service.desk.middleware.db.dao.PnClientDAO;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -44,13 +45,22 @@ public class ClientIdWebFilter implements WebFilter {
             throw new PnFilterClientIdException(API_KEY_EMPTY.getTitle(), API_KEY_EMPTY.getMessage());
         }
 
-        return pnClientDAO.getByApiKey(apiKey)
-                .switchIfEmpty(Mono.error(new PnFilterClientIdException(API_KEY_NOT_PRESENT.getTitle(),
-                        API_KEY_NOT_PRESENT.getMessage().concat(" ApiKey = ").concat(apiKey)))
-                )
-                .doOnSuccess(key ->log.info("ApiKey:  {}", key))
-                .then(chain.filter(exchange))
-                .doFinally(ignored -> log.logEndingProcess("ENDING PROCESS FROM WEB FILTER"));
+        String ticket = requestHeaders.getFirst(UID_HEADER);
+        if (StringUtils.isNotBlank(ticket)){
+            MDC.put(CX_TYPE_MDC_KEY,"SD");
+            MDC.put(CX_ID_MDC_KEY, ticket.replace("SD-",""));
+        }
+
+        Mono<Void> processFilter = pnClientDAO.getByApiKey(apiKey)
+            .switchIfEmpty(Mono.error(new PnFilterClientIdException(API_KEY_NOT_PRESENT.getTitle(),
+                API_KEY_NOT_PRESENT.getMessage().concat(" ApiKey = ").concat(apiKey)))
+            )
+            .doOnSuccess(key -> log.info("ApiKey:  {}", key))
+            .then(chain.filter(exchange))
+            .doFinally(ignored -> log.logEndingProcess("ENDING PROCESS FROM WEB FILTER"));
+
+        return MDCUtils.addMDCToContextAndExecute(processFilter);
+
     }
 
 }
