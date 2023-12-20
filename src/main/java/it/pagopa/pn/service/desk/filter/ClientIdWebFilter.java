@@ -46,11 +46,10 @@ public class ClientIdWebFilter implements WebFilter {
             throw new PnFilterClientIdException(API_KEY_EMPTY.getTitle(), API_KEY_EMPTY.getMessage());
         }
 
-        String ticket = requestHeaders.getFirst(CX_ID_HEADER);
+        String ticket = requestHeaders.getFirst(UID_HEADER);
         if (StringUtils.isNotBlank(ticket)){
             MDC.put("cx_type","SD");
             MDC.put("cx_id", ticket.replace("SD-",""));
-            MDC.put("uid", ticket);
         }
 
         return pnClientDAO.getByApiKey(apiKey)
