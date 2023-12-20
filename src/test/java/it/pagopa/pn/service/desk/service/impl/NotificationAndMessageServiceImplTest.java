@@ -42,7 +42,6 @@ class NotificationAndMessageServiceImplTest  {
     @InjectMocks
     private NotificationAndMessageServiceImpl notificationAndMessageService;
 
-    private final SearchNotificationsRequest searchNotificationsRequest = new SearchNotificationsRequest();
 
     @Test
     void searchNotificationsFromTaxId() {
@@ -51,7 +50,7 @@ class NotificationAndMessageServiceImplTest  {
                 .thenReturn(Mono.just(getNotificationHistoryResponseDto()));
         Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-15T15:49:05.630Z"),
                         OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                        null, null, 50, "nextPageKey"))
+                        null, null, null, 50, "nextPageKey"))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
         SearchNotificationsResponse actualResponse = notificationAndMessageService.searchNotificationsFromTaxId("fkdokm",
                 OffsetDateTime.parse("2023-08-15T15:49:05.63Z"),
@@ -83,7 +82,7 @@ class NotificationAndMessageServiceImplTest  {
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("PF-4fc75df3-0913-407e-bdaa-e50329708b7d"));
         Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-15T15:49:05.630Z"),
                         OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                        null, null, 50, "nextPageKey"))
+                        null, null, null, 50, "nextPageKey"))
                 .thenReturn(Mono.error(pnGenericException));
 
         StepVerifier.create(notificationAndMessageService.searchNotificationsFromTaxId("fkdokm",
@@ -104,7 +103,7 @@ class NotificationAndMessageServiceImplTest  {
                 .thenReturn(Mono.error(pnGenericException));
         Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-15T15:49:05.630Z"),
                         OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                        null, null, 50, "nextPageKey"))
+                        null, null, null, 50, "nextPageKey"))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
 
         StepVerifier.create(notificationAndMessageService.searchNotificationsFromTaxId("fkdokm",
@@ -216,11 +215,11 @@ class NotificationAndMessageServiceImplTest  {
     void searchNotificationsAsDelegateFromInternalIdTest(){
         Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-15T15:49:05.630Z"),
                 OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                null, null, 50, "nextPageKey"))
+                null, null, RecipientType.PF.getValue(), 50, "nextPageKey"))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getNotificationHistoryResponseDto()));
 
-        SearchNotificationsResponse response = notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", 50, "nextPageKey", OffsetDateTime.parse("2023-08-15T15:49:05.630Z"), OffsetDateTime.parse("2023-08-31T15:49:05.630Z")).block();
+        SearchNotificationsResponse response = notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", RecipientType.PF, 50,"nextPageKey", OffsetDateTime.parse("2023-08-15T15:49:05.630Z"), OffsetDateTime.parse("2023-08-31T15:49:05.630Z")).block();
         Assertions.assertNotNull(response);
         Assertions.assertEquals(1, response.getNextPagesKey().size());
         Assertions.assertEquals(1, response.getResults().size());
@@ -234,10 +233,10 @@ class NotificationAndMessageServiceImplTest  {
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_CLIENT, ERROR_ON_DELIVERY_CLIENT.getMessage());
         Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-15T15:49:05.630Z"),
                 OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                null, null, 50, "nextPageKey"))
+                null, null, RecipientType.PF.getValue(), 50, "nextPageKey"))
                 .thenReturn(Mono.error(pnGenericException));
 
-        StepVerifier.create(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", 50, "nextPageKey", OffsetDateTime.parse("2023-08-15T15:49:05.630Z"), OffsetDateTime.parse("2023-08-31T15:49:05.630Z")))
+        StepVerifier.create(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", RecipientType.PF, 50, "nextPageKey", OffsetDateTime.parse("2023-08-15T15:49:05.630Z"), OffsetDateTime.parse("2023-08-31T15:49:05.630Z")))
                 .expectError(PnGenericException.class)
                 .verify();
     }
@@ -247,12 +246,12 @@ class NotificationAndMessageServiceImplTest  {
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ERROR_ON_DELIVERY_PUSH_CLIENT.getMessage());
         Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-15T15:49:05.630Z"),
                 OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                null, null, 50, "nextPageKey"))
+                null, null, RecipientType.PF.getValue(), 50, "nextPageKey"))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.error(pnGenericException));
 
 
-        StepVerifier.create(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", 50, "nextPageKey", OffsetDateTime.parse("2023-08-15T15:49:05.630Z"), OffsetDateTime.parse("2023-08-31T15:49:05.630Z")))
+        StepVerifier.create(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", RecipientType.PF, 50, "nextPageKey", OffsetDateTime.parse("2023-08-15T15:49:05.630Z"), OffsetDateTime.parse("2023-08-31T15:49:05.630Z")))
                 .expectError(PnGenericException.class)
                 .verify();
     }

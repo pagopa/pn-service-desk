@@ -34,6 +34,16 @@ components:
         minLength: 1
         maxLength: 64
 
+    recipientType:
+      name: recipientType
+      description: >-
+        tipo di destinatario: PF o PG
+      in: query
+      required: true
+      schema:
+        type: string
+        pattern: '^(PF|PG)$'
+
     searchPageSize:
       name: size
       description: >-

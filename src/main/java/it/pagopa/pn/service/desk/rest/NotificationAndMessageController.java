@@ -53,8 +53,8 @@ public class NotificationAndMessageController implements NotificationAndMessageA
     }
 
     @Override
-    public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, ServerWebExchange exchange) {
-        return notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(xPagopaPnUid, mandateId, delegateInternalId, size, nextPagesKey, startDate, endDate)
+    public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, String recipientType, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, ServerWebExchange exchange) {
+        return notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(xPagopaPnUid, mandateId, delegateInternalId, RecipientType.fromValue(recipientType), size, nextPagesKey, startDate, endDate)
                 .map(searchNotificationsResponseResponseEntity -> ResponseEntity.status(HttpStatus.OK).body(searchNotificationsResponseResponseEntity));
     }
 

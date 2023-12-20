@@ -350,6 +350,7 @@ paths:
         - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
         - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchMandateId'
         - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchDelegateInternalId'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/recipientType'
         - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchPageSize'
         - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/searchNextPagesKey'
         - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/queryStartDate'

@@ -167,13 +167,14 @@ class NotificationAndMessageControllerTest {
         SearchNotificationsResponse response = new SearchNotificationsResponse();
         String path = "/service-desk/notifications/delegate";
         Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(Mockito.anyString(),
-                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(response));
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path(path)
                         .queryParam("mandateId", "ajhsdfn")
                         .queryParam("delegateInternalId", "PF-asdafv4345656")
+                        .queryParam("recipientType", "PF")
                         .queryParam("size","1")
                         .queryParam("nextPagesKey","1")
                         .queryParam("startDate","2023-08-31T15:49:05.63Z")
@@ -190,13 +191,60 @@ class NotificationAndMessageControllerTest {
         SearchNotificationsResponse response = new SearchNotificationsResponse();
         String path = "/service-desk/notifications/delegate";
         Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(Mockito.anyString(),
-                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT, HttpStatus.BAD_REQUEST)));
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path(path)
                         .queryParam("mandateId", "ajhsdfn")
                         .queryParam("delegateInternalId", "PF-asdafv4345656")
+                        .queryParam("size","1")
+                        .queryParam("nextPagesKey","1")
+                        .queryParam("startDate","2023-08-31T15:49:05.63Z")
+                        .queryParam("endDate","2023-09-15T15:49:05.63Z")
+                        .build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void searchNotificationsAsDelegateFromInternalIdRecipientTypeNullTest() {
+        SearchNotificationsResponse response = new SearchNotificationsResponse();
+        String path = "/service-desk/notifications/delegate";
+        Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(Mockito.anyString(),
+                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(response));
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path(path)
+                        .queryParam("mandateId", "ajhsdfn")
+                        .queryParam("delegateInternalId", "PF-asdafv4345656")
+                        .queryParam("size","1")
+                        .queryParam("nextPagesKey","1")
+                        .queryParam("startDate","2023-08-31T15:49:05.63Z")
+                        .queryParam("endDate","2023-09-15T15:49:05.63Z")
+                        .build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void searchNotificationsAsDelegateFromInternalIdRecipientTypeWrongValueTest() {
+        SearchNotificationsResponse response = new SearchNotificationsResponse();
+        String path = "/service-desk/notifications/delegate";
+        Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(Mockito.anyString(),
+                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(response));
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path(path)
+                        .queryParam("mandateId", "ajhsdfn")
+                        .queryParam("delegateInternalId", "PF-asdafv4345656")
+                        .queryParam("recipientType", "PP")
                         .queryParam("size","1")
                         .queryParam("nextPagesKey","1")
                         .queryParam("startDate","2023-08-31T15:49:05.63Z")
