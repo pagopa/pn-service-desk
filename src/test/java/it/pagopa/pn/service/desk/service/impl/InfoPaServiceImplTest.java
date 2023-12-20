@@ -76,7 +76,7 @@ class InfoPaServiceImplTest {
     void searchNotificationsFromSenderId(){
         Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-31T15:49:05.630Z"),
                         OffsetDateTime.parse("2023-10-10T15:49:05.630Z"), null,
-                        "PA-oihdsojn120u", null, 50, "nextPageKey"))
+                        "PA-oihdsojn120u", null, null, 50, "nextPageKey"))
                 .thenReturn(Mono.just(expectedNotificationSearchResponse));
 
         SearchNotificationsResponse actual = this.infoPaService.searchNotificationsFromSenderId(null, 50, "nextPageKey", this.getPaNotificationsRequest())

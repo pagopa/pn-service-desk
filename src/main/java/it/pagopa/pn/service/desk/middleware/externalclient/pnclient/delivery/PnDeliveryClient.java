@@ -10,7 +10,7 @@ import java.time.OffsetDateTime;
 public interface PnDeliveryClient {
 
     Mono<SentNotificationV21Dto> getSentNotificationPrivate(String iun);
-    Mono<NotificationSearchResponseDto> searchNotificationsPrivate(OffsetDateTime startDate, OffsetDateTime endDate, String recipientId, String senderId, String mandateId, Integer size, String nextPagesKey);
+    Mono<NotificationSearchResponseDto> searchNotificationsPrivate(OffsetDateTime startDate, OffsetDateTime endDate, String recipientId, String senderId, String mandateId, String cxType, Integer size, String nextPagesKey);
     Mono<NotificationAttachmentDownloadMetadataResponseDto> getReceivedNotificationDocumentPrivate(String iun, Integer docIdx, String recipientInternalId, String mandateId);
 
 }

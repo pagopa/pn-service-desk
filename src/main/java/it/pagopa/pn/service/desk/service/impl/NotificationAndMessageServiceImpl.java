@@ -60,7 +60,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsFromTaxId for taxId = {}", request.getTaxId());
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
                 .flatMap(internalId ->
-                        pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, internalId, null, null, size, nextPagesKey)
+                        pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, internalId, null, null, null, size, nextPagesKey)
                                 .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage());
                                     logEvent.generateFailure(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage()).log();
@@ -230,8 +230,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                     }))
                     .map(notificationAttachmentDownloadMetadataResponseDto -> {
                         documentsSize.set(documentsSize.get() + notificationAttachmentDownloadMetadataResponseDto.getContentLength());
-                        Document document = NotificationAndMessageMapper.getDocument(notificationAttachmentDownloadMetadataResponseDto);
-                        return document;
+                        return NotificationAndMessageMapper.getDocument(notificationAttachmentDownloadMetadataResponseDto);
                     });
         }
         return Flux.empty();
@@ -254,10 +253,10 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @Override
-    public Mono<SearchNotificationsResponse> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, Integer size, String nextPagesKey, OffsetDateTime startDate, OffsetDateTime endDate) {
+    public Mono<SearchNotificationsResponse> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, RecipientType recipientType, Integer size, String nextPagesKey, OffsetDateTime startDate, OffsetDateTime endDate) {
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_NT_INSERT, "searchNotificationsAsDelegateFromInternalId for delegateInternalId = {}", delegateInternalId);
         SearchNotificationsResponse searchNotificationsResponse = new SearchNotificationsResponse();
-        return pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, delegateInternalId, null, mandateId, size, nextPagesKey)
+        return pnDeliveryClient.searchNotificationsPrivate(startDate, endDate, delegateInternalId, null, mandateId, recipientType.getValue(), size, nextPagesKey)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage());
                     logEvent.generateFailure(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage()).log();
