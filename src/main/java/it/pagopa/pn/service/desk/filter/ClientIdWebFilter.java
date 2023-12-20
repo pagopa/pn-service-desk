@@ -47,8 +47,8 @@ public class ClientIdWebFilter implements WebFilter {
 
         String ticket = requestHeaders.getFirst(UID_HEADER);
         if (StringUtils.isNotBlank(ticket)){
-            MDC.put("cx_type","SD");
-            MDC.put("cx_id", ticket.replace("SD-",""));
+            MDC.put(CX_TYPE_MDC_KEY,"SD");
+            MDC.put(CX_ID_MDC_KEY, ticket.replace("SD-",""));
         }
 
         Mono<Void> processFilter = pnClientDAO.getByApiKey(apiKey)

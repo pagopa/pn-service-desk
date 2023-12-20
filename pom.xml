@@ -18,10 +18,7 @@
 	  <tag>HEAD</tag>
   </scm>
 	<properties>
-		<java.version>17</java.version>
 		<jacoco.min.line.cover.ratio>0.00</jacoco.min.line.cover.ratio>
-		<maven.compiler.source>17</maven.compiler.source>
-		<maven.compiler.target>17</maven.compiler.target>
 	</properties>
 
 	<dependencies>
@@ -323,7 +320,7 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/4cfd8cfa4ce9b87a066fb8fce803a8ea53089724/docs/openapi/api-private.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/4882cb6dccaa1eea87ac9260343e7839212e398b/docs/openapi/api-private.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>

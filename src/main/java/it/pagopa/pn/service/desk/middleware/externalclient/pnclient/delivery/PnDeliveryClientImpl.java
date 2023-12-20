@@ -21,8 +21,8 @@ public class PnDeliveryClientImpl implements PnDeliveryClient{
     }
 
     @Override
-    public Mono<NotificationSearchResponseDto> searchNotificationsPrivate(OffsetDateTime startDate, OffsetDateTime endDate, String recipientId, String senderId, String mandateId, Integer size, String nextPagesKey) {
-        return internalOnlyApi.searchNotificationsPrivate(startDate, endDate, recipientId, null, senderId, null, mandateId, size, nextPagesKey);
+    public Mono<NotificationSearchResponseDto> searchNotificationsPrivate(OffsetDateTime startDate, OffsetDateTime endDate, String recipientId, String senderId, String mandateId, String cxType, Integer size, String nextPagesKey) {
+        return internalOnlyApi.searchNotificationsPrivate(startDate, endDate, recipientId, null, senderId, null, mandateId, cxType, size, nextPagesKey);
     }
 
     @Override
