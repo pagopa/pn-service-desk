@@ -9,7 +9,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -52,13 +51,16 @@ public class ClientIdWebFilter implements WebFilter {
             MDC.put("cx_id", ticket.replace("SD-",""));
         }
 
-        return pnClientDAO.getByApiKey(apiKey)
-                .switchIfEmpty(Mono.error(new PnFilterClientIdException(API_KEY_NOT_PRESENT.getTitle(),
-                        API_KEY_NOT_PRESENT.getMessage().concat(" ApiKey = ").concat(apiKey)))
-                )
-                .doOnSuccess(key ->log.info("ApiKey:  {}", key))
-                .then(chain.filter(exchange))
-                .doFinally(ignored -> log.logEndingProcess("ENDING PROCESS FROM WEB FILTER"));
+        Mono<Void> processFilter = pnClientDAO.getByApiKey(apiKey)
+            .switchIfEmpty(Mono.error(new PnFilterClientIdException(API_KEY_NOT_PRESENT.getTitle(),
+                API_KEY_NOT_PRESENT.getMessage().concat(" ApiKey = ").concat(apiKey)))
+            )
+            .doOnSuccess(key -> log.info("ApiKey:  {}", key))
+            .then(chain.filter(exchange))
+            .doFinally(ignored -> log.logEndingProcess("ENDING PROCESS FROM WEB FILTER"));
+
+        return MDCUtils.addMDCToContextAndExecute(processFilter);
+
     }
 
 }
