@@ -85,8 +85,8 @@ class ProfileMapperTest {
         Assertions.assertEquals(actualDelegate.getDateFrom(), OffsetDateTime.parse(internalDelegateDtoDto.getDatefrom()));
         Assertions.assertEquals(actualDelegate.getDateTo(), OffsetDateTime.parse(internalDelegateDtoDto.getDateto()));
         Assertions.assertEquals(actualDelegate.getMandateId(), internalDelegateDtoDto.getMandateId());
-        Assertions.assertEquals(internalDelegateDtoDto.getDelegator(), actualDelegate.getDelegateInternalId());
-        Assertions.assertEquals(actualDelegate.getDelegatorInternalId(), internalDelegateDtoDto.getDelegate());
+        Assertions.assertEquals(actualDelegator.getDelegatorInternalId(), internalDelegateDtoDto.getDelegate());
+        Assertions.assertEquals(actualDelegate.getDelegateInternalId(), internalDelegateDtoDto.getDelegate());
     }
 
 }
