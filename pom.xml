@@ -45,6 +45,11 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+<!--		janino required se si esclude le dipendenze di lollipop-->
+		<dependency>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>janino</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>it.pagopa.pn</groupId>
 			<artifactId>pn-model</artifactId>
