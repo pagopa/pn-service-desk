@@ -8,6 +8,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dt
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import org.modelmapper.ModelMapper;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,7 @@ public class NotificationAndMessageMapper {
         notification.setSubject(notificationSearchRowDto.getSubject());
         notification.setIunStatus(IunStatus.fromValue(notificationSearchRowDto.getNotificationStatus().getValue()));
 
-        if (!filteredElements.isEmpty()){
+            if (!CollectionUtils.isEmpty(filteredElements)){
             List<CourtesyMessage> courtesyMessages = new ArrayList<>();
             filteredElements.forEach(timelineElementDto ->
                     courtesyMessages.add(getCourtesyMessage(timelineElementDto))
@@ -110,22 +111,6 @@ public class NotificationAndMessageMapper {
         return notificationDetailResponse;
     }
 
-    public static NotificationResponse getNotificationResponse(NotificationSearchRowDto notificationSearchRowDto, NotificationHistoryResponseDto notificationHistoryResponseDto) {
-        List<CourtesyMessage> courtesyMessages = new ArrayList<>();
-        if (notificationHistoryResponseDto.getTimeline() != null) {
-            notificationHistoryResponseDto.getTimeline().forEach(timelineElementV20Dto ->
-                    courtesyMessages.add(getCourtesyMessage(timelineElementV20Dto))
-            );
-        }
-        NotificationResponse notificationResponse = new NotificationResponse();
-        notificationResponse.setIun(notificationSearchRowDto.getIun());
-        notificationResponse.setSender(notificationSearchRowDto.getSender());
-        notificationResponse.setSubject(notificationSearchRowDto.getSubject());
-        notificationResponse.setIunStatus(IunStatus.fromValue(notificationSearchRowDto.getNotificationStatus().getValue()));
-        notificationResponse.setCourtesyMessages(courtesyMessages);
-        notificationResponse.setSentAt(notificationSearchRowDto.getSentAt());
-        return notificationResponse;
-    }
 
     private static CourtesyMessage getCourtesyMessage(TimelineElementV20Dto timelineElementV20Dto) {
         CourtesyMessage courtesyMessage = new CourtesyMessage();

@@ -263,14 +263,8 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
                 })
                 .flatMapMany(notificationSearchResponseDto -> getNotificationSearchRowFlux(notificationSearchResponseDto, searchNotificationsResponse))
-                .flatMap(notificationSearchRowDto -> pnDeliveryPushClient.getNotificationHistory(notificationSearchRowDto.getIun(), notificationSearchRowDto.getRecipients().size(), notificationSearchRowDto.getSentAt())
-                        .onErrorResume(WebClientResponseException.class, exception -> {
-                            log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
-                            logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()).log();
-                            return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getStatusCode()));
-                        })
-                        .map(notificationHistoryResponseDto -> NotificationAndMessageMapper
-                                .getNotificationResponse(notificationSearchRowDto, notificationHistoryResponseDto)))
+                .map(notificationSearchResponseDto -> NotificationAndMessageMapper
+                                .getNotification(notificationSearchResponseDto, null))
                 .collectList()
                 .map(notificationResponses -> {
                     searchNotificationsResponse.setResults(notificationResponses);

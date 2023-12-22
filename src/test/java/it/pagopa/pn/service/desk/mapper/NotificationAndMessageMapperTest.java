@@ -90,10 +90,4 @@ public class NotificationAndMessageMapperTest {
         assertNotNull(notificationDetailResponse);
     }
 
-    @Test
-    void getNotificationResponseTest (){
-        NotificationResponse notificationResponse = NotificationAndMessageMapper.getNotificationResponse(notificationSearchRowDto, historyResponseDto);
-        assertNotNull(notificationResponse);
-    }
-
 }
