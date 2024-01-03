@@ -22,10 +22,11 @@
 	</properties>
 
 	<dependencies>
+
 		<dependency>
 			<groupId>it.pagopa.pn</groupId>
 			<artifactId>pn-commons</artifactId>
-			<version>2.2.4-SNAPSHOT</version>
+			<version>2.2.5</version>
 			<exclusions>
 				<exclusion>
 					<groupId>it.pagopa.tech.lollipop-consumer-java-sdk</groupId>
@@ -44,6 +45,11 @@
 					<artifactId>identity-service-rest-client-native</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+<!--		janino required se si esclude le dipendenze di lollipop-->
+		<dependency>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>janino</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>it.pagopa.pn</groupId>

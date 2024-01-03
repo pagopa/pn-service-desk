@@ -63,9 +63,9 @@ public class ProfileMapper {
                 mandate.setMandateId(internalMandateDto.getMandateId());
                 mandate.setDateFrom(OffsetDateTime.parse(internalMandateDto.getDatefrom()));
                 mandate.setDateTo(OffsetDateTime.parse(internalMandateDto.getDateto()));
-                mandate.setDelegatorInternalId(internalMandateDto.getDelegate());
-                mandate.setDelegateInternalId(internalMandateDto.getDelegator());
-                mandate.setRecipientType(RecipientType.fromValue(internalMandateDto.getDelegator().split("-")[0]));
+                mandate.setDelegatorInternalId(internalMandateDto.getDelegator());
+                mandate.setDelegateInternalId(internalMandateDto.getDelegate());
+                mandate.setRecipientType(RecipientType.fromValue(internalMandateDto.getDelegate().split("-")[0]));
                 delegateMandates.add(mandate);
             });
         }

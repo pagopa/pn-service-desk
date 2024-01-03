@@ -60,9 +60,9 @@ class ProfileServiceImplTest {
         Assertions.assertEquals("64270e52-b5d5-4cf3-bbe2-15e8ac750107", mandate.getMandateId());
         Assertions.assertEquals(OffsetDateTime.parse("2023-01-10T23:00Z"), mandate.getDateFrom());
         Assertions.assertEquals(OffsetDateTime.parse("2026-05-12T21:59:59Z"), mandate.getDateTo());
-        Assertions.assertEquals("PF-4fc75df3-0913-407e-bdaa-e50329708b7d", mandate.getDelegatorInternalId());
-        Assertions.assertEquals("PG-8f409ca6-fc3d-46c3-8da7-69cd9a1e9e62", mandate.getDelegateInternalId());
-        Assertions.assertEquals(RecipientType.PG.getValue(),mandate.getRecipientType().getValue());
+        Assertions.assertEquals("PG-8f409ca6-fc3d-46c3-8da7-69cd9a1e9e62", mandate.getDelegatorInternalId());
+        Assertions.assertEquals("PF-4fc75df3-0913-407e-bdaa-e50329708b7d", mandate.getDelegateInternalId());
+        Assertions.assertEquals(RecipientType.PF.getValue(),mandate.getRecipientType().getValue());
 
         Assertions.assertEquals("49258827-a23d-4712-a46f-e23a67b4150f", delegate.getMandateId());
         Assertions.assertEquals(OffsetDateTime.parse("2023-06-18T22:00:00Z"), delegate.getDateFrom());

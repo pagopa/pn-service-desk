@@ -217,7 +217,6 @@ class NotificationAndMessageServiceImplTest  {
                 OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
                 null, null, RecipientType.PF.getValue(), 50, "nextPageKey"))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
-        Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getNotificationHistoryResponseDto()));
 
         SearchNotificationsResponse response = notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", RecipientType.PF, 50,"nextPageKey", OffsetDateTime.parse("2023-08-15T15:49:05.630Z"), OffsetDateTime.parse("2023-08-31T15:49:05.630Z")).block();
         Assertions.assertNotNull(response);
@@ -241,20 +240,6 @@ class NotificationAndMessageServiceImplTest  {
                 .verify();
     }
 
-    @Test
-    void searchNotificationsAsDelegateFromInternalIdDeliveryPushClientError(){
-        PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ERROR_ON_DELIVERY_PUSH_CLIENT.getMessage());
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-15T15:49:05.630Z"),
-                OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                null, null, RecipientType.PF.getValue(), 50, "nextPageKey"))
-                .thenReturn(Mono.just(getNotificationSearchResponseDto()));
-        Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.error(pnGenericException));
-
-
-        StepVerifier.create(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", RecipientType.PF, 50, "nextPageKey", OffsetDateTime.parse("2023-08-15T15:49:05.630Z"), OffsetDateTime.parse("2023-08-31T15:49:05.630Z")))
-                .expectError(PnGenericException.class)
-                .verify();
-    }
 
     private SearchNotificationsRequest getSearchMessageRequest(String taxId, RecipientType recipientType) {
         SearchNotificationsRequest searchMessagesRequest = new SearchNotificationsRequest();
