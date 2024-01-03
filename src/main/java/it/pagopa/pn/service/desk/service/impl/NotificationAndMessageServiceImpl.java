@@ -190,7 +190,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     @Override
     public Mono<DocumentsResponse> getDocumentsOfIun(String iun, DocumentsRequest request) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_VIEW_NOTIFICATION, "getDocumentsOfIun for");
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_DOC_AVAILABLE, "getDocumentsOfIun for");
         DocumentsResponse response = new DocumentsResponse();
         AtomicInteger documentsSize = new AtomicInteger(0);
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
