@@ -32,6 +32,10 @@ Parameters:
     Type: Number
     Default: 14
 
+  LogsKinesisSourceStreamArn:
+    Type: String
+    Description: 'Where to send Logs'
+
 Resources:
 
     ClientDynamoTable:
@@ -180,6 +184,7 @@ Resources:
           LogGroupName: !Sub "${ProjectName}-service-desk"
           LogGroupRetention: !Ref LogRetention
           LogGroupPrefix: '/aws/ecs'
+          LogsKinesisSourceStreamArn: !Ref LogsKinesisSourceStreamArn
 
 Outputs:
   EcsLogGroup:
