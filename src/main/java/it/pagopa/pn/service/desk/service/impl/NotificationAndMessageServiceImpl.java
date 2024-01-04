@@ -128,7 +128,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     @Override
     public Mono<TimelineResponse> getTimelineOfIUN(String xPagopaPnUid, String iun, SearchNotificationsRequest searchNotificationsRequest) {
         String logInfo = searchNotificationsRequest == null ? "getTimelineOfIUN for " : "getTimelineOfIUNAndTaxId for ";
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, logInfo);
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_VIEW_NOTIFICATION, logInfo);
         return pnDeliveryClient.getSentNotificationPrivate(iun)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
@@ -190,7 +190,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     @Override
     public Mono<DocumentsResponse> getDocumentsOfIun(String iun, DocumentsRequest request) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getDocumentsOfIun for");
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_DOC_AVAILABLE, "getDocumentsOfIun for");
         DocumentsResponse response = new DocumentsResponse();
         AtomicInteger documentsSize = new AtomicInteger(0);
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
@@ -238,7 +238,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     @Override
     public Mono<NotificationDetailResponse> getNotificationFromIUN(String iun) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_NT_INSERT, "getNotificationFromIUN for");
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_VIEW_NOTIFICATION, "getNotificationFromIUN for");
         return this.pnDeliveryClient.getSentNotificationPrivate(iun)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
