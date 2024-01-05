@@ -491,7 +491,7 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-apikey-manager/1e2439f3bb3fc0846ce25b570d78b7169f8f2a20/docs/openapi/pn-apikey-manager-bo.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-apikey-manager/9fe38c7bd527181ab20ac60727c83e6f81628050/docs/openapi/pn-apikey-manager-bo.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
