@@ -294,6 +294,7 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
+
 Conditions:
   HasAlbDimensionName: !Not [ !Equals [ !Ref ApplicationLoadBalancerMetricsDimensionName, '' ] ]
 
