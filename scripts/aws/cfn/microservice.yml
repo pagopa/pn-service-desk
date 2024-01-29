@@ -288,6 +288,11 @@ Parameters:
     Type: Number
     Description: 'Number of pages for shipment'
 
+  # EFS parameters
+  FargateEFSFileSystemID:
+    Type: String
+    Description: "EFS Filesystem"
+
   MountEfs:
     Type: String
     Default: false
@@ -295,6 +300,7 @@ Parameters:
       - "true"
       - "false"
 
+  # Logging parameters
   WireTapLogActivation:
     Type: String
     Default: false
@@ -334,6 +340,7 @@ Resources:
         AutoscalingDataPointN: !Ref AutoscalingDataPointN
         AutoscalingDataPointM: !Ref AutoscalingDataPointM
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+        EfsFilesystem: !Ref FargateEFSFileSystemID
         MountEfs: !Ref MountEfs
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
