@@ -5,11 +5,13 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 @ConfigurationProperties( prefix = "pn.service-desk")
 @Data
 @Import({SharedAutoConfiguration.class})
+@EnableScheduling
 public class PnServiceDeskConfigs {
 
     private String safeStorageBasePath;
