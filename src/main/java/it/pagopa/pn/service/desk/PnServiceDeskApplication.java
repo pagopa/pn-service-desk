@@ -1,5 +1,6 @@
 package it.pagopa.pn.service.desk;
 
+import it.pagopa.pn.commons.configs.listeners.TaskIdApplicationListener;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +12,8 @@ public class PnServiceDeskApplication {
 
 
     public static void main(String[] args) {
+        SpringApplication app = new SpringApplication(PnServiceDeskApplication.class);
+        app.addListeners(new TaskIdApplicationListener());
         SpringApplication.run(PnServiceDeskApplication.class, args);
     }
 
