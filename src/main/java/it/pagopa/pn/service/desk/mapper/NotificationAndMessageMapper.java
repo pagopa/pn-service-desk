@@ -2,7 +2,7 @@ package it.pagopa.pn.service.desk.mapper;
 
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationAttachmentDownloadMetadataResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV21Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV23Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV20Dto;
@@ -91,7 +91,7 @@ public class NotificationAndMessageMapper {
         return document;
     }
 
-    public static NotificationDetailResponse getNotificationDetail(SentNotificationV21Dto sentNotificationV21Dto) {
+    public static NotificationDetailResponse getNotificationDetail(SentNotificationV23Dto sentNotificationV21Dto) {
         NotificationDetailResponse notificationDetailResponse = new NotificationDetailResponse();
         notificationDetailResponse.setPaProtocolNumber(sentNotificationV21Dto.getPaProtocolNumber());
         notificationDetailResponse.setSubject(sentNotificationV21Dto.getSubject());
