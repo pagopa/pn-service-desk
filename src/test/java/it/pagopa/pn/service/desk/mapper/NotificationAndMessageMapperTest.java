@@ -21,7 +21,7 @@ public class NotificationAndMessageMapperTest {
     private final List<TimelineElementV20Dto> filteredElements = new ArrayList<>();
     private final NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
     private final NotificationAttachmentDownloadMetadataResponseDto notificationAttachmentDownloadMetadataResponseDto = new NotificationAttachmentDownloadMetadataResponseDto();
-    private final SentNotificationV21Dto sentNotificationV21Dto = new SentNotificationV21Dto();
+    private final SentNotificationV23Dto sentNotificationV21Dto = new SentNotificationV23Dto();
 
     @BeforeEach
     void initialize (){
@@ -48,10 +48,10 @@ public class NotificationAndMessageMapperTest {
         sentNotificationV21Dto.setPaProtocolNumber("abc123");
         sentNotificationV21Dto.setSubject("comune di Palermo");
         sentNotificationV21Dto.setAbstract("");
-        NotificationRecipientV21Dto notificationRecipientV21Dto = new NotificationRecipientV21Dto();
-        notificationRecipientV21Dto.setRecipientType(NotificationRecipientV21Dto.RecipientTypeEnum.PF);
+        NotificationRecipientV23Dto notificationRecipientV21Dto = new NotificationRecipientV23Dto();
+        notificationRecipientV21Dto.setRecipientType(NotificationRecipientV23Dto.RecipientTypeEnum.PF);
         notificationRecipientV21Dto.setPayments(new ArrayList<>());
-        List<NotificationRecipientV21Dto> recipients = new ArrayList<>();
+        List<NotificationRecipientV23Dto> recipients = new ArrayList<>();
         recipients.add(notificationRecipientV21Dto);
         sentNotificationV21Dto.setRecipients(recipients);
         sentNotificationV21Dto.setAmount(1234);
@@ -59,7 +59,7 @@ public class NotificationAndMessageMapperTest {
         NotificationDocumentDto documentDto = new NotificationDocumentDto();
         documentDtoList.add(documentDto);
         sentNotificationV21Dto.setDocuments(documentDtoList);
-        sentNotificationV21Dto.setPhysicalCommunicationType(SentNotificationV21Dto.PhysicalCommunicationTypeEnum.REGISTERED_LETTER_890);
+        sentNotificationV21Dto.setPhysicalCommunicationType(SentNotificationV23Dto.PhysicalCommunicationTypeEnum.REGISTERED_LETTER_890);
         sentNotificationV21Dto.setSenderDenomination("Fieramosca");
         sentNotificationV21Dto.setSenderTaxId("FRMTTR76M06B715E");
         sentNotificationV21Dto.setSentAt(OffsetDateTime.now());

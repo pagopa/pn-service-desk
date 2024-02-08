@@ -18,7 +18,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
     @Autowired
     private PnDeliveryClient pnDeliveryClient;
     
-    private final SentNotificationV21Dto expectedNotification = new SentNotificationV21Dto();
+    private final SentNotificationV23Dto expectedNotification = new SentNotificationV23Dto();
     private final NotificationSearchResponseDto expectedNotificationSearchResponse = new NotificationSearchResponseDto();
     private final NotificationAttachmentDownloadMetadataResponseDto expectedNotificationAttachment = new NotificationAttachmentDownloadMetadataResponseDto();
 
@@ -110,7 +110,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
 
     @Test
     void getSentNotificationPrivate(){
-        SentNotificationV21Dto actual = this.pnDeliveryClient
+        SentNotificationV23Dto actual = this.pnDeliveryClient
                 .getSentNotificationPrivate("1234").block();
 
         Assertions.assertNotNull(actual);

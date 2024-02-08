@@ -118,7 +118,7 @@ class NotificationAndMessageServiceImplTest  {
 
     @Test
     void getTimelineOfIUNTest(){
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV21Dto()));
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV23Dto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getHistory()));
 
         TimelineResponse response = notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1", null).block();
@@ -142,7 +142,7 @@ class NotificationAndMessageServiceImplTest  {
     @Test
     void getTimelineOfIUNPnDeliveryPushClientError(){
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ERROR_ON_DELIVERY_PUSH_CLIENT.getMessage());
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV21Dto()));
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV23Dto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.error(pnGenericException));
 
         StepVerifier.create(notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1", null))
@@ -153,7 +153,7 @@ class NotificationAndMessageServiceImplTest  {
     @Test
     void getDocumentsOfIunTest (){
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("PF-4fc75df3-0913-407e-bdaa-e50329708b7d"));
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV21Dto()));
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV23Dto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getHistory()));
         DocumentsRequest request = new DocumentsRequest();
         request.setRecipientType(RecipientType.PF);
@@ -166,7 +166,7 @@ class NotificationAndMessageServiceImplTest  {
     @Test
     void getDocumentsOfIunNotificationCancelledTest (){
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("PF-4fc75df3-0913-407e-bdaa-e50329708b7d"));
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV21Dto()));
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV23Dto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getHistoryNotificationCancellation()));
         DocumentsRequest request = new DocumentsRequest();
         request.setRecipientType(RecipientType.PF);
@@ -192,7 +192,7 @@ class NotificationAndMessageServiceImplTest  {
 
     @Test
     void getNotificationFromIUNTest (){
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV21Dto()));
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV23Dto()));
         NotificationDetailResponse response = notificationAndMessageService.getNotificationFromIUN("PRVZ-NZKM-JEDK-202309-A-1").block();
         Assertions.assertNotNull(response);
         Assertions.assertEquals("FRMTTR76M06B715E", response.getSenderTaxId());
@@ -319,18 +319,18 @@ class NotificationAndMessageServiceImplTest  {
         return notificationHistoryResponseDto;
     }
 
-    private SentNotificationV21Dto getSentNotificationV21Dto (){
-        SentNotificationV21Dto sentNotificationV21Dto = new SentNotificationV21Dto();
+    private SentNotificationV23Dto getSentNotificationV23Dto (){
+        SentNotificationV23Dto sentNotificationV21Dto = new SentNotificationV23Dto();
         sentNotificationV21Dto.setSentAt(OffsetDateTime.now());
-        NotificationRecipientV21Dto notificationRecipientV21Dto = new NotificationRecipientV21Dto();
-        notificationRecipientV21Dto.setRecipientType(NotificationRecipientV21Dto.RecipientTypeEnum.PF);
+        NotificationRecipientV23Dto notificationRecipientV21Dto = new NotificationRecipientV23Dto();
+        notificationRecipientV21Dto.setRecipientType(NotificationRecipientV23Dto.RecipientTypeEnum.PF);
         notificationRecipientV21Dto.setPayments(new ArrayList<>());
-        sentNotificationV21Dto.setPhysicalCommunicationType(SentNotificationV21Dto.PhysicalCommunicationTypeEnum.AR_REGISTERED_LETTER);
+        sentNotificationV21Dto.setPhysicalCommunicationType(SentNotificationV23Dto.PhysicalCommunicationTypeEnum.AR_REGISTERED_LETTER);
         sentNotificationV21Dto.setSenderDenomination("comune");
         sentNotificationV21Dto.setSenderTaxId("FRMTTR76M06B715E");
         sentNotificationV21Dto.setSentAt(OffsetDateTime.now());
         sentNotificationV21Dto.setPaymentExpirationDate("31/12/2023");
-        List<NotificationRecipientV21Dto> dtoList = new ArrayList<>();
+        List<NotificationRecipientV23Dto> dtoList = new ArrayList<>();
         dtoList.add(notificationRecipientV21Dto);
         sentNotificationV21Dto.setRecipients(dtoList);
         return sentNotificationV21Dto;

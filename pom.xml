@@ -326,7 +326,7 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/4882cb6dccaa1eea87ac9260343e7839212e398b/docs/openapi/api-private.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/19f7bd16eec3b1951fbe453a028269ea0a041ace/docs/openapi/api-private.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
