@@ -96,7 +96,7 @@ public class NotificationAndMessageMapper {
         notificationDetailResponse.setPaProtocolNumber(sentNotificationV21Dto.getPaProtocolNumber());
         notificationDetailResponse.setSubject(sentNotificationV21Dto.getSubject());
         notificationDetailResponse.setAbstract(sentNotificationV21Dto.getAbstract());
-        notificationDetailResponse.setIsMultiRecipients(!CollectionUtils.isEmpty(sentNotificationV21Dto.getRecipients()) && sentNotificationV21Dto.getRecipients().size() > 1);
+        notificationDetailResponse.setIsMultiRecipients(sentNotificationV21Dto.getRecipients() != null && sentNotificationV21Dto.getRecipients().size() > 1);
         if(!sentNotificationV21Dto.getRecipients().isEmpty()){
             notificationDetailResponse.setHasPayments(!sentNotificationV21Dto.getRecipients().get(0).getPayments().isEmpty());
         }
