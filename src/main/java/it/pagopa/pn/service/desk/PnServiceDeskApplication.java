@@ -14,7 +14,7 @@ public class PnServiceDeskApplication {
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(PnServiceDeskApplication.class);
         app.addListeners(new TaskIdApplicationListener());
-        SpringApplication.run(PnServiceDeskApplication.class, args);
+        app.run(args);
     }
 
 
