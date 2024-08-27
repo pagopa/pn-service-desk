@@ -3,19 +3,18 @@ package it.pagopa.pn.service.desk.mapper;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.*;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.Document;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationDetailResponse;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationResponse;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.TimelineResponse;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class NotificationAndMessageMapperTest {
+class NotificationAndMessageMapperTest {
 
     private final NotificationSearchRowDto notificationSearchRowDto = new NotificationSearchRowDto();
     private final List<TimelineElementV20Dto> filteredElements = new ArrayList<>();
@@ -36,11 +35,20 @@ public class NotificationAndMessageMapperTest {
         timelineElementV20Dto.setDetails(detailsV20Dto);
         timelineElementV20Dto.setCategory(TimelineElementCategoryV20Dto.REQUEST_ACCEPTED);
         timelineElementV20Dto.setTimestamp(OffsetDateTime.now());
+
+        TimelineElementV20Dto refinement = new TimelineElementV20Dto();
+        TimelineElementDetailsV20Dto refinementDetail = new TimelineElementDetailsV20Dto();
+        detailsV20Dto.setSendDate(OffsetDateTime.now().plusSeconds(10));
+        refinement.setDetails(refinementDetail);
+        refinement.setCategory(TimelineElementCategoryV20Dto.REFINEMENT);
+        refinement.setTimestamp(OffsetDateTime.now().plusSeconds(10));
+
         DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
         digitalAddressDto.setType("PEC");
         detailsV20Dto.setDigitalAddress(digitalAddressDto);
         filteredElements.add(timelineElementV20Dto);
-        historyResponseDto.setTimeline(filteredElements);
+        List<TimelineElementV20Dto> allTimelines = List.of(timelineElementV20Dto, refinement);
+        historyResponseDto.setTimeline(allTimelines);
         historyResponseDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationStatusDto.ACCEPTED);
         notificationAttachmentDownloadMetadataResponseDto.setFilename("document_test");
         notificationAttachmentDownloadMetadataResponseDto.setContentType("test");
@@ -88,6 +96,15 @@ public class NotificationAndMessageMapperTest {
     void getNotificationDetailTest (){
         NotificationDetailResponse notificationDetailResponse = NotificationAndMessageMapper.getNotificationDetail(sentNotificationV21Dto);
         assertNotNull(notificationDetailResponse);
+    }
+
+    @Test
+    void getTimelineWithRefinement() {
+        TimelineResponse response = NotificationAndMessageMapper.getTimeline(historyResponseDto);
+        assertNotNull(response);
+        assertThat(response.getTimeline()).hasSize(2);
+        var categories = response.getTimeline().stream().map(TimelineElement::getCategory).toList();
+        assertThat(categories).contains(TimelineElementCategory.REFINEMENT);
     }
 
 }
