@@ -78,7 +78,8 @@ public class NotificationAndMessageMapper {
                         element.getCategory().equals(TimelineElementCategoryV20Dto.SEND_ANALOG_FEEDBACK) ||
                         element.getCategory().equals(TimelineElementCategoryV20Dto.COMPLETELY_UNREACHABLE) ||
                         element.getCategory().equals(TimelineElementCategoryV20Dto.AAR_GENERATION) ||
-                        element.getCategory().equals(TimelineElementCategoryV20Dto.NOT_HANDLED)
+                        element.getCategory().equals(TimelineElementCategoryV20Dto.NOT_HANDLED) ||
+                        element.getCategory().equals(TimelineElementCategoryV20Dto.REFINEMENT)
                 )
                 .toList();
     }
