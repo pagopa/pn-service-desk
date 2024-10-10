@@ -286,11 +286,11 @@ class NotificationAndMessageServiceImplTest  {
         NotificationHistoryResponseDto notificationHistoryResponseDto = new NotificationHistoryResponseDto();
         notificationHistoryResponseDto.setNotificationStatus(NotificationStatusDto.ACCEPTED);
 
-        List<TimelineElementV20Dto> timelineElementDtoList = new ArrayList<>();
-        TimelineElementV20Dto timelineElementDto = new TimelineElementV20Dto();
-        timelineElementDto.setCategory(TimelineElementCategoryV20Dto.SEND_COURTESY_MESSAGE);
+        List<TimelineElementV23Dto> timelineElementDtoList = new ArrayList<>();
+        TimelineElementV23Dto timelineElementDto = new TimelineElementV23Dto();
+        timelineElementDto.setCategory(TimelineElementCategoryV23Dto.SEND_COURTESY_MESSAGE);
         timelineElementDto.setElementId("elementId");
-        timelineElementDto.setDetails(new TimelineElementDetailsV20Dto());
+        timelineElementDto.setDetails(new TimelineElementDetailsV23Dto());
         timelineElementDto.setTimestamp(OffsetDateTime.of(LocalDateTime.now(),
                 ZoneOffset.of("+07:00")));
 
@@ -339,12 +339,12 @@ class NotificationAndMessageServiceImplTest  {
     private NotificationHistoryResponseDto getHistory (){
         NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
         historyResponseDto.setNotificationStatus(NotificationStatusDto.ACCEPTED);
-        TimelineElementV20Dto timelineElementV20Dto = new TimelineElementV20Dto();
-        timelineElementV20Dto.setCategory(TimelineElementCategoryV20Dto.REQUEST_ACCEPTED);
-        timelineElementV20Dto.setDetails(new TimelineElementDetailsV20Dto());
-        timelineElementV20Dto.setTimestamp(OffsetDateTime.now());
-        List<TimelineElementV20Dto> dtoList = new ArrayList<>();
-        dtoList.add(timelineElementV20Dto);
+        TimelineElementV23Dto timelineElementV23Dto = new TimelineElementV23Dto();
+        timelineElementV23Dto.setCategory(TimelineElementCategoryV23Dto.REQUEST_ACCEPTED);
+        timelineElementV23Dto.setDetails(new TimelineElementDetailsV23Dto());
+        timelineElementV23Dto.setTimestamp(OffsetDateTime.now());
+        List<TimelineElementV23Dto> dtoList = new ArrayList<>();
+        dtoList.add(timelineElementV23Dto);
         historyResponseDto.setTimeline(dtoList);
         return historyResponseDto;
     }
@@ -352,12 +352,12 @@ class NotificationAndMessageServiceImplTest  {
     private NotificationHistoryResponseDto getHistoryNotificationCancellation (){
         NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
         historyResponseDto.setNotificationStatus(NotificationStatusDto.ACCEPTED);
-        TimelineElementV20Dto timelineElementV20Dto = new TimelineElementV20Dto();
-        timelineElementV20Dto.setCategory(TimelineElementCategoryV20Dto.NOTIFICATION_CANCELLATION_REQUEST);
-        timelineElementV20Dto.setDetails(new TimelineElementDetailsV20Dto());
-        timelineElementV20Dto.setTimestamp(OffsetDateTime.now());
-        List<TimelineElementV20Dto> dtoList = new ArrayList<>();
-        dtoList.add(timelineElementV20Dto);
+        TimelineElementV23Dto timelineElementV23Dto = new TimelineElementV23Dto();
+        timelineElementV23Dto.setCategory(TimelineElementCategoryV23Dto.NOTIFICATION_CANCELLATION_REQUEST);
+        timelineElementV23Dto.setDetails(new TimelineElementDetailsV23Dto());
+        timelineElementV23Dto.setTimestamp(OffsetDateTime.now());
+        List<TimelineElementV23Dto> dtoList = new ArrayList<>();
+        dtoList.add(timelineElementV23Dto);
         historyResponseDto.setTimeline(dtoList);
         return historyResponseDto;
     }

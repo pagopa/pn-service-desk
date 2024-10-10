@@ -24,7 +24,7 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
 
     private static final String OPERATION_ID = "test12345";
 
-    private final TimelineElementV20Dto expectedTimeline = new TimelineElementV20Dto();
+    private final TimelineElementV23Dto expectedTimeline = new TimelineElementV23Dto();
 
     @Autowired
     private PnDeliveryPushClient pnDeliveryPushClient;
@@ -33,17 +33,17 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
     public void setUp(){
         expectedTimeline.setElementId("SEND_DIGITAL.IUN_PRVZ-NZKM-JEDK-202309-A-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
         expectedTimeline.setTimestamp(OffsetDateTime.parse("2023-09-29T14:04:11.354725545Z"));
-        expectedTimeline.setCategory(TimelineElementCategoryV20Dto.SEND_DIGITAL_DOMICILE);
+        expectedTimeline.setCategory(TimelineElementCategoryV23Dto.SEND_DIGITAL_DOMICILE);
 
-        TimelineElementDetailsV20Dto categoryV20Dto = new TimelineElementDetailsV20Dto();
-        categoryV20Dto.setSendDate(OffsetDateTime.parse("2023-09-29T14:04:01.033478852Z"));
-        categoryV20Dto.setDigitalAddressSource(DigitalAddressSourceDto.PLATFORM);
+        TimelineElementDetailsV23Dto categoryV23Dto = new TimelineElementDetailsV23Dto();
+        categoryV23Dto.setSendDate(OffsetDateTime.parse("2023-09-29T14:04:01.033478852Z"));
+        categoryV23Dto.setDigitalAddressSource(DigitalAddressSourceDto.PLATFORM);
         DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
         digitalAddressDto.setType("PEC");
         digitalAddressDto.setAddress("2c25227d-9835-42a2-a274-a462242a9619@pec.it");
-        categoryV20Dto.setDigitalAddress(digitalAddressDto);
+        categoryV23Dto.setDigitalAddress(digitalAddressDto);
 
-        expectedTimeline.setDetails(categoryV20Dto);
+        expectedTimeline.setDetails(categoryV23Dto);
     }
 
     @Test
@@ -117,7 +117,7 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
         Assertions.assertNotNull(actual.getTimeline());
         Assertions.assertNotNull(actual.getTimeline().get(0));
 
-        TimelineElementV20Dto actualTimeline = actual.getTimeline().get(0);
+        TimelineElementV23Dto actualTimeline = actual.getTimeline().get(0);
         Assertions.assertEquals(expectedTimeline.getElementId(), actualTimeline.getElementId());
         Assertions.assertEquals(expectedTimeline.getTimestamp(), actualTimeline.getTimestamp());
         Assertions.assertEquals(expectedTimeline.getCategory(), actualTimeline.getCategory());
