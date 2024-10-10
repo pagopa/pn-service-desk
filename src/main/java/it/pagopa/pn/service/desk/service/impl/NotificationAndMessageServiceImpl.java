@@ -173,8 +173,8 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         if (request == null) return Mono.just(response);
         return getIndexTaxIdFromSentNotification(request.getTaxId(), sentNotificationV21Dto.getRecipients())
                 .map(indexTaxId -> {
-            List<TimelineElementV23Dto> list = getFilteredElements(response, null, indexTaxId);
-            response.setTimeline(list);
+            var filteredTimelines = getFilteredElements(response, null, indexTaxId);
+            response.setTimeline(filteredTimelines);
             return response;
         });
     }
@@ -290,7 +290,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
 
     private static boolean cancellationTimelineIsPresent(String iun, NotificationHistoryResponseDto notificationHistoryResponseDto, AtomicBoolean cancellationTimelineIsPresent) {
         var cancellationRequestCategory = TimelineElementCategoryV23Dto.NOTIFICATION_CANCELLATION_REQUEST;
-        Optional<TimelineElementV23Dto> cancellationRequestTimeline = notificationHistoryResponseDto.getTimeline().stream()
+        var cancellationRequestTimeline = notificationHistoryResponseDto.getTimeline().stream()
                 .filter(timelineElement -> cancellationRequestCategory.toString().equals(timelineElement.getCategory().toString()))
                 .findFirst();
         cancellationTimelineIsPresent.set(cancellationRequestTimeline.isPresent());
