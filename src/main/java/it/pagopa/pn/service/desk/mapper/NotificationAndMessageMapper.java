@@ -76,6 +76,7 @@ public class NotificationAndMessageMapper {
                         element.getCategory().equals(TimelineElementCategoryV23Dto.SEND_ANALOG_DOMICILE) ||
                         element.getCategory().equals(TimelineElementCategoryV23Dto.SEND_ANALOG_PROGRESS) ||
                         element.getCategory().equals(TimelineElementCategoryV23Dto.SEND_ANALOG_FEEDBACK) ||
+                        element.getCategory().equals(TimelineElementCategoryV23Dto.NOTIFICATION_RADD_RETRIEVED) ||
                         element.getCategory().equals(TimelineElementCategoryV23Dto.COMPLETELY_UNREACHABLE) ||
                         element.getCategory().equals(TimelineElementCategoryV23Dto.AAR_GENERATION) ||
                         element.getCategory().equals(TimelineElementCategoryV23Dto.NOT_HANDLED) ||
