@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class NotificationAndMessageMapperTest {
 
     private final NotificationSearchRowDto notificationSearchRowDto = new NotificationSearchRowDto();
-    private final List<TimelineElementV20Dto> filteredElements = new ArrayList<>();
+    private final List<TimelineElementV23Dto> filteredElements = new ArrayList<>();
     private final NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
     private final NotificationAttachmentDownloadMetadataResponseDto notificationAttachmentDownloadMetadataResponseDto = new NotificationAttachmentDownloadMetadataResponseDto();
     private final SentNotificationV23Dto sentNotificationV21Dto = new SentNotificationV23Dto();
@@ -29,25 +29,25 @@ class NotificationAndMessageMapperTest {
         notificationSearchRowDto.setSentAt(OffsetDateTime.now());
         notificationSearchRowDto.setSubject("comune di Palermo");
         notificationSearchRowDto.setNotificationStatus(NotificationStatusDto.ACCEPTED);
-        TimelineElementV20Dto timelineElementV20Dto = new TimelineElementV20Dto();
-        TimelineElementDetailsV20Dto detailsV20Dto = new TimelineElementDetailsV20Dto();
-        detailsV20Dto.setSendDate(OffsetDateTime.now());
-        timelineElementV20Dto.setDetails(detailsV20Dto);
-        timelineElementV20Dto.setCategory(TimelineElementCategoryV20Dto.REQUEST_ACCEPTED);
-        timelineElementV20Dto.setTimestamp(OffsetDateTime.now());
+        TimelineElementV23Dto timelineElementV23Dto = new TimelineElementV23Dto();
+        TimelineElementDetailsV23Dto detailsV23Dto = new TimelineElementDetailsV23Dto();
+        detailsV23Dto.setSendDate(OffsetDateTime.now());
+        timelineElementV23Dto.setDetails(detailsV23Dto);
+        timelineElementV23Dto.setCategory(TimelineElementCategoryV23Dto.REQUEST_ACCEPTED);
+        timelineElementV23Dto.setTimestamp(OffsetDateTime.now());
 
-        TimelineElementV20Dto refinement = new TimelineElementV20Dto();
-        TimelineElementDetailsV20Dto refinementDetail = new TimelineElementDetailsV20Dto();
-        detailsV20Dto.setSendDate(OffsetDateTime.now().plusSeconds(10));
+        TimelineElementV23Dto refinement = new TimelineElementV23Dto();
+        TimelineElementDetailsV23Dto refinementDetail = new TimelineElementDetailsV23Dto();
+        detailsV23Dto.setSendDate(OffsetDateTime.now().plusSeconds(10));
         refinement.setDetails(refinementDetail);
-        refinement.setCategory(TimelineElementCategoryV20Dto.REFINEMENT);
+        refinement.setCategory(TimelineElementCategoryV23Dto.REFINEMENT);
         refinement.setTimestamp(OffsetDateTime.now().plusSeconds(10));
 
         DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
         digitalAddressDto.setType("PEC");
-        detailsV20Dto.setDigitalAddress(digitalAddressDto);
-        filteredElements.add(timelineElementV20Dto);
-        List<TimelineElementV20Dto> allTimelines = List.of(timelineElementV20Dto, refinement);
+        detailsV23Dto.setDigitalAddress(digitalAddressDto);
+        filteredElements.add(timelineElementV23Dto);
+        List<TimelineElementV23Dto> allTimelines = List.of(timelineElementV23Dto, refinement);
         historyResponseDto.setTimeline(allTimelines);
         historyResponseDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationStatusDto.ACCEPTED);
         notificationAttachmentDownloadMetadataResponseDto.setFilename("document_test");

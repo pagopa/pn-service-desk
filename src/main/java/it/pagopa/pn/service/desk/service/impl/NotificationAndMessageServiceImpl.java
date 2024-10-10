@@ -8,8 +8,8 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.No
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV23Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV20Dto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV20Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV23Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV23Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.mapper.NotificationAndMessageMapper;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
@@ -76,7 +76,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getStatusCode()));
                                 })
                                 .map(notificationHistoryResponseDto -> NotificationAndMessageMapper
-                                        .getNotification(notificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto, TimelineElementCategoryV20Dto.SEND_COURTESY_MESSAGE, getIndexTaxId(request.getTaxId(), notificationSearchRowDto.getRecipients())))
+                                        .getNotification(notificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto, TimelineElementCategoryV23Dto.SEND_COURTESY_MESSAGE, getIndexTaxId(request.getTaxId(), notificationSearchRowDto.getRecipients())))
                                 )
                 )
                 .collectList()
@@ -102,8 +102,8 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @NotNull
-    private static List<TimelineElementV20Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, TimelineElementCategoryV20Dto category,  Integer indexTaxId) {
-        List<TimelineElementV20Dto> filteredElements = new ArrayList<>();
+    private static List<TimelineElementV23Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, TimelineElementCategoryV23Dto category,  Integer indexTaxId) {
+        List<TimelineElementV23Dto> filteredElements = new ArrayList<>();
         if (notificationHistoryResponseDto.getTimeline() != null) {
             filteredElements = notificationHistoryResponseDto.getTimeline()
                     .stream()
@@ -173,7 +173,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         if (request == null) return Mono.just(response);
         return getIndexTaxIdFromSentNotification(request.getTaxId(), sentNotificationV21Dto.getRecipients())
                 .map(indexTaxId -> {
-            List<TimelineElementV20Dto> list = getFilteredElements(response, null, indexTaxId);
+            List<TimelineElementV23Dto> list = getFilteredElements(response, null, indexTaxId);
             response.setTimeline(list);
             return response;
         });
@@ -289,8 +289,8 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     private static boolean cancellationTimelineIsPresent(String iun, NotificationHistoryResponseDto notificationHistoryResponseDto, AtomicBoolean cancellationTimelineIsPresent) {
-        var cancellationRequestCategory = TimelineElementCategoryV20Dto.NOTIFICATION_CANCELLATION_REQUEST;
-        Optional<TimelineElementV20Dto> cancellationRequestTimeline = notificationHistoryResponseDto.getTimeline().stream()
+        var cancellationRequestCategory = TimelineElementCategoryV23Dto.NOTIFICATION_CANCELLATION_REQUEST;
+        Optional<TimelineElementV23Dto> cancellationRequestTimeline = notificationHistoryResponseDto.getTimeline().stream()
                 .filter(timelineElement -> cancellationRequestCategory.toString().equals(timelineElement.getCategory().toString()))
                 .findFirst();
         cancellationTimelineIsPresent.set(cancellationRequestTimeline.isPresent());
