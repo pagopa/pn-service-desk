@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 @ExtendWith(MockitoExtension.class)
@@ -50,11 +51,11 @@ class InfoPaServiceImplTest {
         notificationSearchRowDto.setIun("PRVZ-NZKM-JEDK-202309-A-1");
         notificationSearchRowDto.setPaProtocolNumber("202381856591695996128952");
         notificationSearchRowDto.setSender("Comune di Palermo");
-        notificationSearchRowDto.setSentAt(OffsetDateTime.parse("2023-09-29T14:02:08.670718277Z"));
+        notificationSearchRowDto.setSentAt(Instant.parse("2023-09-29T14:02:08.670718277Z"));
         notificationSearchRowDto.setSubject("Test-di-carico");
         notificationSearchRowDto.setNotificationStatus(NotificationStatusDto.VIEWED);
         notificationSearchRowDto.setRecipients(List.of("GLLGLL64B15G702I"));
-        notificationSearchRowDto.setRequestAcceptedAt(OffsetDateTime.parse("2023-09-29T14:03:02.807361187Z"));
+        notificationSearchRowDto.setRequestAcceptedAt(Instant.parse("2023-09-29T14:03:02.807361187Z"));
 
         expectedNotificationSearchResponse.setResultsPage(List.of(notificationSearchRowDto));
     }
@@ -74,8 +75,8 @@ class InfoPaServiceImplTest {
 
     @Test
     void searchNotificationsFromSenderId(){
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-31T15:49:05.630Z"),
-                        OffsetDateTime.parse("2023-10-10T15:49:05.630Z"), null,
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Instant.parse("2023-08-31T15:49:05.630Z"),
+                        Instant.parse("2023-10-10T15:49:05.630Z"), null,
                         "PA-oihdsojn120u", null, null, 50, "nextPageKey"))
                 .thenReturn(Mono.just(expectedNotificationSearchResponse));
 
@@ -95,8 +96,8 @@ class InfoPaServiceImplTest {
     private PaNotificationsRequest getPaNotificationsRequest() {
         PaNotificationsRequest paNotificationsRequest = new PaNotificationsRequest();
         paNotificationsRequest.setId("PA-oihdsojn120u");
-        paNotificationsRequest.setStartDate(OffsetDateTime.parse("2023-08-31T15:49:05.63Z"));
-        paNotificationsRequest.setEndDate(OffsetDateTime.parse("2023-10-10T15:49:05.63Z"));
+        paNotificationsRequest.setStartDate(Instant.parse("2023-08-31T15:49:05.63Z"));
+        paNotificationsRequest.setEndDate(Instant.parse("2023-10-10T15:49:05.63Z"));
         return paNotificationsRequest;
     }
 

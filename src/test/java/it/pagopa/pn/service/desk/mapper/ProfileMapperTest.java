@@ -8,7 +8,7 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.ProfileResponse
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,14 +76,14 @@ class ProfileMapperTest {
         Mandate actualDelegator = profileResponse.getDelegatorMandates().get(0);
         Mandate actualDelegate = profileResponse.getDelegateMandates().get(0);
 
-        Assertions.assertEquals(actualDelegator.getDateFrom(), OffsetDateTime.parse(internalDelegatorDtoDto.getDatefrom()));
-        Assertions.assertEquals(actualDelegator.getDateTo(), OffsetDateTime.parse(internalDelegatorDtoDto.getDateto()));
+        Assertions.assertEquals(actualDelegator.getDateFrom(), Instant.parse(internalDelegatorDtoDto.getDatefrom()));
+        Assertions.assertEquals(actualDelegator.getDateTo(), Instant.parse(internalDelegatorDtoDto.getDateto()));
         Assertions.assertEquals(actualDelegator.getMandateId(), internalDelegatorDtoDto.getMandateId());
         Assertions.assertEquals(actualDelegator.getDelegateInternalId(), internalDelegatorDtoDto.getDelegate());
         Assertions.assertEquals(actualDelegator.getDelegatorInternalId(), internalDelegatorDtoDto.getDelegator());
 
-        Assertions.assertEquals(actualDelegate.getDateFrom(), OffsetDateTime.parse(internalDelegateDtoDto.getDatefrom()));
-        Assertions.assertEquals(actualDelegate.getDateTo(), OffsetDateTime.parse(internalDelegateDtoDto.getDateto()));
+        Assertions.assertEquals(actualDelegate.getDateFrom(), Instant.parse(internalDelegateDtoDto.getDatefrom()));
+        Assertions.assertEquals(actualDelegate.getDateTo(), Instant.parse(internalDelegateDtoDto.getDateto()));
         Assertions.assertEquals(actualDelegate.getMandateId(), internalDelegateDtoDto.getMandateId());
         Assertions.assertEquals(actualDelegator.getDelegatorInternalId(), internalDelegateDtoDto.getDelegate());
         Assertions.assertEquals(actualDelegate.getDelegateInternalId(), internalDelegateDtoDto.getDelegate());

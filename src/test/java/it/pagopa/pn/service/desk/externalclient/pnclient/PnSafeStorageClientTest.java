@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.test.StepVerifier;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 class PnSafeStorageClientTest extends BaseTest.WithMockServer {
     private static final String FILE_KEY = "FILE-KEY-ATTACHMENTS";
@@ -44,7 +44,7 @@ class PnSafeStorageClientTest extends BaseTest.WithMockServer {
         Assertions.assertEquals("3Z9SdhZ50PBeIj617KEMrztNKDMJj8FZ", fileDownloadResponse.getVersionId());
         Assertions.assertEquals("application/pdf", fileDownloadResponse.getContentType());
         Assertions.assertEquals("jezIVxlG1M1woCSUngM6KipUN3/p8cG5RMIPnuEanlE=", fileDownloadResponse.getChecksum());
-        Assertions.assertEquals(OffsetDateTime.parse("2032-04-12T12:32:04Z"), fileDownloadResponse.getRetentionUntil());
+        Assertions.assertEquals(Instant.parse("2032-04-12T12:32:04Z"), fileDownloadResponse.getRetentionUntil());
         Assertions.assertEquals("PN_LEGALFACT", fileDownloadResponse.getDocumentType());
     }
 
@@ -70,7 +70,7 @@ class PnSafeStorageClientTest extends BaseTest.WithMockServer {
         Assertions.assertEquals("3Z9SdhZ50PBeIj617KEMrztNKDMJj8FZ", fileDownloadResponse.getVersionId());
         Assertions.assertEquals("application/pdf", fileDownloadResponse.getContentType());
         Assertions.assertEquals("jezIVxlG1M1woCSUngM6KipUN3/p8cG5RMIPnuEanlE=", fileDownloadResponse.getChecksum());
-        Assertions.assertEquals(OffsetDateTime.parse("2032-04-12T12:32:04Z"), fileDownloadResponse.getRetentionUntil());
+        Assertions.assertEquals(Instant.parse("2032-04-12T12:32:04Z"), fileDownloadResponse.getRetentionUntil());
         Assertions.assertEquals("PN_LEGALFACT", fileDownloadResponse.getDocumentType());
     }
 

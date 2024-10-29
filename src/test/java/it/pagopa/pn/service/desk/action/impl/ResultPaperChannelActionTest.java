@@ -19,8 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -176,8 +174,8 @@ class ResultPaperChannelActionTest {
         SendEventDto sendEventDto = new SendEventDto();
         sendEventDto.setRequestId(requestId);
         sendEventDto.setStatusDetail("");
-        sendEventDto.setStatusDateTime(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
-        sendEventDto.setClientRequestTimeStamp(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
+        sendEventDto.setStatusDateTime(Instant.now());
+        sendEventDto.setClientRequestTimeStamp(Instant.now());
         sendEventDto.setStatusDescription("");
         sendEventDto.setDeliveryFailureCause("");
         return sendEventDto;
@@ -189,8 +187,8 @@ class ResultPaperChannelActionTest {
         sendEventDto.setRequestId(requestId);
         sendEventDto.setStatusCode(StatusCodeEnumDto.OK);
         sendEventDto.setStatusDetail("");
-        sendEventDto.setStatusDateTime(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
-        sendEventDto.setClientRequestTimeStamp(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
+        sendEventDto.setStatusDateTime(Instant.now());
+        sendEventDto.setClientRequestTimeStamp(Instant.now());
         sendEventDto.setStatusDescription("");
         sendEventDto.setDeliveryFailureCause("");
         return sendEventDto;
