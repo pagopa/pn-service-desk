@@ -8,7 +8,7 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.ProfileResponse
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +26,8 @@ class ProfileMapperTest {
         legalDigitalAddressDto.setSenderId("default");
         legalDigitalAddressDto.setRecipientId("PF-1234");
         legalDigitalAddressDtoList.add(legalDigitalAddressDto);
+        legalDigitalAddressDto.setCreated(Instant.now());
+        legalDigitalAddressDto.setLastModified(Instant.now());
 
         List<CourtesyDigitalAddressDto> courtesyDigitalAddressDtoList = new ArrayList<>();
         CourtesyDigitalAddressDto courtesyDigitalAddressDto = new CourtesyDigitalAddressDto();
@@ -34,6 +36,8 @@ class ProfileMapperTest {
         courtesyDigitalAddressDto.setChannelType(CourtesyChannelTypeDto.SMS);
         courtesyDigitalAddressDto.setSenderId("default");
         courtesyDigitalAddressDto.setRecipientId("PF-1234");
+        courtesyDigitalAddressDto.setCreated(Instant.now());
+        courtesyDigitalAddressDto.setLastModified(Instant.now());
         courtesyDigitalAddressDtoList.add(courtesyDigitalAddressDto);
 
         profileResponse = ProfileMapper.getAddress(legalDigitalAddressDtoList, courtesyDigitalAddressDtoList, profileResponse);
@@ -44,10 +48,15 @@ class ProfileMapperTest {
         Assertions.assertEquals(legalDigitalAddressDto.getValue(), actualLegalAddress.getLegalValue());
         Assertions.assertEquals(legalDigitalAddressDto.getChannelType().getValue(), actualLegalAddress.getLegalChannelType().getValue());
         Assertions.assertEquals(legalDigitalAddressDto.getAddressType().getValue(), actualLegalAddress.getLegalAddressType().getValue());
+        Assertions.assertEquals(legalDigitalAddressDto.getCreated(), actualLegalAddress.getCreated());
+        Assertions.assertEquals(legalDigitalAddressDto.getLastModified(), actualLegalAddress.getLastModified());
 
         Assertions.assertEquals(courtesyDigitalAddressDto.getValue(), actualCourtesyAddress.getCourtesyValue());
         Assertions.assertEquals(courtesyDigitalAddressDto.getChannelType().getValue(), actualCourtesyAddress.getCourtesyChannelType().getValue());
         Assertions.assertEquals(courtesyDigitalAddressDto.getAddressType().getValue(), actualCourtesyAddress.getCourtesyAddressType().getValue());
+        Assertions.assertEquals(courtesyDigitalAddressDto.getCreated(), actualCourtesyAddress.getCreated());
+        Assertions.assertEquals(courtesyDigitalAddressDto.getLastModified(), actualCourtesyAddress.getLastModified());
+
     }
 
     @Test
@@ -76,14 +85,14 @@ class ProfileMapperTest {
         Mandate actualDelegator = profileResponse.getDelegatorMandates().get(0);
         Mandate actualDelegate = profileResponse.getDelegateMandates().get(0);
 
-        Assertions.assertEquals(actualDelegator.getDateFrom(), OffsetDateTime.parse(internalDelegatorDtoDto.getDatefrom()));
-        Assertions.assertEquals(actualDelegator.getDateTo(), OffsetDateTime.parse(internalDelegatorDtoDto.getDateto()));
+        Assertions.assertEquals(actualDelegator.getDateFrom(), Instant.parse(internalDelegatorDtoDto.getDatefrom()));
+        Assertions.assertEquals(actualDelegator.getDateTo(), Instant.parse(internalDelegatorDtoDto.getDateto()));
         Assertions.assertEquals(actualDelegator.getMandateId(), internalDelegatorDtoDto.getMandateId());
         Assertions.assertEquals(actualDelegator.getDelegateInternalId(), internalDelegatorDtoDto.getDelegate());
         Assertions.assertEquals(actualDelegator.getDelegatorInternalId(), internalDelegatorDtoDto.getDelegator());
 
-        Assertions.assertEquals(actualDelegate.getDateFrom(), OffsetDateTime.parse(internalDelegateDtoDto.getDatefrom()));
-        Assertions.assertEquals(actualDelegate.getDateTo(), OffsetDateTime.parse(internalDelegateDtoDto.getDateto()));
+        Assertions.assertEquals(actualDelegate.getDateFrom(), Instant.parse(internalDelegateDtoDto.getDatefrom()));
+        Assertions.assertEquals(actualDelegate.getDateTo(), Instant.parse(internalDelegateDtoDto.getDateto()));
         Assertions.assertEquals(actualDelegate.getMandateId(), internalDelegateDtoDto.getMandateId());
         Assertions.assertEquals(actualDelegator.getDelegatorInternalId(), internalDelegateDtoDto.getDelegate());
         Assertions.assertEquals(actualDelegate.getDelegateInternalId(), internalDelegateDtoDto.getDelegate());

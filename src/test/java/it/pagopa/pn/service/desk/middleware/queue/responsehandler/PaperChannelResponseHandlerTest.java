@@ -31,7 +31,7 @@ class PaperChannelResponseHandlerTest {
         Instant instant = Instant.parse("2023-10-09T16:04:13.913859900Z");
         PrepareEventDto prepareEvent = new PrepareEventDto();
         prepareEvent.setStatusCode(StatusCodeEnumDto.OK);
-        prepareEvent.setStatusDateTime(instant.atOffset(ZoneOffset.UTC));
+        prepareEvent.setStatusDateTime(instant);
         prepareEvent.setRequestId("iun_event_idx_0");
         prepareEvent.setStatusDetail("ok");
         handler.handlePreparePaperChannelEventResponse(prepareEvent);
@@ -44,7 +44,7 @@ class PaperChannelResponseHandlerTest {
         Instant instant = Instant.parse("2023-10-09T16:04:13.913859900Z");
         SendEventDto sendEventDto = new SendEventDto();
         sendEventDto.setStatusCode(StatusCodeEnumDto.OK);
-        sendEventDto.setStatusDateTime(instant.atOffset(ZoneOffset.UTC));
+        sendEventDto.setStatusDateTime(instant);
         sendEventDto.setRequestId("iun_event_idx_0");
         sendEventDto.setStatusDetail("ok");
         handler.handleResultPaperChannelEventResponse(sendEventDto);

@@ -19,6 +19,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 
 @WebFluxTest(controllers = {InfoPaController.class})
@@ -105,8 +106,8 @@ public class InfoPaControllerTest {
     private PaNotificationsRequest getPaNotificationRequest() {
         PaNotificationsRequest paNotificationsRequest = new PaNotificationsRequest();
         paNotificationsRequest.setId("123");
-        paNotificationsRequest.setStartDate(OffsetDateTime.parse("2023-09-29T14:02:08.203039228Z"));
-        paNotificationsRequest.setEndDate(OffsetDateTime.parse("2023-10-15T14:02:08.203039228Z"));
+        paNotificationsRequest.setStartDate(Instant.parse("2023-09-29T14:02:08.203039228Z"));
+        paNotificationsRequest.setEndDate(Instant.parse("2023-10-15T14:02:08.203039228Z"));
         return paNotificationsRequest;
     }
 

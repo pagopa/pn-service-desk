@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 @Component
 @AllArgsConstructor
@@ -21,7 +21,7 @@ public class PnDeliveryClientImpl implements PnDeliveryClient{
     }
 
     @Override
-    public Mono<NotificationSearchResponseDto> searchNotificationsPrivate(OffsetDateTime startDate, OffsetDateTime endDate, String recipientId, String senderId, String mandateId, String cxType, Integer size, String nextPagesKey) {
+    public Mono<NotificationSearchResponseDto> searchNotificationsPrivate(Instant startDate, Instant endDate, String recipientId, String senderId, String mandateId, String cxType, Integer size, String nextPagesKey) {
         return internalOnlyApi.searchNotificationsPrivate(startDate, endDate, recipientId, null, senderId, null, mandateId, cxType, size, nextPagesKey);
     }
 

@@ -21,6 +21,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -50,13 +51,13 @@ class NotificationAndMessageServiceImplTest  {
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("PF-4fc75df3-0913-407e-bdaa-e50329708b7d"));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNotificationHistoryResponseDto()));
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-15T15:49:05.630Z"),
-                        OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Instant.parse("2023-08-15T15:49:05.630Z"),
+                        Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
                         null, null, null, 50, "nextPageKey"))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
         SearchNotificationsResponse actualResponse = notificationAndMessageService.searchNotificationsFromTaxId("fkdokm",
-                OffsetDateTime.parse("2023-08-15T15:49:05.63Z"),
-                OffsetDateTime.parse("2023-08-31T15:49:05.63Z"),
+                Instant.parse("2023-08-15T15:49:05.63Z"),
+                Instant.parse("2023-08-31T15:49:05.63Z"),
                 50,
                 "nextPageKey",
                 getSearchMessageRequest("taxId", RecipientType.PF)).block();
@@ -82,14 +83,14 @@ class NotificationAndMessageServiceImplTest  {
     void searchNotificationsFromTaxIdWhenPnDeliveryClientError(){
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_CLIENT, ERROR_ON_DELIVERY_CLIENT.getMessage());
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("PF-4fc75df3-0913-407e-bdaa-e50329708b7d"));
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-15T15:49:05.630Z"),
-                        OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Instant.parse("2023-08-15T15:49:05.630Z"),
+                        Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
                         null, null, null, 50, "nextPageKey"))
                 .thenReturn(Mono.error(pnGenericException));
 
         StepVerifier.create(notificationAndMessageService.searchNotificationsFromTaxId("fkdokm",
-                        OffsetDateTime.parse("2023-08-15T15:49:05.63Z"),
-                        OffsetDateTime.parse("2023-08-31T15:49:05.63Z"),
+                        Instant.parse("2023-08-15T15:49:05.63Z"),
+                        Instant.parse("2023-08-31T15:49:05.63Z"),
                         50,
                         "nextPageKey",
                         getSearchMessageRequest("taxId", RecipientType.PF)))
@@ -103,14 +104,14 @@ class NotificationAndMessageServiceImplTest  {
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("PF-4fc75df3-0913-407e-bdaa-e50329708b7d"));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(pnGenericException));
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-15T15:49:05.630Z"),
-                        OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Instant.parse("2023-08-15T15:49:05.630Z"),
+                        Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
                         null, null, null, 50, "nextPageKey"))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
 
         StepVerifier.create(notificationAndMessageService.searchNotificationsFromTaxId("fkdokm",
-                        OffsetDateTime.parse("2023-08-15T15:49:05.63Z"),
-                        OffsetDateTime.parse("2023-08-31T15:49:05.63Z"),
+                        Instant.parse("2023-08-15T15:49:05.63Z"),
+                        Instant.parse("2023-08-31T15:49:05.63Z"),
                         50,
                         "nextPageKey",
                         getSearchMessageRequest("taxId", RecipientType.PF)))
@@ -215,12 +216,12 @@ class NotificationAndMessageServiceImplTest  {
 
     @Test
     void searchNotificationsAsDelegateFromInternalIdTest(){
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-15T15:49:05.630Z"),
-                OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Instant.parse("2023-08-15T15:49:05.630Z"),
+                        Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
                 null, null, RecipientType.PF.getValue(), 50, "nextPageKey"))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
 
-        SearchNotificationsResponse response = notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", RecipientType.PF, 50,"nextPageKey", OffsetDateTime.parse("2023-08-15T15:49:05.630Z"), OffsetDateTime.parse("2023-08-31T15:49:05.630Z")).block();
+        SearchNotificationsResponse response = notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", RecipientType.PF, 50,"nextPageKey", Instant.parse("2023-08-15T15:49:05.630Z"), Instant.parse("2023-08-31T15:49:05.630Z")).block();
         Assertions.assertNotNull(response);
         Assertions.assertEquals(1, response.getNextPagesKey().size());
         Assertions.assertEquals(1, response.getResults().size());
@@ -232,12 +233,12 @@ class NotificationAndMessageServiceImplTest  {
     @Test
     void searchNotificationsAsDelegateFromInternalIdDeliveryClientError(){
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_CLIENT, ERROR_ON_DELIVERY_CLIENT.getMessage());
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(OffsetDateTime.parse("2023-08-15T15:49:05.630Z"),
-                OffsetDateTime.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Instant.parse("2023-08-15T15:49:05.630Z"),
+                        Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
                 null, null, RecipientType.PF.getValue(), 50, "nextPageKey"))
                 .thenReturn(Mono.error(pnGenericException));
 
-        StepVerifier.create(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", RecipientType.PF, 50, "nextPageKey", OffsetDateTime.parse("2023-08-15T15:49:05.630Z"), OffsetDateTime.parse("2023-08-31T15:49:05.630Z")))
+        StepVerifier.create(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", RecipientType.PF, 50, "nextPageKey", Instant.parse("2023-08-15T15:49:05.630Z"), Instant.parse("2023-08-31T15:49:05.630Z")))
                 .expectError(PnGenericException.class)
                 .verify();
     }
@@ -266,8 +267,7 @@ class NotificationAndMessageServiceImplTest  {
         notificationSearchRowDto.setGroup("group");
         notificationSearchRowDto.setSender("sender");
         notificationSearchRowDto.setSubject("subject");
-        notificationSearchRowDto.setSentAt(OffsetDateTime.of(LocalDateTime.now(),
-                ZoneOffset.of("+07:00")));
+        notificationSearchRowDto.setSentAt(Instant.now());
         notificationSearchRowDto.setMandateId("4321");
         notificationSearchRowDto.setPaProtocolNumber("1234");
 
@@ -275,8 +275,7 @@ class NotificationAndMessageServiceImplTest  {
         recipients.add("456");
 
         notificationSearchRowDto.setRecipients(recipients);
-        notificationSearchRowDto.setRequestAcceptedAt(OffsetDateTime.of(LocalDateTime.now(),
-                ZoneOffset.of("+08:00")));
+        notificationSearchRowDto.setRequestAcceptedAt(Instant.now());
         notificationSearchRowDtoList.add(notificationSearchRowDto);
 
         notificationSearchResponseDto.setResultsPage(notificationSearchRowDtoList);
@@ -293,8 +292,7 @@ class NotificationAndMessageServiceImplTest  {
         timelineElementDto.setCategory(TimelineElementCategoryV23Dto.SEND_COURTESY_MESSAGE);
         timelineElementDto.setElementId("elementId");
         timelineElementDto.setDetails(new TimelineElementDetailsV23Dto());
-        timelineElementDto.setTimestamp(OffsetDateTime.of(LocalDateTime.now(),
-                ZoneOffset.of("+07:00")));
+        timelineElementDto.setTimestamp(Instant.now());
 
         List<LegalFactListElementDto> legalFactListElementDtoList = new ArrayList<>();
         LegalFactListElementDto legalFactListElementDto = new LegalFactListElementDto();
@@ -308,8 +306,7 @@ class NotificationAndMessageServiceImplTest  {
         List<NotificationStatusHistoryElementDto> notificationStatusHistoryElementDtoList = new ArrayList<>();
         NotificationStatusHistoryElementDto notificationStatusHistoryElementDto = new NotificationStatusHistoryElementDto();
         notificationStatusHistoryElementDto.setStatus(NotificationStatusDto.ACCEPTED);
-        notificationStatusHistoryElementDto.setActiveFrom(OffsetDateTime.of(LocalDateTime.now(),
-                ZoneOffset.of("+07:00")));
+        notificationStatusHistoryElementDto.setActiveFrom(Instant.now());
 
         List<String> relativeTimeLineElements = new ArrayList<>();
         relativeTimeLineElements.add("relativeTimeLineElement");
@@ -323,14 +320,14 @@ class NotificationAndMessageServiceImplTest  {
 
     private SentNotificationV23Dto getSentNotificationV23Dto (){
         SentNotificationV23Dto sentNotificationV21Dto = new SentNotificationV23Dto();
-        sentNotificationV21Dto.setSentAt(OffsetDateTime.now());
+        sentNotificationV21Dto.setSentAt(Instant.now());
         NotificationRecipientV23Dto notificationRecipientV21Dto = new NotificationRecipientV23Dto();
         notificationRecipientV21Dto.setRecipientType(NotificationRecipientV23Dto.RecipientTypeEnum.PF);
         notificationRecipientV21Dto.setPayments(new ArrayList<>());
         sentNotificationV21Dto.setPhysicalCommunicationType(SentNotificationV23Dto.PhysicalCommunicationTypeEnum.AR_REGISTERED_LETTER);
         sentNotificationV21Dto.setSenderDenomination("comune");
         sentNotificationV21Dto.setSenderTaxId("FRMTTR76M06B715E");
-        sentNotificationV21Dto.setSentAt(OffsetDateTime.now());
+        sentNotificationV21Dto.setSentAt(Instant.now());
         sentNotificationV21Dto.setPaymentExpirationDate("31/12/2023");
         sentNotificationV21Dto.setRecipients(List.of(
                 new NotificationRecipientV23Dto()
@@ -351,7 +348,7 @@ class NotificationAndMessageServiceImplTest  {
         TimelineElementV23Dto timelineElementV23Dto = new TimelineElementV23Dto();
         timelineElementV23Dto.setCategory(TimelineElementCategoryV23Dto.REQUEST_ACCEPTED);
         timelineElementV23Dto.setDetails(new TimelineElementDetailsV23Dto());
-        timelineElementV23Dto.setTimestamp(OffsetDateTime.now());
+        timelineElementV23Dto.setTimestamp(Instant.now());
         List<TimelineElementV23Dto> dtoList = new ArrayList<>();
         dtoList.add(timelineElementV23Dto);
         historyResponseDto.setTimeline(dtoList);
@@ -364,7 +361,7 @@ class NotificationAndMessageServiceImplTest  {
         TimelineElementV23Dto timelineElementV23Dto = new TimelineElementV23Dto();
         timelineElementV23Dto.setCategory(TimelineElementCategoryV23Dto.NOTIFICATION_CANCELLATION_REQUEST);
         timelineElementV23Dto.setDetails(new TimelineElementDetailsV23Dto());
-        timelineElementV23Dto.setTimestamp(OffsetDateTime.now());
+        timelineElementV23Dto.setTimestamp(Instant.now());
         List<TimelineElementV23Dto> dtoList = new ArrayList<>();
         dtoList.add(timelineElementV23Dto);
         historyResponseDto.setTimeline(dtoList);

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 @RestController
 @AllArgsConstructor
@@ -19,7 +19,7 @@ public class NotificationAndMessageController implements NotificationAndMessageA
     private final NotificationAndMessageService notificationAndMessageService;
 
     @Override
-    public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsFromTaxId(String xPagopaPnUid, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, Mono<SearchNotificationsRequest> searchNotificationsRequest, ServerWebExchange exchange) {
+    public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsFromTaxId(String xPagopaPnUid, Instant startDate, Instant endDate, Integer size, String nextPagesKey, Mono<SearchNotificationsRequest> searchNotificationsRequest, ServerWebExchange exchange) {
         return searchNotificationsRequest
                 .flatMap(searchMessages -> notificationAndMessageService.searchNotificationsFromTaxId(xPagopaPnUid, startDate, endDate, size, nextPagesKey, searchMessages)
                         .map(searchMessagesResponse -> ResponseEntity.status(HttpStatus.OK).body(searchMessagesResponse)));
@@ -53,7 +53,7 @@ public class NotificationAndMessageController implements NotificationAndMessageA
     }
 
     @Override
-    public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, String recipientType, OffsetDateTime startDate, OffsetDateTime endDate, Integer size, String nextPagesKey, ServerWebExchange exchange) {
+    public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, String recipientType, Instant startDate, Instant endDate, Integer size, String nextPagesKey, ServerWebExchange exchange) {
         return notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(xPagopaPnUid, mandateId, delegateInternalId, RecipientType.fromValue(recipientType), size, nextPagesKey, startDate, endDate)
                 .map(searchNotificationsResponseResponseEntity -> ResponseEntity.status(HttpStatus.OK).body(searchNotificationsResponseResponseEntity));
     }

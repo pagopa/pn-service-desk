@@ -7,6 +7,7 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,22 +27,22 @@ class NotificationAndMessageMapperTest {
     void initialize (){
         notificationSearchRowDto.setSender("Comune");
         notificationSearchRowDto.setIun("PRVZ-NZKM-JEDK-202309-A-1");
-        notificationSearchRowDto.setSentAt(OffsetDateTime.now());
+        notificationSearchRowDto.setSentAt(Instant.now());
         notificationSearchRowDto.setSubject("comune di Palermo");
         notificationSearchRowDto.setNotificationStatus(NotificationStatusDto.ACCEPTED);
         TimelineElementV23Dto timelineElementV23Dto = new TimelineElementV23Dto();
         TimelineElementDetailsV23Dto detailsV23Dto = new TimelineElementDetailsV23Dto();
-        detailsV23Dto.setSendDate(OffsetDateTime.now());
+        detailsV23Dto.setSendDate(Instant.now());
         timelineElementV23Dto.setDetails(detailsV23Dto);
         timelineElementV23Dto.setCategory(TimelineElementCategoryV23Dto.REQUEST_ACCEPTED);
-        timelineElementV23Dto.setTimestamp(OffsetDateTime.now());
+        timelineElementV23Dto.setTimestamp(Instant.now());
 
         TimelineElementV23Dto refinement = new TimelineElementV23Dto();
         TimelineElementDetailsV23Dto refinementDetail = new TimelineElementDetailsV23Dto();
-        detailsV23Dto.setSendDate(OffsetDateTime.now().plusSeconds(10));
+        detailsV23Dto.setSendDate(Instant.now().plusSeconds(10));
         refinement.setDetails(refinementDetail);
         refinement.setCategory(TimelineElementCategoryV23Dto.REFINEMENT);
-        refinement.setTimestamp(OffsetDateTime.now().plusSeconds(10));
+        refinement.setTimestamp(Instant.now().plusSeconds(10));
 
         DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
         digitalAddressDto.setType("PEC");
@@ -70,7 +71,7 @@ class NotificationAndMessageMapperTest {
         sentNotificationV21Dto.setPhysicalCommunicationType(SentNotificationV23Dto.PhysicalCommunicationTypeEnum.REGISTERED_LETTER_890);
         sentNotificationV21Dto.setSenderDenomination("Fieramosca");
         sentNotificationV21Dto.setSenderTaxId("FRMTTR76M06B715E");
-        sentNotificationV21Dto.setSentAt(OffsetDateTime.now());
+        sentNotificationV21Dto.setSentAt(Instant.now());
         sentNotificationV21Dto.setPaymentExpirationDate("");
     }
 
