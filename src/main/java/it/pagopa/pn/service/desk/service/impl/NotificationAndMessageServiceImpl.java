@@ -239,12 +239,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     @Override
     public Mono<NotificationDetailResponse> getNotificationFromIUN(String iun) {
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_VIEW_NOTIFICATION, "getNotificationFromIUN for");
-        return this.pnDeliveryClient.getSentNotificationPrivate(iun)
-                .onErrorResume(WebClientResponseException.class, exception -> {
-                    log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
-                    logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
-                })
+        return callSentNotificationPrivate(iun, logEvent)
                 .map(sentNotificationV21Dto -> {
                     NotificationDetailResponse response = NotificationAndMessageMapper.getNotificationDetail(sentNotificationV21Dto);
                     logEvent.generateSuccess("getNotificationFromIUN response = {}", response).log();
@@ -298,6 +293,26 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
             log.warn("Notification with iun: {} has a request for cancellation", iun);
         }
         return cancellationTimelineIsPresent.get();
+    }
+
+    @Override
+    public Mono<NotificationRecipientDetailResponse> getNotificationRecipientDetail(String iun, String recipientTaxId) {
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_VIEW_NOTIFICATION, "getNotificationRecipientDetail for");
+        return callSentNotificationPrivate(iun, logEvent)
+                .map(sentNotificationV21Dto -> {
+                    var response = NotificationAndMessageMapper.getNotificationRecipientDetailResponse(sentNotificationV21Dto, recipientTaxId);
+                    logEvent.generateSuccess("getNotificationRecipientDetail response = {}", response).log();
+                    return response;
+                });
+    }
+
+    private Mono<SentNotificationV23Dto> callSentNotificationPrivate(String iun, PnAuditLogEvent logEvent) {
+        return this.pnDeliveryClient.getSentNotificationPrivate(iun)
+                .onErrorResume(WebClientResponseException.class, exception -> {
+                    log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
+                    logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
+                });
     }
 
 }

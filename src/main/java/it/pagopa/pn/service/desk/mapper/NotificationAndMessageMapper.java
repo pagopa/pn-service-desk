@@ -1,17 +1,19 @@
 package it.pagopa.pn.service.desk.mapper;
 
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationAttachmentDownloadMetadataResponseDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV23Dto;
+import it.pagopa.pn.service.desk.exception.PnGenericException;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV23Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV23Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.TAX_ID_NOT_FOUND;
 
 public class NotificationAndMessageMapper {
 
@@ -121,5 +123,82 @@ public class NotificationAndMessageMapper {
             courtesyMessage.setSentTimestamp(timelineElementV20Dto.getDetails().getSendDate());
         }
         return courtesyMessage;
+    }
+
+    public static NotificationRecipientDetailResponse getNotificationRecipientDetailResponse(SentNotificationV23Dto sentNotificationV21Dto, String taxId) {
+        var response = new NotificationRecipientDetailResponse();
+        response.setPaProtocolNumber(sentNotificationV21Dto.getPaProtocolNumber());
+        response.setSubject(sentNotificationV21Dto.getSubject());
+        response.setAbstract(sentNotificationV21Dto.getAbstract());
+        response.setIsMultiRecipients(sentNotificationV21Dto.getRecipients().size() > 1);
+        if(!sentNotificationV21Dto.getRecipients().isEmpty()){
+            response.setHasPayments(!sentNotificationV21Dto.getRecipients().get(0).getPayments().isEmpty());
+        }
+        response.setAmount(sentNotificationV21Dto.getAmount());
+        response.setHasDocuments(!sentNotificationV21Dto.getDocuments().isEmpty());
+        response.setPhysicalCommunicationType(NotificationRecipientDetailResponse.PhysicalCommunicationTypeEnum
+                .fromValue(sentNotificationV21Dto.getPhysicalCommunicationType().getValue()));
+        response.setSenderDenomination(sentNotificationV21Dto.getSenderDenomination());
+        response.setSenderTaxId(sentNotificationV21Dto.getSenderTaxId());
+        response.setSentAt(sentNotificationV21Dto.getSentAt());
+        response.setPaymentExpirationDate(sentNotificationV21Dto.getPaymentExpirationDate());
+
+        var recipient = sentNotificationV21Dto.getRecipients().stream()
+                .filter(recipientV23Dto -> recipientV23Dto.getTaxId().equals(taxId))
+                .findFirst()
+                .orElseThrow(() -> new PnGenericException(TAX_ID_NOT_FOUND, HttpStatus.BAD_REQUEST));
+
+        response.setRecipient(toNotificationRecipient(recipient));
+
+        return response;
+    }
+
+    private static NotificationRecipient toNotificationRecipient(NotificationRecipientV23Dto deliveryRecipient) {
+        return new NotificationRecipient()
+                .recipientType(NotificationRecipient.RecipientTypeEnum.fromValue(deliveryRecipient.getRecipientType().getValue()))
+                .denomination(deliveryRecipient.getDenomination())
+                .taxId(deliveryRecipient.getTaxId())
+                .payments(toPayments(deliveryRecipient.getPayments()));
+    }
+
+    private static List<NotificationPaymentItem> toPayments(List<NotificationPaymentItemDto> deliveryPayments) {
+        if(CollectionUtils.isEmpty(deliveryPayments)) {
+            return List.of();
+        }
+
+        return deliveryPayments.stream()
+                .map(NotificationAndMessageMapper::toNotificationPaymentItem)
+                .toList();
+    }
+
+    private static NotificationPaymentItem toNotificationPaymentItem(NotificationPaymentItemDto deliveryPayment) {
+        if(deliveryPayment != null) {
+            return new NotificationPaymentItem()
+                    .pagoPa(toPagoPaPayment(deliveryPayment.getPagoPa()))
+                    .f24(toF24Payment(deliveryPayment.getF24()));
+        }
+
+        return null;
+    }
+
+    private static PagoPaPayment toPagoPaPayment(PagoPaPaymentDto deliveryPagoPaPayment) {
+        if(deliveryPagoPaPayment != null) {
+            return new PagoPaPayment()
+                    .creditorTaxId(deliveryPagoPaPayment.getCreditorTaxId())
+                    .noticeCode(deliveryPagoPaPayment.getNoticeCode())
+                    .applyCost(deliveryPagoPaPayment.getApplyCost());
+        }
+
+        return null;
+    }
+
+    private static F24Payment toF24Payment(F24PaymentDto deliveryF24Payment) {
+        if(deliveryF24Payment != null) {
+            return new F24Payment()
+                    .title(deliveryF24Payment.getTitle())
+                    .applyCost(deliveryF24Payment.getApplyCost());
+        }
+
+        return null;
     }
 }

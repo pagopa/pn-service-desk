@@ -209,6 +209,49 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+    post:
+      operationId: getNotificationRecipientDetail
+      summary: Retrieve notification detail by IUN and TaxId
+      description: Retrieve notification detail by IUN and TaxId
+      tags:
+        - NotificationAndMessage
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - name: iun
+          in: path
+          required: true
+          schema:
+            $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/IUN'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/NotificationRecipientDetailRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/NotificationRecipientDetailResponse'
+        '400':
+          description: Invalid taxId
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '404':
+          description: IUN not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
 
   '/service-desk/notifications/{iun}/timeline':
     get:

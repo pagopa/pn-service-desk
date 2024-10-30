@@ -16,6 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
+import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.TAX_ID_NOT_FOUND;
+
 @WebFluxTest(controllers = {NotificationAndMessageController.class})
 class NotificationAndMessageControllerTest {
 
@@ -188,7 +191,6 @@ class NotificationAndMessageControllerTest {
 
     @Test
     void searchNotificationsAsDelegateFromInternalIdKOTest() {
-        SearchNotificationsResponse response = new SearchNotificationsResponse();
         String path = "/service-desk/notifications/delegate";
         Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(Mockito.anyString(),
                         Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
@@ -252,6 +254,52 @@ class NotificationAndMessageControllerTest {
                         .build())
                 .header("x-pagopa-pn-uid", "test")
                 .header("x-api-key", "test")
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void getNotificationRecipientDetailOkTest(){
+        var response = new NotificationRecipientDetailResponse();
+        var body = new NotificationRecipientDetailRequest().taxId("AAAAAAAAAAA");
+        String path = "/service-desk/notifications/PRVZ-NZKM-JEDK-202309-A-1";
+        Mockito.when(notificationAndMessageService.getNotificationRecipientDetail("PRVZ-NZKM-JEDK-202309-A-1", body.getTaxId())).thenReturn(Mono.just(response));
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path(path).build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .bodyValue(body)
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    @Test
+    void getNotificationRecipientDetailKoForIunTest(){
+        var body = new NotificationRecipientDetailRequest().taxId("AAAAAAAAAAA");
+        String path = "/service-desk/notifications/PRVZ-NZKM-JEDK-202309-A-1";
+        Mockito.when(notificationAndMessageService.getNotificationRecipientDetail("PRVZ-NZKM-JEDK-202309-A-1", body.getTaxId())).thenReturn(Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT,HttpStatus.NOT_FOUND)));
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path(path).build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .bodyValue(body)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    void getNotificationRecipientDetailKoForTaxIdTest(){
+        var body = new NotificationRecipientDetailRequest().taxId("AAAAAAAAAAA");
+        String path = "/service-desk/notifications/PRVZ-NZKM-JEDK-202309-A-1";
+        Mockito.when(notificationAndMessageService.getNotificationRecipientDetail("PRVZ-NZKM-JEDK-202309-A-1", body.getTaxId())).thenReturn(Mono.error( new PnGenericException(TAX_ID_NOT_FOUND, HttpStatus.BAD_REQUEST)));
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path(path).build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .bodyValue(body)
                 .exchange()
                 .expectStatus().isBadRequest();
     }

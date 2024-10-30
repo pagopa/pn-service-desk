@@ -16,6 +16,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -330,9 +332,16 @@ class NotificationAndMessageServiceImplTest  {
         sentNotificationV21Dto.setSenderTaxId("FRMTTR76M06B715E");
         sentNotificationV21Dto.setSentAt(OffsetDateTime.now());
         sentNotificationV21Dto.setPaymentExpirationDate("31/12/2023");
-        List<NotificationRecipientV23Dto> dtoList = new ArrayList<>();
-        dtoList.add(notificationRecipientV21Dto);
-        sentNotificationV21Dto.setRecipients(dtoList);
+        sentNotificationV21Dto.setRecipients(List.of(
+                new NotificationRecipientV23Dto()
+                        .recipientType(NotificationRecipientV23Dto.RecipientTypeEnum.PF)
+                        .taxId("DVNLRD52D15M059P")
+                        .denomination("Leo  denomination")
+                        .payments(List.of(
+                                new NotificationPaymentItemDto().pagoPa(new PagoPaPaymentDto().creditorTaxId("77777777777").noticeCode("302011730298073905").applyCost(false)),
+                                new NotificationPaymentItemDto().f24(new F24PaymentDto().title("Titolo f24").applyCost(false))
+                        ))
+        ));
         return sentNotificationV21Dto;
     }
 
@@ -362,12 +371,51 @@ class NotificationAndMessageServiceImplTest  {
         return historyResponseDto;
     }
 
-    private NotificationAttachmentDownloadMetadataResponseDto getDocuments (){
-        NotificationAttachmentDownloadMetadataResponseDto responseDto = new NotificationAttachmentDownloadMetadataResponseDto();
-        responseDto.setContentLength(1234);
-        responseDto.setContentType("pdf");
-        responseDto.setFilename("file_test");
-        return responseDto;
+
+    @Test
+    void getNotificationRecipientDetailOK(){
+        var iun = "PRVZ-NZKM-JEDK-202309-A-1";
+        var taxId = "DVNLRD52D15M059P";
+        var notification = getSentNotificationV23Dto();
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(iun)).thenReturn(Mono.just(notification));
+        var response = notificationAndMessageService.getNotificationRecipientDetail(iun, taxId).block();
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals("FRMTTR76M06B715E", response.getSenderTaxId());
+        Assertions.assertEquals("31/12/2023", response.getPaymentExpirationDate());
+        Assertions.assertEquals("comune", response.getSenderDenomination());
+        Assertions.assertEquals("AR_REGISTERED_LETTER", response.getPhysicalCommunicationType().getValue());
+
+        var recipientResponseActual = response.getRecipient();
+        var recipientExpected = notification.getRecipients().get(0);
+        Assertions.assertEquals(recipientExpected.getRecipientType().getValue(), recipientResponseActual.getRecipientType().getValue());
+        Assertions.assertEquals(recipientExpected.getDenomination(), recipientResponseActual.getDenomination());
+        Assertions.assertEquals(recipientExpected.getPayments().get(0).getPagoPa().getCreditorTaxId(), recipientResponseActual.getPayments().get(0).getPagoPa().getCreditorTaxId());
+        Assertions.assertEquals(recipientExpected.getPayments().get(0).getPagoPa().getNoticeCode(), recipientResponseActual.getPayments().get(0).getPagoPa().getNoticeCode());
+        Assertions.assertEquals(recipientExpected.getPayments().get(1).getF24().getTitle(), recipientResponseActual.getPayments().get(1).getF24().getTitle());
+        Assertions.assertEquals(recipientExpected.getPayments().get(1).getF24().getApplyCost(), recipientResponseActual.getPayments().get(1).getF24().getApplyCost());
+    }
+
+    @Test
+    void getNotificationRecipientDetailKOForIun(){
+        var iun = "PRVZ-NZKM-JEDK-202309-A-1";
+        var taxId = "DVNLRD52D15M059P";
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(iun)).thenReturn(Mono.error(WebClientResponseException.create(404, "Not Found", null, null, null)));
+        StepVerifier.create(notificationAndMessageService.getNotificationRecipientDetail(iun, taxId))
+                .expectErrorMatches(throwable -> throwable instanceof PnGenericException e && e.getHttpStatus().equals(HttpStatus.NOT_FOUND))
+                .verify();
+
+    }
+
+    @Test
+    void getNotificationRecipientDetailKOForTaxId(){
+        var iun = "PRVZ-NZKM-JEDK-202309-A-1";
+        var taxId = "AAAAAAAAAAAAAA";
+        var notification = getSentNotificationV23Dto();
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(iun)).thenReturn(Mono.just(notification));
+        StepVerifier.create(notificationAndMessageService.getNotificationRecipientDetail(iun, taxId))
+                .expectErrorMatches(throwable -> throwable instanceof PnGenericException e && e.getHttpStatus().equals(HttpStatus.BAD_REQUEST))
+                .verify();
+
     }
 
 }
