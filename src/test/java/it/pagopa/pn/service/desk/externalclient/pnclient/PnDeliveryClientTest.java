@@ -8,7 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,21 +71,21 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
                 "PRVZ-NZKM-JEDK-202309-A-1",
                 "202381856591695996128952",
                 "Comune di Palermo",
-                OffsetDateTime.parse("2023-09-29T14:02:08.670718277Z"),
+                Instant.parse("2023-09-29T14:02:08.670718277Z"),
                 "Test-di-carico",
                 NotificationStatusDto.VIEWED,
                 List.of("GLLGLL64B15G702I"),
-                OffsetDateTime.parse("2023-09-29T14:03:02.807361187Z")
+                Instant.parse("2023-09-29T14:03:02.807361187Z")
         ));
         notificationSearchRowDtoList.add(this.getNotificationSearchRow(
                 "ENEZ-VXZU-JDJQ-202309-L-1",
                 "202380813111695996128483",
                 "Comune di Palermo",
-                OffsetDateTime.parse("2023-09-29T14:02:08.203039228Z"),
+                Instant.parse("2023-09-29T14:02:08.203039228Z"),
                 "Test-di-carico",
                 NotificationStatusDto.VIEWED,
                 List.of("GLLGLL64B15G702I"),
-                OffsetDateTime.parse("2023-09-29T14:03:10.91919327Z")
+                Instant.parse("2023-09-29T14:03:10.91919327Z")
         ));
         expectedNotificationSearchResponse.setResultsPage(notificationSearchRowDtoList);
 
@@ -127,8 +127,8 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
     void searchNotificationsPrivate(){
         NotificationSearchResponseDto actual = this.pnDeliveryClient
                 .searchNotificationsPrivate(
-                        OffsetDateTime.parse("2023-08-31T15:49:05.63Z"),
-                        OffsetDateTime.parse("2023-10-10T15:49:05.63Z"),
+                        Instant.parse("2023-08-31T15:49:05.630Z"),
+                        Instant.parse("2023-10-10T15:49:05.630Z"),
                         "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
                         null,
                         null,
@@ -173,7 +173,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
         return document;
     }
 
-    private NotificationSearchRowDto getNotificationSearchRow(String iun, String paProtocolNumber, String sender, OffsetDateTime sentAt, String subject, NotificationStatusDto notificationStatus, List<String> recipients, OffsetDateTime requestAcceptedAt) {
+    private NotificationSearchRowDto getNotificationSearchRow(String iun, String paProtocolNumber, String sender, Instant sentAt, String subject, NotificationStatusDto notificationStatus, List<String> recipients, Instant requestAcceptedAt) {
         NotificationSearchRowDto notificationSearchRowDto = new NotificationSearchRowDto();
         notificationSearchRowDto.setIun(iun);
         notificationSearchRowDto.setPaProtocolNumber(paProtocolNumber);

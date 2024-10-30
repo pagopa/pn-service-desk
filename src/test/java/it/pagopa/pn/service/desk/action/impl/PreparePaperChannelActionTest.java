@@ -197,7 +197,7 @@ class PreparePaperChannelActionTest {
         PrepareEventDto prepareEventDto = new PrepareEventDto();
         prepareEventDto.setRequestId(requestId);
         prepareEventDto.setProductType("890");
-        prepareEventDto.setStatusDateTime(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
+        prepareEventDto.setStatusDateTime(Instant.now());
         prepareEventDto.setStatusDetail("");
         AnalogAddressDto analogAddressDto = new AnalogAddressDto();
         analogAddressDto.setFullname("Ettore Fieramosca");

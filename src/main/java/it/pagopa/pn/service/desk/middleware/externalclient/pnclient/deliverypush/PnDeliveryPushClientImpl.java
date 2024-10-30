@@ -50,7 +50,7 @@ public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
         RequestNotificationViewedDtoDto request = new RequestNotificationViewedDtoDto();
         request.setRecipientType(RecipientTypeDto.PF);
         request.setRecipientInternalId(internalRecipientId);
-        request.setRaddBusinessTransactionDate(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
+        request.setRaddBusinessTransactionDate(Instant.now());
         request.setRaddBusinessTransactionId(operationId);
         request.setRaddType(RADD_TYPE);
         return this.eventComunicationApi.notifyNotificationViewed(iun, request)
@@ -65,7 +65,7 @@ public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
     }
 
     @Override
-    public Mono<NotificationHistoryResponseDto> getNotificationHistory(String iun, Integer numberOfRecipients, OffsetDateTime createdAt) {
+    public Mono<NotificationHistoryResponseDto> getNotificationHistory(String iun, Integer numberOfRecipients, Instant createdAt) {
         return this.timelineAndStatusApi.getNotificationHistory(iun, numberOfRecipients, createdAt);
     }
 }

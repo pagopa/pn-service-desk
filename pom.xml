@@ -238,6 +238,9 @@
 						</goals>
 						<phase>process-resources</phase>
 						<configuration>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
 							<inputSpec>${project.basedir}/docs/openapi/api-cruscotto-assistenza-pn-service-desk-v1.yaml</inputSpec>
 							<generatorName>spring</generatorName>
 							<library>spring-boot</library>
@@ -274,6 +277,9 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
 							<inputSpec>${project.basedir}/docs/wsclient/pn-safe-storage/pn-safestorage-v1-api.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
@@ -302,6 +308,9 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
 							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-data-vault/43455b4cc0ab02eef418448595eb8b86d9a609cd/docs/openapi/pn-datavault-api-v1.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
@@ -326,6 +335,9 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
 							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/19f7bd16eec3b1951fbe453a028269ea0a041ace/docs/openapi/api-private.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
@@ -350,6 +362,9 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
 							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/68c9a5b71fca82711ba8055210224bdfa7b031cf/docs/openapi/api-private.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
@@ -374,6 +389,9 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
 							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-paper-channel/2a025f5ace1d528030d6dc8eb0a738ad50e5c29b/docs/openapi/api-internal-v1.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
@@ -398,6 +416,9 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
 							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-address-manager/fbfd1ec3833ba0e390026901b9e18d17225e7647/docs/openapi/pn-address-manager-v1.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
@@ -422,6 +443,9 @@
 						</goals>
 						<phase>process-resources</phase>
 						<configuration>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
 							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-external-registries/9f9bed8a85ab9ac5720294895afd26abccde5be6/docs/openapi/pn-selfcare-internal-v1.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
@@ -445,7 +469,10 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-user-attributes/9d0cfbab701d7934281566eadd53e38f91fe106c/docs/openapi/pn-address-book-api-internal.yaml</inputSpec>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-user-attributes/d64b348f445db60f1c7f9b5c49552a93dcda7f5c/docs/openapi/pn-address-book-api-internal.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
@@ -468,6 +495,9 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
 							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-mandate/c0f15f2bfd7df51dbac09c0927dff073b3da8e8f/docs/openapi/pn-mandate-internal.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
@@ -491,6 +521,9 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
 							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-apikey-manager/9fe38c7bd527181ab20ac60727c83e6f81628050/docs/openapi/pn-apikey-manager-bo.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
