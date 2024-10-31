@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import reactor.core.publisher.Mono;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 @Slf4j
 @ControllerAdvice
@@ -29,7 +29,7 @@ public class RestExceptionHandler {
         problem.setTitle(exception.getExceptionType().getTitle());
         problem.setDetail(exception.getMessage());
         problem.setStatus(exception.getHttpStatus().value());
-        problem.setTimestamp(OffsetDateTime.now());
+        problem.setTimestamp(Instant.now());
         return Mono.just(ResponseEntity.status(exception.getHttpStatus()).body(problem));
     }
 

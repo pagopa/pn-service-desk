@@ -121,6 +121,16 @@ components:
               example: 'nome.utente@server.it'
             legalChannelType:
               $ref: '#/components/schemas/LegalChannelType'
+            created:
+              type: string
+              format: date-time
+              description: Timestamp creazione recapito in UTC
+              example: '2024-10-29T10:00:00.000Z'
+            lastModified:
+              type: string
+              format: date-time
+              description: Timestamp ultima modifica recapito in UTC
+              example: '2024-10-29T11:00:00.000Z'
 
     RecipientType:
       title: 'Tipo del destinatario: PF / PG'

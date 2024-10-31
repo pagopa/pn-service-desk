@@ -59,8 +59,8 @@
             "path":"/delivery-private/search",
             "queryStringParameters":{
                 "recipientId":["PF-4fc75df3-0913-407e-bdaa-e50329708b7d"],
-                "startDate":["2023-08-31T15:49:05.63Z"],
-                "endDate":["2023-10-10T15:49:05.63Z"],
+                "startDate":["2023-08-31T15:49:05.630Z"],
+                "endDate":["2023-10-10T15:49:05.630Z"],
                 "size":["1"]
             },
             "method":"GET"

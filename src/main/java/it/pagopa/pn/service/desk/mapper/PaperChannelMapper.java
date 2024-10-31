@@ -56,7 +56,7 @@ public class PaperChannelMapper {
         sendRequestDto.setPrintType(PRINT_TYPE);
         sendRequestDto.setReceiverType(RECEIVER_TYPE);
         sendRequestDto.setReceiverFiscalCode(fiscalCode);
-        sendRequestDto.setClientRequestTimeStamp(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
+        sendRequestDto.setClientRequestTimeStamp(Instant.now());
         sendRequestDto.setAttachmentUrls(toListStringAttachments(operations));
         sendRequestDto.setSenderAddress(AddressMapper.toAnalogAddressDto(pnServiceDeskConfigs.getSenderAddress()));
         return sendRequestDto;

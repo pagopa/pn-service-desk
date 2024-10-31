@@ -7,13 +7,13 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dt
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 public interface PnDeliveryPushClient {
 
     Flux<ResponsePaperNotificationFailedDtoDto> paperNotificationFailed(String recipientInternalId);
     Flux<LegalFactListElementV20Dto> getNotificationLegalFactsPrivate(String recipientInternalId, String iun);
     Mono<ResponseNotificationViewedDtoDto> notifyNotificationViewed(String iun, String operationId, String internalRecipientId);
-    Mono<NotificationHistoryResponseDto> getNotificationHistory(String iun, Integer numberOfRecipients, OffsetDateTime createdAt);
+    Mono<NotificationHistoryResponseDto> getNotificationHistory(String iun, Integer numberOfRecipients, Instant createdAt);
 
 }

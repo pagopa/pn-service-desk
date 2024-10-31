@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.test.StepVerifier;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 
 class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
@@ -32,11 +32,11 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
     @BeforeEach
     public void setUp(){
         expectedTimeline.setElementId("SEND_DIGITAL.IUN_PRVZ-NZKM-JEDK-202309-A-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
-        expectedTimeline.setTimestamp(OffsetDateTime.parse("2023-09-29T14:04:11.354725545Z"));
+        expectedTimeline.setTimestamp(Instant.parse("2023-09-29T14:04:11.354725545Z"));
         expectedTimeline.setCategory(TimelineElementCategoryV23Dto.SEND_DIGITAL_DOMICILE);
 
         TimelineElementDetailsV23Dto categoryV23Dto = new TimelineElementDetailsV23Dto();
-        categoryV23Dto.setSendDate(OffsetDateTime.parse("2023-09-29T14:04:01.033478852Z"));
+        categoryV23Dto.setSendDate(Instant.parse("2023-09-29T14:04:01.033478852Z"));
         categoryV23Dto.setDigitalAddressSource(DigitalAddressSourceDto.PLATFORM);
         DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
         digitalAddressDto.setType("PEC");
@@ -110,7 +110,7 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
                 .getNotificationHistory(
                         "ENEZ-VXZU-JDJQ-202309-L-1",
                         1,
-                        OffsetDateTime.parse("2023-09-29T14:02:08.203039228Z")
+                        Instant.parse("2023-09-29T14:02:08.203039228Z")
                 ).block();
 
         Assertions.assertNotNull(actual);
