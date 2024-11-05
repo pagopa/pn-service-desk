@@ -5,7 +5,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.No
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV23Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV23Dto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV23Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV25Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.util.CollectionUtils;
@@ -19,7 +19,7 @@ public class NotificationAndMessageMapper {
 
     private static final ModelMapper modelMapper = new ModelMapper();
 
-    public static NotificationResponse getNotification (NotificationSearchRowDto notificationSearchRowDto, List<TimelineElementV23Dto> filteredElements){
+    public static NotificationResponse getNotification (NotificationSearchRowDto notificationSearchRowDto, List<TimelineElementV25Dto> filteredElements){
         NotificationResponse notification = new NotificationResponse();
         notification.setIun(notificationSearchRowDto.getIun());
         notification.setSender(notificationSearchRowDto.getSender());
@@ -57,7 +57,7 @@ public class NotificationAndMessageMapper {
         return response;
     }
 
-    private static List<TimelineElementV23Dto> filteredElements(List<TimelineElementV23Dto> timelineElementList){
+    private static List<TimelineElementV25Dto> filteredElements(List<TimelineElementV25Dto> timelineElementList){
 
         return timelineElementList
                 .stream()
@@ -114,11 +114,11 @@ public class NotificationAndMessageMapper {
     }
 
 
-    private static CourtesyMessage getCourtesyMessage(TimelineElementV23Dto timelineElementV20Dto) {
+    private static CourtesyMessage getCourtesyMessage(TimelineElementV25Dto timelineElementDto) {
         CourtesyMessage courtesyMessage = new CourtesyMessage();
-        if (timelineElementV20Dto.getDetails() != null) {
-            courtesyMessage.setChannel(CourtesyChannelType.fromValue(timelineElementV20Dto.getDetails().getDigitalAddress().getType()));
-            courtesyMessage.setSentTimestamp(timelineElementV20Dto.getDetails().getSendDate());
+        if (timelineElementDto.getDetails() != null) {
+            courtesyMessage.setChannel(CourtesyChannelType.fromValue(timelineElementDto.getDetails().getDigitalAddress().getType()));
+            courtesyMessage.setSentTimestamp(timelineElementDto.getDetails().getSendDate());
         }
         return courtesyMessage;
     }

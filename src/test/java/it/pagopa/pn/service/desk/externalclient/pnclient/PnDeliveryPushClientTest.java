@@ -24,7 +24,7 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
 
     private static final String OPERATION_ID = "test12345";
 
-    private final TimelineElementV23Dto expectedTimeline = new TimelineElementV23Dto();
+    private final TimelineElementV25Dto expectedTimeline = new TimelineElementV25Dto();
 
     @Autowired
     private PnDeliveryPushClient pnDeliveryPushClient;
@@ -73,7 +73,7 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
 
     @Test
     void getNotificationLegalFactsPrivate(){
-        List<LegalFactListElementDto> legalFactListElementDtos =
+        List<LegalFactListElementV20Dto> legalFactListElementDtos =
                 this.pnDeliveryPushClient
                         .getNotificationLegalFactsPrivate(RECIPIENT_INTERNAL_ID, IUN).collectList().block();
 
@@ -117,7 +117,7 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
         Assertions.assertNotNull(actual.getTimeline());
         Assertions.assertNotNull(actual.getTimeline().get(0));
 
-        TimelineElementV23Dto actualTimeline = actual.getTimeline().get(0);
+        TimelineElementV25Dto actualTimeline = actual.getTimeline().get(0);
         Assertions.assertEquals(expectedTimeline.getElementId(), actualTimeline.getElementId());
         Assertions.assertEquals(expectedTimeline.getTimestamp(), actualTimeline.getTimestamp());
         Assertions.assertEquals(expectedTimeline.getCategory(), actualTimeline.getCategory());

@@ -362,10 +362,10 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
-							<typeMappings>
-								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
-							</typeMappings>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/68c9a5b71fca82711ba8055210224bdfa7b031cf/docs/openapi/api-private.yaml</inputSpec>
+                            <typeMappings>
+                                <typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+                            </typeMappings>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/92beeb82aac748f858c0d38bd87c4c97aee52b6e/docs/openapi/api-private.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
