@@ -472,7 +472,7 @@
 							<typeMappings>
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-user-attributes/9d0cfbab701d7934281566eadd53e38f91fe106c/docs/openapi/pn-address-book-api-internal.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-user-attributes/d64b348f445db60f1c7f9b5c49552a93dcda7f5c/docs/openapi/pn-address-book-api-internal.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
