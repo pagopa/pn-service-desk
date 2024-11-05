@@ -9,7 +9,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.No
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV23Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV23Dto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV23Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV25Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoV21Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
@@ -100,8 +100,8 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @NotNull
-    private static List<TimelineElementV23Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, TimelineElementCategoryV23Dto category,  Integer indexTaxId) {
-        List<TimelineElementV23Dto> filteredElements = new ArrayList<>();
+    private static List<TimelineElementV25Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, TimelineElementCategoryV23Dto category,  Integer indexTaxId) {
+        List<TimelineElementV25Dto> filteredElements = new ArrayList<>();
         if (notificationHistoryResponseDto.getTimeline() != null) {
             filteredElements = notificationHistoryResponseDto.getTimeline()
                     .stream()
