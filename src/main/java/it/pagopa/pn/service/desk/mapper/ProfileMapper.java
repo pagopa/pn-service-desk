@@ -22,8 +22,6 @@ public class ProfileMapper {
                 legalAddress.setLegalAddressType(LegalAddressType.fromValue(legalDigitalAddressDto.getAddressType().getValue()));
                 legalAddress.setLegalChannelType(LegalChannelType.fromValue(legalDigitalAddressDto.getChannelType().getValue()));
                 legalAddress.setLegalValue(legalDigitalAddressDto.getValue());
-                legalAddress.setCreated(legalDigitalAddressDto.getCreated());
-                legalAddress.setLastModified(legalDigitalAddressDto.getLastModified());
                 addressList.add(legalAddress);
             });
         }
@@ -33,8 +31,6 @@ public class ProfileMapper {
                 courtesyAddress.setCourtesyAddressType(CourtesyAddressType.fromValue(courtesyDigitalAddressDto.getAddressType().getValue()));
                 courtesyAddress.setCourtesyChannelType(CourtesyChannelType.fromValue(courtesyDigitalAddressDto.getChannelType().getValue()));
                 courtesyAddress.setCourtesyValue(courtesyDigitalAddressDto.getValue());
-                courtesyAddress.setCreated(courtesyDigitalAddressDto.getCreated());
-                courtesyAddress.setLastModified(courtesyDigitalAddressDto.getLastModified());
                 addressList.add(courtesyAddress);
             });
         }
