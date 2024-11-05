@@ -211,8 +211,8 @@ paths:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
     post:
       operationId: getNotificationRecipientDetail
-      summary: Retrieve notification detail by IUN and TaxId
-      description: Retrieve notification detail by IUN and TaxId
+      summary: Retrieve notification with recipient details by IUN and TaxId
+      description: Retrieve notification recipient details by IUN and TaxId
       tags:
         - NotificationAndMessage
       parameters:
