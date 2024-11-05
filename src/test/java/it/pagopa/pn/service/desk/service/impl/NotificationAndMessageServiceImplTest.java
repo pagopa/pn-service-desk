@@ -4,10 +4,15 @@ import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationStatusDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.DetailDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoRequestDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoV21Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentStatusDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregistries.ExternalRegistriesClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +23,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -36,6 +42,8 @@ class NotificationAndMessageServiceImplTest  {
     private PnDeliveryClient pnDeliveryClient;
     @Mock
     private PnDeliveryPushClient pnDeliveryPushClient;
+    @Mock
+    private ExternalRegistriesClient externalRegistriesClient;
 
     @Spy
     private AuditLogServiceImpl auditLogService;
@@ -371,7 +379,13 @@ class NotificationAndMessageServiceImplTest  {
         var iun = "PRVZ-NZKM-JEDK-202309-A-1";
         var taxId = "DVNLRD52D15M059P";
         var notification = getSentNotificationV23Dto();
+        var pagoPaPaymentExpected = notification.getRecipients().get(0).getPayments().get(0).getPagoPa();
+        var creditorTaxIdExpected = pagoPaPaymentExpected.getCreditorTaxId();
+        var noticeCodeExpected = pagoPaPaymentExpected.getNoticeCode();
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(iun)).thenReturn(Mono.just(notification));
+        final PaymentInfoV21Dto paymentInfoExpected = new PaymentInfoV21Dto().amount(100).causaleVersamento("Causale").dueDate("2024-11-05").creditorTaxId(creditorTaxIdExpected).noticeCode(noticeCodeExpected).status(PaymentStatusDto.REQUIRED);
+        Mockito.when(this.externalRegistriesClient.getPaymentInfo(List.of(new PaymentInfoRequestDto().noticeCode(noticeCodeExpected).creditorTaxId(creditorTaxIdExpected))))
+                .thenReturn(Flux.just(paymentInfoExpected));
         var response = notificationAndMessageService.getNotificationRecipientDetail(iun, taxId).block();
         Assertions.assertNotNull(response);
         Assertions.assertEquals("FRMTTR76M06B715E", response.getSenderTaxId());
@@ -383,10 +397,13 @@ class NotificationAndMessageServiceImplTest  {
         var recipientExpected = notification.getRecipients().get(0);
         Assertions.assertEquals(recipientExpected.getRecipientType().getValue(), recipientResponseActual.getRecipientType().getValue());
         Assertions.assertEquals(recipientExpected.getDenomination(), recipientResponseActual.getDenomination());
-        Assertions.assertEquals(recipientExpected.getPayments().get(0).getPagoPa().getCreditorTaxId(), recipientResponseActual.getPayments().get(0).getPagoPa().getCreditorTaxId());
-        Assertions.assertEquals(recipientExpected.getPayments().get(0).getPagoPa().getNoticeCode(), recipientResponseActual.getPayments().get(0).getPagoPa().getNoticeCode());
-        Assertions.assertEquals(recipientExpected.getPayments().get(1).getF24().getTitle(), recipientResponseActual.getPayments().get(1).getF24().getTitle());
-        Assertions.assertEquals(recipientExpected.getPayments().get(1).getF24().getApplyCost(), recipientResponseActual.getPayments().get(1).getF24().getApplyCost());
+        Assertions.assertEquals(creditorTaxIdExpected, recipientResponseActual.getPayments().get(0).getPagoPa().getCreditorTaxId());
+        Assertions.assertEquals(noticeCodeExpected, recipientResponseActual.getPayments().get(0).getPagoPa().getNoticeCode());
+        Assertions.assertEquals(paymentInfoExpected.getCausaleVersamento(), recipientResponseActual.getPayments().get(0).getPagoPa().getCausaleVersamento());
+        Assertions.assertEquals(paymentInfoExpected.getDueDate(), recipientResponseActual.getPayments().get(0).getPagoPa().getDueDate());
+        Assertions.assertEquals(paymentInfoExpected.getStatus().getValue(), recipientResponseActual.getPayments().get(0).getPagoPa().getStatus());
+        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getErrorCode());
+        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getDetail());
     }
 
     @Test
@@ -410,6 +427,68 @@ class NotificationAndMessageServiceImplTest  {
                 .expectErrorMatches(throwable -> throwable instanceof PnGenericException e && e.getHttpStatus().equals(HttpStatus.BAD_REQUEST))
                 .verify();
 
+    }
+
+    @Test
+    void getNotificationRecipientDetailPaymentInfoHttpKO(){
+        var iun = "PRVZ-NZKM-JEDK-202309-A-1";
+        var taxId = "DVNLRD52D15M059P";
+        var notification = getSentNotificationV23Dto();
+        var pagoPaPaymentExpected = notification.getRecipients().get(0).getPayments().get(0).getPagoPa();
+        var creditorTaxIdExpected = pagoPaPaymentExpected.getCreditorTaxId();
+        var noticeCodeExpected = pagoPaPaymentExpected.getNoticeCode();
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(iun)).thenReturn(Mono.just(notification));
+        Mockito.when(this.externalRegistriesClient.getPaymentInfo(List.of(new PaymentInfoRequestDto().noticeCode(noticeCodeExpected).creditorTaxId(creditorTaxIdExpected))))
+                .thenReturn(Flux.error(WebClientResponseException.create(503, "Service Unavailable", null, null, null)));
+        var response = notificationAndMessageService.getNotificationRecipientDetail(iun, taxId).block();
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals("FRMTTR76M06B715E", response.getSenderTaxId());
+        Assertions.assertEquals("31/12/2023", response.getPaymentExpirationDate());
+        Assertions.assertEquals("comune", response.getSenderDenomination());
+        Assertions.assertEquals("AR_REGISTERED_LETTER", response.getPhysicalCommunicationType().getValue());
+
+        var recipientResponseActual = response.getRecipient();
+        var recipientExpected = notification.getRecipients().get(0);
+        Assertions.assertEquals(recipientExpected.getRecipientType().getValue(), recipientResponseActual.getRecipientType().getValue());
+        Assertions.assertEquals(recipientExpected.getDenomination(), recipientResponseActual.getDenomination());
+        Assertions.assertEquals(creditorTaxIdExpected, recipientResponseActual.getPayments().get(0).getPagoPa().getCreditorTaxId());
+        Assertions.assertEquals(noticeCodeExpected, recipientResponseActual.getPayments().get(0).getPagoPa().getNoticeCode());
+        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getCausaleVersamento());
+        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getDueDate());
+        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getErrorCode());
+        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getDetail());
+    }
+
+    @Test
+    void getNotificationRecipientDetailPayment200WithErrorField(){
+        var iun = "PRVZ-NZKM-JEDK-202309-A-1";
+        var taxId = "DVNLRD52D15M059P";
+        var notification = getSentNotificationV23Dto();
+        var pagoPaPaymentExpected = notification.getRecipients().get(0).getPayments().get(0).getPagoPa();
+        var creditorTaxIdExpected = pagoPaPaymentExpected.getCreditorTaxId();
+        var noticeCodeExpected = pagoPaPaymentExpected.getNoticeCode();
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(iun)).thenReturn(Mono.just(notification));
+        final PaymentInfoV21Dto paymentInfoExpected = new PaymentInfoV21Dto().errorCode("Error").detail(DetailDto.PAYMENT_DUPLICATED).creditorTaxId(creditorTaxIdExpected).noticeCode(noticeCodeExpected).status(PaymentStatusDto.SUCCEEDED);
+        Mockito.when(this.externalRegistriesClient.getPaymentInfo(List.of(new PaymentInfoRequestDto().noticeCode(noticeCodeExpected).creditorTaxId(creditorTaxIdExpected))))
+                .thenReturn(Flux.just(paymentInfoExpected));
+        var response = notificationAndMessageService.getNotificationRecipientDetail(iun, taxId).block();
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals("FRMTTR76M06B715E", response.getSenderTaxId());
+        Assertions.assertEquals("31/12/2023", response.getPaymentExpirationDate());
+        Assertions.assertEquals("comune", response.getSenderDenomination());
+        Assertions.assertEquals("AR_REGISTERED_LETTER", response.getPhysicalCommunicationType().getValue());
+
+        var recipientResponseActual = response.getRecipient();
+        var recipientExpected = notification.getRecipients().get(0);
+        Assertions.assertEquals(recipientExpected.getRecipientType().getValue(), recipientResponseActual.getRecipientType().getValue());
+        Assertions.assertEquals(recipientExpected.getDenomination(), recipientResponseActual.getDenomination());
+        Assertions.assertEquals(creditorTaxIdExpected, recipientResponseActual.getPayments().get(0).getPagoPa().getCreditorTaxId());
+        Assertions.assertEquals(noticeCodeExpected, recipientResponseActual.getPayments().get(0).getPagoPa().getNoticeCode());
+        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getCausaleVersamento());
+        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getDueDate());
+        Assertions.assertEquals(paymentInfoExpected.getStatus().getValue(), recipientResponseActual.getPayments().get(0).getPagoPa().getStatus());
+        Assertions.assertEquals(paymentInfoExpected.getErrorCode(), recipientResponseActual.getPayments().get(0).getPagoPa().getErrorCode());
+        Assertions.assertEquals(paymentInfoExpected.getDetail().getValue(), recipientResponseActual.getPayments().get(0).getPagoPa().getDetail());
     }
 
 }

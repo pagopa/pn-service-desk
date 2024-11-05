@@ -1684,16 +1684,6 @@ components:
       properties:
         recipient:
           $ref: '#/components/schemas/NotificationRecipient'
-        notificationFeePolicy:
-          type: string
-          description: >-
-            Politica di addebitamento dei costi di notifica. <br/>
-            - _FLAT_RATE_: costo forfettario fisso. In questa modalità SEND non gestisce 
-            il costo della notifica per il destinatario.<br/>
-            - _DELIVERY_MODE_: costo calcolato in base all'effettivo percorso di notifica. <br/>
-          enum:
-            - FLAT_RATE
-            - DELIVERY_MODE
 
     NotificationRecipient:
       description: Informazioni sui destinatari
@@ -1734,8 +1724,6 @@ components:
       properties:
         pagoPa:
           $ref: '#/components/schemas/PagoPaPayment'
-        f24:
-          $ref: '#/components/schemas/F24Payment'
 
     PagoPaPayment:
       title: Informazioni per effettuare il pagamento con sistema pagoPA
@@ -1750,7 +1738,7 @@ components:
       required:
         - noticeCode
         - creditorTaxId
-        - applyCost
+        - status
       properties:
         noticeCode:
           description: Payment notice number  numero avviso
@@ -1763,30 +1751,42 @@ components:
           type: string
           maxLength: 99999
           description: "Codice Fiscale della PA mittente"
-        applyCost:
-          type: boolean
-          nullable: false
-          description: Flag per indicare se l'avviso pagoPa deve contenere i costi di notifica
-
-
-    F24Payment:
-      title: Informazioni per effettuare il pagamento tramite modello F24
-      description: >-
-        Informazioni utili per effettuare il pagamento di una notifica, sono associate al
-        destinatario perché le spese di notifica possono differire a seconda del canale di
-        notifica utilizzato. <br/>
-          - _title_: titolo del documento pdf da mostrare all'utente .<br/>
-          - _applyCost_: flag per indicare se il modello F24 deve contenere i costi di notifica.<br/>
-      type: object
-      required:
-        - title
-        - applyCost
-        - metadataAttachment
-      properties:
-        title:
-          description: Titolo del documento pdf da mostrare all'utente
+        amount:
+          description: Amount for required payment in eurocents
+          example: 1200
+          type: integer
+        causaleVersamento:
+          description: reason for payment
           type: string
-        applyCost:
-          type: boolean
-          nullable: false
-          description: Flag per indicare se il modello F24 deve contere i costi di notifica
+          example: Seconda rata TARI
+        dueDate:
+          description: payment expiration date
+          type: string
+          example: 2025-07-31
+          pattern: ([0-9]{4})-(1[0-2]|0[1-9])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])
+        status:
+          example: 'REQUIRED'
+          description: >
+            Payment status:
+              * `REQUIRED` - payment required
+              * `SUCCEEDED` - payment done
+              * `IN_PROGRESS` - waiting confirm
+              * `FAILURE` - error see errorType
+          type: string
+        errorCode:
+          description: error code to show at the user
+          type: string
+          example: PPT_AUTORIZZAZIONE
+        detail:
+          description: >
+            Classification to help user address the issue
+              * `PAYMENT_UNAVAILABLE`: Technical Error.
+              * `PAYMENT_UNKNOWN`: Payment data error.
+              * `DOMAIN_UNKNOWN`: creditor institution error.
+              * `PAYMENT_ONGOING`: payment on going.
+              * `PAYMENT_EXPIRED`: payment expired.
+              * `PAYMENT_CANCELED`: payment cancelled.
+              * `PAYMENT_DUPLICATED`: payment duplicated.
+              * `GENERIC_ERROR`: generic error.
+          example: PAYMENT_UNAVAILABLE
+          type: string

@@ -167,6 +167,7 @@ public class NotificationAndMessageMapper {
         }
 
         return deliveryPayments.stream()
+                .filter(notificationPaymentItemDto -> notificationPaymentItemDto.getPagoPa() != null)
                 .map(NotificationAndMessageMapper::toNotificationPaymentItem)
                 .toList();
     }
@@ -174,10 +175,8 @@ public class NotificationAndMessageMapper {
     private static NotificationPaymentItem toNotificationPaymentItem(NotificationPaymentItemDto deliveryPayment) {
         if(deliveryPayment != null) {
             return new NotificationPaymentItem()
-                    .pagoPa(toPagoPaPayment(deliveryPayment.getPagoPa()))
-                    .f24(toF24Payment(deliveryPayment.getF24()));
+                    .pagoPa(toPagoPaPayment(deliveryPayment.getPagoPa()));
         }
-
         return null;
     }
 
@@ -185,20 +184,8 @@ public class NotificationAndMessageMapper {
         if(deliveryPagoPaPayment != null) {
             return new PagoPaPayment()
                     .creditorTaxId(deliveryPagoPaPayment.getCreditorTaxId())
-                    .noticeCode(deliveryPagoPaPayment.getNoticeCode())
-                    .applyCost(deliveryPagoPaPayment.getApplyCost());
+                    .noticeCode(deliveryPagoPaPayment.getNoticeCode());
         }
-
-        return null;
-    }
-
-    private static F24Payment toF24Payment(F24PaymentDto deliveryF24Payment) {
-        if(deliveryF24Payment != null) {
-            return new F24Payment()
-                    .title(deliveryF24Payment.getTitle())
-                    .applyCost(deliveryF24Payment.getApplyCost());
-        }
-
         return null;
     }
 }
