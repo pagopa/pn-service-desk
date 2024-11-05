@@ -26,8 +26,6 @@ class ProfileMapperTest {
         legalDigitalAddressDto.setSenderId("default");
         legalDigitalAddressDto.setRecipientId("PF-1234");
         legalDigitalAddressDtoList.add(legalDigitalAddressDto);
-        legalDigitalAddressDto.setCreated(Instant.now());
-        legalDigitalAddressDto.setLastModified(Instant.now());
 
         List<CourtesyDigitalAddressDto> courtesyDigitalAddressDtoList = new ArrayList<>();
         CourtesyDigitalAddressDto courtesyDigitalAddressDto = new CourtesyDigitalAddressDto();
@@ -36,8 +34,6 @@ class ProfileMapperTest {
         courtesyDigitalAddressDto.setChannelType(CourtesyChannelTypeDto.SMS);
         courtesyDigitalAddressDto.setSenderId("default");
         courtesyDigitalAddressDto.setRecipientId("PF-1234");
-        courtesyDigitalAddressDto.setCreated(Instant.now());
-        courtesyDigitalAddressDto.setLastModified(Instant.now());
         courtesyDigitalAddressDtoList.add(courtesyDigitalAddressDto);
 
         profileResponse = ProfileMapper.getAddress(legalDigitalAddressDtoList, courtesyDigitalAddressDtoList, profileResponse);
@@ -48,15 +44,10 @@ class ProfileMapperTest {
         Assertions.assertEquals(legalDigitalAddressDto.getValue(), actualLegalAddress.getLegalValue());
         Assertions.assertEquals(legalDigitalAddressDto.getChannelType().getValue(), actualLegalAddress.getLegalChannelType().getValue());
         Assertions.assertEquals(legalDigitalAddressDto.getAddressType().getValue(), actualLegalAddress.getLegalAddressType().getValue());
-        Assertions.assertEquals(legalDigitalAddressDto.getCreated(), actualLegalAddress.getCreated());
-        Assertions.assertEquals(legalDigitalAddressDto.getLastModified(), actualLegalAddress.getLastModified());
 
         Assertions.assertEquals(courtesyDigitalAddressDto.getValue(), actualCourtesyAddress.getCourtesyValue());
         Assertions.assertEquals(courtesyDigitalAddressDto.getChannelType().getValue(), actualCourtesyAddress.getCourtesyChannelType().getValue());
         Assertions.assertEquals(courtesyDigitalAddressDto.getAddressType().getValue(), actualCourtesyAddress.getCourtesyAddressType().getValue());
-        Assertions.assertEquals(courtesyDigitalAddressDto.getCreated(), actualCourtesyAddress.getCreated());
-        Assertions.assertEquals(courtesyDigitalAddressDto.getLastModified(), actualCourtesyAddress.getLastModified());
-
     }
 
     @Test
