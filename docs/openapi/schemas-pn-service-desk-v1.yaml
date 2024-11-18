@@ -577,7 +577,7 @@ components:
         # NOT_HANDLED
         - "$ref": "#/components/schemas/NotHandledDetails"
         # ANALOG_WORKFLOW_RECIPIENT_DECEASED
-        - "$ref": "#/components/schemas/AnalogWorkflowRecipientDeceasedDetailsV26"
+        - "$ref": "#/components/schemas/AnalogWorkflowRecipientDeceasedDetails"
 
     NotificationRequestAcceptedDetails:
       type: object
@@ -1303,7 +1303,7 @@ components:
           type: string
           description: Motivazione casistica non gestita
 
-    AnalogWorkflowRecipientDeceasedDetailsV26:
+    AnalogWorkflowRecipientDeceasedDetails:
       type: object
       required:
         - recIndex
