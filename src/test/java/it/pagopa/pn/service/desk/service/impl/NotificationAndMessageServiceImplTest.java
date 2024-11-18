@@ -3,7 +3,6 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.*;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationStatusDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
@@ -20,9 +19,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -283,13 +279,13 @@ class NotificationAndMessageServiceImplTest  {
 
     private NotificationHistoryResponseDto getNotificationHistoryResponseDto() {
         NotificationHistoryResponseDto notificationHistoryResponseDto = new NotificationHistoryResponseDto();
-        notificationHistoryResponseDto.setNotificationStatus(NotificationStatusDto.ACCEPTED);
+        notificationHistoryResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
 
-        List<TimelineElementV25Dto> timelineElementDtoList = new ArrayList<>();
-        TimelineElementV25Dto timelineElementDto = new TimelineElementV25Dto();
-        timelineElementDto.setCategory(TimelineElementCategoryV23Dto.SEND_COURTESY_MESSAGE);
+        List<TimelineElementV26Dto> timelineElementDtoList = new ArrayList<>();
+        var timelineElementDto = new TimelineElementV26Dto();
+        timelineElementDto.setCategory(TimelineElementCategoryV26Dto.SEND_COURTESY_MESSAGE);
         timelineElementDto.setElementId("elementId");
-        timelineElementDto.setDetails(new TimelineElementDetailsV23Dto());
+        timelineElementDto.setDetails(new TimelineElementDetailsV26Dto());
         timelineElementDto.setTimestamp(Instant.now());
 
         List<LegalFactListElementV20Dto> legalFactListElementDtoList = new ArrayList<>();
@@ -301,9 +297,9 @@ class NotificationAndMessageServiceImplTest  {
 
         notificationHistoryResponseDto.setTimeline(timelineElementDtoList);
 
-        List<NotificationStatusHistoryElementDto> notificationStatusHistoryElementDtoList = new ArrayList<>();
-        NotificationStatusHistoryElementDto notificationStatusHistoryElementDto = new NotificationStatusHistoryElementDto();
-        notificationStatusHistoryElementDto.setStatus(NotificationStatusDto.ACCEPTED);
+        List<NotificationStatusHistoryElementV26Dto> notificationStatusHistoryElementDtoList = new ArrayList<>();
+        var notificationStatusHistoryElementDto = new NotificationStatusHistoryElementV26Dto();
+        notificationStatusHistoryElementDto.setStatus(NotificationStatusV26Dto.ACCEPTED);
         notificationStatusHistoryElementDto.setActiveFrom(Instant.now());
 
         List<String> relativeTimeLineElements = new ArrayList<>();
@@ -335,12 +331,12 @@ class NotificationAndMessageServiceImplTest  {
 
     private NotificationHistoryResponseDto getHistory (){
         NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
-        historyResponseDto.setNotificationStatus(NotificationStatusDto.ACCEPTED);
-        TimelineElementV25Dto timelineElementDto = new TimelineElementV25Dto();
-        timelineElementDto.setCategory(TimelineElementCategoryV23Dto.REQUEST_ACCEPTED);
-        timelineElementDto.setDetails(new TimelineElementDetailsV23Dto());
+        historyResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
+        var timelineElementDto = new TimelineElementV26Dto();
+        timelineElementDto.setCategory(TimelineElementCategoryV26Dto.REQUEST_ACCEPTED);
+        timelineElementDto.setDetails(new TimelineElementDetailsV26Dto());
         timelineElementDto.setTimestamp(Instant.now());
-        List<TimelineElementV25Dto> dtoList = new ArrayList<>();
+        List<TimelineElementV26Dto> dtoList = new ArrayList<>();
         dtoList.add(timelineElementDto);
         historyResponseDto.setTimeline(dtoList);
         return historyResponseDto;
@@ -348,23 +344,16 @@ class NotificationAndMessageServiceImplTest  {
 
     private NotificationHistoryResponseDto getHistoryNotificationCancellation (){
         NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
-        historyResponseDto.setNotificationStatus(NotificationStatusDto.ACCEPTED);
-        TimelineElementV25Dto timelineElementDto = new TimelineElementV25Dto();
-        timelineElementDto.setCategory(TimelineElementCategoryV23Dto.NOTIFICATION_CANCELLATION_REQUEST);
-        timelineElementDto.setDetails(new TimelineElementDetailsV23Dto());
+        historyResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
+        var timelineElementDto = new TimelineElementV26Dto();
+        timelineElementDto.setCategory(TimelineElementCategoryV26Dto.NOTIFICATION_CANCELLATION_REQUEST);
+        timelineElementDto.setDetails(new TimelineElementDetailsV26Dto());
         timelineElementDto.setTimestamp(Instant.now());
-        List<TimelineElementV25Dto> dtoList = new ArrayList<>();
+        List<TimelineElementV26Dto> dtoList = new ArrayList<>();
         dtoList.add(timelineElementDto);
         historyResponseDto.setTimeline(dtoList);
         return historyResponseDto;
     }
 
-    private NotificationAttachmentDownloadMetadataResponseDto getDocuments (){
-        NotificationAttachmentDownloadMetadataResponseDto responseDto = new NotificationAttachmentDownloadMetadataResponseDto();
-        responseDto.setContentLength(1234);
-        responseDto.setContentType("pdf");
-        responseDto.setFilename("file_test");
-        return responseDto;
-    }
 
 }

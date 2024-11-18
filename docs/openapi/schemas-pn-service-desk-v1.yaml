@@ -491,6 +491,7 @@ components:
           * `NOTIFICATION_CANCELLATION_REQUEST` - Richiesta di annullamento di una notifica
           * `NOTIFICATION_CANCELLED` - Notifica annullata
           * `PREPARE_ANALOG_DOMICILE_FAILURE` - Fallimento della richiesta di prepare (preparazione ad invio) cartaceo a paperChannel
+          * `ANALOG_WORKFLOW_RECIPIENT_DECEASED` - Destinatario deceduto
       enum:
         - SENDER_ACK_CREATION_REQUEST
         - VALIDATE_NORMALIZE_ADDRESSES_REQUEST
@@ -534,6 +535,7 @@ components:
         - NOTIFICATION_CANCELLATION_REQUEST
         - NOTIFICATION_CANCELLED
         - PREPARE_ANALOG_DOMICILE_FAILURE
+        - ANALOG_WORKFLOW_RECIPIENT_DECEASED
 
     TimelineElementDetail:
       description: The event payload that will be different based on the event.
@@ -574,6 +576,8 @@ components:
         - "$ref": "#/components/schemas/AarGenerationDetails"
         # NOT_HANDLED
         - "$ref": "#/components/schemas/NotHandledDetails"
+        # ANALOG_WORKFLOW_RECIPIENT_DECEASED
+        - "$ref": "#/components/schemas/AnalogWorkflowRecipientDeceasedDetailsV26"
 
     NotificationRequestAcceptedDetails:
       type: object
@@ -1298,6 +1302,24 @@ components:
         reason:
           type: string
           description: Motivazione casistica non gestita
+
+    AnalogWorkflowRecipientDeceasedDetailsV26:
+      type: object
+      required:
+        - recIndex
+        - physicalAddress
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        physicalAddress:
+          $ref: "#/components/schemas/PhysicalAddress"
+        notificationCost:
+          description: costo notifica in euro cents, può essere nullo se la notifica è stata precedentemente visualizzata
+          example: 1220
+          type: integer
+          format: int64
 
     NotificationRequest:
       description: Request per la verifica della presenza di notifiche in stato irreperibile

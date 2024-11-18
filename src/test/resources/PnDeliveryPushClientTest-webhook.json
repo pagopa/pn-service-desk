@@ -162,6 +162,7 @@
                     {
                         "elementId": "SEND_DIGITAL.IUN_PRVZ-NZKM-JEDK-202309-A-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0",
                         "timestamp": "2023-09-29T14:04:11.354725545Z",
+                        "eventTimestamp": "2023-09-29T14:04:11.354725545Z",
                         "legalFactsIds": [],
                         "category": "SEND_DIGITAL_DOMICILE",
                         "details": {
