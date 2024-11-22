@@ -24,7 +24,7 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
 
     private static final String OPERATION_ID = "test12345";
 
-    private final TimelineElementV25Dto expectedTimeline = new TimelineElementV25Dto();
+    private final TimelineElementV26Dto expectedTimeline = new TimelineElementV26Dto();
 
     @Autowired
     private PnDeliveryPushClient pnDeliveryPushClient;
@@ -33,9 +33,10 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
     public void setUp(){
         expectedTimeline.setElementId("SEND_DIGITAL.IUN_PRVZ-NZKM-JEDK-202309-A-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
         expectedTimeline.setTimestamp(Instant.parse("2023-09-29T14:04:11.354725545Z"));
-        expectedTimeline.setCategory(TimelineElementCategoryV23Dto.SEND_DIGITAL_DOMICILE);
+        expectedTimeline.setEventTimestamp(Instant.parse("2023-09-29T14:04:11.354725545Z"));
+        expectedTimeline.setCategory(TimelineElementCategoryV26Dto.SEND_DIGITAL_DOMICILE);
 
-        TimelineElementDetailsV23Dto categoryV23Dto = new TimelineElementDetailsV23Dto();
+        var categoryV23Dto = new TimelineElementDetailsV26Dto();
         categoryV23Dto.setSendDate(Instant.parse("2023-09-29T14:04:01.033478852Z"));
         categoryV23Dto.setDigitalAddressSource(DigitalAddressSourceDto.PLATFORM);
         DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
@@ -117,9 +118,9 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
         Assertions.assertNotNull(actual.getTimeline());
         Assertions.assertNotNull(actual.getTimeline().get(0));
 
-        TimelineElementV25Dto actualTimeline = actual.getTimeline().get(0);
+        var actualTimeline = actual.getTimeline().get(0);
         Assertions.assertEquals(expectedTimeline.getElementId(), actualTimeline.getElementId());
-        Assertions.assertEquals(expectedTimeline.getTimestamp(), actualTimeline.getTimestamp());
+        Assertions.assertEquals(expectedTimeline.getEventTimestamp(), actualTimeline.getEventTimestamp());
         Assertions.assertEquals(expectedTimeline.getCategory(), actualTimeline.getCategory());
         Assertions.assertEquals(expectedTimeline.getDetails().getDigitalAddress().getType(), actualTimeline.getDetails().getDigitalAddress().getType());
         Assertions.assertEquals(expectedTimeline.getDetails().getDigitalAddressSource(), actualTimeline.getDetails().getDigitalAddressSource());

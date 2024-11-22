@@ -3,8 +3,8 @@ package it.pagopa.pn.service.desk.mapper;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV23Dto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV25Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV26Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV26Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -21,7 +21,7 @@ public class NotificationAndMessageMapper {
 
     private static final ModelMapper modelMapper = new ModelMapper();
 
-    public static NotificationResponse getNotification (NotificationSearchRowDto notificationSearchRowDto, List<TimelineElementV25Dto> filteredElements){
+    public static NotificationResponse getNotification (NotificationSearchRowDto notificationSearchRowDto, List<TimelineElementV26Dto> filteredElements){
         NotificationResponse notification = new NotificationResponse();
         notification.setIun(notificationSearchRowDto.getIun());
         notification.setSender(notificationSearchRowDto.getSender());
@@ -48,7 +48,7 @@ public class NotificationAndMessageMapper {
                 TimelineElement timelineElement = new TimelineElement();
                 timelineElement.setCategory(TimelineElementCategory.fromValue(timelineElementDto.getCategory().getValue()));
                 timelineElement.setDetail(modelMapper.map(timelineElementDto.getDetails(), TimelineElementDetail.class));
-                timelineElement.setTimestamp(timelineElementDto.getTimestamp());
+                timelineElement.setTimestamp(timelineElementDto.getEventTimestamp());
                 timelineElementList.add(timelineElement);
             });
         }
@@ -59,30 +59,31 @@ public class NotificationAndMessageMapper {
         return response;
     }
 
-    private static List<TimelineElementV25Dto> filteredElements(List<TimelineElementV25Dto> timelineElementList){
+    private static List<TimelineElementV26Dto> filteredElements(List<TimelineElementV26Dto> timelineElementList){
 
         return timelineElementList
                 .stream()
-                .filter(element -> element.getCategory().equals(TimelineElementCategoryV23Dto.REQUEST_ACCEPTED) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.SEND_COURTESY_MESSAGE) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.SCHEDULE_DIGITAL_WORKFLOW) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.SEND_DIGITAL_DOMICILE) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.SEND_DIGITAL_PROGRESS) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.SEND_DIGITAL_FEEDBACK) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.DIGITAL_SUCCESS_WORKFLOW) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.DIGITAL_FAILURE_WORKFLOW) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.ANALOG_FAILURE_WORKFLOW) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.SEND_SIMPLE_REGISTERED_LETTER) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.NOTIFICATION_VIEWED) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.PREPARE_ANALOG_DOMICILE_FAILURE) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.SEND_ANALOG_DOMICILE) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.SEND_ANALOG_PROGRESS) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.SEND_ANALOG_FEEDBACK) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.NOTIFICATION_RADD_RETRIEVED) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.COMPLETELY_UNREACHABLE) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.AAR_GENERATION) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.NOT_HANDLED) ||
-                        element.getCategory().equals(TimelineElementCategoryV23Dto.REFINEMENT)
+                .filter(element -> element.getCategory().equals(TimelineElementCategoryV26Dto.REQUEST_ACCEPTED) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.SEND_COURTESY_MESSAGE) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.SCHEDULE_DIGITAL_WORKFLOW) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.SEND_DIGITAL_DOMICILE) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.SEND_DIGITAL_PROGRESS) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.SEND_DIGITAL_FEEDBACK) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.DIGITAL_SUCCESS_WORKFLOW) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.DIGITAL_FAILURE_WORKFLOW) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.ANALOG_FAILURE_WORKFLOW) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.SEND_SIMPLE_REGISTERED_LETTER) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.NOTIFICATION_VIEWED) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.PREPARE_ANALOG_DOMICILE_FAILURE) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.SEND_ANALOG_DOMICILE) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.SEND_ANALOG_PROGRESS) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.SEND_ANALOG_FEEDBACK) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.NOTIFICATION_RADD_RETRIEVED) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.COMPLETELY_UNREACHABLE) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.AAR_GENERATION) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.NOT_HANDLED) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.REFINEMENT) ||
+                        element.getCategory().equals(TimelineElementCategoryV26Dto.ANALOG_WORKFLOW_RECIPIENT_DECEASED)
                 )
                 .toList();
     }
@@ -116,7 +117,7 @@ public class NotificationAndMessageMapper {
     }
 
 
-    private static CourtesyMessage getCourtesyMessage(TimelineElementV25Dto timelineElementDto) {
+    private static CourtesyMessage getCourtesyMessage(TimelineElementV26Dto timelineElementDto) {
         CourtesyMessage courtesyMessage = new CourtesyMessage();
         if (timelineElementDto.getDetails() != null) {
             courtesyMessage.setChannel(CourtesyChannelType.fromValue(timelineElementDto.getDetails().getDigitalAddress().getType()));
