@@ -446,7 +446,7 @@
 							<typeMappings>
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-external-registries/9f9bed8a85ab9ac5720294895afd26abccde5be6/docs/openapi/pn-selfcare-internal-v1.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-external-registries/600b7608cc4bdbac077b72efa87efe5c622008e0/docs/openapi/pn-selfcare-internal-v1.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
@@ -463,6 +463,32 @@
 						</configuration>
 					</execution>
 					<execution>
+						<id>generate-client-pn-external-registries-payment</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>process-resources</phase>
+						<configuration>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-external-registries/600b7608cc4bdbac077b72efa87efe5c622008e0/docs/openapi/pn-payment-info-internal-v1.yaml</inputSpec>
+							<generatorName>java</generatorName>
+							<library>webclient</library>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<generateApiTests>false</generateApiTests>
+							<generateModelTests>false</generateModelTests>
+							<generateSupportingFiles>true</generateSupportingFiles>
+							<configOptions>
+								<swaggerAnnotations>false</swaggerAnnotations>
+								<openApiNullable>false</openApiNullable>
+							</configOptions>
+							<modelPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.api</apiPackage>
+							<modelNameSuffix>Dto</modelNameSuffix>
+						</configuration>
+					</execution>
+					<execution>
 						<id>generate-client-pn-user-attributes</id>
 						<goals>
 							<goal>generate</goal>
@@ -472,7 +498,7 @@
 							<typeMappings>
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-user-attributes/9d0cfbab701d7934281566eadd53e38f91fe106c/docs/openapi/pn-address-book-api-internal.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-user-attributes/d64b348f445db60f1c7f9b5c49552a93dcda7f5c/docs/openapi/pn-address-book-api-internal.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>

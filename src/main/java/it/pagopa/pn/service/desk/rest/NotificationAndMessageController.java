@@ -58,4 +58,12 @@ public class NotificationAndMessageController implements NotificationAndMessageA
                 .map(searchNotificationsResponseResponseEntity -> ResponseEntity.status(HttpStatus.OK).body(searchNotificationsResponseResponseEntity));
     }
 
-}
+    @Override
+    public Mono<ResponseEntity<NotificationRecipientDetailResponse>> getNotificationRecipientDetail(String xPagopaPnUid, String iun, Mono<NotificationRecipientDetailRequest> notificationRecipientDetailRequest,  final ServerWebExchange exchange) {
+        return notificationRecipientDetailRequest
+                .flatMap(request -> notificationAndMessageService.getNotificationRecipientDetail(iun, request.getTaxId()))
+                .map(ResponseEntity::ok);
+    }
+
+
+    }

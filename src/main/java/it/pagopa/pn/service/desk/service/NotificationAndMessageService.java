@@ -13,4 +13,5 @@ public interface NotificationAndMessageService {
     Mono<DocumentsResponse> getDocumentsOfIun(String iun, DocumentsRequest request);
     Mono<NotificationDetailResponse> getNotificationFromIUN(String iun);
     Mono<SearchNotificationsResponse> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, RecipientType recipientType, Integer size, String nextPagesKey, Instant startDate, Instant endDate);
+    Mono<NotificationRecipientDetailResponse> getNotificationRecipientDetail(String iun, String recipientTaxId);
 }
