@@ -10,14 +10,18 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.Se
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV23Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV25Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoRequestDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoV21Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.mapper.NotificationAndMessageMapper;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregistries.ExternalRegistriesClient;
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationAndMessageService;
 import lombok.CustomLog;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -27,8 +31,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -36,22 +39,18 @@ import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 
 @Service
 @CustomLog
+@RequiredArgsConstructor
 public class NotificationAndMessageServiceImpl implements NotificationAndMessageService {
 
     private final PnDataVaultClient dataVaultClient;
     private final PnDeliveryClient pnDeliveryClient;
     private final PnDeliveryPushClient pnDeliveryPushClient;
+    private final ExternalRegistriesClient externalRegistriesClient;
     private final AuditLogService auditLogService;
     private static final String ERROR_MESSAGE_NOTIFICATION_HISTORY = "errorReason = {}, An error occurred while call service for obtain notification history";
     private static final String ERROR_MESSAGE_SENT_NOTIFICATIONS = "errorReason = {}, An error occurred while calling the service to obtain sent notifications";
     private static final String ERROR_MESSAGE_SEARCH_NOTIFICATIONS = "errorReason = {}, An error occurred while calling the service to obtain sent notifications";
 
-    public NotificationAndMessageServiceImpl(PnDataVaultClient dataVaultClient, PnDeliveryClient pnDeliveryClient, PnDeliveryPushClient pnDeliveryPushClient, AuditLogService auditLogService) {
-        this.dataVaultClient = dataVaultClient;
-        this.pnDeliveryClient = pnDeliveryClient;
-        this.pnDeliveryPushClient = pnDeliveryPushClient;
-        this.auditLogService = auditLogService;
-    }
 
     @Override
     public Mono<SearchNotificationsResponse> searchNotificationsFromTaxId(String xPagopaPnUid, Instant startDate, Instant endDate, Integer size, String nextPagesKey, SearchNotificationsRequest request) {
@@ -238,12 +237,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     @Override
     public Mono<NotificationDetailResponse> getNotificationFromIUN(String iun) {
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_VIEW_NOTIFICATION, "getNotificationFromIUN for");
-        return this.pnDeliveryClient.getSentNotificationPrivate(iun)
-                .onErrorResume(WebClientResponseException.class, exception -> {
-                    log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
-                    logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
-                })
+        return callSentNotificationPrivate(iun, logEvent)
                 .map(sentNotificationV21Dto -> {
                     NotificationDetailResponse response = NotificationAndMessageMapper.getNotificationDetail(sentNotificationV21Dto);
                     logEvent.generateSuccess("getNotificationFromIUN response = {}", response).log();
@@ -297,6 +291,70 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
             log.warn("Notification with iun: {} has a request for cancellation", iun);
         }
         return cancellationTimelineIsPresent.get();
+    }
+
+    @Override
+    public Mono<NotificationRecipientDetailResponse> getNotificationRecipientDetail(String iun, String recipientTaxId) {
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(iun, PnAuditLogEventType.AUD_CA_VIEW_NOTIFICATION, "getNotificationRecipientDetail for");
+        return callSentNotificationPrivate(iun, logEvent)
+                .map(sentNotificationV21Dto -> NotificationAndMessageMapper.getNotificationRecipientDetailResponse(sentNotificationV21Dto, recipientTaxId))
+                .flatMap(this::enrichWithPaymentsDetail)
+                .doOnNext(response -> logEvent.generateSuccess("getNotificationRecipientDetail response = {}", response).log());
+    }
+
+    private Mono<SentNotificationV23Dto> callSentNotificationPrivate(String iun, PnAuditLogEvent logEvent) {
+        return this.pnDeliveryClient.getSentNotificationPrivate(iun)
+                .onErrorResume(WebClientResponseException.class, exception -> {
+                    log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
+                    logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getStatusCode()));
+                });
+    }
+
+    private Mono<NotificationRecipientDetailResponse> enrichWithPaymentsDetail(NotificationRecipientDetailResponse response) {
+        if (Boolean.TRUE.equals(response.getHasPayments())) {
+            return enrichPayment(response.getRecipient().getPayments())
+                    .thenReturn(response);
+        } else {
+            return Mono.just(response);
+        }
+    }
+
+    private Mono<Void> enrichPayment(List<NotificationPaymentItem> paymentsPagoPa) {
+        var noticeCodePayment = new HashMap<String, NotificationPaymentItem>();
+         var list = paymentsPagoPa.stream()
+                .filter(paymentItem -> paymentItem.getPagoPa() != null)
+                .map(paymentItem -> {
+                    noticeCodePayment.put(paymentItem.getPagoPa().getNoticeCode(), paymentItem);
+                    return new PaymentInfoRequestDto()
+                            .creditorTaxId(paymentItem.getPagoPa().getCreditorTaxId())
+                            .noticeCode(paymentItem.getPagoPa().getNoticeCode());
+                })
+                .toList();
+
+        return externalRegistriesClient.getPaymentInfo(list)
+                .onErrorResume(e -> {
+                    // non faccio andare in errore l'intero flusso se non va in porto il recupero del dettaglio pagamento
+                    log.error("Error in getPaymentInfo, PaymentInfoRequestDtos={}", list, e);
+                    return Flux.empty();
+                })
+                .doOnNext(paymentInfoV21Dto -> {
+                        var notificationPaymentItem = noticeCodePayment.get(paymentInfoV21Dto.getNoticeCode());
+                        enrichNotificationPaymentItemWithPaymentInfo(notificationPaymentItem, paymentInfoV21Dto);
+                })
+                .then();
+    }
+
+    private void enrichNotificationPaymentItemWithPaymentInfo(NotificationPaymentItem paymentItem, PaymentInfoV21Dto paymentInfoV21Dto) {
+        if(paymentItem != null) {
+            paymentItem.getPagoPa().setAmount(paymentInfoV21Dto.getAmount());
+            paymentItem.getPagoPa().setCausaleVersamento(paymentInfoV21Dto.getCausaleVersamento());
+            paymentItem.getPagoPa().setDueDate(paymentInfoV21Dto.getDueDate());
+            paymentItem.getPagoPa().setStatus(paymentInfoV21Dto.getStatus().getValue());
+            paymentItem.getPagoPa().setErrorCode(paymentInfoV21Dto.getErrorCode());
+            paymentItem.getPagoPa().setDetail(paymentInfoV21Dto.getDetail() != null ? paymentInfoV21Dto.getDetail().getValue() : null);
+        }
+
     }
 
 }
