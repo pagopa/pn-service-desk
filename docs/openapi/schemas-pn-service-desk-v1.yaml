@@ -164,6 +164,7 @@ components:
       enum:
         - PEC
         - APPIO
+        - SERCQ
 
     LegalAddressType:
       type: string
