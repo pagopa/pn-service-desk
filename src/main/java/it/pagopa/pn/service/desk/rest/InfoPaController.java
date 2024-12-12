@@ -20,8 +20,8 @@ public class InfoPaController implements PaApi {
     private final InfoPaService infoPaService;
 
     @Override
-    public Mono<ResponseEntity<Flux<PaSummary>>> getListOfOnboardedPA(String xPagopaPnUid, final ServerWebExchange exchange) {
-        return this.infoPaService.getListOfOnboardedPA(xPagopaPnUid).collectList().map(list -> ResponseEntity.ok(Flux.fromStream(list.stream())));
+    public Mono<ResponseEntity<Flux<PaSummary>>> getListOfOnboardedPA(String xPagopaPnUid, String paNameFilter, final ServerWebExchange exchange) {
+        return this.infoPaService.getListOfOnboardedPA(xPagopaPnUid, paNameFilter).collectList().map(list -> ResponseEntity.ok(Flux.fromStream(list.stream())));
     }
 
     @Override

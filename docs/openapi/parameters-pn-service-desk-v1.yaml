@@ -82,6 +82,18 @@ components:
         type: string
         format: date-time
 
+    paNameFilter:
+      name: paNameFilter
+      description: Se valorizzato indica il prefisso della denominazione della PA
+      in: query
+      required: false
+      schema:
+        title: Admitted character for PA denomination field
+        type: string
+        minLength: 3
+        maxLength: 250
+        pattern: ^([\x20-\xFF]{1,250})$
+
   securitySchemes:
     ApiKeyAuth:
       type: apiKey

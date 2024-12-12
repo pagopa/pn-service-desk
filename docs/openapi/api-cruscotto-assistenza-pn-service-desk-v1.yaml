@@ -43,6 +43,7 @@ paths:
         - PA
       parameters:
         - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/paNameFilter'
       responses:
         '200':
           description: OK
