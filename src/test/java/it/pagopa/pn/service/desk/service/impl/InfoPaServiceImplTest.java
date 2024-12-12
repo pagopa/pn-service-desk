@@ -22,7 +22,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.List;
 @ExtendWith(MockitoExtension.class)
 class InfoPaServiceImplTest {
@@ -62,10 +61,10 @@ class InfoPaServiceImplTest {
 
     @Test
     void getListOfOnboardedPA(){
-        Mockito.when(this.externalRegistriesClient.listOnboardedPa())
+        Mockito.when(this.externalRegistriesClient.listOnboardedPa(null))
                 .thenReturn(Flux.just(expectedPaSummary));
 
-        PaSummary actual = this.infoPaService.getListOfOnboardedPA(null)
+        PaSummary actual = this.infoPaService.getListOfOnboardedPA(null, null)
                 .blockFirst();
 
         Assertions.assertNotNull(actual);

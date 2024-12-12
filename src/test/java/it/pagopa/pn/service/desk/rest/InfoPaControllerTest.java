@@ -20,10 +20,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
 
 @WebFluxTest(controllers = {InfoPaController.class})
-public class InfoPaControllerTest {
+class InfoPaControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;
@@ -42,7 +41,7 @@ public class InfoPaControllerTest {
     void getListOfOnboardedPATest(){
         PaSummary response = new PaSummary();
         String path = "/service-desk/pa/activated-on-pn";
-        Mockito.when(infoPaService.getListOfOnboardedPA(Mockito.any()))
+        Mockito.when(infoPaService.getListOfOnboardedPA(Mockito.any(), Mockito.isNull()))
                 .thenReturn(Flux.just(response));
 
         webTestClient.get()
@@ -55,9 +54,27 @@ public class InfoPaControllerTest {
     }
 
     @Test
+    void getListOfOnboardedPAWithPaNameFilterTest(){
+        PaSummary response = new PaSummary();
+        String path = "/service-desk/pa/activated-on-pn";
+        String paNameFilter = "Pal";
+        Mockito.when(infoPaService.getListOfOnboardedPA(Mockito.any(), Mockito.eq(paNameFilter)))
+                .thenReturn(Flux.just(response));
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path(path)
+                        .queryParam("paNameFilter", paNameFilter)
+                        .build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    @Test
     void getListOfOnboardedPAKOTest(){
         String path = "/service-desk/pa/activated-on-pn";
-        Mockito.when(infoPaService.getListOfOnboardedPA(Mockito.any()))
+        Mockito.when(infoPaService.getListOfOnboardedPA(Mockito.any(), Mockito.isNull()))
                 .thenReturn(Flux.error(new PnGenericException(ExceptionTypeEnum.ERROR_ON_EXTERNAL_REGISTRIES_CLIENT, HttpStatus.BAD_REQUEST)));
 
         webTestClient.get()
@@ -88,7 +105,6 @@ public class InfoPaControllerTest {
 
     @Test
     void searchNotificationsFromSenderIdKO(){
-        SearchNotificationsResponse response = new SearchNotificationsResponse();
         String path = "/service-desk/pa/notifications";
         Mockito.when(infoPaService.searchNotificationsFromSenderId(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT, HttpStatus.BAD_REQUEST)));

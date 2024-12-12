@@ -23,8 +23,8 @@ public class ExternalRegistriesClientImpl implements ExternalRegistriesClient {
 
 
     @Override
-    public Flux<PaSummaryDto> listOnboardedPa() {
-        return infoPaApi.listOnboardedPa(null, null);
+    public Flux<PaSummaryDto> listOnboardedPa(String paNameFilter) {
+        return infoPaApi.listOnboardedPa(paNameFilter, null);
     }
 
     public Flux<PaymentInfoV21Dto> getPaymentInfo(List<PaymentInfoRequestDto> paymentInfoV21Dtos) {
