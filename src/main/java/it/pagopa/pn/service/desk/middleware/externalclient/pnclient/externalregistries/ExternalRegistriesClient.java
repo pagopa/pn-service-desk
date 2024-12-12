@@ -10,7 +10,7 @@ import java.util.List;
 
 
 public interface ExternalRegistriesClient {
-    Flux<PaSummaryDto> listOnboardedPa();
+    Flux<PaSummaryDto> listOnboardedPa(String paNameFilter);
     Flux<PaymentInfoV21Dto> getPaymentInfo(List<PaymentInfoRequestDto> paymentInfoV21Dtos);
 
 }

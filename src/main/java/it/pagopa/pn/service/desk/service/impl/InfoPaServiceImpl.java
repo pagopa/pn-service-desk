@@ -39,9 +39,10 @@ public class InfoPaServiceImpl implements InfoPaService {
     }
 
     @Override
-    public Flux<PaSummary> getListOfOnboardedPA(String xPagopaPnUid) {
+    public Flux<PaSummary> getListOfOnboardedPA(String xPagopaPnUid, String paNameFilter) {
         PnAuditLogEvent logEvent =  auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_VIEW_ONBOARDING, "getListOfOnboardedPA");
-        return externalRegistriesClient.listOnboardedPa()
+        log.debug("getListOfOnboardedPA with paNameFilter: {}", paNameFilter);
+        return externalRegistriesClient.listOnboardedPa(paNameFilter)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, An error occurred while calling the service to obtain list onboarded PA", exception.getMessage());
                     logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain list onboarded PA", exception.getMessage()).log();

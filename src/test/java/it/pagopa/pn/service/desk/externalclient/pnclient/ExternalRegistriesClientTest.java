@@ -24,7 +24,7 @@ class ExternalRegistriesClientTest extends BaseTest.WithMockServer{
 
     @Test
     void listOnboardedPaTest(){
-        Flux<PaSummaryDto> fluxSummaryDto = this.externalRegistriesClient.listOnboardedPa();
+        Flux<PaSummaryDto> fluxSummaryDto = this.externalRegistriesClient.listOnboardedPa(null);
         PaSummaryDto summaryDto = fluxSummaryDto.blockFirst();
 
         Assertions.assertNotNull(summaryDto);
