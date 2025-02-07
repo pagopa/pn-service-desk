@@ -93,6 +93,43 @@ components:
         minLength: 3
         maxLength: 250
         pattern: ^([\x20-\xFF]{1,250})$
+        default: "default"
+
+    page:
+      name: page
+      description: >
+        Numero della pagina da visualizzare. 
+        Default: 1
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    size:
+      name: size
+      description: >
+        Numero massimo di risultati per pagina. 
+        Default: 1
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    onlyChildren:
+      name: onlyChildren
+      description: >
+        Se valorizzato a `true`, restituisce solo i figli delle PA, 
+        altrimenti restituisce tutti i risultati. 
+        Default: false.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
 
   securitySchemes:
     ApiKeyAuth:
