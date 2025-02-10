@@ -4,9 +4,9 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.No
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.v1.dto.PaSummaryDto;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaNotificationsRequest;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaSummary;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.v1.dto.PaSummaryExtendedDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.v1.dto.PaSummaryExtendedResponseDto;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregistries.ExternalRegistriesClient;
 import org.junit.jupiter.api.Assertions;
@@ -20,9 +20,11 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+
+
 @ExtendWith(MockitoExtension.class)
 class InfoPaServiceImplTest {
 
@@ -37,6 +39,8 @@ class InfoPaServiceImplTest {
 
     private final PaSummaryDto expectedPaSummary = new PaSummaryDto();
     private final NotificationSearchResponseDto expectedNotificationSearchResponse = new NotificationSearchResponseDto();
+    private final PaSummaryExtendedResponseDto paSummaryExtendedResponseDto = new PaSummaryExtendedResponseDto();
+
 
     @BeforeEach
     public void setUp(){
@@ -57,6 +61,13 @@ class InfoPaServiceImplTest {
         notificationSearchRowDto.setRequestAcceptedAt(Instant.parse("2023-09-29T14:03:02.807361187Z"));
 
         expectedNotificationSearchResponse.setResultsPage(List.of(notificationSearchRowDto));
+
+        List<PaSummaryExtendedDto> paSummaryExtendedDtoList = new ArrayList<>();
+        PaSummaryExtendedDto paSummaryExtendedDto = new PaSummaryExtendedDto();
+        paSummaryExtendedDto.setId("0");
+        paSummaryExtendedDto.setName("Comune di Firenze");
+        paSummaryExtendedDtoList.add(paSummaryExtendedDto);
+        paSummaryExtendedResponseDto.setContent(paSummaryExtendedDtoList);
     }
 
     @Test
@@ -70,6 +81,53 @@ class InfoPaServiceImplTest {
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(expectedPaSummary.getId(), actual.getId());
         Assertions.assertEquals(expectedPaSummary.getName(), actual.getName());
+    }
+
+    @Test
+    void getExtendedListOfOnboardedPA(){
+        // Given & When
+        Mockito.when(this.externalRegistriesClient.extendedListOnboardedPa("Comune", false, 1, 10))
+                .thenReturn(Mono.just(paSummaryExtendedResponseDto));
+
+        // Then
+        PaSummaryExtendedResponse paSummaryExtendedResponse = this.infoPaService.getExtendedListOfOnboardedPA(null, "Comune", false, 1, 10)
+                .block();
+
+        Assertions.assertNotNull(paSummaryExtendedResponse);
+        Assertions.assertEquals(paSummaryExtendedResponseDto.getContent().get(0).getId(), paSummaryExtendedResponse.getContent().get(0).getId());
+        Assertions.assertEquals(paSummaryExtendedResponseDto.getContent().get(0).getName(), paSummaryExtendedResponse.getContent().get(0).getName());
+    }
+
+    @Test
+    void getExtendedListOfOnboardedPA_OnlyChildren() {
+        // When
+        Mockito.when(this.externalRegistriesClient.extendedListOnboardedPa("Comune", true, 1, 10))
+                .thenReturn(Mono.just(paSummaryExtendedResponseDto));
+
+        // Then
+        PaSummaryExtendedResponse paSummaryExtendedResponse = this.infoPaService.getExtendedListOfOnboardedPA(null, "Comune", true, 1, 10)
+                .block();
+
+        Assertions.assertNotNull(paSummaryExtendedResponse);
+        Assertions.assertFalse(paSummaryExtendedResponse.getContent().isEmpty());
+    }
+
+    @Test
+    void getExtendedListOfOnboardedPA_Pagination() {
+        // Given
+        Integer page = 2;
+        Integer size = 5;
+
+        Mockito.when(this.externalRegistriesClient.extendedListOnboardedPa("Comune", false, page, size))
+                .thenReturn(Mono.just(paSummaryExtendedResponseDto));
+
+        // When
+        PaSummaryExtendedResponse paSummaryExtendedResponse = this.infoPaService.getExtendedListOfOnboardedPA(null, "Comune", false, page, size)
+                .block();
+
+        // Then
+        Assertions.assertNotNull(paSummaryExtendedResponse);
+        Assertions.assertFalse(paSummaryExtendedResponse.getContent().isEmpty());
     }
 
     @Test
