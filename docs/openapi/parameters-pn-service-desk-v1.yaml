@@ -93,7 +93,6 @@ components:
         minLength: 3
         maxLength: 250
         pattern: ^([\x20-\xFF]{1,250})$
-        default: "default"
 
     page:
       name: page
@@ -117,7 +116,7 @@ components:
       schema:
         type: integer
         minimum: 1
-        default: 1
+        default: 10
 
     onlyChildren:
       name: onlyChildren
