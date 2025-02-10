@@ -38,7 +38,7 @@ public class ExternalRegistriesClientImpl implements ExternalRegistriesClient {
      * @param onlyChildren  If true, retrieves only child institutions; otherwise, retrieves both parents and children.
      * @param page          The page number to retrieve (1-based index). If null, defaults to the first page.
      * @param size          The number of items per page. If null, a default size is used.
-     * @return A {@link Mono} emitting a {@link PaSummaryExtendedResponseDto} containing the paginated list of PAs.
+     * @return A {@link Mono} emitting a {@link PaSummaryExtendedResponseDto} containing the paginated list of PA.
      */
     @Override
     public Mono<PaSummaryExtendedResponseDto> extendedListOnboardedPa(String paNameFilter, Boolean onlyChildren, Integer page, Integer size) {
