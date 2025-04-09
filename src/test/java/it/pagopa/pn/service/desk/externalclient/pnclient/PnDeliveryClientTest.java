@@ -18,7 +18,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
     @Autowired
     private PnDeliveryClient pnDeliveryClient;
     
-    private final SentNotificationV23Dto expectedNotification = new SentNotificationV23Dto();
+    private final SentNotificationV25Dto expectedNotification = new SentNotificationV25Dto();
     private final NotificationSearchResponseDto expectedNotificationSearchResponse = new NotificationSearchResponseDto();
     private final NotificationAttachmentDownloadMetadataResponseDto expectedNotificationAttachment = new NotificationAttachmentDownloadMetadataResponseDto();
 
@@ -73,7 +73,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
                 "Comune di Palermo",
                 Instant.parse("2023-09-29T14:02:08.670718277Z"),
                 "Test-di-carico",
-                NotificationStatusDto.VIEWED,
+                NotificationStatusV26Dto.VIEWED,
                 List.of("GLLGLL64B15G702I"),
                 Instant.parse("2023-09-29T14:03:02.807361187Z")
         ));
@@ -83,7 +83,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
                 "Comune di Palermo",
                 Instant.parse("2023-09-29T14:02:08.203039228Z"),
                 "Test-di-carico",
-                NotificationStatusDto.VIEWED,
+                NotificationStatusV26Dto.VIEWED,
                 List.of("GLLGLL64B15G702I"),
                 Instant.parse("2023-09-29T14:03:10.91919327Z")
         ));
@@ -110,7 +110,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
 
     @Test
     void getSentNotificationPrivate(){
-        SentNotificationV23Dto actual = this.pnDeliveryClient
+        SentNotificationV25Dto actual = this.pnDeliveryClient
                 .getSentNotificationPrivate("1234").block();
 
         Assertions.assertNotNull(actual);
@@ -173,7 +173,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
         return document;
     }
 
-    private NotificationSearchRowDto getNotificationSearchRow(String iun, String paProtocolNumber, String sender, Instant sentAt, String subject, NotificationStatusDto notificationStatus, List<String> recipients, Instant requestAcceptedAt) {
+    private NotificationSearchRowDto getNotificationSearchRow(String iun, String paProtocolNumber, String sender, Instant sentAt, String subject, NotificationStatusV26Dto notificationStatus, List<String> recipients, Instant requestAcceptedAt) {
         NotificationSearchRowDto notificationSearchRowDto = new NotificationSearchRowDto();
         notificationSearchRowDto.setIun(iun);
         notificationSearchRowDto.setPaProtocolNumber(paProtocolNumber);

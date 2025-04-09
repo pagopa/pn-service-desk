@@ -3,13 +3,13 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationRecipientV23Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationRecipientV24Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV23Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV26Dto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV26Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV27Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV27Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoV21Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
@@ -74,7 +74,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getStatusCode()));
                                 })
                                 .map(notificationHistoryResponseDto -> NotificationAndMessageMapper
-                                        .getNotification(notificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto, TimelineElementCategoryV26Dto.SEND_COURTESY_MESSAGE, getIndexTaxId(request.getTaxId(), notificationSearchRowDto.getRecipients())))
+                                        .getNotification(notificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto, TimelineElementCategoryV27Dto.SEND_COURTESY_MESSAGE, getIndexTaxId(request.getTaxId(), notificationSearchRowDto.getRecipients())))
                                 )
                 )
                 .collectList()
@@ -100,8 +100,8 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @NotNull
-    private static List<TimelineElementV26Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, TimelineElementCategoryV26Dto category,  Integer indexTaxId) {
-        List<TimelineElementV26Dto> filteredElements = new ArrayList<>();
+    private static List<TimelineElementV27Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, TimelineElementCategoryV27Dto category,  Integer indexTaxId) {
+        List<TimelineElementV27Dto> filteredElements = new ArrayList<>();
         if (notificationHistoryResponseDto.getTimeline() != null) {
             filteredElements = notificationHistoryResponseDto.getTimeline()
                     .stream()
@@ -155,7 +155,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 );
     }
 
-    private Mono<SentNotificationV23Dto> checkTaxId(SentNotificationV23Dto sentNotificationV21Dto, String taxId) {
+    private Mono<SentNotificationV25Dto> checkTaxId(SentNotificationV25Dto sentNotificationV21Dto, String taxId) {
         boolean taxIdMatch = sentNotificationV21Dto.getRecipients()
                 .stream()
                 .anyMatch(notificationRecipientV21Dto -> notificationRecipientV21Dto.getTaxId().equalsIgnoreCase(taxId));
@@ -167,7 +167,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         }
     }
 
-    private Mono<NotificationHistoryResponseDto> filterElementFromTaxId(NotificationHistoryResponseDto response, SearchNotificationsRequest request, SentNotificationV23Dto sentNotificationV21Dto) {
+    private Mono<NotificationHistoryResponseDto> filterElementFromTaxId(NotificationHistoryResponseDto response, SearchNotificationsRequest request, SentNotificationV25Dto sentNotificationV21Dto) {
         if (request == null) return Mono.just(response);
         return getIndexTaxIdFromSentNotification(request.getTaxId(), sentNotificationV21Dto.getRecipients())
                 .map(indexTaxId -> {
@@ -177,7 +177,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         });
     }
 
-    public Mono<Integer> getIndexTaxIdFromSentNotification(String taxId, List<NotificationRecipientV23Dto> notificationRecipientV21Dto) {
+    public Mono<Integer> getIndexTaxIdFromSentNotification(String taxId, List<NotificationRecipientV24Dto> notificationRecipientV21Dto) {
         return Flux.fromIterable(notificationRecipientV21Dto)
                 .index()
                 .filter(tuple -> tuple.getT2().getTaxId().equals(taxId))
@@ -215,7 +215,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @NotNull
-    private Flux<Document> getDocuments(String iun, Tuple2<String, SentNotificationV23Dto> internalIdAndSentNotificationV23Dto, DocumentsResponse response, AtomicInteger documentsSize) {
+    private Flux<Document> getDocuments(String iun, Tuple2<String, SentNotificationV25Dto> internalIdAndSentNotificationV23Dto, DocumentsResponse response, AtomicInteger documentsSize) {
         if (!isNotificationCancelled(internalIdAndSentNotificationV23Dto.getT2(), iun)) {
             response.setDocumentsAvailable(true);
             return Flux.fromIterable(internalIdAndSentNotificationV23Dto.getT2().getDocuments())
@@ -266,7 +266,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 });
     }
 
-    private boolean isNotificationCancelled(SentNotificationV23Dto sentNotificationV21Dto, String iun) {
+    private boolean isNotificationCancelled(SentNotificationV25Dto sentNotificationV21Dto, String iun) {
         AtomicBoolean cancellationTimelineIsPresent = new AtomicBoolean();
         return pnDeliveryPushClient.getNotificationHistory(iun, sentNotificationV21Dto.getRecipients().size(), sentNotificationV21Dto.getSentAt())
                 .onErrorResume(WebClientResponseException.class, exception -> {
@@ -282,7 +282,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     private static boolean cancellationTimelineIsPresent(String iun, NotificationHistoryResponseDto notificationHistoryResponseDto, AtomicBoolean cancellationTimelineIsPresent) {
-        var cancellationRequestCategory = TimelineElementCategoryV26Dto.NOTIFICATION_CANCELLATION_REQUEST;
+        var cancellationRequestCategory = TimelineElementCategoryV27Dto.NOTIFICATION_CANCELLATION_REQUEST;
         var cancellationRequestTimeline = notificationHistoryResponseDto.getTimeline().stream()
                 .filter(timelineElement -> cancellationRequestCategory.toString().equals(timelineElement.getCategory().toString()))
                 .findFirst();
@@ -302,7 +302,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 .doOnNext(response -> logEvent.generateSuccess("getNotificationRecipientDetail response = {}", response).log());
     }
 
-    private Mono<SentNotificationV23Dto> callSentNotificationPrivate(String iun, PnAuditLogEvent logEvent) {
+    private Mono<SentNotificationV25Dto> callSentNotificationPrivate(String iun, PnAuditLogEvent logEvent) {
         return this.pnDeliveryClient.getSentNotificationPrivate(iun)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("An error occurred while calling the service to obtain sent notifications: ", exception);

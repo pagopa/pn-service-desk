@@ -3,6 +3,7 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.*;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationStatusV26Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.DetailDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoV21Dto;
@@ -125,7 +126,7 @@ class NotificationAndMessageServiceImplTest  {
 
     @Test
     void getTimelineOfIUNTest(){
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV23Dto()));
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV25Dto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getHistory()));
 
         TimelineResponse response = notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1", null).block();
@@ -149,7 +150,7 @@ class NotificationAndMessageServiceImplTest  {
     @Test
     void getTimelineOfIUNPnDeliveryPushClientError(){
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, ERROR_ON_DELIVERY_PUSH_CLIENT.getMessage());
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV23Dto()));
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV25Dto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.error(pnGenericException));
 
         StepVerifier.create(notificationAndMessageService.getTimelineOfIUN("test", "PRVZ-NZKM-JEDK-202309-A-1", null))
@@ -160,7 +161,7 @@ class NotificationAndMessageServiceImplTest  {
     @Test
     void getDocumentsOfIunTest (){
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("PF-4fc75df3-0913-407e-bdaa-e50329708b7d"));
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV23Dto()));
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV25Dto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getHistory()));
         DocumentsRequest request = new DocumentsRequest();
         request.setRecipientType(RecipientType.PF);
@@ -173,7 +174,7 @@ class NotificationAndMessageServiceImplTest  {
     @Test
     void getDocumentsOfIunNotificationCancelledTest (){
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("PF-4fc75df3-0913-407e-bdaa-e50329708b7d"));
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV23Dto()));
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV25Dto()));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getHistoryNotificationCancellation()));
         DocumentsRequest request = new DocumentsRequest();
         request.setRecipientType(RecipientType.PF);
@@ -199,7 +200,7 @@ class NotificationAndMessageServiceImplTest  {
 
     @Test
     void getNotificationFromIUNTest (){
-        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV23Dto()));
+        Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(getSentNotificationV25Dto()));
         NotificationDetailResponse response = notificationAndMessageService.getNotificationFromIUN("PRVZ-NZKM-JEDK-202309-A-1").block();
         Assertions.assertNotNull(response);
         Assertions.assertEquals("FRMTTR76M06B715E", response.getSenderTaxId());
@@ -266,7 +267,7 @@ class NotificationAndMessageServiceImplTest  {
         List<NotificationSearchRowDto> notificationSearchRowDtoList = new ArrayList<>();
         NotificationSearchRowDto notificationSearchRowDto = new NotificationSearchRowDto();
         notificationSearchRowDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto
-                .NotificationStatusDto.ACCEPTED);
+                .NotificationStatusV26Dto.ACCEPTED);
         notificationSearchRowDto.setIun("iun123");
         notificationSearchRowDto.setGroup("group");
         notificationSearchRowDto.setSender("sender");
@@ -291,11 +292,11 @@ class NotificationAndMessageServiceImplTest  {
         NotificationHistoryResponseDto notificationHistoryResponseDto = new NotificationHistoryResponseDto();
         notificationHistoryResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
 
-        List<TimelineElementV26Dto> timelineElementDtoList = new ArrayList<>();
-        var timelineElementDto = new TimelineElementV26Dto();
-        timelineElementDto.setCategory(TimelineElementCategoryV26Dto.SEND_COURTESY_MESSAGE);
+        List<TimelineElementV27Dto> timelineElementDtoList = new ArrayList<>();
+        var timelineElementDto = new TimelineElementV27Dto();
+        timelineElementDto.setCategory(TimelineElementCategoryV27Dto.SEND_COURTESY_MESSAGE);
         timelineElementDto.setElementId("elementId");
-        timelineElementDto.setDetails(new TimelineElementDetailsV26Dto());
+        timelineElementDto.setDetails(new TimelineElementDetailsV27Dto());
         timelineElementDto.setTimestamp(Instant.now());
 
         List<LegalFactListElementV20Dto> legalFactListElementDtoList = new ArrayList<>();
@@ -322,20 +323,20 @@ class NotificationAndMessageServiceImplTest  {
         return notificationHistoryResponseDto;
     }
 
-    private SentNotificationV23Dto getSentNotificationV23Dto (){
-        SentNotificationV23Dto sentNotificationV21Dto = new SentNotificationV23Dto();
+    private SentNotificationV25Dto getSentNotificationV25Dto (){
+        SentNotificationV25Dto sentNotificationV21Dto = new SentNotificationV25Dto();
         sentNotificationV21Dto.setSentAt(Instant.now());
-        NotificationRecipientV23Dto notificationRecipientV21Dto = new NotificationRecipientV23Dto();
-        notificationRecipientV21Dto.setRecipientType(NotificationRecipientV23Dto.RecipientTypeEnum.PF);
+        NotificationRecipientV24Dto notificationRecipientV21Dto = new NotificationRecipientV24Dto();
+        notificationRecipientV21Dto.setRecipientType(NotificationRecipientV24Dto.RecipientTypeEnum.PF);
         notificationRecipientV21Dto.setPayments(new ArrayList<>());
-        sentNotificationV21Dto.setPhysicalCommunicationType(SentNotificationV23Dto.PhysicalCommunicationTypeEnum.AR_REGISTERED_LETTER);
+        sentNotificationV21Dto.setPhysicalCommunicationType(SentNotificationV25Dto.PhysicalCommunicationTypeEnum.AR_REGISTERED_LETTER);
         sentNotificationV21Dto.setSenderDenomination("comune");
         sentNotificationV21Dto.setSenderTaxId("FRMTTR76M06B715E");
         sentNotificationV21Dto.setSentAt(Instant.now());
         sentNotificationV21Dto.setPaymentExpirationDate("31/12/2023");
         sentNotificationV21Dto.setRecipients(List.of(
-                new NotificationRecipientV23Dto()
-                        .recipientType(NotificationRecipientV23Dto.RecipientTypeEnum.PF)
+                new NotificationRecipientV24Dto()
+                        .recipientType(NotificationRecipientV24Dto.RecipientTypeEnum.PF)
                         .taxId("DVNLRD52D15M059P")
                         .denomination("Leo  denomination")
                         .payments(List.of(
@@ -349,11 +350,11 @@ class NotificationAndMessageServiceImplTest  {
     private NotificationHistoryResponseDto getHistory (){
         NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
         historyResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
-        var timelineElementDto = new TimelineElementV26Dto();
-        timelineElementDto.setCategory(TimelineElementCategoryV26Dto.REQUEST_ACCEPTED);
-        timelineElementDto.setDetails(new TimelineElementDetailsV26Dto());
+        var timelineElementDto = new TimelineElementV27Dto();
+        timelineElementDto.setCategory(TimelineElementCategoryV27Dto.REQUEST_ACCEPTED);
+        timelineElementDto.setDetails(new TimelineElementDetailsV27Dto());
         timelineElementDto.setTimestamp(Instant.now());
-        List<TimelineElementV26Dto> dtoList = new ArrayList<>();
+        List<TimelineElementV27Dto> dtoList = new ArrayList<>();
         dtoList.add(timelineElementDto);
         historyResponseDto.setTimeline(dtoList);
         return historyResponseDto;
@@ -362,11 +363,11 @@ class NotificationAndMessageServiceImplTest  {
     private NotificationHistoryResponseDto getHistoryNotificationCancellation (){
         NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
         historyResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
-        var timelineElementDto = new TimelineElementV26Dto();
-        timelineElementDto.setCategory(TimelineElementCategoryV26Dto.NOTIFICATION_CANCELLATION_REQUEST);
-        timelineElementDto.setDetails(new TimelineElementDetailsV26Dto());
+        var timelineElementDto = new TimelineElementV27Dto();
+        timelineElementDto.setCategory(TimelineElementCategoryV27Dto.NOTIFICATION_CANCELLATION_REQUEST);
+        timelineElementDto.setDetails(new TimelineElementDetailsV27Dto());
         timelineElementDto.setTimestamp(Instant.now());
-        List<TimelineElementV26Dto> dtoList = new ArrayList<>();
+        List<TimelineElementV27Dto> dtoList = new ArrayList<>();
         dtoList.add(timelineElementDto);
         historyResponseDto.setTimeline(dtoList);
         return historyResponseDto;
@@ -377,7 +378,7 @@ class NotificationAndMessageServiceImplTest  {
     void getNotificationRecipientDetailOK(){
         var iun = "PRVZ-NZKM-JEDK-202309-A-1";
         var taxId = "DVNLRD52D15M059P";
-        var notification = getSentNotificationV23Dto();
+        var notification = getSentNotificationV25Dto();
         var pagoPaPaymentExpected = notification.getRecipients().get(0).getPayments().get(0).getPagoPa();
         var creditorTaxIdExpected = pagoPaPaymentExpected.getCreditorTaxId();
         var noticeCodeExpected = pagoPaPaymentExpected.getNoticeCode();
@@ -420,7 +421,7 @@ class NotificationAndMessageServiceImplTest  {
     void getNotificationRecipientDetailKOForTaxId(){
         var iun = "PRVZ-NZKM-JEDK-202309-A-1";
         var taxId = "AAAAAAAAAAAAAA";
-        var notification = getSentNotificationV23Dto();
+        var notification = getSentNotificationV25Dto();
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(iun)).thenReturn(Mono.just(notification));
         StepVerifier.create(notificationAndMessageService.getNotificationRecipientDetail(iun, taxId))
                 .expectErrorMatches(throwable -> throwable instanceof PnGenericException e && e.getHttpStatus().equals(HttpStatus.BAD_REQUEST))
@@ -432,7 +433,7 @@ class NotificationAndMessageServiceImplTest  {
     void getNotificationRecipientDetailPaymentInfoHttpKO(){
         var iun = "PRVZ-NZKM-JEDK-202309-A-1";
         var taxId = "DVNLRD52D15M059P";
-        var notification = getSentNotificationV23Dto();
+        var notification = getSentNotificationV25Dto();
         var pagoPaPaymentExpected = notification.getRecipients().get(0).getPayments().get(0).getPagoPa();
         var creditorTaxIdExpected = pagoPaPaymentExpected.getCreditorTaxId();
         var noticeCodeExpected = pagoPaPaymentExpected.getNoticeCode();
@@ -462,7 +463,7 @@ class NotificationAndMessageServiceImplTest  {
     void getNotificationRecipientDetailPayment200WithErrorField(){
         var iun = "PRVZ-NZKM-JEDK-202309-A-1";
         var taxId = "DVNLRD52D15M059P";
-        var notification = getSentNotificationV23Dto();
+        var notification = getSentNotificationV25Dto();
         var pagoPaPaymentExpected = notification.getRecipients().get(0).getPayments().get(0).getPagoPa();
         var creditorTaxIdExpected = pagoPaPaymentExpected.getCreditorTaxId();
         var noticeCodeExpected = pagoPaPaymentExpected.getNoticeCode();

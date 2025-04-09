@@ -2,7 +2,7 @@ package it.pagopa.pn.service.desk.service.impl;
 
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusV26Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.v1.dto.PaSummaryDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaNotificationsRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaSummary;
@@ -52,7 +52,7 @@ class InfoPaServiceImplTest {
         notificationSearchRowDto.setSender("Comune di Palermo");
         notificationSearchRowDto.setSentAt(Instant.parse("2023-09-29T14:02:08.670718277Z"));
         notificationSearchRowDto.setSubject("Test-di-carico");
-        notificationSearchRowDto.setNotificationStatus(NotificationStatusDto.VIEWED);
+        notificationSearchRowDto.setNotificationStatus(NotificationStatusV26Dto.VIEWED);
         notificationSearchRowDto.setRecipients(List.of("GLLGLL64B15G702I"));
         notificationSearchRowDto.setRequestAcceptedAt(Instant.parse("2023-09-29T14:03:02.807361187Z"));
 

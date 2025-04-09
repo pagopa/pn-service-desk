@@ -8,7 +8,7 @@ import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationAttachmentBodyRefDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationDocumentDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV23Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactCategoryV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactsIdV20Dto;
@@ -79,7 +79,7 @@ class ValidationOperationActionImplTest {
 
     private final PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
     private final ResponsePaperNotificationFailedDtoDto responsePaperNotificationFailedDtoDto = new ResponsePaperNotificationFailedDtoDto();
-    private final SentNotificationV23Dto sentNotificationDto = new SentNotificationV23Dto();
+    private final SentNotificationV25Dto sentNotificationDto = new SentNotificationV25Dto();
     private final NotificationDocumentDto notificationDocumentDto = new NotificationDocumentDto();
     private final List<NotificationDocumentDto> notifications = new ArrayList<>();
     private final NotificationAttachmentBodyRefDto notificationAttachmentBodyRefDto = new NotificationAttachmentBodyRefDto();
