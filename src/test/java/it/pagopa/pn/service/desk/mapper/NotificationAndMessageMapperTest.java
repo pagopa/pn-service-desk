@@ -1,11 +1,13 @@
 package it.pagopa.pn.service.desk.mapper;
 
+import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationStatusV26Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -105,6 +107,64 @@ class NotificationAndMessageMapperTest {
         assertThat(response.getTimeline()).hasSize(2);
         var categories = response.getTimeline().stream().map(TimelineElement::getCategory).toList();
         assertThat(categories).contains(TimelineElementCategory.REFINEMENT);
+    }
+
+    @Test
+    void getNotificationRecipientDetailResponseTest() {
+        SentNotificationV25Dto sentNotification = getSentNotificationDto();
+
+        String taxId = "TAX123";
+
+        NotificationRecipientDetailResponse response = NotificationAndMessageMapper.getNotificationRecipientDetailResponse(sentNotification, taxId);
+
+        assertNotNull(response);
+        assertEquals("PA123", response.getPaProtocolNumber());
+        assertEquals("Test Subject", response.getSubject());
+        assertEquals("Test Abstract", response.getAbstract());
+        assertEquals(1000, response.getAmount());
+        assertEquals("John Doe", response.getRecipient().getDenomination());
+        assertEquals("TAX123", response.getRecipient().getTaxId());
+        assertEquals(NotificationRecipientDetailResponse.PhysicalCommunicationTypeEnum.REGISTERED_LETTER_890, response.getPhysicalCommunicationType());
+    }
+
+    @Test
+    void getNotificationRecipientDetailResponseThrowsExceptionWhenTaxIdNotFound() {
+        SentNotificationV25Dto sentNotification = getSentNotificationDto();
+        sentNotification.setRecipients(getNotificationRecipientList());
+
+        PnGenericException exception = assertThrows(PnGenericException.class, () ->
+                NotificationAndMessageMapper.getNotificationRecipientDetailResponse(sentNotification, null)
+        );
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getHttpStatus());
+    }
+
+    private List<NotificationRecipientV24Dto> getNotificationRecipientList() {
+        NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
+        recipient.setRecipientType(NotificationRecipientV24Dto.RecipientTypeEnum.PF);
+        recipient.payments(new ArrayList<>());
+        recipient.setDenomination("John Doe");
+        recipient.setTaxId("TAX123");
+        recipient.setPayments(new ArrayList<>());
+
+        List<NotificationRecipientV24Dto> recipients = new ArrayList<>();
+        recipients.add(recipient);
+        return recipients;
+    }
+
+    private SentNotificationV25Dto getSentNotificationDto() {
+        SentNotificationV25Dto sentNotification = new SentNotificationV25Dto();
+        sentNotification.setPaProtocolNumber("PA123");
+        sentNotification.setSubject("Test Subject");
+        sentNotification.setAbstract("Test Abstract");
+        sentNotification.setAmount(1000);
+
+        sentNotification.setRecipients(getNotificationRecipientList());
+
+        sentNotification.setDocuments(new ArrayList<>());
+        sentNotification.setPhysicalCommunicationType(SentNotificationV25Dto.PhysicalCommunicationTypeEnum.REGISTERED_LETTER_890);
+        sentNotification.setSenderDenomination("Sender Name");
+        sentNotification.setSenderTaxId("SENDER123");
+        return sentNotification;
     }
 
 }
