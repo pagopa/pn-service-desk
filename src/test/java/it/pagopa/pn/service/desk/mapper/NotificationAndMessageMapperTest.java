@@ -5,6 +5,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationStatusV26Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -136,6 +137,53 @@ class NotificationAndMessageMapperTest {
                 NotificationAndMessageMapper.getNotificationRecipientDetailResponse(sentNotification, null)
         );
         assertEquals(HttpStatus.BAD_REQUEST, exception.getHttpStatus());
+    }
+
+    @Test
+    void getTimelineFiltersByCategory() {
+        // Create timeline elements with different categories
+        TimelineElementV27Dto element1 = new TimelineElementV27Dto();
+        element1.setCategory(TimelineElementCategoryV27Dto.REQUEST_ACCEPTED);
+        element1.setEventTimestamp(Instant.now());
+        element1.setDetails(new TimelineElementDetailsV27Dto());
+
+        TimelineElementV27Dto element2 = new TimelineElementV27Dto();
+        element2.setCategory(TimelineElementCategoryV27Dto.REFINEMENT);
+        element2.setEventTimestamp(Instant.now().plusSeconds(10));
+        element2.setDetails(new TimelineElementDetailsV27Dto());
+
+        TimelineElementV27Dto element3 = new TimelineElementV27Dto();
+        element3.setCategory(TimelineElementCategoryV27Dto.SEND_DIGITAL_DOMICILE);
+        element3.setEventTimestamp(Instant.now().plusSeconds(20));
+        element3.setDetails(new TimelineElementDetailsV27Dto());
+
+        // Add elements to the timeline
+        List<TimelineElementV27Dto> timeline = new ArrayList<>();
+        timeline.add(element1);
+        timeline.add(element2);
+        timeline.add(element3);
+
+        historyResponseDto.setTimeline(timeline);
+        Assertions.assertNotNull(historyResponseDto.getTimeline());
+        assertThat(historyResponseDto.getTimeline()).hasSize(3);
+
+        TimelineResponse response = NotificationAndMessageMapper.getTimeline(historyResponseDto);
+
+        Assertions.assertNotNull(response);
+        assertThat(response.getTimeline()).isNotEmpty();
+
+        // Verify that only elements with the specified category are included
+        List<TimelineElementCategoryV27Dto> expectedCategories = List.of(
+                TimelineElementCategoryV27Dto.REQUEST_ACCEPTED,
+                TimelineElementCategoryV27Dto.REFINEMENT,
+                TimelineElementCategoryV27Dto.SEND_DIGITAL_DOMICILE
+        );
+
+        var actualCategories = response.getTimeline().stream()
+                .map(timelineElement -> TimelineElementCategoryV27Dto.fromValue(timelineElement.getCategory().getValue()))
+                .toList();
+
+        assertThat(actualCategories).containsAll(expectedCategories);
     }
 
     private List<NotificationRecipientV24Dto> getNotificationRecipientList() {
