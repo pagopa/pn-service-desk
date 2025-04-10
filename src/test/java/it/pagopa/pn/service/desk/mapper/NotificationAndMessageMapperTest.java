@@ -141,49 +141,62 @@ class NotificationAndMessageMapperTest {
 
     @Test
     void getTimelineFiltersByCategory() {
-        // Create timeline elements with different categories
-        TimelineElementV27Dto element1 = new TimelineElementV27Dto();
-        element1.setCategory(TimelineElementCategoryV27Dto.REQUEST_ACCEPTED);
-        element1.setEventTimestamp(Instant.now());
-        element1.setDetails(new TimelineElementDetailsV27Dto());
-
-        TimelineElementV27Dto element2 = new TimelineElementV27Dto();
-        element2.setCategory(TimelineElementCategoryV27Dto.REFINEMENT);
-        element2.setEventTimestamp(Instant.now().plusSeconds(10));
-        element2.setDetails(new TimelineElementDetailsV27Dto());
-
-        TimelineElementV27Dto element3 = new TimelineElementV27Dto();
-        element3.setCategory(TimelineElementCategoryV27Dto.SEND_DIGITAL_DOMICILE);
-        element3.setEventTimestamp(Instant.now().plusSeconds(20));
-        element3.setDetails(new TimelineElementDetailsV27Dto());
-
-        // Add elements to the timeline
         List<TimelineElementV27Dto> timeline = new ArrayList<>();
-        timeline.add(element1);
-        timeline.add(element2);
-        timeline.add(element3);
+        List<TimelineElementCategoryV27Dto> categories = getFilteredCategories();
+        for (TimelineElementCategoryV27Dto category : categories) {
+            TimelineElementV27Dto element = new TimelineElementV27Dto();
+            element.setCategory(category);
+            element.setEventTimestamp(Instant.now());
+            element.setDetails(new TimelineElementDetailsV27Dto());
+            timeline.add(element);
+        }
 
+        // Set the timeline in the historyResponseDto
         historyResponseDto.setTimeline(timeline);
-        Assertions.assertNotNull(historyResponseDto.getTimeline());
-        assertThat(historyResponseDto.getTimeline()).hasSize(3);
 
+        // Assertions
+        Assertions.assertNotNull(historyResponseDto.getTimeline());
+        assertThat(historyResponseDto.getTimeline()).hasSize(categories.size());
+
+        // Act
         TimelineResponse response = NotificationAndMessageMapper.getTimeline(historyResponseDto);
 
+        // Assert
         Assertions.assertNotNull(response);
         assertThat(response.getTimeline()).isNotEmpty();
 
-        // Verify that only elements with the specified category are included
-        List<TimelineElementCategoryV27Dto> expectedCategories = List.of(
-                TimelineElementCategoryV27Dto.REQUEST_ACCEPTED,
-                TimelineElementCategoryV27Dto.REFINEMENT,
-                TimelineElementCategoryV27Dto.SEND_DIGITAL_DOMICILE
-        );
-
-        var actualCategories = response.getTimeline().stream()
+        // Verify that all categories are included in the response
+        List<TimelineElementCategoryV27Dto> actualCategories = response.getTimeline().stream()
                 .map(timelineElement -> TimelineElementCategoryV27Dto.fromValue(timelineElement.getCategory().getValue()))
                 .toList();
 
-        assertThat(actualCategories).containsAll(expectedCategories);
+        assertThat(actualCategories).containsAll(categories);
+    }
+
+    private static List<TimelineElementCategoryV27Dto> getFilteredCategories() {
+        return List.of(
+                TimelineElementCategoryV27Dto.REQUEST_ACCEPTED,
+                TimelineElementCategoryV27Dto.SEND_COURTESY_MESSAGE,
+                TimelineElementCategoryV27Dto.SCHEDULE_DIGITAL_WORKFLOW,
+                TimelineElementCategoryV27Dto.SEND_DIGITAL_DOMICILE,
+                TimelineElementCategoryV27Dto.SEND_DIGITAL_PROGRESS,
+                TimelineElementCategoryV27Dto.SEND_DIGITAL_FEEDBACK,
+                TimelineElementCategoryV27Dto.DIGITAL_SUCCESS_WORKFLOW,
+                TimelineElementCategoryV27Dto.DIGITAL_FAILURE_WORKFLOW,
+                TimelineElementCategoryV27Dto.ANALOG_FAILURE_WORKFLOW,
+                TimelineElementCategoryV27Dto.SEND_SIMPLE_REGISTERED_LETTER,
+                TimelineElementCategoryV27Dto.NOTIFICATION_VIEWED,
+                TimelineElementCategoryV27Dto.PREPARE_ANALOG_DOMICILE_FAILURE,
+                TimelineElementCategoryV27Dto.SEND_ANALOG_DOMICILE,
+                TimelineElementCategoryV27Dto.SEND_ANALOG_PROGRESS,
+                TimelineElementCategoryV27Dto.SEND_ANALOG_FEEDBACK,
+                TimelineElementCategoryV27Dto.NOTIFICATION_RADD_RETRIEVED,
+                TimelineElementCategoryV27Dto.COMPLETELY_UNREACHABLE,
+                TimelineElementCategoryV27Dto.AAR_GENERATION,
+                TimelineElementCategoryV27Dto.NOT_HANDLED,
+                TimelineElementCategoryV27Dto.REFINEMENT,
+                TimelineElementCategoryV27Dto.ANALOG_WORKFLOW_RECIPIENT_DECEASED
+        );
     }
 
     private List<NotificationRecipientV24Dto> getNotificationRecipientList() {
