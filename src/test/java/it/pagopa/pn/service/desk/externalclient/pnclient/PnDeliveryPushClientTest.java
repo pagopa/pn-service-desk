@@ -24,7 +24,7 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
 
     private static final String OPERATION_ID = "test12345";
 
-    private final TimelineElementV26Dto expectedTimeline = new TimelineElementV26Dto();
+    private final TimelineElementV27Dto expectedTimeline = new TimelineElementV27Dto();
 
     @Autowired
     private PnDeliveryPushClient pnDeliveryPushClient;
@@ -34,9 +34,9 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
         expectedTimeline.setElementId("SEND_DIGITAL.IUN_PRVZ-NZKM-JEDK-202309-A-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
         expectedTimeline.setTimestamp(Instant.parse("2023-09-29T14:04:11.354725545Z"));
         expectedTimeline.setEventTimestamp(Instant.parse("2023-09-29T14:04:11.354725545Z"));
-        expectedTimeline.setCategory(TimelineElementCategoryV26Dto.SEND_DIGITAL_DOMICILE);
+        expectedTimeline.setCategory(TimelineElementCategoryV27Dto.SEND_DIGITAL_DOMICILE);
 
-        var categoryV23Dto = new TimelineElementDetailsV26Dto();
+        var categoryV23Dto = new TimelineElementDetailsV27Dto();
         categoryV23Dto.setSendDate(Instant.parse("2023-09-29T14:04:01.033478852Z"));
         categoryV23Dto.setDigitalAddressSource(DigitalAddressSourceDto.PLATFORM);
         DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
