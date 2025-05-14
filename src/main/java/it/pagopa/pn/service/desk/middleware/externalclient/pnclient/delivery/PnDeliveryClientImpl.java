@@ -3,7 +3,7 @@ package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.api.InternalOnlyApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationAttachmentDownloadMetadataResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchResponseDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV23Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -16,7 +16,7 @@ public class PnDeliveryClientImpl implements PnDeliveryClient{
     private InternalOnlyApi internalOnlyApi;
 
     @Override
-    public Mono<SentNotificationV23Dto> getSentNotificationPrivate(String iun) {
+    public Mono<SentNotificationV25Dto> getSentNotificationPrivate(String iun) {
         return internalOnlyApi.getSentNotificationPrivate(iun);
     }
 

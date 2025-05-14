@@ -338,7 +338,7 @@
 							<typeMappings>
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/19f7bd16eec3b1951fbe453a028269ea0a041ace/docs/openapi/api-private.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/d120971effba9a36803d66d52714ba62364e5fa4/docs/openapi/api-private.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
@@ -365,7 +365,7 @@
                             <typeMappings>
                                 <typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
                             </typeMappings>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/b50003498afe6f95455169e048ac77c1cd8ce2e6/docs/openapi/api-private.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/7a4b6a8f2d61b13a47950cd3fe3b288fc2fdc0ba/docs/openapi/api-private.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
