@@ -1379,6 +1379,29 @@ components:
           maxLength: 10
       additionalProperties: false
 
+    CreateOperationDigitalRequest:
+      required:
+        - taxId
+        - digitalAddress
+        - ticketId
+      type: object
+      properties:
+        digitalAddress:
+          $ref: '#/components/schemas/DigitalAddress'
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+        ticketId:
+          type: string
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 32
+        ticketOperationId:
+          type: string
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 10
+      additionalProperties: false
+
     OperationsResponse:
       description: Reponse della creazione di un'operation
       type: object
