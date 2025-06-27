@@ -1356,7 +1356,7 @@ components:
           minimum: 0
       additionalProperties: false
 
-    CreateOperationRequest:
+    CreateOperationAnalogRequest:
       required:
         - taxId
         - address
@@ -1377,6 +1377,32 @@ components:
           type: string
           format: '/[^A-Za-z0-9]+/'
           maxLength: 10
+      additionalProperties: false
+
+    CreateActOperationRequest:
+      required:
+        - taxId
+        - address
+        - ticketId
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/ActDigitalAddress'
+        taxId:
+          type: string
+          maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+        ticketId:
+          type: string
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 32
+        ticketOperationId:
+          type: string
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 10
+        iun:
+          type: string
+          maxLength: 99999
       additionalProperties: false
 
     OperationsResponse:
@@ -1616,6 +1642,16 @@ components:
           description: "In caso di destinatario estero, diventa obbligatoria l’indicazione\
             \ della nazione di destinazione,  in standard UPU o altro standard condiviso."
       description: Indirizzo analogico
+
+    ActDigitalAddress:
+      required:
+        - emailAddress
+      properties:
+        emailAddress:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          maxLength: 99999
+          description: Indirizzo email del destinatario
 
     SDNotificationSummary:
       type: object
