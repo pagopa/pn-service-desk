@@ -1645,13 +1645,16 @@ components:
 
     ActDigitalAddress:
       required:
-        - emailAddress
+        - address
       properties:
-        emailAddress:
+        type:
+          type: string
+          description: Identifica il tipo di canale di comunicazione da usare
+        address:
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
-          maxLength: 99999
-          description: Indirizzo email del destinatario
+          maxLength: 256
+          description: Indirizzo del destinatario
 
     SDNotificationSummary:
       type: object
