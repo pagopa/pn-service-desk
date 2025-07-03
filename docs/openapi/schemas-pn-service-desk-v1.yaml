@@ -1356,7 +1356,7 @@ components:
           minimum: 0
       additionalProperties: false
 
-    CreateOperationAnalogRequest:
+    CreateOperationRequest:
       required:
         - taxId
         - address
@@ -1645,6 +1645,7 @@ components:
 
     ActDigitalAddress:
       required:
+        - type
         - address
       properties:
         type:
@@ -1852,3 +1853,12 @@ components:
               * `GENERIC_ERROR`: generic error.
           example: PAYMENT_UNAVAILABLE
           type: string
+          
+    Status:
+      type: string
+      description: >-
+        status dell'operation
+        es.:
+          OK - operazione eseguita
+          KO - operazione non andata a buon fine
+          PENDING - operazione presa in carico

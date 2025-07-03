@@ -93,7 +93,7 @@ paths:
               $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/CreateOperationRequest'
       responses:
         '201':
-          description: Creazione operazione andata a bon fine
+          description: Creazione operazione andata a buon fine
           content:
             application/json:
               schema:
@@ -130,7 +130,7 @@ paths:
               $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/CreateActOperationRequest'
       responses:
         '201':
-          description: Creazione operazione andata a bon fine
+          description: Creazione operazione andata a buon fine
           content:
             application/json:
               schema:
@@ -230,13 +230,14 @@ paths:
 
   '/service-desk/operation/{operationId}':
     get:
-      summary: operation path
-      description: dato l'operationId, restituisce una stringa
+      operationId: getOperationStatus
+      summary: API per reperire lo status di una operation
+      description: dato l'operationId, restituisce il suo stato
       tags:
         - Operation
       parameters:
         - name: operationId
-          description: Indica l'id dell'operazione a cui associare il video
+          description: Indica l'id dell'operazione di cui reperire lo stato
           in: path
           required: true
           schema:
@@ -262,7 +263,7 @@ paths:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'                    
         '404':
-          description: Operation API Not Found
+          description: Resource not found
           content:
             application/problem+json:
               schema:
