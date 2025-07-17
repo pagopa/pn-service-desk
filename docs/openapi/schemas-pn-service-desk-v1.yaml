@@ -1384,6 +1384,7 @@ components:
         - taxId
         - address
         - ticketId
+        - iun
       type: object
       properties:
         address:
@@ -1401,8 +1402,11 @@ components:
           format: '/[^A-Za-z0-9]+/'
           maxLength: 10
         iun:
+          description: Identificativo Univoco Notifica
           type: string
-          maxLength: 99999
+          minLength: 25
+          maxLength: 25
+          pattern: ^[A-Z]{4}-[A-Z]{4}-[A-Z]{4}-[0-9]{6}-[A-Z]{1}-[0-9]{1}$
       additionalProperties: false
 
     OperationsResponse:
