@@ -64,29 +64,57 @@ public class OperationsServiceImpl implements OperationsService {
     public Mono<OperationsResponse> createOperation(String xPagopaPnUid, CreateOperationRequest createOperationRequest) {
         log.debug("xPagopaPnUid = {}, createOperationRequest = {}, CreateOperation received input", xPagopaPnUid, createOperationRequest);
 
+        return handleCreateOperation(
+                xPagopaPnUid,
+                createOperationRequest,
+                createOperationRequest.getTaxId(),
+                req -> OperationMapper.getInitialOperation(req, UUID.randomUUID().toString()),
+                (req, operationId) -> AddressMapper.toEntity(req.getAddress(), operationId, cfn));
+    }
+
+    @Override
+    public Mono<OperationsResponse> createActOperation(String xPagopaPnUid, CreateActOperationRequest createActOperationRequest) {
+        log.debug("xPagopaPnUid = {}, createActOperationRequest = {}, CreateActOperation received input", xPagopaPnUid, createActOperationRequest);
+        return handleCreateOperation(
+                xPagopaPnUid,
+                createActOperationRequest,
+                createActOperationRequest.getTaxId(),
+                req -> OperationMapper.getInitialActOperation(req, UUID.randomUUID().toString()),
+                (req, operationId) -> AddressMapper.toActEntity(req.getAddress(), operationId, cfn));
+    }
+
+    private <T> Mono<OperationsResponse> handleCreateOperation(
+            String xPagopaPnUid,
+            T request,
+            String taxId,
+            java.util.function.Function<T, PnServiceDeskOperations> operationCreator,
+            java.util.function.BiFunction<T, String, PnServiceDeskAddress> addressCreator
+                                                               ) {
+
         OperationsResponse response = new OperationsResponse();
         NotificationRequest notificationRequest = new NotificationRequest();
-        notificationRequest.setTaxId(createOperationRequest.getTaxId());
+        notificationRequest.setTaxId(taxId);
         String randomUUID = UUID.randomUUID().toString();
 
         return notificationService.getUnreachableNotification(randomUUID, notificationRequest)
-                .flatMap(notificationsUnreachableResponse -> {
-                    log.debug("notificationsUnreachableResponse = {}, Are there unreachable notification?", notificationsUnreachableResponse);
-                    if(notificationsUnreachableResponse.getNotificationsCount().equals(1L)) {
-                        log.debug("notificationsUnreachableCount = {}, There are unreachable notification?", notificationsUnreachableResponse.getNotificationsCount());
-                        return dataVaultClient.anonymized(createOperationRequest.getTaxId())
-                                .map(recipientId -> OperationMapper.getInitialOperation(createOperationRequest, recipientId))
-                                .zipWhen(pnServiceDeskOperations -> {
-                                    PnServiceDeskAddress address = AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn);
-                                    return Mono.just(address);
-                                })
-                                .flatMap(this::checkAndSaveOperation)
-                                .map(operation -> response.operationId(operation.getOperationId()));
-                    }
-                    PnGenericException ex = new PnGenericException(NO_UNREACHABLE_NOTIFICATION,NO_UNREACHABLE_NOTIFICATION.getMessage());
-                    log.error("notificationsUnreachableCount = {}, There are not unreachable notification", notificationsUnreachableResponse.getNotificationsCount());
-                    return Mono.error(ex);
-                });
+                                  .flatMap(notificationsUnreachableResponse -> {
+                                      log.debug("notificationsUnreachableResponse = {}, Are there unreachable notification?", notificationsUnreachableResponse);
+                                      if (notificationsUnreachableResponse.getNotificationsCount().equals(1L)) {
+                                          log.debug("notificationsUnreachableCount = {}, There are unreachable notification?", notificationsUnreachableResponse.getNotificationsCount());
+
+                                          return dataVaultClient.anonymized(taxId)
+                                                                .map(recipientId -> operationCreator.apply(request))
+                                                                .zipWhen(pnServiceDeskOperations -> {
+                                                                    PnServiceDeskAddress address = addressCreator.apply(request, pnServiceDeskOperations.getOperationId());
+                                                                    return Mono.just(address);
+                                                                })
+                                                                .flatMap(this::checkAndSaveOperation)
+                                                                .map(operation -> response.operationId(operation.getOperationId()));
+                                      }
+                                      PnGenericException ex = new PnGenericException(NO_UNREACHABLE_NOTIFICATION, NO_UNREACHABLE_NOTIFICATION.getMessage());
+                                      log.error("notificationsUnreachableCount = {}, There are not unreachable notification", notificationsUnreachableResponse.getNotificationsCount());
+                                      return Mono.error(ex);
+                                  });
     }
 
     private Mono<PnServiceDeskOperations> checkAndSaveOperation(Tuple2<PnServiceDeskOperations, PnServiceDeskAddress> operationAndAddress){
