@@ -21,6 +21,8 @@ public class PnServiceDeskConfigs {
     private String deliveryPushBasePath;
     private String deliveryBasePath;
     private String paperChannelBasePath;
+    private String externalChannelBasePath;
+    private String externalChannelCxId;
     private String externalRegistriesBasePath;
     private String userAttributesBasePath;
     private String mandateBasePath;

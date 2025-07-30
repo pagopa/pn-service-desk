@@ -11,6 +11,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dt
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PaperChannelUpdateDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
 import it.pagopa.pn.service.desk.mapper.AttachmentMapper;
+import it.pagopa.pn.service.desk.mapper.ExternalChannelMapper;
 import it.pagopa.pn.service.desk.mapper.PaperChannelMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
@@ -21,6 +22,7 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.addressmanag
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalchannel.PnExternalChannelClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.model.AttachmentInfo;
@@ -55,12 +57,13 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
     private PnSafeStorageClient safeStorageClient;
     private PnServiceDeskConfigs cfn;
     private PnDataVaultClient pnDataVaultClient;
+    private PnExternalChannelClient pnExternalChannelClient;
 
     public ValidationOperationActionImpl(OperationDAO operationDao, AddressDAO addressDAO,
                                          PnAddressManagerClient addressManagerClient, PnDeliveryPushClient pnDeliveryPushClient,
                                          PnDeliveryClient pnDeliveryClient,
                                          PnPaperChannelClient paperChannelClient, PnSafeStorageClient safeStorageClient,
-                                         PnServiceDeskConfigs cfn, PnDataVaultClient pnDataVaultClient) {
+                                         PnServiceDeskConfigs cfn, PnDataVaultClient pnDataVaultClient, PnExternalChannelClient pnExternalChannelClient) {
         super(operationDao);
         this.addressDAO = addressDAO;
         this.addressManagerClient = addressManagerClient;
@@ -70,6 +73,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         this.safeStorageClient = safeStorageClient;
         this.cfn = cfn;
         this.pnDataVaultClient = pnDataVaultClient;
+        this.pnExternalChannelClient = pnExternalChannelClient;
     }
 
     @Override
@@ -121,7 +125,9 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                             }))
                             .thenReturn(op);
                 })
-                .flatMap(op -> requestToPaperPrepare(op, address))
+                .flatMap( op->  (address.getType() != null && address.getType().equalsIgnoreCase("EMAIL"))
+                                    ? requestToEmailPrepare(op, address)
+                                    : requestToPaperPrepare(op, address))
                 .then()
                 .doOnError(exception -> log.error("errorReason = {}, Error during the validation flow", exception.getMessage()));
     }
@@ -143,6 +149,23 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                 });
     }
 
+
+    private Mono<Void> requestToEmailPrepare(PnServiceDeskOperations operation, PnServiceDeskAddress address) {
+        return Flux.fromIterable(operation.getAttachments())
+                   .flatMap(this::getFileKeyFromAttachments)
+                   .map(fileKey -> fileKey)
+                   .collectList()
+                   .flatMap(attachments -> {
+                       log.info("entityOperation = {}, entityAddress = {}, attachments = {}, All data requirements are available to make the call to prepare", operation, address, attachments);
+                       return emailPrepare(operation, address, attachments);
+                   })
+                   .onErrorResume(ex -> {
+                       if (ex instanceof PnEntityNotFoundException) {
+                           return Mono.error(ex);
+                       }
+                       return traceErrorOnDB(operation.getOperationId(), ex);
+                   });
+    }
     private Flux<String> getFileKeyFromAttachments(PnServiceDeskAttachments pnServiceDeskAttachments) {
         log.debug("entityAttachments = {}, iun = {}, Are attachments available for this iun?", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
         if (Boolean.TRUE.equals(pnServiceDeskAttachments.getIsAvailable())){
@@ -152,6 +175,8 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         log.debug("entityAttachments = {}, iun = {}, Attachments are not available for this iun", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
         return Flux.empty();
     }
+
+
 
     /**
      * Retrieve address from AddressDAO
@@ -425,6 +450,44 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                     return Mono.error(new PnGenericException(ERROR_ON_SEND_PAPER_CHANNEL_CLIENT, exception.getMessage()));
                 })
                 .then();
+    }
+
+    private Mono<Void> emailPrepare(PnServiceDeskOperations entityOperation, PnServiceDeskAddress address, List<String> attachments) {
+        log.debug("entityOperation = {}, entityAddress = {}, EmailPrepare received input", entityOperation, address);
+
+        String requestId = Utility.generateRequestId(entityOperation.getOperationId());
+        log.debug("requestId = {}, Generated a new requestId", requestId);
+
+        log.debug("entityOperation = {}, Is attachments null or empty?", entityOperation);
+        if (attachments == null || attachments.isEmpty()) {
+            log.error("entityOperation = {}, Attachments list is null, there are no attachments available for this operation", entityOperation);
+
+            String errorMessage = NO_ATTACHMENT_AVAILABLE.getMessage()
+                                                         .concat(entityOperation.getOperationId())
+                                                         .concat(" - ")
+                                                         .concat(requestId);
+            log.debug(errorMessage);
+            return Mono.error(new PnGenericException(NO_ATTACHMENT_AVAILABLE, errorMessage));
+        }
+
+        log.debug("recipientInternalId = {}, Calling service for deanonymizing this recipientInternalId", entityOperation.getRecipientInternalId());
+        return this.pnDataVaultClient.deAnonymized(entityOperation.getRecipientInternalId())
+                                     .map(fiscalCode -> ExternalChannelMapper.getPrepareCourtesyMail(entityOperation, address, attachments, requestId, fiscalCode, cfn))
+                                     .flatMap(prepareRequestDto -> {
+                                         log.info("requestId = {}, prepareRequestDto = {}, Calling prepare api with this requestId and request", requestId, prepareRequestDto);
+                                         return this.pnExternalChannelClient.sendCourtesyMail(requestId, cfn.getExternalChannelCxId(), prepareRequestDto);
+                                     })
+                                     .doOnSuccess(response -> log.debug("Mail prepare request has been sent"))
+                                     .flatMap(response -> {
+                                         entityOperation.setErrorReason(null);
+                                         log.debug("errorReason = {}, Setting to null errorReason into entityOperation", entityOperation);
+                                         return updateOperationStatus(entityOperation, OperationStatusEnum.PENDING);
+                                     })
+                                     .onErrorResume(exception -> {
+                                         log.error("requestId = {}, errorReason = {}, Error during call externalChannel prepare", requestId, exception.getMessage());
+                                         return Mono.error(new PnGenericException(ERROR_ON_SEND_EXTERNAL_CHANNEL_CLIENT, exception.getMessage()));
+                                     })
+                                     .then();
     }
 
 }

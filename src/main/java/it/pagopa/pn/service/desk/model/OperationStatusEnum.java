@@ -9,5 +9,6 @@ public enum OperationStatusEnum {
     NOTIFY_VIEW,
     NOTIFY_VIEW_ERROR,
     OK,
-    KO
+    KO,
+    PENDING
 }

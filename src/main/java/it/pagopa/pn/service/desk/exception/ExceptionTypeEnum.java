@@ -31,6 +31,7 @@ public enum ExceptionTypeEnum {
     API_KEY_EMPTY("API_KEY_EMPTY", "Non è stato inserito alcun valore per l'header x-api-key"),
     API_KEY_NOT_PRESENT("API_KEY_NOT_PRESENT", "ApiKey non censito."),
     ERROR_ON_DELIVERY_CLIENT("ERROR_ON_DELIVERY_CLIENT", "Error in Delivery failed service"),
+    ERROR_ON_SEND_EXTERNAL_CHANNEL_CLIENT("ERROR_ON_SEND_EXTERNAL_CHANNEL_CLIENT", "Error in send ExternalChannel Failed Serivce"),
     ERROR_ON_SEND_PAPER_CHANNEL_CLIENT("ERROR_ON_SEND_PAPER_CHANNEL_CLIENT", "Error in send Paper Channel failed service "),
     ERROR_ON_DELIVERY_PUSH_CLIENT("ERROR_ON_DELIVERY_PUSH_CLIENT", "Error in Delivery Push failed service"),
     ERROR_GET_UNREACHABLE_NOTIFICATION("ERROR_GET_UNREACHABLE_NOTIFICATION","Error in Paper Notification failed service"),
