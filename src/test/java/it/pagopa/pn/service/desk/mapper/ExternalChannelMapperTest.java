@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.mapper;
 
-import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.DigitalCourtesyMailRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pntemplatesengine.v1.dto.LanguageEnumDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pntemplatesengine.v1.dto.NotificationCceForEmailDto;
@@ -23,58 +22,52 @@ import static org.junit.jupiter.api.Assertions.*;
 class ExternalChannelMapperTest {
 
     private PnTemplatesEngineClient mockTemplatesEngineClient;
+    private PnServiceDeskOperations operations;
+    private PnServiceDeskAddress address;
+    private String requestId;
 
     @BeforeEach
     void setup() {
         mockTemplatesEngineClient = Mockito.mock(PnTemplatesEngineClient.class);
         ExternalChannelMapper.setPnTemplatesEngineClient(mockTemplatesEngineClient);
+
+        operations = new PnServiceDeskOperations();
+        operations.setOperationId("OP123");
+
+        address = new PnServiceDeskAddress();
+        address.setAddress("test@pn.gov.it");
+        address.setFullName("Mario Rossi");
+
+        requestId = "REQ-001";
     }
 
     @AfterEach
     void tearDown() {
-        // Reset static field to avoid side effects on other tests
         ExternalChannelMapper.setPnTemplatesEngineClient(null);
     }
 
     @Test
     void getPrepareCourtesyMail_shouldReturnValidMailRequest() {
-        // Prepara dati
-        PnServiceDeskOperations operations = new PnServiceDeskOperations();
         operations.setOperationId("op123");
         operations.setOperationStartDate(Instant.parse("2023-01-01T10:00:00Z"));
         operations.setOperationLastUpdateDate(Instant.parse("2023-01-02T11:00:00Z"));
+
         PnServiceDeskAttachments attachment1 = new PnServiceDeskAttachments();
         attachment1.setFilesKey(List.of("file1.pdf"));
-
         PnServiceDeskAttachments attachment2 = new PnServiceDeskAttachments();
         attachment2.setFilesKey(List.of("file2.jpg"));
-
         operations.setAttachments(List.of(attachment1, attachment2));
 
-        PnServiceDeskAddress address = new PnServiceDeskAddress();
-        address.setAddress("test@example.com");
-        address.setFullName("Mario Rossi");
-
-        String requestId = "req123";
-        String fiscalCode = "RSSMRA80A01H501U";
-        PnServiceDeskConfigs configs = Mockito.mock(PnServiceDeskConfigs.class);
-
-        // Mock template engine client
         String fakeHtmlTemplate = "<mj-title>Test Subject</mj-title><body>Test message</body>";
         Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.eq(LanguageEnumDto.IT), Mockito.any(NotificationCceForEmailDto.class)))
                .thenReturn(Mono.just(fakeHtmlTemplate));
 
-        // Esegui metodo
         Mono<DigitalCourtesyMailRequestDto> resultMono = ExternalChannelMapper.getPrepareCourtesyMail(
                 operations,
                 address,
                 List.of("file1.pdf", "file2.jpg"),
-                requestId,
-                fiscalCode,
-                configs
-                                                                                                     );
+                requestId);
 
-        // Verifica risultato con StepVerifier
         StepVerifier.create(resultMono)
                     .assertNext(mailRequestDto -> {
                         assertEquals(requestId, mailRequestDto.getRequestId());
@@ -92,18 +85,14 @@ class ExternalChannelMapperTest {
                     })
                     .verifyComplete();
 
-        // Verifica chiamata al client
         Mockito.verify(mockTemplatesEngineClient).notificationCceTemplate(Mockito.eq(LanguageEnumDto.IT), Mockito.any(NotificationCceForEmailDto.class));
     }
 
     @Test
     void extractTagContent_shouldReturnCorrectContent() throws Exception {
-        // Metodo privato, testiamo indirettamente tramite riflessione
-
         String html = "<mj-title>Subject here</mj-title><p>Test</p>";
         String tagName = "mj-title";
 
-        // Uso reflection perché metodo è privato statico
         var method = ExternalChannelMapper.class.getDeclaredMethod("extractTagContent", String.class, String.class);
         method.setAccessible(true);
         String result = (String) method.invoke(null, html, tagName);
@@ -112,19 +101,60 @@ class ExternalChannelMapperTest {
     }
 
     @Test
-    void toListStringAttachments_shouldReturnEmptyListIfNull() throws Exception {
-        // Metodo privato statico test tramite reflection
+    void testGenerateMailWithoutAttachments() {
+        Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just("<mj-title>Email di Test</mj-title>Contenuto email"));
 
-        var method = ExternalChannelMapper.class.getDeclaredMethod("toListStringAttachments", PnServiceDeskOperations.class);
-        method.setAccessible(true);
+        DigitalCourtesyMailRequestDto result = ExternalChannelMapper
+                .getPrepareCourtesyMail(operations, address, null, requestId)
+                .block();
 
-        PnServiceDeskOperations nullAttachmentsOps = new PnServiceDeskOperations();
-        nullAttachmentsOps.setAttachments(null);
-
-        @SuppressWarnings("unchecked")
-        List<String> result = (List<String>) method.invoke(null, nullAttachmentsOps);
-
-        assertTrue(result.isEmpty());
+        assertNotNull(result);
+        assertEquals("Email di Test", result.getSubjectText());
+        assertEquals("test@pn.gov.it", result.getReceiverDigitalAddress());
+        assertTrue(result.getAttachmentUrls() == null || result.getAttachmentUrls().isEmpty());
     }
 
+    @Test
+    void testGenerateMailWithEmptyAttachments() {
+        Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just("<mj-title>Email di Test</mj-title>Contenuto email"));
+
+        DigitalCourtesyMailRequestDto result = ExternalChannelMapper
+                .getPrepareCourtesyMail(operations, address, List.of(), requestId)
+                .block();
+
+        assertNotNull(result);
+        assertTrue(result.getAttachmentUrls() == null || result.getAttachmentUrls().isEmpty());
+    }
+
+    @Test
+    void testGenerateMailWithAttachments() {
+        List<String> attachments = List.of("file1.pdf", "file2.jpg");
+
+        Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just("<mj-title>Email di Test</mj-title>Contenuto email"));
+
+        DigitalCourtesyMailRequestDto result = ExternalChannelMapper
+                .getPrepareCourtesyMail(operations, address, attachments, requestId)
+                .block();
+
+        assertNotNull(result);
+        assertEquals(List.of("safestorage://file1.pdf", "safestorage://file2.jpg"), result.getAttachmentUrls());
+    }
+
+    @Test
+    void testFallbackSubjectWhenMissing() {
+        String htmlWithoutSubject = "<html><body>No title here</body></html>";
+
+        Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just(htmlWithoutSubject));
+
+        DigitalCourtesyMailRequestDto result = ExternalChannelMapper
+                .getPrepareCourtesyMail(operations, address, List.of("file1.txt"), requestId)
+                .block();
+
+        assertNotNull(result);
+        assertEquals("Oggetto della comunicazione", result.getSubjectText());
+    }
 }

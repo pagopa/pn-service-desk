@@ -29,9 +29,7 @@ public class ExternalChannelMapper {
             PnServiceDeskOperations operations,
             PnServiceDeskAddress address,
             List<String> attachments,
-            String requestId,
-            String fiscalCode,
-            PnServiceDeskConfigs cfn) {
+            String requestId) {
 
         Mono<String> renderedTemplateMono = callNotificationCceForEmail(operations, address, LanguageEnumDto.IT);
 
@@ -47,18 +45,19 @@ public class ExternalChannelMapper {
             mailRequestDto.setMessageContentType(DigitalCourtesyMailRequestDto.MessageContentTypeEnum.PLAIN);
             mailRequestDto.setChannel(DigitalCourtesyMailRequestDto.ChannelEnum.EMAIL);
 
-            // Estraggo il subject dal tag <mj-title>
+
             String subject = extractTagContent(renderedTemplate, "mj-title");
             if (subject == null || subject.isEmpty()) {
-                subject = "Oggetto della comunicazione"; // fallback
+                subject = "Oggetto della comunicazione";
             }
             mailRequestDto.setSubjectText(subject);
-
-            // Per messageText puoi decidere se mettere tutto l’HTML o solo una parte, qui metto tutto
             mailRequestDto.setMessageText(renderedTemplate);
 
-            List<String> attachmentUrls = toListStringAttachments(operations);
-            if (attachmentUrls != null && !attachmentUrls.isEmpty()) {
+
+            if (attachments != null && !attachments.isEmpty()) {
+                List<String> attachmentUrls = attachments.stream()
+                                                         .map(fileKey -> "safestorage://" + fileKey)
+                                                         .toList();
                 mailRequestDto.setAttachmentUrls(attachmentUrls);
             }
 
@@ -66,16 +65,6 @@ public class ExternalChannelMapper {
         });
     }
 
-    private static List<String> toListStringAttachments(PnServiceDeskOperations operations) {
-        if (operations == null || operations.getAttachments() == null) {
-            return List.of();
-        }
-        return operations.getAttachments().stream()
-                         .filter(attachment -> attachment.getFilesKey() != null)
-                         .flatMap(attachment -> attachment.getFilesKey().stream())
-                         .map(fileKey -> "safestorage://" + fileKey)
-                         .toList();
-    }
 
 
     private static Mono<String> callNotificationCceForEmail(

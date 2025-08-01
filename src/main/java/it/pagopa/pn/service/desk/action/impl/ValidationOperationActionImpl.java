@@ -434,7 +434,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
 
         log.debug("recipientInternalId = {}, Calling service for deanonymizing this recipientInternalId", entityOperation.getRecipientInternalId());
         return this.pnDataVaultClient.deAnonymized(entityOperation.getRecipientInternalId())
-                                     .flatMap(fiscalCode -> ExternalChannelMapper.getPrepareCourtesyMail(entityOperation, address, attachments, requestId, fiscalCode, cfn))
+                                     .flatMap(fiscalCode -> ExternalChannelMapper.getPrepareCourtesyMail(entityOperation, address, attachments, requestId))
                                      .flatMap(prepareRequestDto -> {
                                          log.info("requestId = {}, prepareRequestDto = {}, Calling prepare api with this requestId and request", requestId, prepareRequestDto);
                                          return this.pnExternalChannelClient.sendCourtesyMail(requestId, cfn.getExternalChannelCxId(), prepareRequestDto);
