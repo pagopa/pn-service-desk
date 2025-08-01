@@ -17,7 +17,6 @@ public class ExternalChannelApiConfigurator extends CommonBaseClient {
                 new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
 
 apiClient.setBasePath(pnServiceDeskConfigs.getExternalChannelBasePath());
-apiClient.addDefaultHeader("x-pagopa-externalchannel-cx-id", pnServiceDeskConfigs.getExternalChannelCxId());
 
         return new DigitalCourtesyMessagesApi(apiClient);
     }

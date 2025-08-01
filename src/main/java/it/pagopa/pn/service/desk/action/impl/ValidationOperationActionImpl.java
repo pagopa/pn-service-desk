@@ -125,21 +125,22 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                             }))
                             .thenReturn(op);
                 })
-                .flatMap( op->  (address.getType() != null && address.getType().equalsIgnoreCase("EMAIL"))
-                                    ? requestToEmailPrepare(op, address)
-                                    : requestToPaperPrepare(op, address))
+                .flatMap( op-> requestToPrepare(op, address)
+)
                 .then()
                 .doOnError(exception -> log.error("errorReason = {}, Error during the validation flow", exception.getMessage()));
     }
 
-    private Mono<Void> requestToPaperPrepare(PnServiceDeskOperations operation, PnServiceDeskAddress address) {
+    private Mono<Void> requestToPrepare(PnServiceDeskOperations operation, PnServiceDeskAddress address) {
         return Flux.fromIterable(operation.getAttachments())
                                 .flatMap(this::getFileKeyFromAttachments)
                                 .map(fileKey -> fileKey)
                                 .collectList()
                                 .flatMap(attachments -> {
                                     log.info("entityOperation = {}, entityAddress = {}, attachments = {}, All data requirements are available to make the call to prepare", operation, address, attachments);
-                                    return paperPrepare(operation, address, attachments);
+                                    return "EMAIL".equalsIgnoreCase(address.getType())?
+                                            emailPrepare(operation,address,attachments):
+                                            paperPrepare(operation, address, attachments);
                                 })
                                 .onErrorResume(ex -> {
                                     if (ex instanceof PnEntityNotFoundException) {
@@ -150,22 +151,6 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
     }
 
 
-    private Mono<Void> requestToEmailPrepare(PnServiceDeskOperations operation, PnServiceDeskAddress address) {
-        return Flux.fromIterable(operation.getAttachments())
-                   .flatMap(this::getFileKeyFromAttachments)
-                   .map(fileKey -> fileKey)
-                   .collectList()
-                   .flatMap(attachments -> {
-                       log.info("entityOperation = {}, entityAddress = {}, attachments = {}, All data requirements are available to make the call to prepare", operation, address, attachments);
-                       return emailPrepare(operation, address, attachments);
-                   })
-                   .onErrorResume(ex -> {
-                       if (ex instanceof PnEntityNotFoundException) {
-                           return Mono.error(ex);
-                       }
-                       return traceErrorOnDB(operation.getOperationId(), ex);
-                   });
-    }
     private Flux<String> getFileKeyFromAttachments(PnServiceDeskAttachments pnServiceDeskAttachments) {
         log.debug("entityAttachments = {}, iun = {}, Are attachments available for this iun?", pnServiceDeskAttachments, pnServiceDeskAttachments.getIun());
         if (Boolean.TRUE.equals(pnServiceDeskAttachments.getIsAvailable())){
@@ -413,23 +398,13 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                 });
     }
 
+
+
+
     private Mono<Void> paperPrepare(PnServiceDeskOperations entityOperation, PnServiceDeskAddress address, List<String> attachments) {
         log.debug("entityOperation = {}, entityAddress = {}, PaperPrepare received input", entityOperation, address);
 
-        String requestId = Utility.generateRequestId(entityOperation.getOperationId());
-        log.debug("requestId = {}, Generated a new requestId", requestId);
-
-        log.debug("entityOperation = {}, Is attachments null or empty?", entityOperation);
-        if (attachments == null || attachments.isEmpty()) {
-            log.error("entityOperation = {}, Attachments list is null, there are no attachments available for this operation", entityOperation);
-
-            String errorMessage = NO_ATTACHMENT_AVAILABLE.getMessage()
-                    .concat(entityOperation.getOperationId())
-                    .concat(" - ")
-                    .concat(requestId);
-            log.debug(errorMessage);
-            throw new PnGenericException(NO_ATTACHMENT_AVAILABLE, errorMessage);
-        }
+        String requestId = checkAndGenerateRequestId(entityOperation, attachments);
 
         log.debug("recipientInternalId = {}, Calling service for deanonymizing this recipientInternalId", entityOperation.getRecipientInternalId());
         return this.pnDataVaultClient.deAnonymized(entityOperation.getRecipientInternalId())
@@ -455,20 +430,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
     private Mono<Void> emailPrepare(PnServiceDeskOperations entityOperation, PnServiceDeskAddress address, List<String> attachments) {
         log.debug("entityOperation = {}, entityAddress = {}, EmailPrepare received input", entityOperation, address);
 
-        String requestId = Utility.generateRequestId(entityOperation.getOperationId());
-        log.debug("requestId = {}, Generated a new requestId", requestId);
-
-        log.debug("entityOperation = {}, Is attachments null or empty?", entityOperation);
-        if (attachments == null || attachments.isEmpty()) {
-            log.error("entityOperation = {}, Attachments list is null, there are no attachments available for this operation", entityOperation);
-
-            String errorMessage = NO_ATTACHMENT_AVAILABLE.getMessage()
-                                                         .concat(entityOperation.getOperationId())
-                                                         .concat(" - ")
-                                                         .concat(requestId);
-            log.debug(errorMessage);
-            return Mono.error(new PnGenericException(NO_ATTACHMENT_AVAILABLE, errorMessage));
-        }
+        String requestId = checkAndGenerateRequestId(entityOperation, attachments);
 
         log.debug("recipientInternalId = {}, Calling service for deanonymizing this recipientInternalId", entityOperation.getRecipientInternalId());
         return this.pnDataVaultClient.deAnonymized(entityOperation.getRecipientInternalId())
@@ -481,7 +443,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                      .flatMap(response -> {
                                          entityOperation.setErrorReason(null);
                                          log.debug("errorReason = {}, Setting to null errorReason into entityOperation", entityOperation);
-                                         return updateOperationStatus(entityOperation, OperationStatusEnum.PENDING);
+                                         return updateOperationStatus(entityOperation, OperationStatusEnum.PROGRESS);
                                      })
                                      .onErrorResume(exception -> {
                                          log.error("requestId = {}, errorReason = {}, Error during call externalChannel prepare", requestId, exception.getMessage());
@@ -489,5 +451,27 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                      })
                                      .then();
     }
+
+//logica comune tra emailPrepare e PaperPrepare
+    private String checkAndGenerateRequestId(PnServiceDeskOperations entityOperation, List<String> attachments) {
+        String requestId = Utility.generateRequestId(entityOperation.getOperationId());
+        log.debug("requestId = {}, Generated a new requestId", requestId);
+
+        log.debug("entityOperation = {}, Is attachments null or empty?", entityOperation);
+        if (attachments == null || attachments.isEmpty()) {
+            log.error("entityOperation = {}, Attachments list is null, there are no attachments available for this operation", entityOperation);
+
+            String errorMessage = NO_ATTACHMENT_AVAILABLE.getMessage()
+                                                         .concat(entityOperation.getOperationId())
+                                                         .concat(" - ")
+                                                         .concat(requestId);
+            log.debug(errorMessage);
+
+            throw new PnGenericException(NO_ATTACHMENT_AVAILABLE, errorMessage);
+        }
+
+        return requestId;
+    }
+
 
 }

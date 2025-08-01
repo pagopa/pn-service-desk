@@ -28,7 +28,6 @@ public class ExternalChannelMapper {
         mailRequestDto.setCorrelationId(requestId);
         mailRequestDto.setEventType("DEFAULT_EVENT_TYPE");
         mailRequestDto.setQos(DigitalCourtesyMailRequestDto.QosEnum.INTERACTIVE);
-        mailRequestDto.setTags(new HashMap<>());
         mailRequestDto.setClientRequestTimeStamp(java.time.Instant.now());
         mailRequestDto.setReceiverDigitalAddress(address.getAddress());
         mailRequestDto.setMessageContentType(DigitalCourtesyMailRequestDto.MessageContentTypeEnum.PLAIN);
@@ -38,12 +37,20 @@ public class ExternalChannelMapper {
         mailRequestDto.setMessageText("Testo Messaggio");
         mailRequestDto.setSubjectText("Oggetto della comunicazione");
 
-        if (attachments != null && !attachments.isEmpty()) {
-            mailRequestDto.setAttachmentUrls(attachments);
+        List<String> attachmentUrls = toListStringAttachments(operations);
+        if (attachmentUrls != null && !attachmentUrls.isEmpty()) {
+            mailRequestDto.setAttachmentUrls(attachmentUrls);
         }
 
         return mailRequestDto;
     }
 
-
+    private static List<String> toListStringAttachments(PnServiceDeskOperations operations) {
+        if (operations == null || operations.getAttachments() == null) {
+            return List.of();
+        }
+        return operations.getAttachments().stream()
+                         .map(fileKey -> "safestorage://" + fileKey)
+                         .toList();
+    }
 }
