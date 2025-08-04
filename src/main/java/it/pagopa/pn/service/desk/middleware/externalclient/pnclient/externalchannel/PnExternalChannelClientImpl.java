@@ -1,8 +1,6 @@
 package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalchannel;
 
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.PrepareDigitalDetailsDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.api.DigitalCourtesyMessagesApi;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.CourtesyMessageProgressEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.DigitalCourtesyMailRequestDto;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
