@@ -239,7 +239,7 @@ Parameters:
   
   ExternalChannelCxId:
     Type: String
-    Description: 'ExternalChannel cx-id'
+    Description: 'CxId used by service desk for requests towards External Channel'
 
   AddressManagerApiKey:
     Type: String
