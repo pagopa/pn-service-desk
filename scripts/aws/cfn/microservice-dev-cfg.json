@@ -6,6 +6,7 @@
     "TtlReceiverAddress": "120",
     "AddressManagerCxId": "pn-service-desk",
     "PaperChannelCxId": "pn-service-desk",
+    "ExternalChannelCxId": "pn-service-desk",
     "AddressManagerApiKey": "_",
     "NotifyAttempt": "2",
     "MaxNumberOfPages": "50",

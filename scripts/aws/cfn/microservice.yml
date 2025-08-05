@@ -236,6 +236,10 @@ Parameters:
   PaperChannelCxId:
     Type: String
     Description: 'PaperChannel cx-id'
+  
+  ExternalChannelCxId:
+    Type: String
+    Description: 'ExternalChannel cx-id'
 
   AddressManagerApiKey:
     Type: String
@@ -313,6 +317,10 @@ Parameters:
     Type: String
     Default: '-'
     Description: Cron for which you send the metric to CloudWatch
+  
+  ExternalChannelToServiceDeskQueueARN:
+    Type: String
+    Description: pn-external-channel TO pn-paper-channel queue ARN
 
 Conditions:
   HasAlbDimensionName: !Not [ !Equals [ !Ref ApplicationLoadBalancerMetricsDimensionName, '' ] ]
@@ -439,6 +447,66 @@ Resources:
               - !Sub "${ServiceDeskOperationFileKeyDynamoTableArn}/*"
               - !Sub "${ClientDynamoTableArn}"
               - !Sub "${ClientDynamoTableArn}/*"
+  
+  EventBusEnqueueRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
+        Version: "2012-10-17"
+      Policies:
+        - PolicyName: !Sub ${ProjectName}-externalchannel-2-servicedesk-eventBusRulePolicy
+          PolicyDocument:
+            Statement:
+              - Sid: putEvents
+                Action:
+                  - sqs:ChangeMessageVisibility
+                  - sqs:GetQueueAttributes
+                  - sqs:GetQueueUrl
+                  - sqs:SendMessage
+                Effect: Allow
+                Resource:
+                  - !Ref ExternalChannelToServiceDeskQueueARN
+    
+  #route pn-external-channel response events to pn-servicedesk
+  PnCoreEventBusExternalChannel2ServiceDeskResponseRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: Route ExternalChannel events to pn-servicedesk
+      RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
+      EventBusName: !Sub '${ProjectName}-CoreEventBus'
+      EventPattern:
+        detail-type: [ "ExternalChannelOutcomeEvent" ]
+        detail:
+          clientId: [ !Ref ExternalChannelCxId ]
+      Targets: 
+        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
+          Id: !Sub ${ProjectName}-Logger-ExternalChannel2ServiceDesk
+          InputTransformer:
+            InputPathsMap:
+              "timestamp": "$.time"
+            InputTemplate: |
+              {
+                  "timestamp": <timestamp>,
+                  "ruleArn": <aws.events.rule-arn>,
+                  "ruleName": <aws.events.rule-name>,
+                  "ingestionTime": <aws.events.event.ingestion-time>,
+                  "originalEvent": <aws.events.event.json>
+              }       
+        - Id: !Sub '${ProjectName}-CoreEventBus-ExternalChannel2ServiceDesk'
+          Arn: !Ref ExternalChannelToServiceDeskQueueARN
+          InputPath: $.detail
+          DeadLetterConfig: 
+            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
+    
+
 
   ServiceDeskMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack
