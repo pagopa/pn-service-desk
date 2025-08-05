@@ -160,4 +160,25 @@ class OperationMapperTest {
         assertNull(operationResponse.getOperationUpdateTimestamp());
     }
 
+
+    @Test
+    void testBuildInitialOperationT() {
+        CreateOperationRequest request = new CreateOperationRequest();
+        request.setTicketId("TICKET123");
+        request.setTicketOperationId("OP456");
+        request.setTaxId("ABCDEF123");
+        String recipientInternalId = "RECIPIENT789";
+
+        PnServiceDeskOperations operation = OperationMapper.getInitialOperation(request, recipientInternalId);
+
+        assertNotNull(operation);
+        assertEquals("TICKET123OP456", operation.getOperationId());
+        assertEquals("TICKET123", operation.getTicketId());
+        assertEquals(OperationStatusEnum.CREATING.toString(), operation.getStatus());
+        assertEquals("RECIPIENT789", operation.getRecipientInternalId());
+        assertNotNull(operation.getOperationStartDate());
+        assertNotNull(operation.getOperationLastUpdateDate());
+    }
+
+
 }

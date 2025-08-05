@@ -65,7 +65,6 @@ public class OperationsServiceImpl implements OperationsService {
         log.debug("xPagopaPnUid = {}, createOperationRequest = {}, CreateOperation received input", xPagopaPnUid, createOperationRequest);
 
         return handleCreateOperation(
-                xPagopaPnUid,
                 createOperationRequest,
                 createOperationRequest.getTaxId(),
                 req -> OperationMapper.getInitialOperation(req, UUID.randomUUID().toString()),
@@ -76,7 +75,6 @@ public class OperationsServiceImpl implements OperationsService {
     public Mono<OperationsResponse> createActOperation(String xPagopaPnUid, CreateActOperationRequest createActOperationRequest) {
         log.debug("xPagopaPnUid = {}, createActOperationRequest = {}, CreateActOperation received input", xPagopaPnUid, createActOperationRequest);
         return handleCreateOperation(
-                xPagopaPnUid,
                 createActOperationRequest,
                 createActOperationRequest.getTaxId(),
                 req -> OperationMapper.getInitialActOperation(req, UUID.randomUUID().toString()),
@@ -84,7 +82,6 @@ public class OperationsServiceImpl implements OperationsService {
     }
 
     private <T> Mono<OperationsResponse> handleCreateOperation(
-            String xPagopaPnUid,
             T request,
             String taxId,
             java.util.function.Function<T, PnServiceDeskOperations> operationCreator,
