@@ -320,7 +320,7 @@ Parameters:
   
   ExternalChannelToServiceDeskQueueARN:
     Type: String
-    Description: pn-external-channel TO pn-paper-channel queue ARN
+    Description: pn-external-channel TO pn-service-desk queue ARN
 
 Conditions:
   HasAlbDimensionName: !Not [ !Equals [ !Ref ApplicationLoadBalancerMetricsDimensionName, '' ] ]
@@ -475,11 +475,10 @@ Resources:
                 Resource:
                   - !Ref ExternalChannelToServiceDeskQueueARN
     
-  #route pn-external-channel response events to pn-servicedesk
   PnCoreEventBusExternalChannel2ServiceDeskResponseRule:
     Type: AWS::Events::Rule
     Properties: 
-      Description: Route ExternalChannel events to pn-servicedesk
+      Description: Route ExternalChannel events to pn-service-desk
       RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
       EventBusName: !Sub '${ProjectName}-CoreEventBus'
       EventPattern:
