@@ -68,6 +68,42 @@ class OperationsControllerTest {
                 .expectStatus().isBadRequest();
     }
 
+
+    @Test
+    void createActOperation() {
+        OperationsResponse response = new OperationsResponse();
+        String path = "/service-desk/act-operations";
+        Mockito.when(operationsService.createActOperation(Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just(response));
+
+        webTestClient.post()
+                     .uri(uriBuilder -> uriBuilder.path(path)
+                                                  .build())
+                     .header("x-pagopa-pn-uid", "test")
+                     .header("x-api-key", "test")
+                     .bodyValue(getCreateActOperationRequest())
+                     .exchange()
+                     .expectStatus().isCreated();
+    }
+
+    @Test
+    void createActOperationKo() {
+        String path = "/service-desk/act-operations";
+
+        // Simuliamo che il service ritorni un errore
+        Mockito.when(operationsService.createActOperation(Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.error(new PnGenericException(NO_UNREACHABLE_NOTIFICATION, NO_UNREACHABLE_NOTIFICATION.getMessage())));
+
+        webTestClient.post()
+                     .uri(uriBuilder -> uriBuilder.path(path).build())
+                     .header("x-pagopa-pn-uid", "test")
+                     .header("x-api-key", "test")
+                     .bodyValue(getCreateActOperationRequest())
+                     .exchange()
+                     .expectStatus().isBadRequest();  // Aspettiamo un 400 Bad Request o altro status previsto
+    }
+
+
     @Test
     void searchOperationsFromTaxId() {
         SearchResponse response = new SearchResponse();
@@ -127,6 +163,23 @@ class OperationsControllerTest {
         analogAddress.setFullname("test");
         request.setTaxId("1234567");
         request.setAddress(analogAddress);
+        request.setTicketId("1234");
+        request.setTicketOperationId("1234");
+        return request;
+    }
+
+
+    private CreateActOperationRequest getCreateActOperationRequest(){
+        CreateActOperationRequest request = new CreateActOperationRequest();
+        ActDigitalAddress digitalAddress= new ActDigitalAddress();
+        digitalAddress.setAddress("test@test.com");
+        digitalAddress.setType("EMAIL");
+
+        request.setIun("ABCD-EFGH-IJKL-123456-M-1");
+        request.setTicketDate("2025-07-25");
+        request.setVrDate("2025-07-25");
+        request.setTaxId("1234567");
+        request.setAddress(digitalAddress);
         request.setTicketId("1234");
         request.setTicketOperationId("1234");
         return request;
