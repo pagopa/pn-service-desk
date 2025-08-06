@@ -1,10 +1,7 @@
 package it.pagopa.pn.service.desk.mapper;
 
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationStatus;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationResponse;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SDNotificationSummary;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
@@ -26,19 +23,24 @@ public class OperationMapper {
 
     private OperationMapper(){}
 
-    public static PnServiceDeskOperations getInitialOperation (CreateOperationRequest operationRequest, String recipientInternalId){
+    public static PnServiceDeskOperations getInitialOperation(CreateOperationRequest req, String recipientInternalId) {
+        return buildInitialOperation(req.getTicketId(), req.getTicketOperationId(), recipientInternalId);
+    }
 
+    public static PnServiceDeskOperations getInitialActOperation(CreateActOperationRequest req, String recipientInternalId) {
+        return buildInitialOperation(req.getTicketId(), req.getTicketOperationId(), recipientInternalId);
+    }
+
+    private static PnServiceDeskOperations buildInitialOperation(String ticketId, String ticketOperationId, String recipientInternalId) {
         PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
-        pnServiceDeskOperations.setOperationId(Utility.generateOperationId(operationRequest.getTicketId(), operationRequest.getTicketOperationId()));
-        pnServiceDeskOperations.setTicketId(operationRequest.getTicketId());
+        pnServiceDeskOperations.setOperationId(Utility.generateOperationId(ticketId, ticketOperationId));
+        pnServiceDeskOperations.setTicketId(ticketId);
         pnServiceDeskOperations.setStatus(OperationStatusEnum.CREATING.toString());
         pnServiceDeskOperations.setOperationStartDate(Instant.now());
         pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
         pnServiceDeskOperations.setRecipientInternalId(recipientInternalId);
-
         return pnServiceDeskOperations;
     }
-
     public static OperationResponse operationResponseMapper(PnServiceDeskConfigs pnServiceDeskConfigs, PnServiceDeskOperations pnServiceDeskOperations, String taxId){
         OperationResponse operationResponse = new OperationResponse();
         operationResponse.setOperationId(Utility.cleanUpOperationId(pnServiceDeskOperations.getOperationId()));

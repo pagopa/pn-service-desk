@@ -224,6 +224,19 @@ class OperationsServiceImplTest extends BaseTest {
         return request;
     }
 
+
+    private CreateActOperationRequest getCreateActOperationRequest(){
+        CreateActOperationRequest request = new CreateActOperationRequest();
+        ActDigitalAddress digitalAddress= new ActDigitalAddress();
+        digitalAddress.setAddress("test@test.com");
+       digitalAddress.setType("EMAIL");
+        request.setTaxId("1234567");
+        request.setAddress(digitalAddress);
+        request.setTicketId("1234");
+        request.setTicketOperationId("1234");
+        return request;
+    }
+
     private VideoUploadRequest getVideoUploadRequest(){
         VideoUploadRequest request = new VideoUploadRequest();
         request.setPreloadIdx("123");
@@ -237,4 +250,57 @@ class OperationsServiceImplTest extends BaseTest {
         request.setTaxId("123");
         return request;
     }
+
+
+    @Test
+    void createActOperationTestCaseWithNotification() {
+        NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
+        notificationsUnreachableResponse.setNotificationsCount(1L);
+
+        Mockito.when(notificationService.getUnreachableNotification(Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just(notificationsUnreachableResponse));
+        Mockito.when(operationDAO.getByOperationId(Mockito.any()))
+               .thenReturn(Mono.empty());
+        Mockito.when(operationDAO.createOperationAndAddress(Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just(Tuples.of(pnServiceDeskOperations, new PnServiceDeskAddress())));
+
+        assertNotNull(service.createActOperation("1234", getCreateActOperationRequest()).block());
+    }
+
+
+    @Test
+    void createActOperationTestCaseWithoutNotification() {
+        NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
+        notificationsUnreachableResponse.setNotificationsCount(0L);
+
+        Mockito.when(notificationService.getUnreachableNotification(Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just(notificationsUnreachableResponse));
+        Mockito.when(operationDAO.getByOperationId(Mockito.any()))
+               .thenReturn(Mono.empty());
+        Mockito.when(operationDAO.createOperationAndAddress(Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just(Tuples.of(pnServiceDeskOperations, new PnServiceDeskAddress())));
+
+        StepVerifier.create(service.createActOperation("1234", getCreateActOperationRequest()))
+                    .expectError(PnGenericException.class)
+                    .verify();
+    }
+
+
+    @Test
+    void whenCallcreateActOperationAndOperationIdAlreadyExistReturnErrorTest() {
+        NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
+        notificationsUnreachableResponse.setNotificationsCount(1L);
+
+        Mockito.when(notificationService.getUnreachableNotification(Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just(notificationsUnreachableResponse));
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
+        StepVerifier.create(service.createActOperation("1234", getCreateActOperationRequest()))
+                    .expectErrorMatches(ex -> {
+                        assertTrue(ex instanceof PnGenericException);
+                        assertEquals(OPERATION_ID_IS_PRESENT, ((PnGenericException) ex).getExceptionType());
+                        return true;
+                    }).verify();
+    }
+
+
 }
