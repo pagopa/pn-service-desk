@@ -26,6 +26,7 @@ public class PnServiceDeskAddress {
     public static final String COL_COUNTRY = "country";
     public static final String COL_PR = "pr";
     public static final String COL_TTL = "ttl";
+    public static final String COL_TYPE = "type";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_OPERATION_ID)}))
     private String operationId;
@@ -68,5 +69,8 @@ public class PnServiceDeskAddress {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_TYPE)}))
+    private String type;
 
 }
