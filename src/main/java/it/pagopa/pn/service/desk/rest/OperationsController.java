@@ -1,12 +1,7 @@
 package it.pagopa.pn.service.desk.rest;
 
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.api.OperationApi;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationsResponse;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadRequest;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.VideoUploadResponse;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationRequest;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchResponse;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.service.OperationsService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +21,14 @@ public class OperationsController implements OperationApi {
         return createOperationRequest
                 .flatMap(operationRequest -> operationsService.createOperation(xPagopaPnUid, operationRequest)
                         .map(operationsResponse -> ResponseEntity.status(HttpStatus.CREATED).body(operationsResponse)));
+    }
+
+
+    @Override
+    public Mono<ResponseEntity<OperationsResponse>> createActOperation(String xPagopaPnUid, Mono<CreateActOperationRequest> createActOperationRequest, ServerWebExchange exchange) {
+        return createActOperationRequest
+                .flatMap(actOperationRequest -> operationsService.createActOperation(xPagopaPnUid, actOperationRequest)
+                        .map(actOperationResponse -> ResponseEntity.status(HttpStatus.CREATED).body(actOperationResponse)));
     }
 
     @Override
