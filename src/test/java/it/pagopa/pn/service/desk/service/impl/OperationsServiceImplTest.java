@@ -295,7 +295,7 @@ class OperationsServiceImplTest extends BaseTest {
                .thenReturn(Mono.just(notificationsUnreachableResponse));
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
         StepVerifier.create(service.createActOperation("1234", getCreateActOperationRequest()))
-                    .expectErrorMatches((ex) -> {
+                    .expectErrorMatches(ex -> {
                         assertTrue(ex instanceof PnGenericException);
                         assertEquals(OPERATION_ID_IS_PRESENT, ((PnGenericException) ex).getExceptionType());
                         return true;
