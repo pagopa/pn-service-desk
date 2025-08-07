@@ -49,6 +49,7 @@ public class PnServiceDeskConfigs {
         private String internalQueue;
         private String safeStorageEvents;
         private String paperChannelQueue;
+        private String externalChannelQueue;
     }
 
     @Data

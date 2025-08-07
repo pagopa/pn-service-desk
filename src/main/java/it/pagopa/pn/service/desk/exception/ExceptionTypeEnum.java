@@ -21,6 +21,7 @@ public enum ExceptionTypeEnum {
     SAFE_STORAGE_FILE_LOADING("SAFE_STORAGE_FILE_LOADING", "Caricamento in corso"),
     ENTITY_NOT_FOUND("ENTITY_NOT_FOUND", "The searched entity is not present in the Database "),
     PAPERCHANNEL_STATUS_CODE_EMPTY("PAPERCHANNEL_STATUS_CODE_EMPTY", "Lo status code inviato dal microservizio Paperchannel è mancante"),
+    EXTERNALCHANNEL_STATUS_CODE_EMPTY("EXTERNAL_STATUS_CODE_EMPTY", "Lo status code inviato dal microservizio Externalchannel è mancante"),
     NO_ATTACHMENT_AVAILABLE("NO_ATTACHMENT_AVAILABLE","There are no attachments available for this operation "),
     ADDRESS_IS_NOT_PRESENT("ADDRESS_IS_NOT_PRESENT", "L'indirizzo non è presente"),
     NO_UNREACHABLE_NOTIFICATION("NO_UNREACHABLE_NOTIFICATION", "There are no unreachable notification for the taxId provided "),
