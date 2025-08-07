@@ -1508,6 +1508,7 @@ components:
           * `PAID` - Uno dei destinatari ha pagato la notifica
           * `UNREACHABLE` - Il destinatario non è reperibile
           * `CANCELLED` - L'ente ha annullato l'invio della notifica
+          * `DELIVERY_TIMEOUT` - La notifica è andata in Timeout dopo un tempo prestabilito
       enum:
         - IN_VALIDATION
         - ACCEPTED
@@ -1519,6 +1520,7 @@ components:
         - PAID
         - UNREACHABLE
         - CANCELLED
+        - DELIVERY_TIMEOUT
 
     OperationResponse:
       required:

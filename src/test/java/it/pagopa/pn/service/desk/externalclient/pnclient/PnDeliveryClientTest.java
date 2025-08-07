@@ -73,7 +73,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
                 "Comune di Palermo",
                 Instant.parse("2023-09-29T14:02:08.670718277Z"),
                 "Test-di-carico",
-                NotificationStatusV26Dto.VIEWED,
+                NotificationStatusV28Dto.VIEWED,
                 List.of("GLLGLL64B15G702I"),
                 Instant.parse("2023-09-29T14:03:02.807361187Z")
         ));
@@ -83,7 +83,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
                 "Comune di Palermo",
                 Instant.parse("2023-09-29T14:02:08.203039228Z"),
                 "Test-di-carico",
-                NotificationStatusV26Dto.VIEWED,
+                NotificationStatusV28Dto.VIEWED,
                 List.of("GLLGLL64B15G702I"),
                 Instant.parse("2023-09-29T14:03:10.91919327Z")
         ));
@@ -173,7 +173,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
         return document;
     }
 
-    private NotificationSearchRowDto getNotificationSearchRow(String iun, String paProtocolNumber, String sender, Instant sentAt, String subject, NotificationStatusV26Dto notificationStatus, List<String> recipients, Instant requestAcceptedAt) {
+    private NotificationSearchRowDto getNotificationSearchRow(String iun, String paProtocolNumber, String sender, Instant sentAt, String subject, NotificationStatusV28Dto notificationStatus, List<String> recipients, Instant requestAcceptedAt) {
         NotificationSearchRowDto notificationSearchRowDto = new NotificationSearchRowDto();
         notificationSearchRowDto.setIun(iun);
         notificationSearchRowDto.setPaProtocolNumber(paProtocolNumber);
