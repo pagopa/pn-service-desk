@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class NotificationAndMessageMapperTest {
 
     private final NotificationSearchRowDto notificationSearchRowDto = new NotificationSearchRowDto();
-    private final List<TimelineElementV27Dto> filteredElements = new ArrayList<>();
+    private final List<TimelineElementV28Dto> filteredElements = new ArrayList<>();
     private final NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
     private final NotificationAttachmentDownloadMetadataResponseDto notificationAttachmentDownloadMetadataResponseDto = new NotificationAttachmentDownloadMetadataResponseDto();
     private final SentNotificationV25Dto sentNotificationV21Dto = new SentNotificationV25Dto();
@@ -32,18 +32,18 @@ class NotificationAndMessageMapperTest {
         notificationSearchRowDto.setSentAt(Instant.now());
         notificationSearchRowDto.setSubject("comune di Palermo");
         notificationSearchRowDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusV26Dto.ACCEPTED);
-        var timelineElementV23Dto = new TimelineElementV27Dto();
-        var detailsV23Dto = new TimelineElementDetailsV27Dto();
+        var timelineElementV23Dto = new TimelineElementV28Dto();
+        var detailsV23Dto = new TimelineElementDetailsV28Dto();
         detailsV23Dto.setSendDate(Instant.now());
         timelineElementV23Dto.setDetails(detailsV23Dto);
-        timelineElementV23Dto.setCategory(TimelineElementCategoryV27Dto.REQUEST_ACCEPTED);
+        timelineElementV23Dto.setCategory(TimelineElementCategoryV28Dto.REQUEST_ACCEPTED);
         timelineElementV23Dto.setTimestamp(Instant.now());
 
-        var refinement = new TimelineElementV27Dto();
-        var refinementDetail = new TimelineElementDetailsV27Dto();
+        var refinement = new TimelineElementV28Dto();
+        var refinementDetail = new TimelineElementDetailsV28Dto();
         detailsV23Dto.setSendDate(Instant.now().plusSeconds(10));
         refinement.setDetails(refinementDetail);
-        refinement.setCategory(TimelineElementCategoryV27Dto.REFINEMENT);
+        refinement.setCategory(TimelineElementCategoryV28Dto.REFINEMENT);
         refinement.setTimestamp(Instant.now().plusSeconds(10));
 
         DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
@@ -141,13 +141,13 @@ class NotificationAndMessageMapperTest {
 
     @Test
     void getTimelineFiltersByCategory() {
-        List<TimelineElementV27Dto> timeline = new ArrayList<>();
-        List<TimelineElementCategoryV27Dto> categories = getFilteredCategories();
-        for (TimelineElementCategoryV27Dto category : categories) {
-            TimelineElementV27Dto element = new TimelineElementV27Dto();
+        List<TimelineElementV28Dto> timeline = new ArrayList<>();
+        List<TimelineElementCategoryV28Dto> categories = getFilteredCategories();
+        for (TimelineElementCategoryV28Dto category : categories) {
+            TimelineElementV28Dto element = new TimelineElementV28Dto();
             element.setCategory(category);
             element.setEventTimestamp(Instant.now());
-            element.setDetails(new TimelineElementDetailsV27Dto());
+            element.setDetails(new TimelineElementDetailsV28Dto());
             timeline.add(element);
         }
 
@@ -166,36 +166,36 @@ class NotificationAndMessageMapperTest {
         assertThat(response.getTimeline()).isNotEmpty();
 
         // Verify that all categories are included in the response
-        List<TimelineElementCategoryV27Dto> actualCategories = response.getTimeline().stream()
-                .map(timelineElement -> TimelineElementCategoryV27Dto.fromValue(timelineElement.getCategory().getValue()))
+        List<TimelineElementCategoryV28Dto> actualCategories = response.getTimeline().stream()
+                .map(timelineElement -> TimelineElementCategoryV28Dto.fromValue(timelineElement.getCategory().getValue()))
                 .toList();
 
         assertThat(actualCategories).containsAll(categories);
     }
 
-    private static List<TimelineElementCategoryV27Dto> getFilteredCategories() {
+    private static List<TimelineElementCategoryV28Dto> getFilteredCategories() {
         return List.of(
-                TimelineElementCategoryV27Dto.REQUEST_ACCEPTED,
-                TimelineElementCategoryV27Dto.SEND_COURTESY_MESSAGE,
-                TimelineElementCategoryV27Dto.SCHEDULE_DIGITAL_WORKFLOW,
-                TimelineElementCategoryV27Dto.SEND_DIGITAL_DOMICILE,
-                TimelineElementCategoryV27Dto.SEND_DIGITAL_PROGRESS,
-                TimelineElementCategoryV27Dto.SEND_DIGITAL_FEEDBACK,
-                TimelineElementCategoryV27Dto.DIGITAL_SUCCESS_WORKFLOW,
-                TimelineElementCategoryV27Dto.DIGITAL_FAILURE_WORKFLOW,
-                TimelineElementCategoryV27Dto.ANALOG_FAILURE_WORKFLOW,
-                TimelineElementCategoryV27Dto.SEND_SIMPLE_REGISTERED_LETTER,
-                TimelineElementCategoryV27Dto.NOTIFICATION_VIEWED,
-                TimelineElementCategoryV27Dto.PREPARE_ANALOG_DOMICILE_FAILURE,
-                TimelineElementCategoryV27Dto.SEND_ANALOG_DOMICILE,
-                TimelineElementCategoryV27Dto.SEND_ANALOG_PROGRESS,
-                TimelineElementCategoryV27Dto.SEND_ANALOG_FEEDBACK,
-                TimelineElementCategoryV27Dto.NOTIFICATION_RADD_RETRIEVED,
-                TimelineElementCategoryV27Dto.COMPLETELY_UNREACHABLE,
-                TimelineElementCategoryV27Dto.AAR_GENERATION,
-                TimelineElementCategoryV27Dto.NOT_HANDLED,
-                TimelineElementCategoryV27Dto.REFINEMENT,
-                TimelineElementCategoryV27Dto.ANALOG_WORKFLOW_RECIPIENT_DECEASED
+                TimelineElementCategoryV28Dto.REQUEST_ACCEPTED,
+                TimelineElementCategoryV28Dto.SEND_COURTESY_MESSAGE,
+                TimelineElementCategoryV28Dto.SCHEDULE_DIGITAL_WORKFLOW,
+                TimelineElementCategoryV28Dto.SEND_DIGITAL_DOMICILE,
+                TimelineElementCategoryV28Dto.SEND_DIGITAL_PROGRESS,
+                TimelineElementCategoryV28Dto.SEND_DIGITAL_FEEDBACK,
+                TimelineElementCategoryV28Dto.DIGITAL_SUCCESS_WORKFLOW,
+                TimelineElementCategoryV28Dto.DIGITAL_FAILURE_WORKFLOW,
+                TimelineElementCategoryV28Dto.ANALOG_FAILURE_WORKFLOW,
+                TimelineElementCategoryV28Dto.SEND_SIMPLE_REGISTERED_LETTER,
+                TimelineElementCategoryV28Dto.NOTIFICATION_VIEWED,
+                TimelineElementCategoryV28Dto.PREPARE_ANALOG_DOMICILE_FAILURE,
+                TimelineElementCategoryV28Dto.SEND_ANALOG_DOMICILE,
+                TimelineElementCategoryV28Dto.SEND_ANALOG_PROGRESS,
+                TimelineElementCategoryV28Dto.SEND_ANALOG_FEEDBACK,
+                TimelineElementCategoryV28Dto.NOTIFICATION_RADD_RETRIEVED,
+                TimelineElementCategoryV28Dto.COMPLETELY_UNREACHABLE,
+                TimelineElementCategoryV28Dto.AAR_GENERATION,
+                TimelineElementCategoryV28Dto.NOT_HANDLED,
+                TimelineElementCategoryV28Dto.REFINEMENT,
+                TimelineElementCategoryV28Dto.ANALOG_WORKFLOW_RECIPIENT_DECEASED
         );
     }
 
