@@ -43,6 +43,7 @@ public class OperationMapper {
         pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
         pnServiceDeskOperations.setRecipientInternalId(recipientInternalId);
         pnServiceDeskOperations.setTicketDate(operationRequest.getTicketDate());
+        pnServiceDeskOperations.setVrDate(operationRequest.getVrDate());
         return pnServiceDeskOperations;
     }
 
