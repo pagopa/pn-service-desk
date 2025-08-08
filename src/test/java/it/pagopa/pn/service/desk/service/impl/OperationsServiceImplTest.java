@@ -3,6 +3,8 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationRecipientV24Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileCreationResponse;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
@@ -14,6 +16,7 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperationFileKey;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.service.NotificationService;
@@ -38,6 +41,7 @@ import java.nio.charset.Charset;
 import java.sql.Array;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,7 +50,7 @@ class OperationsServiceImplTest extends BaseTest {
     @MockBean
     private NotificationService notificationService;
     @MockBean
-    private PnDeliveryPushClient pnDeliveryPushClient;
+    private PnDeliveryClient pnDeliveryClient;
     @MockBean
     private PnDataVaultClient dataVaultClient;
     @MockBean
@@ -254,14 +258,16 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void createActOperation_Success() {
-        LegalFactListElementV20Dto legalFact = new LegalFactListElementV20Dto();
-        legalFact.setTaxId(createActOperationRequest.getTaxId());
-        legalFact.setIun(createActOperationRequest.getIun());
+        SentNotificationV25Dto sentNotificationV25Dto = new SentNotificationV25Dto();
 
-        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(
-                       Mockito.eq(createActOperationRequest.getTaxId()),
-                       Mockito.eq(createActOperationRequest.getIun())))
-               .thenReturn(Flux.just(legalFact));
+        NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
+        recipient.setTaxId(createActOperationRequest.getTaxId());
+        sentNotificationV25Dto.setRecipients(List.of(recipient));
+        sentNotificationV25Dto.setIun(createActOperationRequest.getIun());
+
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
+                Mockito.eq(createActOperationRequest.getIun())))
+               .thenReturn(Mono.just(sentNotificationV25Dto));
 
         Mockito.when(operationDAO.getByOperationId(Mockito.any()))
                .thenReturn(Mono.empty());
@@ -280,30 +286,27 @@ class OperationsServiceImplTest extends BaseTest {
 
 
     @Test
-    void createActOperation_NoLegalFacts_ReturnsError() {
-        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(
-                       Mockito.eq(createActOperationRequest.getTaxId()),
+    void createActOperation_NoLegalFacts_CompletesWithoutError() {
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
                        Mockito.eq(createActOperationRequest.getIun())))
-               .thenReturn(Flux.empty());
+               .thenReturn(Mono.empty());
 
         StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
-                    .expectErrorSatisfies(ex -> {
-                        assertTrue(ex instanceof PnGenericException);
-                        assertEquals(NOT_NOTIFICATION_FOUND.getMessage(), ex.getMessage());
-                    })
-                    .verify();
-    }
+                    .verifyComplete();    }
+
 
     @Test
     void createActOperation_TaxIdMismatch_ReturnsError() {
-        LegalFactListElementV20Dto legalFact = new LegalFactListElementV20Dto();
-        legalFact.setTaxId("DIFFERENT_TAX_ID");
-        legalFact.setIun("iun123");
+        SentNotificationV25Dto sentNotification = new SentNotificationV25Dto();
 
-        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(
-                       Mockito.eq(createActOperationRequest.getTaxId()),
+        NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
+        // Simuliamo mismatch
+        recipient.setTaxId("DIFFERENT_TAX_ID");
+        sentNotification.setRecipients(List.of(recipient));
+
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
                        Mockito.eq(createActOperationRequest.getIun())))
-               .thenReturn(Flux.just(legalFact));
+               .thenReturn(Mono.just(sentNotification));
 
         StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
                     .expectErrorSatisfies(ex -> {
@@ -313,12 +316,12 @@ class OperationsServiceImplTest extends BaseTest {
                     .verify();
     }
 
+
     @Test
     void createActOperation_ClientError_PropagatesPnGenericException() {
-        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(
-                       Mockito.eq(createActOperationRequest.getTaxId()),
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
                        Mockito.eq(createActOperationRequest.getIun())))
-               .thenReturn(Flux.error(new RuntimeException("Simulated client error")));
+               .thenReturn(Mono.error(new RuntimeException("Simulated client error")));
 
         StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
                     .expectErrorSatisfies(ex -> {

@@ -23,24 +23,29 @@ public class OperationMapper {
 
     private OperationMapper(){}
 
-    public static PnServiceDeskOperations getInitialOperation(CreateOperationRequest req, String recipientInternalId) {
-        return buildInitialOperation(req.getTicketId(), req.getTicketOperationId(), recipientInternalId);
-    }
-
-    public static PnServiceDeskOperations getInitialActOperation(CreateActOperationRequest req, String recipientInternalId) {
-        return buildInitialOperation(req.getTicketId(), req.getTicketOperationId(), recipientInternalId);
-    }
-
-    private static PnServiceDeskOperations buildInitialOperation(String ticketId, String ticketOperationId, String recipientInternalId) {
+    public static PnServiceDeskOperations getInitialOperation(CreateOperationRequest operationRequest, String recipientInternalId) {
         PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
-        pnServiceDeskOperations.setOperationId(Utility.generateOperationId(ticketId, ticketOperationId));
-        pnServiceDeskOperations.setTicketId(ticketId);
+        pnServiceDeskOperations.setOperationId(Utility.generateOperationId(operationRequest.getTicketId(), operationRequest.getTicketOperationId()));
+        pnServiceDeskOperations.setTicketId(operationRequest.getTicketId());
         pnServiceDeskOperations.setStatus(OperationStatusEnum.CREATING.toString());
         pnServiceDeskOperations.setOperationStartDate(Instant.now());
         pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
         pnServiceDeskOperations.setRecipientInternalId(recipientInternalId);
+
+        return pnServiceDeskOperations;    }
+
+    public static PnServiceDeskOperations getInitialActOperation(CreateActOperationRequest operationRequest, String recipientInternalId) {
+        PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
+        pnServiceDeskOperations.setOperationId(Utility.generateOperationId(operationRequest.getTicketId(), operationRequest.getTicketOperationId()));
+        pnServiceDeskOperations.setTicketId(operationRequest.getTicketId());
+        pnServiceDeskOperations.setStatus(OperationStatusEnum.CREATING.toString());
+        pnServiceDeskOperations.setOperationStartDate(Instant.now());
+        pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
+        pnServiceDeskOperations.setRecipientInternalId(recipientInternalId);
+        pnServiceDeskOperations.setTicketDate(operationRequest.getTicketDate());
         return pnServiceDeskOperations;
     }
+
     public static OperationResponse operationResponseMapper(PnServiceDeskConfigs pnServiceDeskConfigs, PnServiceDeskOperations pnServiceDeskOperations, String taxId){
         OperationResponse operationResponse = new OperationResponse();
         operationResponse.setOperationId(Utility.cleanUpOperationId(pnServiceDeskOperations.getOperationId()));

@@ -14,7 +14,7 @@ import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
-import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationService;
@@ -39,7 +39,7 @@ public class OperationsServiceImpl implements OperationsService {
     private final NotificationService notificationService;
     private final PnDataVaultClient dataVaultClient;
     private final PnSafeStorageClient safeStorageClient;
-    private final PnDeliveryPushClient pnDeliveryPushClient;
+    private final PnDeliveryClient pnDeliveryClient;
     private final OperationDAO operationDAO;
     private final OperationsFileKeyDAO operationsFileKeyDAO;
     private final PnServiceDeskConfigs cfn;
@@ -51,13 +51,13 @@ public class OperationsServiceImpl implements OperationsService {
     private static final String ERROR_MESSAGE_RECOVERING_FILE = "errorReason = {}, error during file recover";
 
     public OperationsServiceImpl(NotificationService notificationService, PnDataVaultClient dataVaultClient,
-                                 PnSafeStorageClient safeStorageClient, PnDeliveryPushClient pnDeliveryPushClient, OperationDAO operationDAO,
+                                 PnSafeStorageClient safeStorageClient, PnDeliveryClient pnDeliveryClient, OperationDAO operationDAO,
                                  OperationsFileKeyDAO operationsFileKeyDAO, PnServiceDeskConfigs cfn,
                                  AuditLogService auditLogService) {
         this.notificationService = notificationService;
         this.dataVaultClient = dataVaultClient;
         this.safeStorageClient = safeStorageClient;
-        this.pnDeliveryPushClient = pnDeliveryPushClient;
+        this.pnDeliveryClient = pnDeliveryClient;
         this.operationDAO = operationDAO;
         this.operationsFileKeyDAO = operationsFileKeyDAO;
         this.cfn = cfn;
@@ -102,46 +102,44 @@ public class OperationsServiceImpl implements OperationsService {
 
         OperationsResponse response = new OperationsResponse();
 
-        String recipientInternalId = createActOperationRequest.getTaxId(); // per il pnDeliveryPushClient
+        String taxId = createActOperationRequest.getTaxId();
         String iun = createActOperationRequest.getIun();
 
-        return pnDeliveryPushClient.getNotificationLegalFactsPrivate(recipientInternalId, iun)
-                                   .collectList()
-                                   .flatMap(legalFacts -> {
-                                       log.debug("legalFactsResponse = {}, Are there legal facts for the notification?", legalFacts);
+        return pnDeliveryClient.getSentNotificationPrivate(iun)
+                                   .flatMap(sentNotification -> {
+                                                log.debug("sentNotificationResponse = {}, Are there legal facts for the notification?",
+                                                          sentNotification);
 
-                                       if (!legalFacts.isEmpty()) {
-                                           LegalFactListElementV20Dto first = legalFacts.get(0);
+                                                if (!sentNotification.getRecipients().isEmpty()) {
 
-                                           // Controllo codice fiscale
-                                           String cfFromService = first.getTaxId();
-                                           String cfFromRequest = createActOperationRequest.getTaxId();
-                                           if (cfFromService == null || !cfFromService.equalsIgnoreCase(cfFromRequest)) {
-                                               String errorMsg = String.format(
-                                                       "Tax ID from request does not match the Tax ID from the notification AAR (IUN: %s). Request: %s, AAR: %s",
-                                                       iun, cfFromRequest, cfFromService);
-                                               log.error(errorMsg);
-                                               PnGenericException ex = new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, errorMsg);
-                                               return Mono.error(ex);
-                                           }
-
-                                           // Se il codice fiscale è ok → proseguo
-                                           return dataVaultClient.anonymized(cfFromService)
-                                                                 .map(recipientId -> OperationMapper.getInitialActOperation(createActOperationRequest, recipientId))
-                                                                 .zipWhen(pnServiceDeskOperations -> {
-                                                                     PnServiceDeskAddress address = AddressMapper.toActEntity(
-                                                                             createActOperationRequest.getAddress(),
-                                                                             pnServiceDeskOperations.getOperationId(),
-                                                                             cfn
-                                                                                                                             );
-                                                                     return Mono.just(address);
-                                                                 })
-                                                                 .flatMap(this::checkAndSaveOperation)
-                                                                 .map(operation -> response.operationId(operation.getOperationId()));
-                                       }
-
+                                                    sentNotification.getRecipients()
+                                                                    .stream()
+                                                                    .filter(recipient ->
+                                                                                    StringUtils.equalsIgnoreCase(recipient.getTaxId(), taxId))
+                                                                                                                .findFirst()
+                                                                                                                 .orElseThrow(() -> {
+                                                                                                                     String errorMsg = String.format(
+                                                                                                                             "Tax ID from request does not match the Tax ID from the notification ");
+                                                                                                                     return new PnGenericException(
+                                                                                                                             NOT_NOTIFICATION_FOUND,
+                                                                                                                             errorMsg);
+                                                                                                                 });
+                                                return dataVaultClient.anonymized(taxId)
+                                                                      .map(recipientId -> OperationMapper.getInitialActOperation(
+                                                                              createActOperationRequest,
+                                                                              recipientId))
+                                                                      .zipWhen(pnServiceDeskOperations -> {
+                                                                          PnServiceDeskAddress address = AddressMapper.toActEntity(
+                                                                                  createActOperationRequest.getAddress(),
+                                                                                  pnServiceDeskOperations.getOperationId(),
+                                                                                  cfn);
+                                                                          return Mono.just(address);
+                                                                      })
+                                                                      .flatMap(this::checkAndSaveOperation)
+                                                                      .map(operation -> response.operationId(operation.getOperationId()));
+                                            }
                                        PnGenericException ex = new PnGenericException(NOT_NOTIFICATION_FOUND, NOT_NOTIFICATION_FOUND.getMessage());
-                                       log.error("No legal facts found for recipientInternalId={} and iun={}", recipientInternalId, iun);
+                                       log.error("No legal facts found for recipientInternalId={} and iun={}", taxId, iun);
                                        return Mono.error(ex);
                                    }).onErrorResume(exception -> {
                     log.error("errorReason = {}, An error occurred while calling DeliveryPush legalFacts service", exception.getMessage());
