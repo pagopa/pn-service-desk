@@ -25,6 +25,7 @@ public enum ExceptionTypeEnum {
     NO_ATTACHMENT_AVAILABLE("NO_ATTACHMENT_AVAILABLE","There are no attachments available for this operation "),
     ADDRESS_IS_NOT_PRESENT("ADDRESS_IS_NOT_PRESENT", "L'indirizzo non è presente"),
     NO_UNREACHABLE_NOTIFICATION("NO_UNREACHABLE_NOTIFICATION", "There are no unreachable notification for the taxId provided "),
+    NOT_NOTIFICATION_FOUND("NOT_NOTIFICATION_FOUND", "There are not notification for the iun provided "),
     ERROR_ON_RADD_INQUIRY("ERROR_ON_RADD_INQUIRY", "An error occurred while calling the service inquiry api "),
     ERROR_SAFE_STORAGE_BODY_NULL("ERROR_SAFE_STORAGE_BODY_NULL", "Safe Storage response is full for this file key "),
     ERROR_ON_UPDATE_ENTITY("ERROR_ON_UPDATE_ETITY", "An error occurred while updating the entity "),

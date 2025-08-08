@@ -4,6 +4,7 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.mapper.AddressMapper;
 import it.pagopa.pn.service.desk.mapper.OperationMapper;
@@ -13,6 +14,7 @@ import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationService;
@@ -37,6 +39,7 @@ public class OperationsServiceImpl implements OperationsService {
     private final NotificationService notificationService;
     private final PnDataVaultClient dataVaultClient;
     private final PnSafeStorageClient safeStorageClient;
+    private final PnDeliveryPushClient pnDeliveryPushClient;
     private final OperationDAO operationDAO;
     private final OperationsFileKeyDAO operationsFileKeyDAO;
     private final PnServiceDeskConfigs cfn;
@@ -48,70 +51,102 @@ public class OperationsServiceImpl implements OperationsService {
     private static final String ERROR_MESSAGE_RECOVERING_FILE = "errorReason = {}, error during file recover";
 
     public OperationsServiceImpl(NotificationService notificationService, PnDataVaultClient dataVaultClient,
-                                 PnSafeStorageClient safeStorageClient, OperationDAO operationDAO,
+                                 PnSafeStorageClient safeStorageClient, PnDeliveryPushClient pnDeliveryPushClient, OperationDAO operationDAO,
                                  OperationsFileKeyDAO operationsFileKeyDAO, PnServiceDeskConfigs cfn,
                                  AuditLogService auditLogService) {
         this.notificationService = notificationService;
         this.dataVaultClient = dataVaultClient;
         this.safeStorageClient = safeStorageClient;
+        this.pnDeliveryPushClient = pnDeliveryPushClient;
         this.operationDAO = operationDAO;
         this.operationsFileKeyDAO = operationsFileKeyDAO;
         this.cfn = cfn;
         this.auditLogService = auditLogService;
     }
 
+
     @Override
     public Mono<OperationsResponse> createOperation(String xPagopaPnUid, CreateOperationRequest createOperationRequest) {
         log.debug("xPagopaPnUid = {}, createOperationRequest = {}, CreateOperation received input", xPagopaPnUid, createOperationRequest);
 
-        return handleCreateOperation(
-                createOperationRequest,
-                createOperationRequest.getTaxId(),
-                req -> OperationMapper.getInitialOperation(req, UUID.randomUUID().toString()),
-                (req, operationId) -> AddressMapper.toEntity(req.getAddress(), operationId, cfn));
+        OperationsResponse response = new OperationsResponse();
+        NotificationRequest notificationRequest = new NotificationRequest();
+        notificationRequest.setTaxId(createOperationRequest.getTaxId());
+        String randomUUID = UUID.randomUUID().toString();
+
+        return notificationService.getUnreachableNotification(randomUUID, notificationRequest)
+                .flatMap(notificationsUnreachableResponse -> {
+                    log.debug("notificationsUnreachableResponse = {}, Are there unreachable notification?", notificationsUnreachableResponse);
+                    if(notificationsUnreachableResponse.getNotificationsCount().equals(1L)) {
+                        log.debug("notificationsUnreachableCount = {}, There are unreachable notification?", notificationsUnreachableResponse.getNotificationsCount());
+                        return dataVaultClient.anonymized(createOperationRequest.getTaxId())
+                                .map(recipientId -> OperationMapper.getInitialOperation(createOperationRequest, recipientId))
+                                .zipWhen(pnServiceDeskOperations -> {
+                                    PnServiceDeskAddress address = AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn);
+                                    return Mono.just(address);
+                                })
+                                .flatMap(this::checkAndSaveOperation)
+                                .map(operation -> response.operationId(operation.getOperationId()));
+                    }
+                    PnGenericException ex = new PnGenericException(NO_UNREACHABLE_NOTIFICATION,NO_UNREACHABLE_NOTIFICATION.getMessage());
+                    log.error("notificationsUnreachableCount = {}, There are not unreachable notification", notificationsUnreachableResponse.getNotificationsCount());
+                    return Mono.error(ex);
+                });
     }
 
     @Override
     public Mono<OperationsResponse> createActOperation(String xPagopaPnUid, CreateActOperationRequest createActOperationRequest) {
-        log.debug("xPagopaPnUid = {}, createActOperationRequest = {}, CreateActOperation received input", xPagopaPnUid, createActOperationRequest);
-        return handleCreateOperation(
-                createActOperationRequest,
-                createActOperationRequest.getTaxId(),
-                req -> OperationMapper.getInitialActOperation(req, UUID.randomUUID().toString()),
-                (req, operationId) -> AddressMapper.toActEntity(req.getAddress(), operationId, cfn));
-    }
 
-    private <T> Mono<OperationsResponse> handleCreateOperation(
-            T request,
-            String taxId,
-            java.util.function.Function<T, PnServiceDeskOperations> operationCreator,
-            java.util.function.BiFunction<T, String, PnServiceDeskAddress> addressCreator
-                                                               ) {
+        log.debug("xPagopaPnUid = {}, createActOperationRequest = {}, CreateActOperation received input",
+                  xPagopaPnUid, createActOperationRequest);
 
         OperationsResponse response = new OperationsResponse();
-        NotificationRequest notificationRequest = new NotificationRequest();
-        notificationRequest.setTaxId(taxId);
-        String randomUUID = UUID.randomUUID().toString();
 
-        return notificationService.getUnreachableNotification(randomUUID, notificationRequest)
-                                  .flatMap(notificationsUnreachableResponse -> {
-                                      log.debug("notificationsUnreachableResponse = {}, Are there unreachable notification?", notificationsUnreachableResponse);
-                                      if (notificationsUnreachableResponse.getNotificationsCount().equals(1L)) {
-                                          log.debug("notificationsUnreachableCount = {}, There are unreachable notification?", notificationsUnreachableResponse.getNotificationsCount());
+        String recipientInternalId = createActOperationRequest.getTaxId(); // per il pnDeliveryPushClient
+        String iun = createActOperationRequest.getIun();
 
-                                          return dataVaultClient.anonymized(taxId)
-                                                                .map(recipientId -> operationCreator.apply(request))
-                                                                .zipWhen(pnServiceDeskOperations -> {
-                                                                    PnServiceDeskAddress address = addressCreator.apply(request, pnServiceDeskOperations.getOperationId());
-                                                                    return Mono.just(address);
-                                                                })
-                                                                .flatMap(this::checkAndSaveOperation)
-                                                                .map(operation -> response.operationId(operation.getOperationId()));
-                                      }
-                                      PnGenericException ex = new PnGenericException(NO_UNREACHABLE_NOTIFICATION, NO_UNREACHABLE_NOTIFICATION.getMessage());
-                                      log.error("notificationsUnreachableCount = {}, There are not unreachable notification", notificationsUnreachableResponse.getNotificationsCount());
-                                      return Mono.error(ex);
-                                  });
+        return pnDeliveryPushClient.getNotificationLegalFactsPrivate(recipientInternalId, iun)
+                                   .collectList()
+                                   .flatMap(legalFacts -> {
+                                       log.debug("legalFactsResponse = {}, Are there legal facts for the notification?", legalFacts);
+
+                                       if (!legalFacts.isEmpty()) {
+                                           LegalFactListElementV20Dto first = legalFacts.get(0);
+
+                                           // Controllo codice fiscale
+                                           String cfFromService = first.getTaxId();
+                                           String cfFromRequest = createActOperationRequest.getTaxId();
+                                           if (cfFromService == null || !cfFromService.equalsIgnoreCase(cfFromRequest)) {
+                                               String errorMsg = String.format(
+                                                       "Tax ID from request does not match the Tax ID from the notification AAR (IUN: %s). Request: %s, AAR: %s",
+                                                       iun, cfFromRequest, cfFromService);
+                                               log.error(errorMsg);
+                                               PnGenericException ex = new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, errorMsg);
+                                               return Mono.error(ex);
+                                           }
+
+                                           // Se il codice fiscale è ok → proseguo
+                                           return dataVaultClient.anonymized(cfFromService)
+                                                                 .map(recipientId -> OperationMapper.getInitialActOperation(createActOperationRequest, recipientId))
+                                                                 .zipWhen(pnServiceDeskOperations -> {
+                                                                     PnServiceDeskAddress address = AddressMapper.toActEntity(
+                                                                             createActOperationRequest.getAddress(),
+                                                                             pnServiceDeskOperations.getOperationId(),
+                                                                             cfn
+                                                                                                                             );
+                                                                     return Mono.just(address);
+                                                                 })
+                                                                 .flatMap(this::checkAndSaveOperation)
+                                                                 .map(operation -> response.operationId(operation.getOperationId()));
+                                       }
+
+                                       PnGenericException ex = new PnGenericException(NOT_NOTIFICATION_FOUND, NOT_NOTIFICATION_FOUND.getMessage());
+                                       log.error("No legal facts found for recipientInternalId={} and iun={}", recipientInternalId, iun);
+                                       return Mono.error(ex);
+                                   }).onErrorResume(exception -> {
+                    log.error("errorReason = {}, An error occurred while calling DeliveryPush legalFacts service", exception.getMessage());
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
+                });
     }
 
     private Mono<PnServiceDeskOperations> checkAndSaveOperation(Tuple2<PnServiceDeskOperations, PnServiceDeskAddress> operationAndAddress){
