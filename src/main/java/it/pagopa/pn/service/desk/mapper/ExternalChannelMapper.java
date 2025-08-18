@@ -75,8 +75,8 @@ public class ExternalChannelMapper {
         NotificationCceForEmailDto notificationCceForEmailDto = new NotificationCceForEmailDto();
         notificationCceForEmailDto.setDenomination(address.getFullName());
         notificationCceForEmailDto.setIun(operations.getOperationId());
-        notificationCceForEmailDto.setTicketDate(String.valueOf(operations.getOperationStartDate()));
-        notificationCceForEmailDto.setVrDate(String.valueOf(operations.getOperationLastUpdateDate()));
+        notificationCceForEmailDto.setTicketDate(String.valueOf(operations.getTicketDate()));
+        notificationCceForEmailDto.setVrDate(String.valueOf(operations.getVrDate()));
 
         return pnTemplatesEngineClient.notificationCceTemplate(language, notificationCceForEmailDto);
     }
