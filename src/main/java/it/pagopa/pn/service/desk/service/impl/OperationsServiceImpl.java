@@ -139,11 +139,11 @@ public class OperationsServiceImpl implements OperationsService {
                                                                       .map(operation -> response.operationId(operation.getOperationId()));
                                             }
                                        PnGenericException ex = new PnGenericException(NOT_NOTIFICATION_FOUND, NOT_NOTIFICATION_FOUND.getMessage());
-                                       log.error("No legal facts found for recipientInternalId={} and iun={}", taxId, iun);
+                                       log.error("No notifications found for recipientInternalId={} and iun={}", taxId, iun);
                                        return Mono.error(ex);
                                    }).onErrorResume(exception -> {
-                    log.error("errorReason = {}, An error occurred while calling DeliveryPush legalFacts service", exception.getMessage());
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
+                    log.error("errorReason = {}, An error occurred while calling Delivery notifications service", exception.getMessage());
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
                 });
     }
 
