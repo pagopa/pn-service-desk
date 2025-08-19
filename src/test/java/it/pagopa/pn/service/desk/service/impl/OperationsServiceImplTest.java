@@ -264,6 +264,8 @@ class OperationsServiceImplTest extends BaseTest {
         recipient.setTaxId(createActOperationRequest.getTaxId());
         sentNotificationV25Dto.setRecipients(List.of(recipient));
         sentNotificationV25Dto.setIun(createActOperationRequest.getIun());
+        sentNotificationV25Dto.setDocumentsAvailable(false);
+
 
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
                 Mockito.eq(createActOperationRequest.getIun())))
@@ -302,7 +304,9 @@ class OperationsServiceImplTest extends BaseTest {
         NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
         // Simuliamo mismatch
         recipient.setTaxId("DIFFERENT_TAX_ID");
+
         sentNotification.setRecipients(List.of(recipient));
+        sentNotification.setDocumentsAvailable(false);
 
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
                        Mockito.eq(createActOperationRequest.getIun())))

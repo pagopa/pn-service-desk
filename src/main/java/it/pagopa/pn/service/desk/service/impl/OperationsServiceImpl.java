@@ -4,7 +4,6 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.mapper.AddressMapper;
 import it.pagopa.pn.service.desk.mapper.OperationMapper;
@@ -100,51 +99,51 @@ public class OperationsServiceImpl implements OperationsService {
         log.debug("xPagopaPnUid = {}, createActOperationRequest = {}, CreateActOperation received input",
                   xPagopaPnUid, createActOperationRequest);
 
-        OperationsResponse response = new OperationsResponse();
-
         String taxId = createActOperationRequest.getTaxId();
         String iun = createActOperationRequest.getIun();
 
-        return pnDeliveryClient.getSentNotificationPrivate(iun)
-                                   .flatMap(sentNotification -> {
-                                                log.debug("sentNotificationResponse = {}, Are there legal facts for the notification?",
-                                                          sentNotification);
+        return dataVaultClient.anonymized(taxId)
+                              .flatMap(recipientId ->
+                                               pnDeliveryClient.getSentNotificationPrivate(iun)
+                                                               .flatMap(sentNotification -> {
+                                                                   log.debug("sentNotificationResponse = {}, recipientId={}, Checking legal facts for the notification",
+                                                                             sentNotification, recipientId);
 
-                                                if (!sentNotification.getRecipients().isEmpty()) {
+                                                                   if (sentNotification.getDocumentsAvailable() != null && Boolean.FALSE.equals(sentNotification.getDocumentsAvailable())) {
+                                                                       sentNotification.getRecipients()
+                                                                                       .stream()
+                                                                                       .filter(recipient -> StringUtils.equalsIgnoreCase(recipient.getTaxId(), taxId))
+                                                                                       .findFirst()
+                                                                                       .orElseThrow(() -> {
+                                                                                           String errorMsg = "Tax ID from request does not match the Tax ID from the notification";
+                                                                                           log.error("recipientId={}, iun={}, {}", recipientId, iun, errorMsg);
+                                                                                           return new PnGenericException(NOT_NOTIFICATION_FOUND, errorMsg);
+                                                                                       });
 
-                                                    sentNotification.getRecipients()
-                                                                    .stream()
-                                                                    .filter(recipient ->
-                                                                                    StringUtils.equalsIgnoreCase(recipient.getTaxId(), taxId))
-                                                                                                                .findFirst()
-                                                                                                                 .orElseThrow(() -> {
-                                                                                                                     String errorMsg = String.format(
-                                                                                                                             "Tax ID from request does not match the Tax ID from the notification ");
-                                                                                                                     return new PnGenericException(
-                                                                                                                             NOT_NOTIFICATION_FOUND,
-                                                                                                                             errorMsg);
-                                                                                                                 });
-                                                return dataVaultClient.anonymized(taxId)
-                                                                      .map(recipientId -> OperationMapper.getInitialActOperation(
-                                                                              createActOperationRequest,
-                                                                              recipientId))
-                                                                      .zipWhen(pnServiceDeskOperations -> {
-                                                                          PnServiceDeskAddress address = AddressMapper.toActEntity(
-                                                                                  createActOperationRequest.getAddress(),
-                                                                                  pnServiceDeskOperations.getOperationId(),
-                                                                                  cfn);
-                                                                          return Mono.just(address);
-                                                                      })
-                                                                      .flatMap(this::checkAndSaveOperation)
-                                                                      .map(operation -> response.operationId(operation.getOperationId()));
-                                            }
-                                       PnGenericException ex = new PnGenericException(NOT_NOTIFICATION_FOUND, NOT_NOTIFICATION_FOUND.getMessage());
-                                       log.error("No notifications found for recipientInternalId={} and iun={}", taxId, iun);
-                                       return Mono.error(ex);
-                                   }).onErrorResume(exception -> {
-                    log.error("errorReason = {}, An error occurred while calling Delivery notifications service", exception.getMessage());
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
-                });
+                                                                       return Mono.just(OperationMapper.getInitialActOperation(createActOperationRequest, recipientId))
+                                                                                  .zipWhen(pnServiceDeskOperations -> {
+                                                                                      PnServiceDeskAddress address = AddressMapper.toActEntity(
+                                                                                              createActOperationRequest.getAddress(),
+                                                                                              pnServiceDeskOperations.getOperationId(),
+                                                                                              cfn);
+                                                                                      return Mono.just(address);
+                                                                                  })
+                                                                                  .flatMap(this::checkAndSaveOperation)
+                                                                                  .map(operation -> {
+                                                                                      log.debug("ActOperation created successfully for recipientId={}, iun={}", recipientId, iun);
+                                                                                      return new OperationsResponse().operationId(operation.getOperationId());
+                                                                                  });
+                                                                   }
+
+                                                                   log.error("No notifications found for recipientId={} and iun={}", recipientId, iun);
+                                                                   return Mono.error(new PnGenericException(NOT_NOTIFICATION_FOUND, NOT_NOTIFICATION_FOUND.getMessage()));
+                                                               })
+                                                               .onErrorResume(exception -> {
+                                                                   log.error("recipientId={}, iun={}, errorReason={}, Error while calling Delivery notifications service",
+                                                                             recipientId, iun, exception.getMessage(), exception);
+                                                                   return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                                                               })
+                                      );
     }
 
     private Mono<PnServiceDeskOperations> checkAndSaveOperation(Tuple2<PnServiceDeskOperations, PnServiceDeskAddress> operationAndAddress){
