@@ -45,4 +45,12 @@ public class OperationsController implements OperationApi {
                 .flatMap(videoUpload -> operationsService.presignedUrlVideoUpload(xPagopaPnUid, operationId, videoUpload)
                         .map(videoUploadResponse -> ResponseEntity.status(HttpStatus.OK).body(videoUploadResponse)));
     }
+
+    @Override
+    public Mono<ResponseEntity<String>> getOperationStatus(String operationId, ServerWebExchange exchange) {
+        return Mono.just(operationId)
+                .flatMap(id -> operationsService.getOperationStatus(id))
+                        .map(status -> ResponseEntity.status(HttpStatus.OK).body(status));
+
+    }
 }

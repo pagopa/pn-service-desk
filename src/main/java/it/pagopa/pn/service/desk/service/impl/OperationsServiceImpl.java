@@ -183,6 +183,30 @@ public class OperationsServiceImpl implements OperationsService {
     }
 
 
-
-
+    @Override
+    public Mono<String> getOperationStatus(String operationId) {
+        return operationDAO.getByOperationId(operationId)
+                           // Se l'operation non esiste, lancia eccezione 404
+                           .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT,
+                                                                            OPERATION_IS_NOT_PRESENT.getMessage(),
+                                                                            HttpStatus.NOT_FOUND)))
+                           // Estrai lo status
+                           .map(operation -> operation.getStatus())
+                           // Gestione eccezione di storage
+                           .onErrorResume(PnRetryStorageException.class,
+                                          ex -> Mono.error(new PnGenericException(SAFE_STORAGE_FILE_LOADING,
+                                                                                  SAFE_STORAGE_FILE_LOADING.getMessage(),
+                                                                                  HttpStatus.BAD_REQUEST)))
+                           // Gestione eccezioni web client
+                           .onErrorResume(WebClientResponseException.class, ex -> {
+                               if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                                   return Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT,
+                                                                            OPERATION_IS_NOT_PRESENT.getMessage(),
+                                                                            HttpStatus.NOT_FOUND));
+                               }
+                               return Mono.error(new PnGenericException(ERROR_DURING_RECOVERING_FILE,
+                                                                        ERROR_DURING_RECOVERING_FILE.getMessage(),
+                                                                        HttpStatus.BAD_REQUEST));
+                           });
+    }
 }
