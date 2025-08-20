@@ -108,7 +108,7 @@ public class OperationsServiceImpl implements OperationsService {
                                                                .flatMap(sentNotification -> {
                                                                    log.debug("sentNotificationResponse = {}, recipientId={}, retrieving notification to check recipient",
                                                                              sentNotification, recipientId);
-                                                                   if (sentNotification.getDocumentsAvailable() != null && Boolean.FALSE.equals(sentNotification.getDocumentsAvailable())) {
+                                                                   if (sentNotification.getDocumentsAvailable() != null && Boolean.TRUE.equals(sentNotification.getDocumentsAvailable())) {
                                                                        sentNotification.getRecipients()
                                                                                        .stream()
                                                                                        .filter(recipient -> StringUtils.equalsIgnoreCase(recipient.getTaxId(), taxId))

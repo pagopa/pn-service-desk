@@ -264,7 +264,7 @@ class OperationsServiceImplTest extends BaseTest {
         recipient.setTaxId(createActOperationRequest.getTaxId());
         sentNotificationV25Dto.setRecipients(List.of(recipient));
         sentNotificationV25Dto.setIun(createActOperationRequest.getIun());
-        sentNotificationV25Dto.setDocumentsAvailable(false);
+        sentNotificationV25Dto.setDocumentsAvailable(true);
 
 
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
@@ -306,7 +306,7 @@ class OperationsServiceImplTest extends BaseTest {
         recipient.setTaxId("DIFFERENT_TAX_ID");
 
         sentNotification.setRecipients(List.of(recipient));
-        sentNotification.setDocumentsAvailable(false);
+        sentNotification.setDocumentsAvailable(true);
 
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
                        Mockito.eq(createActOperationRequest.getIun())))
