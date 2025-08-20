@@ -106,9 +106,8 @@ public class OperationsServiceImpl implements OperationsService {
                               .flatMap(recipientId ->
                                                pnDeliveryClient.getSentNotificationPrivate(iun)
                                                                .flatMap(sentNotification -> {
-                                                                   log.debug("sentNotificationResponse = {}, recipientId={}, Checking legal facts for the notification",
+                                                                   log.debug("sentNotificationResponse = {}, recipientId={}, retrieving notification to check recipient",
                                                                              sentNotification, recipientId);
-
                                                                    if (sentNotification.getDocumentsAvailable() != null && Boolean.FALSE.equals(sentNotification.getDocumentsAvailable())) {
                                                                        sentNotification.getRecipients()
                                                                                        .stream()

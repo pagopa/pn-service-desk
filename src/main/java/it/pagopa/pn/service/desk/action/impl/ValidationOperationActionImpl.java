@@ -39,6 +39,7 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
@@ -102,6 +103,21 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
     }
 
     private Mono<Void> checkValidationFlow(PnServiceDeskOperations operation, PnServiceDeskAddress address) {
+
+        if ("EMAIL".equalsIgnoreCase(address.getType())) {
+            List<String> iuns = new ArrayList<>();
+            iuns.add(operation.getIun());
+
+            return getAttachmentsList(operation, iuns)
+                    .collectList()
+                    .flatMapMany(lstAttachments -> new SplittingAttachments(lstAttachments, operation, cfn.getMaxNumberOfPages()).splitAttachment())
+                    .flatMap(op -> operationDAO.updateEntity(op)
+                                               .switchIfEmpty(Mono.defer(() -> Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()))))
+                                               .thenReturn(op))
+                    .flatMap(op -> requestToPrepare(op, address))
+                    .then();
+        }
+
         return getIuns(operation.getRecipientInternalId())
                 .collectList()
                 .flatMap(responsePaperNotificationFailed -> {
@@ -229,7 +245,10 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         return Mono.just(AttachmentMapper.initAttachment(iun))
                 .flatMap(entity ->
                         this.getAttachmentsFromDelivery(iun)
-                                .concatWith(getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
+                                .concatWith(
+                                        entityOperation.getIun() != null ?
+                                                Flux.empty():
+                                                getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
                                 .flatMap(this::attachmentInfo)
                                 .map(attachmentInfo -> {
                                     if (StringUtils.isNotEmpty(attachmentInfo.getFileKey())) attachmentInfo.setFileKey(attachmentInfo.getFileKey().contains(Utility.SAFESTORAGE_BASE_URL) ? attachmentInfo.getFileKey() : Utility.SAFESTORAGE_BASE_URL.concat(attachmentInfo.getFileKey()));

@@ -31,6 +31,7 @@ public class PnServiceDeskOperations {
     public static final String COL_ATTACHMENTS = "attachments";
     public static final String COL_TICKET_DATE = "ticketDate";
     public static final String COL_VR_DATE = "vrDate";
+    public static final String COL_IUN = "iun";
 
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_OPERATION_ID)}))
@@ -65,6 +66,9 @@ public class PnServiceDeskOperations {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VR_DATE)}))
     private String vrDate;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_IUN)}))
+    private String iun;
 
 
 }

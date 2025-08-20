@@ -333,12 +333,9 @@ class ValidationOperationActionImplTest {
         Mockito.when(operationDAO.getByOperationId("opIdEmail")).thenReturn(Mono.just(operation));
         Mockito.when(addressDAO.getAddress("opIdEmail")).thenReturn(Mono.just(address));
         Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(getDeduplicatesResponse(true)));
-        Mockito.when(pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
         Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(operation));
         Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
         Mockito.when(validationOperationAction.getAttachmentsList(Mockito.any(), Mockito.any())).thenReturn(Flux.fromIterable(pnServiceDeskAttachmentsList));
-        Mockito.when(operationDAO.searchOperationsFromRecipientInternalId(Mockito.anyString()))
-               .thenReturn(Flux.empty());
         Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                .thenReturn(Mono.empty());
         Mockito.when(cfn.getExternalChannelCxId()).thenReturn("CXID");
@@ -352,8 +349,11 @@ class ValidationOperationActionImplTest {
 
     @Test
     void executeWithEmailType_KO() {
-        // Prepara l'operazione e l'indirizzo
+        // --- Prepara l'operazione e l'indirizzo ---
         PnServiceDeskOperations operation = new PnServiceDeskOperations();
+        PnTemplatesEngineClient mockTemplatesEngineClient = Mockito.mock(PnTemplatesEngineClient.class);
+        ExternalChannelMapper.setPnTemplatesEngineClient(mockTemplatesEngineClient);
+
         operation.setOperationId("opIdEmail");
         operation.setRecipientInternalId("recipientId");
         operation.setAttachments(pnServiceDeskAttachmentsList);
@@ -362,40 +362,37 @@ class ValidationOperationActionImplTest {
         address.setType("EMAIL");
         address.setAddress("test@test.com");
 
-        // Mock per pnTemplatesEngineClient statico
-        PnTemplatesEngineClient mockTemplatesEngineClient = Mockito.mock(PnTemplatesEngineClient.class);
+        // --- Mock delle dipendenze ---
         Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.any(), Mockito.any()))
                .thenReturn(Mono.just("<mj-title>Oggetto di test KO</mj-title>Testo mail di errore"));
-        ExternalChannelMapper.setPnTemplatesEngineClient(mockTemplatesEngineClient);
-
-        // Mock delle altre dipendenze
         Mockito.when(operationDAO.getByOperationId("opIdEmail")).thenReturn(Mono.just(operation));
         Mockito.when(addressDAO.getAddress("opIdEmail")).thenReturn(Mono.just(address));
-        Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(getDeduplicatesResponse(true)));
-        Mockito.when(pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
+        Mockito.when(addressManagerClient.deduplicates(Mockito.any()))
+               .thenReturn(Mono.just(getDeduplicatesResponse(true)));
         Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(operation));
+        Mockito.when(validationOperationAction.getAttachmentsList(Mockito.any(), Mockito.any()))
+               .thenReturn(Flux.fromIterable(pnServiceDeskAttachmentsList));
         Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
-        Mockito.when(validationOperationAction.getAttachmentsList(Mockito.any(), Mockito.any())).thenReturn(Flux.fromIterable(pnServiceDeskAttachmentsList));
-        Mockito.when(operationDAO.searchOperationsFromRecipientInternalId(Mockito.anyString())).thenReturn(Flux.empty());
-
-        // Simula errore nella chiamata sendCourtesyMail
         Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                .thenReturn(Mono.error(new RuntimeException("error sending email")));
         Mockito.when(cfn.getExternalChannelCxId()).thenReturn("CXID");
 
-        // Esegui e verifica che NON venga lanciata eccezione (gestione KO su DB)
+        // --- Esegui il metodo senza far fallire il test ---
         Assertions.assertDoesNotThrow(() -> validationOperationAction.execute("opIdEmail"));
 
-        // Verifica che sia stato chiamato il metodo email
+        // --- Verifica che sia stato chiamato il metodo email ---
         Mockito.verify(externalChannelClient).sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any());
 
-        // Verifica che l'operazione sia stata aggiornata con errore
+        // --- Verifica che l'operazione sia stata aggiornata con KO ---
         ArgumentCaptor<PnServiceDeskOperations> captor = ArgumentCaptor.forClass(PnServiceDeskOperations.class);
         Mockito.verify(operationDAO, Mockito.atLeastOnce()).updateEntity(captor.capture());
-        boolean koStatus = captor.getAllValues().stream()
-                                 .anyMatch(op -> OperationStatusEnum.KO.toString().equals(op.getStatus()));
-        Assertions.assertTrue(koStatus, "Status should be KO after email failure");
+
+        boolean hasKoStatus = captor.getAllValues().stream()
+                                    .anyMatch(op -> OperationStatusEnum.KO.toString().equals(op.getStatus()));
+        Assertions.assertTrue(hasKoStatus, "L'operazione deve essere aggiornata con status KO dopo fallimento email");
     }
+
+
 
     private DeduplicatesResponseDto getDeduplicatesResponseWithError() {
         DeduplicatesResponseDto dto = new DeduplicatesResponseDto();

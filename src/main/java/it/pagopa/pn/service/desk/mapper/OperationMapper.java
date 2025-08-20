@@ -44,6 +44,7 @@ public class OperationMapper {
         pnServiceDeskOperations.setRecipientInternalId(recipientInternalId);
         pnServiceDeskOperations.setTicketDate(operationRequest.getTicketDate());
         pnServiceDeskOperations.setVrDate(operationRequest.getVrDate());
+        pnServiceDeskOperations.setIun(operationRequest.getIun());
         return pnServiceDeskOperations;
     }
 
