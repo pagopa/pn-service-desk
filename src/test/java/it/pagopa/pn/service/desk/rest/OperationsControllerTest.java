@@ -198,4 +198,41 @@ class OperationsControllerTest {
         request.setTaxId("123");
         return request;
     }
+
+
+    @Test
+    void getOperationStatus_Success() {
+        String operationId = "op123";
+        String expectedStatus = "OK";
+
+        Mockito.when(operationsService.getOperationStatus(operationId))
+                .thenReturn(Mono.just(expectedStatus));
+
+        webTestClient.get()
+                     .uri("/service-desk/operation/{operationId}", operationId)
+                     .header("x-pagopa-pn-uid", "test")
+                     .header("x-api-key", "test")
+                     .exchange()
+                     .expectStatus().isOk()
+                     .expectBody(String.class)
+                     .isEqualTo(expectedStatus);
+    }
+
+    @Test
+    void getOperationStatus_NotFound() {
+        String operationId = "op404";
+
+        Mockito.when(operationsService.getOperationStatus(operationId))
+                .thenReturn(Mono.error(new RuntimeException("Operation not found")));
+
+        webTestClient.get()
+                     .uri("/service-desk/operation/{operationId}", operationId)
+                     .header("x-pagopa-pn-uid", "test")
+                     .header("x-api-key", "test")
+                     .exchange()
+                     .expectStatus().is5xxServerError()
+                     .expectBody(String.class)
+                     .consumeWith(result ->
+         new String(result.getResponseBody()).contains("Operation not found"));
+    }
 }
