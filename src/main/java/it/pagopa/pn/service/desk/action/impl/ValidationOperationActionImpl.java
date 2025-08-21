@@ -59,12 +59,14 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
     private PnServiceDeskConfigs cfn;
     private PnDataVaultClient pnDataVaultClient;
     private PnExternalChannelClient pnExternalChannelClient;
+    private ExternalChannelMapper externalChannelMapper;
+
 
     public ValidationOperationActionImpl(OperationDAO operationDao, AddressDAO addressDAO,
                                          PnAddressManagerClient addressManagerClient, PnDeliveryPushClient pnDeliveryPushClient,
                                          PnDeliveryClient pnDeliveryClient,
                                          PnPaperChannelClient paperChannelClient, PnSafeStorageClient safeStorageClient,
-                                         PnServiceDeskConfigs cfn, PnDataVaultClient pnDataVaultClient, PnExternalChannelClient pnExternalChannelClient) {
+                                         PnServiceDeskConfigs cfn, PnDataVaultClient pnDataVaultClient, PnExternalChannelClient pnExternalChannelClient, ExternalChannelMapper externalChannelMapper) {
         super(operationDao);
         this.addressDAO = addressDAO;
         this.addressManagerClient = addressManagerClient;
@@ -75,6 +77,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         this.cfn = cfn;
         this.pnDataVaultClient = pnDataVaultClient;
         this.pnExternalChannelClient = pnExternalChannelClient;
+        this.externalChannelMapper = externalChannelMapper;
     }
 
     @Override
@@ -453,7 +456,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
 
         log.debug("recipientInternalId = {}, Calling service for deanonymizing this recipientInternalId", entityOperation.getRecipientInternalId());
         return this.pnDataVaultClient.deAnonymized(entityOperation.getRecipientInternalId())
-                                     .flatMap(fiscalCode -> ExternalChannelMapper.getPrepareCourtesyMail(entityOperation, address, attachments, requestId))
+                                     .flatMap(fiscalCode -> externalChannelMapper.getPrepareCourtesyMail(entityOperation, address, attachments, requestId))
                                      .flatMap(prepareRequestDto -> {
                                          log.info("requestId = {}, prepareRequestDto = {}, Calling prepare api with this requestId and request", requestId, prepareRequestDto);
                                          return this.pnExternalChannelClient.sendCourtesyMail(requestId, cfn.getExternalChannelCxId(), prepareRequestDto);

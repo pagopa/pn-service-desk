@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.mapper;
 
-import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.DigitalCourtesyMailRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pntemplatesengine.v1.dto.LanguageEnumDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pntemplatesengine.v1.dto.NotificationCceForEmailDto;
@@ -8,24 +7,24 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.templatesengine.PnTemplatesEngineClient;
 import lombok.CustomLog;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Component
 @CustomLog
 public class ExternalChannelMapper {
 
-    private ExternalChannelMapper() {}
+    private final PnTemplatesEngineClient pnTemplatesEngineClient;
 
-    private static PnTemplatesEngineClient pnTemplatesEngineClient;
-
-    public static void setPnTemplatesEngineClient(PnTemplatesEngineClient client) {
-        pnTemplatesEngineClient = client;
+    public ExternalChannelMapper(PnTemplatesEngineClient pnTemplatesEngineClient) {
+        this.pnTemplatesEngineClient = pnTemplatesEngineClient;
     }
 
-    public static Mono<DigitalCourtesyMailRequestDto> getPrepareCourtesyMail(
+    public  Mono<DigitalCourtesyMailRequestDto> getPrepareCourtesyMail(
             PnServiceDeskOperations operations,
             PnServiceDeskAddress address,
             List<String> attachments,
@@ -67,7 +66,7 @@ public class ExternalChannelMapper {
 
 
 
-    private static Mono<String> callNotificationCceForEmail(
+    private Mono<String> callNotificationCceForEmail(
             PnServiceDeskOperations operations,
             PnServiceDeskAddress address,
             LanguageEnumDto language) {
@@ -81,7 +80,7 @@ public class ExternalChannelMapper {
         return pnTemplatesEngineClient.notificationCceTemplate(language, notificationCceForEmailDto);
     }
 
-    private static String extractTagContent(String html, String tagName) {
+    private String extractTagContent(String html, String tagName) {
         if (html == null || tagName == null) return null;
         Pattern pattern = Pattern.compile("<" + tagName + "[^>]*>(.*?)</" + tagName + ">", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(html);

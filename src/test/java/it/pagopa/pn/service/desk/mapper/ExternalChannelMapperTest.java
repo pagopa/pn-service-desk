@@ -25,12 +25,12 @@ class ExternalChannelMapperTest {
     private PnServiceDeskOperations operations;
     private PnServiceDeskAddress address;
     private String requestId;
+    private ExternalChannelMapper externalChannelMapper;
 
     @BeforeEach
     void setup() {
         mockTemplatesEngineClient = Mockito.mock(PnTemplatesEngineClient.class);
-        ExternalChannelMapper.setPnTemplatesEngineClient(mockTemplatesEngineClient);
-
+        externalChannelMapper = new ExternalChannelMapper(mockTemplatesEngineClient);
         operations = new PnServiceDeskOperations();
         operations.setOperationId("OP123");
 
@@ -41,10 +41,7 @@ class ExternalChannelMapperTest {
         requestId = "REQ-001";
     }
 
-    @AfterEach
-    void tearDown() {
-        ExternalChannelMapper.setPnTemplatesEngineClient(null);
-    }
+
 
     @Test
     void getPrepareCourtesyMail_shouldReturnValidMailRequest() {
@@ -62,7 +59,7 @@ class ExternalChannelMapperTest {
         Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.eq(LanguageEnumDto.IT), Mockito.any(NotificationCceForEmailDto.class)))
                .thenReturn(Mono.just(fakeHtmlTemplate));
 
-        Mono<DigitalCourtesyMailRequestDto> resultMono = ExternalChannelMapper.getPrepareCourtesyMail(
+        Mono<DigitalCourtesyMailRequestDto> resultMono = externalChannelMapper.getPrepareCourtesyMail(
                 operations,
                 address,
                 List.of("file1.pdf", "file2.jpg"),
@@ -93,19 +90,24 @@ class ExternalChannelMapperTest {
         String html = "<mj-title>Subject here</mj-title><p>Test</p>";
         String tagName = "mj-title";
 
+        ExternalChannelMapper mapper = new ExternalChannelMapper(mockTemplatesEngineClient);
+
         var method = ExternalChannelMapper.class.getDeclaredMethod("extractTagContent", String.class, String.class);
         method.setAccessible(true);
-        String result = (String) method.invoke(null, html, tagName);
 
-        assertEquals("Subject here", result);
+        String result = (String) method.invoke(mapper, html, tagName);
+
+        assertNotNull(result, "Il contenuto non dovrebbe essere null");
+        assertEquals("Subject here", result.trim(), "Il contenuto estratto dal tag non è corretto");
     }
+
 
     @Test
     void testGenerateMailWithoutAttachments() {
         Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.any(), Mockito.any()))
                .thenReturn(Mono.just("<mj-title>Email di Test</mj-title>Contenuto email"));
 
-        DigitalCourtesyMailRequestDto result = ExternalChannelMapper
+        DigitalCourtesyMailRequestDto result = externalChannelMapper
                 .getPrepareCourtesyMail(operations, address, null, requestId)
                 .block();
 
@@ -120,7 +122,7 @@ class ExternalChannelMapperTest {
         Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.any(), Mockito.any()))
                .thenReturn(Mono.just("<mj-title>Email di Test</mj-title>Contenuto email"));
 
-        DigitalCourtesyMailRequestDto result = ExternalChannelMapper
+        DigitalCourtesyMailRequestDto result = externalChannelMapper
                 .getPrepareCourtesyMail(operations, address, List.of(), requestId)
                 .block();
 
@@ -135,7 +137,7 @@ class ExternalChannelMapperTest {
         Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.any(), Mockito.any()))
                .thenReturn(Mono.just("<mj-title>Email di Test</mj-title>Contenuto email"));
 
-        DigitalCourtesyMailRequestDto result = ExternalChannelMapper
+        DigitalCourtesyMailRequestDto result = externalChannelMapper
                 .getPrepareCourtesyMail(operations, address, attachments, requestId)
                 .block();
 
@@ -150,7 +152,7 @@ class ExternalChannelMapperTest {
         Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.any(), Mockito.any()))
                .thenReturn(Mono.just(htmlWithoutSubject));
 
-        DigitalCourtesyMailRequestDto result = ExternalChannelMapper
+        DigitalCourtesyMailRequestDto result = externalChannelMapper
                 .getPrepareCourtesyMail(operations, address, List.of("file1.txt"), requestId)
                 .block();
 
