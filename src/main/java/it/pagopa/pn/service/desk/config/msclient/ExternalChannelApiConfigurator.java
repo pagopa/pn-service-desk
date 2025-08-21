@@ -14,6 +14,11 @@ import javax.annotation.PostConstruct;
 @Configuration
 public class ExternalChannelApiConfigurator extends CommonBaseClient {
 
+    private final PnTemplatesEngineClient pnTemplatesEngineClient;
+
+    public ExternalChannelApiConfigurator(PnTemplatesEngineClient pnTemplatesEngineClient) {
+        this.pnTemplatesEngineClient = pnTemplatesEngineClient;
+    }
 
     @Bean
     public DigitalCourtesyMessagesApi getDigitalCoutesyMessageApiExternalChannel (PnServiceDeskConfigs pnServiceDeskConfigs){
@@ -26,5 +31,9 @@ public class ExternalChannelApiConfigurator extends CommonBaseClient {
         return new DigitalCourtesyMessagesApi(apiClient);
     }
 
+    @PostConstruct
+    public void init() {
+        ExternalChannelMapper.setPnTemplatesEngineClient(pnTemplatesEngineClient);
+    }
 
 }
