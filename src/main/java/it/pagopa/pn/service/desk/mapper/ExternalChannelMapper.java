@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 @CustomLog
 public class ExternalChannelMapper {
 
-    private final PnTemplatesEngineClient pnTemplatesEngineClient;
+    private PnTemplatesEngineClient pnTemplatesEngineClient;
 
     public ExternalChannelMapper(PnTemplatesEngineClient pnTemplatesEngineClient) {
         this.pnTemplatesEngineClient = pnTemplatesEngineClient;
@@ -30,7 +30,11 @@ public class ExternalChannelMapper {
             List<String> attachments,
             String requestId) {
 
+        log.info("Preparing DigitalCourtesyMailRequestDto for requestId: {}", requestId);
+
         Mono<String> renderedTemplateMono = callNotificationCceForEmail(operations, address, LanguageEnumDto.IT);
+
+        log.info("Received rendered template for requestId: {}", requestId);
 
         return renderedTemplateMono.map(renderedTemplate -> {
             DigitalCourtesyMailRequestDto mailRequestDto = new DigitalCourtesyMailRequestDto();
@@ -70,14 +74,14 @@ public class ExternalChannelMapper {
             PnServiceDeskOperations operations,
             PnServiceDeskAddress address,
             LanguageEnumDto language) {
-
+log.info("Calling PN Templates Engine for notification template for operationId: {}", operations.getOperationId());
         NotificationCceForEmailDto notificationCceForEmailDto = new NotificationCceForEmailDto();
         notificationCceForEmailDto.setDenomination(address.getFullName());
         notificationCceForEmailDto.setIun(operations.getOperationId());
         notificationCceForEmailDto.setTicketDate(String.valueOf(operations.getTicketDate()));
         notificationCceForEmailDto.setVrDate(String.valueOf(operations.getVrDate()));
 
-        return pnTemplatesEngineClient.notificationCceTemplate(language, notificationCceForEmailDto);
+        return this.pnTemplatesEngineClient.notificationCceTemplate(language, notificationCceForEmailDto);
     }
 
     private String extractTagContent(String html, String tagName) {
