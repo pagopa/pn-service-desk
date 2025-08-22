@@ -108,33 +108,31 @@ public class OperationsServiceImpl implements OperationsService {
                                                                .flatMap(sentNotification -> {
                                                                    log.debug("sentNotificationResponse = {}, recipientId={}, retrieving notification to check recipient",
                                                                              sentNotification, recipientId);
-                                                                   if (!sentNotification.getRecipients().isEmpty()) {                                                                       sentNotification.getRecipients()
-                                                                                       .stream()
-                                                                                       .filter(recipient -> StringUtils.equalsIgnoreCase(recipient.getTaxId(), taxId))
-                                                                                       .findFirst()
-                                                                                       .orElseThrow(() -> {
-                                                                                           String errorMsg = "Tax ID from request does not match the Tax ID from the notification";
-                                                                                           log.error("recipientId={}, iun={}, {}", recipientId, iun, errorMsg);
-                                                                                           return new PnGenericException(NOT_NOTIFICATION_FOUND, errorMsg);
-                                                                                       });
-
-                                                                       return Mono.just(OperationMapper.getInitialActOperation(createActOperationRequest, recipientId))
-                                                                                  .zipWhen(pnServiceDeskOperations -> {
-                                                                                      PnServiceDeskAddress address = AddressMapper.toActEntity(
-                                                                                              createActOperationRequest.getAddress(),
-                                                                                              pnServiceDeskOperations.getOperationId(),
-                                                                                              cfn);
-                                                                                      return Mono.just(address);
-                                                                                  })
-                                                                                  .flatMap(this::checkAndSaveOperation)
-                                                                                  .map(operation -> {
-                                                                                      log.debug("ActOperation created successfully for recipientId={}, iun={}", recipientId, iun);
-                                                                                      return new OperationsResponse().operationId(operation.getOperationId());
-                                                                                  });
-                                                                   }
-
-                                                                   log.error("No notifications found for recipientId={} and iun={}", recipientId, iun);
-                                                                   return Mono.error(new PnGenericException(NOT_NOTIFICATION_FOUND, NOT_NOTIFICATION_FOUND.getMessage()));
+                                                                   return sentNotification.getRecipients()
+                                                                                          .stream()
+                                                                                          .filter(recipient -> StringUtils.equalsIgnoreCase(recipient.getTaxId(), taxId))
+                                                                                          .findFirst()
+                                                                                          .map(recipient ->
+                                                                                                       Mono.just(OperationMapper.getInitialActOperation(createActOperationRequest, recipientId))
+                                                                                                           .zipWhen(pnServiceDeskOperations -> {
+                                                                                                               PnServiceDeskAddress address = AddressMapper.toActEntity(
+                                                                                                                       createActOperationRequest.getAddress(),
+                                                                                                                       pnServiceDeskOperations.getOperationId(),
+                                                                                                                       cfn,
+                                                                                                                       recipient.getDenomination());
+                                                                                                               return Mono.just(address);
+                                                                                                           })
+                                                                                                           .flatMap(this::checkAndSaveOperation)
+                                                                                                           .map(operation -> {
+                                                                                                               log.debug("ActOperation created successfully for recipientId={}, iun={}", recipientId, iun);
+                                                                                                               return new OperationsResponse().operationId(operation.getOperationId());
+                                                                                                           })
+                                                                                              )
+                                                                                          .orElseThrow(() -> {
+                                                                                              String errorMsg = "Tax ID from request does not match the Tax ID from the notification";
+                                                                                              log.error("recipientId={}, iun={}, {}", recipientId, iun, errorMsg);
+                                                                                              return new PnGenericException(NOT_NOTIFICATION_FOUND, errorMsg);
+                                                                                          });
                                                                })
                                                                .onErrorResume(exception -> {
                                                                    log.error("recipientId={}, iun={}, errorReason={}, Error while calling Delivery notifications service",

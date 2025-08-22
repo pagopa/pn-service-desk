@@ -42,7 +42,7 @@ class AddressMapperTest {
         PnServiceDeskConfigs pnServiceDeskConfigs = new PnServiceDeskConfigs();
         pnServiceDeskConfigs.setTtlReceiverAddress(Long.valueOf("1"));
         ActDigitalAddress digitalAddress = getDigitalAddress();
-        PnServiceDeskAddress pnServiceDeskAddress = addressMapper.toActEntity(digitalAddress, "1234", pnServiceDeskConfigs);
+        PnServiceDeskAddress pnServiceDeskAddress = addressMapper.toActEntity(digitalAddress, "1234", pnServiceDeskConfigs, "nome cognome");
         assertEquals(pnServiceDeskAddress.getAddress(), digitalAddress.getAddress());
     }
 

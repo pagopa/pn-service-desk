@@ -25,8 +25,9 @@ public class AddressMapper {
         return enrichAddress(pnAddress, operationId, configs);
     }
 
-    public static PnServiceDeskAddress toActEntity(ActDigitalAddress address, String operationId, PnServiceDeskConfigs configs) {
+    public static PnServiceDeskAddress toActEntity(ActDigitalAddress address, String operationId, PnServiceDeskConfigs configs, String denomination) {
         PnServiceDeskAddress pnAddress = actMapper.toEntity(address);
+        pnAddress.setFullName(denomination);
         return enrichAddress(pnAddress, operationId, configs);
     }
 
