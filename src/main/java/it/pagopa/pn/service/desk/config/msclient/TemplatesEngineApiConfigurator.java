@@ -15,7 +15,7 @@ public class TemplatesEngineApiConfigurator extends CommonBaseClient {
     public TemplateApi getTemplateEngineApi(PnServiceDeskConfigs pnServiceDeskConfigs){
         ApiClient apiClient =
                 new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
-        apiClient.setBasePath(pnServiceDeskConfigs.getTemplatesBasePath());
+        apiClient.setBasePath(pnServiceDeskConfigs.getTemplatesEngineBasePath());
 
         return new TemplateApi(apiClient);
     }
