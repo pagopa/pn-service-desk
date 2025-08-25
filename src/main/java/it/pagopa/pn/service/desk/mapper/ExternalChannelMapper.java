@@ -58,10 +58,7 @@ public class ExternalChannelMapper {
 
 
             if (attachments != null && !attachments.isEmpty()) {
-                List<String> attachmentUrls = attachments.stream()
-                                                         .map(fileKey -> "safestorage://" + fileKey)
-                                                         .toList();
-                mailRequestDto.setAttachmentUrls(attachmentUrls);
+                mailRequestDto.setAttachmentUrls(attachments);
             }
 
             return mailRequestDto;
