@@ -133,6 +133,14 @@ Parameters:
     Type: String
     Description: 'Send and pull requests in this queue between ServiceDesk and SafeStorage'
 
+  ExternalChannelToServiceDeskQueueName:
+    Type: String
+    Description: 'Send and pull requests in this queue between ServiceDesk and ExternalChannel'
+
+  ExternalChannelToServiceDeskQueueARN:
+    Type: String
+    Description: 'pn-external-channel TO pn-service-desk queue ARN'
+
   ServiceDeskKmsEncDecDynamoDataKeyARN:
     Type: String
     Description: 'Name of KMS Key for Dynamo encode/decode data'
@@ -321,10 +329,6 @@ Parameters:
     Type: String
     Default: '-'
     Description: Cron for which you send the metric to CloudWatch
-  
-  ExternalChannelToServiceDeskQueueARN:
-    Type: String
-    Description: pn-external-channel TO pn-service-desk queue ARN
 
 Conditions:
   HasAlbDimensionName: !Not [ !Equals [ !Ref ApplicationLoadBalancerMetricsDimensionName, '' ] ]
@@ -370,7 +374,7 @@ Resources:
         ContainerEnvEntry13: !Sub 'PN_SERVICEDESK_TOPICS_SAFESTORAGEEVENTS=${SafeStorageToServiceDeskQueueName}'
         ContainerEnvEntry14: !Sub 'PN_SERVICEDESK_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry15: !Sub 'PN_SERVICEDESK_SAFESTORAGEDOCUMENTTYPE=${SafeStorageDocumentType}'
-        ContainerEnvEntry16: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${SafeStorageToServiceDeskQueueName},${ServiceDeskInternalQueueName},${PaperChannelToServiceDeskQueueName}'
+        ContainerEnvEntry16: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${SafeStorageToServiceDeskQueueName},${ServiceDeskInternalQueueName},${PaperChannelToServiceDeskQueueName},${ExternalChannelToServiceDeskQueueName}'
         ContainerEnvEntry17: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
         ContainerEnvEntry18: !Sub 'PN_SERVICEDESK_DELIVERYPUSHBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry19: !Sub 'PN_SERVICEDESK_DELIVERYBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
@@ -426,6 +430,7 @@ Resources:
               - !Ref ServiceDeskInternalQueueARN
               - !Ref SafeStorageToServiceDeskQueueARN
               - !Ref PaperChannelToServiceDeskQueueARN
+              - !Ref ExternalChannelToServiceDeskQueueARN
           - Effect: Allow
             Action:
               - kms:Encrypt
