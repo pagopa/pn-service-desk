@@ -45,7 +45,7 @@ public class ExternalChannelMapper {
             mailRequestDto.setQos(DigitalCourtesyMailRequestDto.QosEnum.INTERACTIVE);
             mailRequestDto.setClientRequestTimeStamp(java.time.Instant.now());
             mailRequestDto.setReceiverDigitalAddress(address.getAddress());
-            mailRequestDto.setMessageContentType(DigitalCourtesyMailRequestDto.MessageContentTypeEnum.PLAIN);
+            mailRequestDto.setMessageContentType(DigitalCourtesyMailRequestDto.MessageContentTypeEnum.HTML);
             mailRequestDto.setChannel(DigitalCourtesyMailRequestDto.ChannelEnum.EMAIL);
 
 
