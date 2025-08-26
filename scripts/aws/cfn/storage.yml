@@ -267,3 +267,7 @@ Outputs:
   ExternalChannelToServiceDeskQueueARN:
     Value: !GetAtt ExternalChannelToServiceDeskQueue.Outputs.QueueARN
     Description: PN-SERVICE-DESK input queue ARN
+  
+  ExternalChannelToServiceDeskQueueURL:
+    Value: !GetAtt ExternalChannelToServiceDeskQueue.Outputs.QueueURL
+    Description: pn-external-channel to pn-service-desk queue URL
