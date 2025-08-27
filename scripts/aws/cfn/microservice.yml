@@ -141,6 +141,10 @@ Parameters:
     Type: String
     Description: 'pn-external-channel TO pn-service-desk queue ARN'
 
+  ExternalChannelToServiceDeskQueueURL:
+    Type: String
+    Description: pn-external-channel TO pn-service-desk queue URL
+
   ServiceDeskKmsEncDecDynamoDataKeyARN:
     Type: String
     Description: 'Name of KMS Key for Dynamo encode/decode data'
@@ -516,7 +520,26 @@ Resources:
           InputPath: $.detail
           DeadLetterConfig: 
             Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
-    
+
+  ExternalChannelToServiceDeskQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref ExternalChannelToServiceDeskQueueURL
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowEventBridgeSendMessage"
+            Effect: "Allow"
+            Principal:
+              Service: events.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !Ref ExternalChannelToServiceDeskQueueARN
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !GetAtt PnCoreEventBusExternalChannel2ServiceDeskResponseRule.Arn
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
 
 
   ServiceDeskMicroserviceCloudWatchDashboard:
