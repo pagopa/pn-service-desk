@@ -7,6 +7,7 @@ import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.CourtesyMessageProgressEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.ProgressEventCategoryDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
@@ -26,13 +27,20 @@ public class ResultExternalChannelActionImpl extends CommonAction implements Res
     private OperationDAO operationDAO;
 
     @Override
-    public void execute(CourtesyMessageProgressEventDto courtesyMessageProgressEventDto) {
+    public void execute(SingleStatusUpdateDto singleStatusUpdateDto) {
+        log.debug("singleStatusUpdate = {}, ResultExternalChannelAction - Execute received input", singleStatusUpdateDto);
+        CourtesyMessageProgressEventDto courtesyMessageProgressEventDto = singleStatusUpdateDto.getDigitalCourtesy();
+
+        if (courtesyMessageProgressEventDto == null) {
+            log.error("Received null CourtesyMessageProgressEventDto in SingleStatusUpdateDto: {}", singleStatusUpdateDto);
+            throw new PnGenericException(EXTERNALCHANNEL_STATUS_CODE_EMPTY, EXTERNALCHANNEL_STATUS_CODE_EMPTY.getMessage());
+        }
+
         String operationId = Utility.extractOperationId(courtesyMessageProgressEventDto.getRequestId());
-        log.debug("courtesyMessageProgressEventDto = {}, ResultExternalChannelAction - Execute received input", courtesyMessageProgressEventDto);
         operationDAO.getByOperationId(operationId)
             .switchIfEmpty(Mono.error(new PnEntityNotFoundException()))
             .flatMap(entityOperation -> {
-                if (courtesyMessageProgressEventDto.getStatus() == null || StringUtils.isBlank(courtesyMessageProgressEventDto.getStatus().getValue())) {
+                if (StringUtils.isBlank(courtesyMessageProgressEventDto.getStatus().getValue())) {
                     log.error("entityOperation = {}, operationId = {}, Status code is null or blank", entityOperation, operationId);
                     return Mono.error(new PnGenericException(EXTERNALCHANNEL_STATUS_CODE_EMPTY, EXTERNALCHANNEL_STATUS_CODE_EMPTY.getMessage()));
                 }

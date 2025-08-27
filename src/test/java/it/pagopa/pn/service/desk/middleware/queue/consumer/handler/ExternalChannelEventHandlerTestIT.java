@@ -1,7 +1,7 @@
 package it.pagopa.pn.service.desk.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.service.desk.LocalStackTestConfig;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.CourtesyMessageProgressEventDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.service.desk.middleware.responsehandler.ExternalChannelResponseHandler;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -29,10 +29,10 @@ class ExternalChannelEventHandlerTestIT {
     @Test
     void consumeMessageOk() {
         // Arrange
-        Consumer<Message<CourtesyMessageProgressEventDto>> consumer = functionCatalog.lookup(Consumer.class, "pnExtChannelEventInboundConsumer");
+        Consumer<Message<SingleStatusUpdateDto>> consumer = functionCatalog.lookup(Consumer.class, "pnExtChannelEventInboundConsumer");
 
-        CourtesyMessageProgressEventDto dto = new CourtesyMessageProgressEventDto();
-        Message<CourtesyMessageProgressEventDto> message = MessageBuilder.withPayload(dto).build();
+        SingleStatusUpdateDto dto = new SingleStatusUpdateDto();
+        Message<SingleStatusUpdateDto> message = MessageBuilder.withPayload(dto).build();
 
         // Act
         consumer.accept(message);
@@ -44,10 +44,10 @@ class ExternalChannelEventHandlerTestIT {
     @Test
     void consumeMessageThrowsException() {
         // Arrange
-        Consumer<Message<CourtesyMessageProgressEventDto>> consumer = functionCatalog.lookup(Consumer.class, "pnExtChannelEventInboundConsumer");
+        Consumer<Message<SingleStatusUpdateDto>> consumer = functionCatalog.lookup(Consumer.class, "pnExtChannelEventInboundConsumer");
 
-        CourtesyMessageProgressEventDto dto = new CourtesyMessageProgressEventDto();
-        Message<CourtesyMessageProgressEventDto> message = MessageBuilder.withPayload(dto).build();
+        SingleStatusUpdateDto dto = new SingleStatusUpdateDto();
+        Message<SingleStatusUpdateDto> message = MessageBuilder.withPayload(dto).build();
 
         Mockito.doThrow(new RuntimeException("Test exception"))
                .when(handler).handleResultExternalChannelEventResponse(Mockito.any());

@@ -1,6 +1,7 @@
 package it.pagopa.pn.service.desk.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.CourtesyMessageProgressEventDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.service.desk.middleware.responsehandler.ExternalChannelResponseHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -21,13 +22,13 @@ public class ExternalChannelEventHandler {
     }
 
     @Bean
-    public Consumer<Message<CourtesyMessageProgressEventDto>> pnExtChannelEventInboundConsumer() {
+    public Consumer<Message<SingleStatusUpdateDto>> pnExtChannelEventInboundConsumer() {
         return message -> {
             try {
                 log.debug("Handle message from Result External Channel with content {}", message);
 
-                CourtesyMessageProgressEventDto courtesyMessageProgressEventDto = message.getPayload();
-                externalChannelResponseHandler.handleResultExternalChannelEventResponse(courtesyMessageProgressEventDto);
+                SingleStatusUpdateDto singleStatusUpdateDto = message.getPayload();
+                externalChannelResponseHandler.handleResultExternalChannelEventResponse(singleStatusUpdateDto);
             } catch (Exception ex) {
                 throw ex;
             }

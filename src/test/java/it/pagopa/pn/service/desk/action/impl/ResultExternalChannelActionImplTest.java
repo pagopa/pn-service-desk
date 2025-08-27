@@ -3,6 +3,7 @@ package it.pagopa.pn.service.desk.action.impl;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.CourtesyMessageProgressEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.ProgressEventCategoryDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import org.junit.jupiter.api.Test;
@@ -24,16 +25,20 @@ class ResultExternalChannelActionImplTest {
     @Mock
     private OperationDAO operationDAO;
 
-    private CourtesyMessageProgressEventDto getDto(String operationId, ProgressEventCategoryDto status) {
+    private SingleStatusUpdateDto getDto(String operationId, ProgressEventCategoryDto status) {
+        SingleStatusUpdateDto singleStatusUpdateDto = new SingleStatusUpdateDto();
+
         CourtesyMessageProgressEventDto dto = new CourtesyMessageProgressEventDto();
         dto.setRequestId("SERVICE_DESK_OPID-" + operationId);
         dto.setStatus(status);
-        return dto;
+
+        singleStatusUpdateDto.setDigitalCourtesy(dto);
+        return singleStatusUpdateDto;
     }
 
     @Test
     void testExecute_entityNotFound() {
-        CourtesyMessageProgressEventDto dto = getDto("NOT_FOUND", ProgressEventCategoryDto.OK);
+        SingleStatusUpdateDto dto = getDto("NOT_FOUND", ProgressEventCategoryDto.OK);
 
         when(operationDAO.getByOperationId("NOT_FOUND")).thenReturn(Mono.empty());
 
@@ -44,7 +49,7 @@ class ResultExternalChannelActionImplTest {
     @Test
     void testExecute_statusCodeEmpty() {
         // Arrange
-        CourtesyMessageProgressEventDto dto = getDto("QWERTY", null); // status è null
+        SingleStatusUpdateDto dto = getDto("QWERTY", null); // status è null
         PnServiceDeskOperations entity = new PnServiceDeskOperations();
 
         when(operationDAO.getByOperationId("QWERTY")).thenReturn(Mono.just(entity));
@@ -56,7 +61,7 @@ class ResultExternalChannelActionImplTest {
 
     @Test
     void testExecute_statusCodeOk() {
-        CourtesyMessageProgressEventDto dto = getDto("OK123", ProgressEventCategoryDto.OK);
+        SingleStatusUpdateDto dto = getDto("OK123", ProgressEventCategoryDto.OK);
         PnServiceDeskOperations entity = new PnServiceDeskOperations();
 
         when(operationDAO.getByOperationId("OK123")).thenReturn(Mono.just(entity));
@@ -69,7 +74,7 @@ class ResultExternalChannelActionImplTest {
 
     @Test
     void testExecute_statusCodeKo() {
-        CourtesyMessageProgressEventDto dto = getDto("KO123", ProgressEventCategoryDto.ERROR);
+        SingleStatusUpdateDto dto = getDto("KO123", ProgressEventCategoryDto.ERROR);
         PnServiceDeskOperations entity = new PnServiceDeskOperations();
 
         when(operationDAO.getByOperationId("KO123")).thenReturn(Mono.just(entity));
@@ -82,7 +87,7 @@ class ResultExternalChannelActionImplTest {
 
     @Test
     void testExecute_unexpectedError() {
-        CourtesyMessageProgressEventDto dto = getDto("ERR123", ProgressEventCategoryDto.OK);
+        SingleStatusUpdateDto dto = getDto("ERR123", ProgressEventCategoryDto.OK);
 
         when(operationDAO.getByOperationId("ERR123")).thenReturn(Mono.error(new RuntimeException("Boom")));
 
@@ -92,7 +97,7 @@ class ResultExternalChannelActionImplTest {
 
     @Test
     void testExecute_genericException() {
-        CourtesyMessageProgressEventDto dto = getDto("GEN123", ProgressEventCategoryDto.OK);
+        SingleStatusUpdateDto dto = getDto("GEN123", ProgressEventCategoryDto.OK);
 
         when(operationDAO.getByOperationId("GEN123")).thenReturn(Mono.error(new PnGenericException(EXTERNALCHANNEL_STATUS_CODE_EMPTY, "status code empty")));
 
