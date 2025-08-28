@@ -2,6 +2,7 @@ package it.pagopa.pn.service.desk.mapper;
 
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.ActDigitalAddress;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import org.junit.jupiter.api.Assertions;
@@ -34,6 +35,15 @@ class AddressMapperTest {
         assertEquals(pnServiceDeskAddress.getCity2(), analogAddress.getCity2());
         assertEquals(pnServiceDeskAddress.getPr(), analogAddress.getPr());
         assertEquals(pnServiceDeskAddress.getCountry(), analogAddress.getCountry());
+    }
+
+    @Test
+    void toActEntityTest() {
+        PnServiceDeskConfigs pnServiceDeskConfigs = new PnServiceDeskConfigs();
+        pnServiceDeskConfigs.setTtlReceiverAddress(Long.valueOf("1"));
+        ActDigitalAddress digitalAddress = getDigitalAddress();
+        PnServiceDeskAddress pnServiceDeskAddress = addressMapper.toActEntity(digitalAddress, "1234", pnServiceDeskConfigs, "nome cognome");
+        assertEquals(pnServiceDeskAddress.getAddress(), digitalAddress.getAddress());
     }
 
     @Test
@@ -87,6 +97,14 @@ class AddressMapperTest {
         analogAddress.setPr("NA");
         analogAddress.setCountry("Italia");
         return analogAddress;
+    }
+
+
+    ActDigitalAddress getDigitalAddress() {
+        ActDigitalAddress digitalAddress= new ActDigitalAddress();
+        digitalAddress.setType("EMAIL");
+        digitalAddress.setAddress("test@test.com");
+        return digitalAddress;
     }
 
     PnServiceDeskConfigs.SenderAddress getSenderAddress() {

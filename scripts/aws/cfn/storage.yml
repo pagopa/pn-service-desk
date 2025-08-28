@@ -173,6 +173,23 @@ Resources:
           QueueName: !Sub '${ProjectName}-service_desk_requests'
           AlarmSNSTopicName: !Ref AlarmSNSTopicName
           DelaySeconds: 1
+    
+    #pn-external-channel to pn-service-desk queue
+    ExternalChannelToServiceDeskQueue:
+      Type: AWS::CloudFormation::Stack
+      UpdateReplacePolicy: Retain
+      DeletionPolicy: Retain      
+      Properties:
+        TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+        Parameters:
+          QueueName: !Sub '${ProjectName}-externalchannel_to_servicedesk'
+          DelaySeconds: 1
+          VisibilityTimeout: 60
+          MaxReceiveCount: 10        
+          AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        Tags:
+          - Key: "Microservice"
+            Value: "pn-service-desk"
 
     # Log group
     PnServiceDeskLogGroup:
@@ -246,3 +263,15 @@ Outputs:
   ServiceDeskKmsEncDecDynamoDataKeyARN:
     Description: Name of KMS Key for Dynamo encode/decode data
     Value: !Sub '${ServiceDeskKmsEncDecDynamoDataKey.Arn}'
+
+  ExternalChannelToServiceDeskQueueName:
+    Value: !GetAtt ExternalChannelToServiceDeskQueue.Outputs.QueueName
+    Description: PN-SERVICE-DESK input queue name
+  
+  ExternalChannelToServiceDeskQueueARN:
+    Value: !GetAtt ExternalChannelToServiceDeskQueue.Outputs.QueueARN
+    Description: PN-SERVICE-DESK input queue ARN
+  
+  ExternalChannelToServiceDeskQueueURL:
+    Value: !GetAtt ExternalChannelToServiceDeskQueue.Outputs.QueueURL
+    Description: pn-external-channel to pn-service-desk queue URL

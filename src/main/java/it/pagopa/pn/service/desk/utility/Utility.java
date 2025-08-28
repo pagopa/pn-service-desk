@@ -1,5 +1,6 @@
 package it.pagopa.pn.service.desk.utility;
 
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.ProgressEventCategoryDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import org.apache.commons.lang3.StringUtils;
@@ -39,12 +40,24 @@ public class Utility {
         return getStatusMapping().get(statusCodePaperChannel);
     }
 
+public static OperationStatusEnum getEcOperationStatusFrom(ProgressEventCategoryDto statusCodeExternalChannel){
+        return getEcStatusMapping().get(statusCodeExternalChannel);
+}
+
     private static Map<StatusCodeEnumDto, OperationStatusEnum> getStatusMapping(){
         Map<StatusCodeEnumDto, OperationStatusEnum> status = new EnumMap<>(StatusCodeEnumDto.class);
         status.put(StatusCodeEnumDto.KO, OperationStatusEnum.KO);
         status.put(StatusCodeEnumDto.KOUNREACHABLE, OperationStatusEnum.KO);
         status.put(StatusCodeEnumDto.OK, OperationStatusEnum.OK);
         status.put(StatusCodeEnumDto.PROGRESS, OperationStatusEnum.PROGRESS);
+        return status;
+    }
+
+    private static Map<ProgressEventCategoryDto, OperationStatusEnum> getEcStatusMapping(){
+        Map<ProgressEventCategoryDto, OperationStatusEnum> status = new EnumMap<>(ProgressEventCategoryDto.class);
+        status.put(ProgressEventCategoryDto.ERROR, OperationStatusEnum.KO);
+        status.put(ProgressEventCategoryDto.OK, OperationStatusEnum.OK);
+        status.put(ProgressEventCategoryDto.PROGRESS, OperationStatusEnum.PROGRESS);
         return status;
     }
 

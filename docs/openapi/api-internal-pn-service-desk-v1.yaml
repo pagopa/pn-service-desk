@@ -93,7 +93,7 @@ paths:
               $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/CreateOperationRequest'
       responses:
         '201':
-          description: Creazione operazione andata a bon fine
+          description: Creazione operazione andata a buon fine
           content:
             application/json:
               schema:
@@ -111,6 +111,42 @@ paths:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
+  '/service-desk/act-operations':
+    post:
+      operationId: createActOperation
+      description: >-
+        Crea una nuova richiesta di invio digitale su un nuovo indirizzo.
+        Se la coppia _ticketId_ e _ticketOperationId_ è ripetuta rispetto 
+        a una precedente richiesta l'operazione non sarà ricreata e sarà
+        restituito '201'
+      tags:
+        - Operation
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/CreateActOperationRequest'
+      responses:
+        '201':
+          description: Creazione operazione andata a buon fine
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/OperationsResponse'
+        '400':
+          description: Richiesta errata
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Errore lato server
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
   '/service-desk/{operationId}/video-upload':
     post:
@@ -187,6 +223,53 @@ paths:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
         '500':
           description: Errore lato server
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+  '/service-desk/operation/{operationId}':
+    get:
+      operationId: getOperationStatus
+      summary: API per reperire lo status di una operation
+      description: dato l'operationId, restituisce il suo stato
+      tags:
+        - Operation
+      parameters:
+        - name: operationId
+          description: Indica l'id dell'operazione di cui reperire lo stato
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Status'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '403':
+          description: Permissions are not granted for the requested resource
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'                    
+        '404':
+          description: Resource not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
           content:
             application/problem+json:
               schema:

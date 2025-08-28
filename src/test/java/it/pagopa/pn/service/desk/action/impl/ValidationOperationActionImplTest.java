@@ -13,12 +13,14 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dt
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactsIdV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.DigitalCourtesyMailRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PaperChannelUpdateDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareEventDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.ProposalTypeEnumDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadInfo;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
+import it.pagopa.pn.service.desk.mapper.ExternalChannelMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
@@ -28,8 +30,10 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.addressmanag
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalchannel.PnExternalChannelClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.templatesengine.PnTemplatesEngineClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,6 +59,9 @@ class ValidationOperationActionImplTest {
     private OperationDAO operationDAO;
 
     @Mock
+    private ExternalChannelMapper externalChannelMapper;
+
+    @Mock
     private AddressDAO addressDAO;
 
     @Mock
@@ -68,6 +75,9 @@ class ValidationOperationActionImplTest {
 
     @Mock
     private PnPaperChannelClient paperChannelClient;
+
+    @Mock
+    private PnExternalChannelClient externalChannelClient;
 
     @Mock
     private PnSafeStorageClient safeStorageClient;
@@ -305,6 +315,86 @@ class ValidationOperationActionImplTest {
 
     }
 
+    @Test
+    void executeWithEmailType() {
+        // Prepara l'operazione e l'indirizzo
+        PnServiceDeskOperations operation = new PnServiceDeskOperations();
+        PnTemplatesEngineClient mockTemplatesEngineClient = Mockito.mock(PnTemplatesEngineClient.class);
+
+
+        operation.setOperationId("opIdEmail");
+        operation.setRecipientInternalId("recipientId");
+        operation.setAttachments(pnServiceDeskAttachmentsList);
+
+        PnServiceDeskAddress address = new PnServiceDeskAddress();
+        address.setType("EMAIL");
+        address.setAddress("test@test.com");
+
+
+           Mockito.when(operationDAO.getByOperationId("opIdEmail")).thenReturn(Mono.just(operation));
+        Mockito.when(addressDAO.getAddress("opIdEmail")).thenReturn(Mono.just(address));
+        Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(getDeduplicatesResponse(true)));
+        Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(operation));
+        Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
+        Mockito.when(validationOperationAction.getAttachmentsList(Mockito.any(), Mockito.any())).thenReturn(Flux.fromIterable(pnServiceDeskAttachmentsList));
+        Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
+               .thenReturn(Mono.empty());
+        Mockito.when(cfn.getExternalChannelCxId()).thenReturn("CXID");
+        Mockito.when(externalChannelMapper.getPrepareCourtesyMail(
+                       Mockito.any(), Mockito.any(), Mockito.anyList(), Mockito.anyString()))
+               .thenReturn(Mono.just(new DigitalCourtesyMailRequestDto()));
+        // Esegui
+        Assertions.assertDoesNotThrow(() -> validationOperationAction.execute("opIdEmail"));
+
+        // Verifica che sia stato chiamato il metodo email
+        Mockito.verify(externalChannelClient).sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any());
+    }
+
+    @Test
+    void executeWithEmailType_KO() {
+        // --- Prepara l'operazione e l'indirizzo ---
+        PnServiceDeskOperations operation = new PnServiceDeskOperations();
+        PnTemplatesEngineClient mockTemplatesEngineClient = Mockito.mock(PnTemplatesEngineClient.class);
+
+        operation.setOperationId("opIdEmail");
+        operation.setRecipientInternalId("recipientId");
+        operation.setAttachments(pnServiceDeskAttachmentsList);
+
+        PnServiceDeskAddress address = new PnServiceDeskAddress();
+        address.setType("EMAIL");
+        address.setAddress("test@test.com");
+
+        // --- Mock delle dipendenze ---
+       Mockito.when(operationDAO.getByOperationId("opIdEmail")).thenReturn(Mono.just(operation));
+        Mockito.when(addressDAO.getAddress("opIdEmail")).thenReturn(Mono.just(address));
+        Mockito.when(addressManagerClient.deduplicates(Mockito.any()))
+               .thenReturn(Mono.just(getDeduplicatesResponse(true)));
+        Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(operation));
+        Mockito.when(validationOperationAction.getAttachmentsList(Mockito.any(), Mockito.any()))
+               .thenReturn(Flux.fromIterable(pnServiceDeskAttachmentsList));
+        Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
+        Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
+               .thenReturn(Mono.error(new RuntimeException("error sending email")));
+        Mockito.when(cfn.getExternalChannelCxId()).thenReturn("CXID");
+        Mockito.when(externalChannelMapper.getPrepareCourtesyMail(
+                       Mockito.any(), Mockito.any(), Mockito.anyList(), Mockito.anyString()))
+               .thenReturn(Mono.just(new DigitalCourtesyMailRequestDto()));
+        // --- Esegui il metodo senza far fallire il test ---
+        Assertions.assertDoesNotThrow(() -> validationOperationAction.execute("opIdEmail"));
+
+        // --- Verifica che sia stato chiamato il metodo email ---
+        Mockito.verify(externalChannelClient).sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any());
+
+        // --- Verifica che l'operazione sia stata aggiornata con KO ---
+        ArgumentCaptor<PnServiceDeskOperations> captor = ArgumentCaptor.forClass(PnServiceDeskOperations.class);
+        Mockito.verify(operationDAO, Mockito.atLeastOnce()).updateEntity(captor.capture());
+
+        boolean hasKoStatus = captor.getAllValues().stream()
+                                    .anyMatch(op -> OperationStatusEnum.KO.toString().equals(op.getStatus()));
+        Assertions.assertTrue(hasKoStatus, "L'operazione deve essere aggiornata con status KO dopo fallimento email");
+    }
+
+
 
     private DeduplicatesResponseDto getDeduplicatesResponseWithError() {
         DeduplicatesResponseDto dto = new DeduplicatesResponseDto();
@@ -328,6 +418,7 @@ class ValidationOperationActionImplTest {
         response.setKey("123-FILE-KEY");
         return response;
     }
+
 
 
 }

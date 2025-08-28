@@ -13,6 +13,7 @@ import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationService;
@@ -37,6 +38,7 @@ public class OperationsServiceImpl implements OperationsService {
     private final NotificationService notificationService;
     private final PnDataVaultClient dataVaultClient;
     private final PnSafeStorageClient safeStorageClient;
+    private final PnDeliveryClient pnDeliveryClient;
     private final OperationDAO operationDAO;
     private final OperationsFileKeyDAO operationsFileKeyDAO;
     private final PnServiceDeskConfigs cfn;
@@ -48,17 +50,19 @@ public class OperationsServiceImpl implements OperationsService {
     private static final String ERROR_MESSAGE_RECOVERING_FILE = "errorReason = {}, error during file recover";
 
     public OperationsServiceImpl(NotificationService notificationService, PnDataVaultClient dataVaultClient,
-                                 PnSafeStorageClient safeStorageClient, OperationDAO operationDAO,
+                                 PnSafeStorageClient safeStorageClient, PnDeliveryClient pnDeliveryClient, OperationDAO operationDAO,
                                  OperationsFileKeyDAO operationsFileKeyDAO, PnServiceDeskConfigs cfn,
                                  AuditLogService auditLogService) {
         this.notificationService = notificationService;
         this.dataVaultClient = dataVaultClient;
         this.safeStorageClient = safeStorageClient;
+        this.pnDeliveryClient = pnDeliveryClient;
         this.operationDAO = operationDAO;
         this.operationsFileKeyDAO = operationsFileKeyDAO;
         this.cfn = cfn;
         this.auditLogService = auditLogService;
     }
+
 
     @Override
     public Mono<OperationsResponse> createOperation(String xPagopaPnUid, CreateOperationRequest createOperationRequest) {
@@ -87,6 +91,55 @@ public class OperationsServiceImpl implements OperationsService {
                     log.error("notificationsUnreachableCount = {}, There are not unreachable notification", notificationsUnreachableResponse.getNotificationsCount());
                     return Mono.error(ex);
                 });
+    }
+
+    @Override
+    public Mono<OperationsResponse> createActOperation(String xPagopaPnUid, CreateActOperationRequest createActOperationRequest) {
+
+        log.debug("xPagopaPnUid = {}, createActOperationRequest = {}, CreateActOperation received input",
+                  xPagopaPnUid, createActOperationRequest);
+
+        String taxId = createActOperationRequest.getTaxId();
+        String iun = createActOperationRequest.getIun();
+
+        return dataVaultClient.anonymized(taxId)
+                              .flatMap(recipientId ->
+                                               pnDeliveryClient.getSentNotificationPrivate(iun)
+                                                               .flatMap(sentNotification -> {
+                                                                   log.debug("sentNotificationResponse = {}, recipientId={}, retrieving notification to check recipient",
+                                                                             sentNotification, recipientId);
+                                                                   return sentNotification.getRecipients()
+                                                                                          .stream()
+                                                                                          .filter(recipient -> StringUtils.equalsIgnoreCase(recipient.getTaxId(), taxId))
+                                                                                          .findFirst()
+                                                                                          .map(recipient ->
+                                                                                                       Mono.just(OperationMapper.getInitialActOperation(createActOperationRequest, recipientId))
+                                                                                                           .zipWhen(pnServiceDeskOperations -> {
+                                                                                                               PnServiceDeskAddress address = AddressMapper.toActEntity(
+                                                                                                                       createActOperationRequest.getAddress(),
+                                                                                                                       pnServiceDeskOperations.getOperationId(),
+                                                                                                                       cfn,
+                                                                                                                       recipient.getDenomination());
+                                                                                                               return Mono.just(address);
+                                                                                                           })
+                                                                                                           .flatMap(this::checkAndSaveOperation)
+                                                                                                           .map(operation -> {
+                                                                                                               log.debug("ActOperation created successfully for recipientId={}, iun={}", recipientId, iun);
+                                                                                                               return new OperationsResponse().operationId(operation.getOperationId());
+                                                                                                           })
+                                                                                              )
+                                                                                          .orElseThrow(() -> {
+                                                                                              String errorMsg = "Tax ID from request does not match the Tax ID from the notification";
+                                                                                              log.error("recipientId={}, iun={}, {}", recipientId, iun, errorMsg);
+                                                                                              return new PnGenericException(NOT_NOTIFICATION_FOUND, errorMsg);
+                                                                                          });
+                                                               })
+                                                               .onErrorResume(exception -> {
+                                                                   log.error("recipientId={}, iun={}, errorReason={}, Error while calling Delivery notifications service",
+                                                                             recipientId, iun, exception.getMessage(), exception);
+                                                                   return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
+                                                               })
+                                      );
     }
 
     private Mono<PnServiceDeskOperations> checkAndSaveOperation(Tuple2<PnServiceDeskOperations, PnServiceDeskAddress> operationAndAddress){
@@ -158,6 +211,26 @@ public class OperationsServiceImpl implements OperationsService {
     }
 
 
-
-
+    @Override
+    public Mono<String> getOperationStatus(String operationId) {
+        return operationDAO.getByOperationId(operationId)
+                           .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT,
+                                                                            OPERATION_IS_NOT_PRESENT.getMessage(),
+                                                                            HttpStatus.NOT_FOUND)))
+                           .map(operation -> operation.getStatus())
+                           .onErrorResume(PnRetryStorageException.class,
+                                          ex -> Mono.error(new PnGenericException(SAFE_STORAGE_FILE_LOADING,
+                                                                                  SAFE_STORAGE_FILE_LOADING.getMessage(),
+                                                                                  HttpStatus.BAD_REQUEST)))
+                           .onErrorResume(WebClientResponseException.class, ex -> {
+                               if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                                   return Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT,
+                                                                            OPERATION_IS_NOT_PRESENT.getMessage(),
+                                                                            HttpStatus.NOT_FOUND));
+                               }
+                               return Mono.error(new PnGenericException(ERROR_DURING_RECOVERING_FILE,
+                                                                        ERROR_DURING_RECOVERING_FILE.getMessage(),
+                                                                        HttpStatus.BAD_REQUEST));
+                           });
+    }
 }

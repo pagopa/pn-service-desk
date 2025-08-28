@@ -24,11 +24,13 @@ public class PnEventInboundService {
     private final EventHandler eventHandler;
     private final String safeStorageEventQueueName;
     private final String paperChannelEventQueueName;
+    private final String externalChannelEventQueueName;
 
     public PnEventInboundService(EventHandler eventHandler, PnServiceDeskConfigs cfg) {
         this.eventHandler = eventHandler;
         this.safeStorageEventQueueName = cfg.getTopics().getSafeStorageEvents();
         this.paperChannelEventQueueName = cfg.getTopics().getPaperChannelQueue();
+        this.externalChannelEventQueueName = cfg.getTopics().getExternalChannelQueue();
     }
 
     @Bean
@@ -95,6 +97,9 @@ public class PnEventInboundService {
             }
             if (Objects.equals(queueName, paperChannelEventQueueName)){
                 return "PAPER_CHANNEL_EVENTS";
+            }
+            if (Objects.equals(queueName, externalChannelEventQueueName)){
+                return "EXTERNAL_CHANNEL_EVENTS";
             }
             else {
                 log.error("eventType not present, cannot start scheduled action headers={} payload={}", message.getHeaders(), message.getPayload());

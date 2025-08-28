@@ -133,6 +133,18 @@ Parameters:
     Type: String
     Description: 'Send and pull requests in this queue between ServiceDesk and SafeStorage'
 
+  ExternalChannelToServiceDeskQueueName:
+    Type: String
+    Description: 'Send and pull requests in this queue between ServiceDesk and ExternalChannel'
+
+  ExternalChannelToServiceDeskQueueARN:
+    Type: String
+    Description: 'pn-external-channel TO pn-service-desk queue ARN'
+
+  ExternalChannelToServiceDeskQueueURL:
+    Type: String
+    Description: pn-external-channel TO pn-service-desk queue URL
+
   ServiceDeskKmsEncDecDynamoDataKeyARN:
     Type: String
     Description: 'Name of KMS Key for Dynamo encode/decode data'
@@ -236,6 +248,10 @@ Parameters:
   PaperChannelCxId:
     Type: String
     Description: 'PaperChannel cx-id'
+  
+  ExternalChannelCxId:
+    Type: String
+    Description: 'CxId used by service desk for requests towards External Channel'
 
   AddressManagerApiKey:
     Type: String
@@ -274,6 +290,10 @@ Parameters:
 
   PaperChannelToServiceDeskQueueAgeAlarmARN:
     Type: String
+
+  ExternalChannelBaseUrl:
+    Type: String
+    Description: 'Base url of external channel microservice'
 
   ApplicationLoadBalancerMetricsDimensionName:
     Type: String
@@ -358,7 +378,7 @@ Resources:
         ContainerEnvEntry13: !Sub 'PN_SERVICEDESK_TOPICS_SAFESTORAGEEVENTS=${SafeStorageToServiceDeskQueueName}'
         ContainerEnvEntry14: !Sub 'PN_SERVICEDESK_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry15: !Sub 'PN_SERVICEDESK_SAFESTORAGEDOCUMENTTYPE=${SafeStorageDocumentType}'
-        ContainerEnvEntry16: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${SafeStorageToServiceDeskQueueName},${ServiceDeskInternalQueueName},${PaperChannelToServiceDeskQueueName}'
+        ContainerEnvEntry16: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${SafeStorageToServiceDeskQueueName},${ServiceDeskInternalQueueName},${PaperChannelToServiceDeskQueueName},${ExternalChannelToServiceDeskQueueName}'
         ContainerEnvEntry17: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
         ContainerEnvEntry18: !Sub 'PN_SERVICEDESK_DELIVERYPUSHBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry19: !Sub 'PN_SERVICEDESK_DELIVERYBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
@@ -376,6 +396,10 @@ Resources:
         ContainerEnvEntry31: !Sub 'PN_SERVICEDESK_APIKEYMANAGERBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry32: !Sub 'PN_CRON_ANALYZER=${PnCronAnalyzer}'
         ContainerEnvEntry33: !Sub 'WIRE_TAP_LOG=${WireTapLogActivation}'
+        ContainerEnvEntry34: !Sub 'PN_SERVICEDESK_EXTERNALCHANNELBASEPATH=${ExternalChannelBaseUrl}'
+        ContainerEnvEntry35: !Sub 'PN_SERVICEDESK_EXTERNALCHANNELCXID=${ExternalChannelCxId}'
+        ContainerEnvEntry36: !Sub 'PN_SERVICEDESK_TEMPLATESENGINEBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry37: !Sub 'PN_SERVICEDESK_TOPICS_EXTERNALCHANNELQUEUE=${ExternalChannelToServiceDeskQueueName}'
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-ServiceDesk-Secrets
         MappedPaths: '/service-desk/*'
@@ -411,6 +435,7 @@ Resources:
               - !Ref ServiceDeskInternalQueueARN
               - !Ref SafeStorageToServiceDeskQueueARN
               - !Ref PaperChannelToServiceDeskQueueARN
+              - !Ref ExternalChannelToServiceDeskQueueARN
           - Effect: Allow
             Action:
               - kms:Encrypt
@@ -439,6 +464,84 @@ Resources:
               - !Sub "${ServiceDeskOperationFileKeyDynamoTableArn}/*"
               - !Sub "${ClientDynamoTableArn}"
               - !Sub "${ClientDynamoTableArn}/*"
+  
+  EventBusEnqueueRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
+        Version: "2012-10-17"
+      Policies:
+        - PolicyName: !Sub ${ProjectName}-externalchannel-2-servicedesk-eventBusRulePolicy
+          PolicyDocument:
+            Statement:
+              - Sid: putEvents
+                Action:
+                  - sqs:ChangeMessageVisibility
+                  - sqs:GetQueueAttributes
+                  - sqs:GetQueueUrl
+                  - sqs:SendMessage
+                Effect: Allow
+                Resource:
+                  - !Ref ExternalChannelToServiceDeskQueueARN
+    
+  PnCoreEventBusExternalChannel2ServiceDeskResponseRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: Route ExternalChannel events to pn-service-desk
+      RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
+      EventBusName: !Sub '${ProjectName}-CoreEventBus'
+      EventPattern:
+        detail-type: [ "ExternalChannelOutcomeEvent" ]
+        detail:
+          clientId: [ !Ref ExternalChannelCxId ]
+      Targets: 
+        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
+          Id: !Sub ${ProjectName}-Logger-ExternalChannel2ServiceDesk
+          InputTransformer:
+            InputPathsMap:
+              "timestamp": "$.time"
+            InputTemplate: |
+              {
+                  "timestamp": <timestamp>,
+                  "ruleArn": <aws.events.rule-arn>,
+                  "ruleName": <aws.events.rule-name>,
+                  "ingestionTime": <aws.events.event.ingestion-time>,
+                  "originalEvent": <aws.events.event.json>
+              }       
+        - Id: !Sub '${ProjectName}-CoreEventBus-ExternalChannel2ServiceDesk'
+          Arn: !Ref ExternalChannelToServiceDeskQueueARN
+          InputPath: $.detail
+          DeadLetterConfig: 
+            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
+
+  ExternalChannelToServiceDeskQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref ExternalChannelToServiceDeskQueueURL
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowEventBridgeSendMessage"
+            Effect: "Allow"
+            Principal:
+              Service: events.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !Ref ExternalChannelToServiceDeskQueueARN
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !GetAtt PnCoreEventBusExternalChannel2ServiceDeskResponseRule.Arn
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+
 
   ServiceDeskMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack

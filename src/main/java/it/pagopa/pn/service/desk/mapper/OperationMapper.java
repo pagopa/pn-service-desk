@@ -1,10 +1,7 @@
 package it.pagopa.pn.service.desk.mapper;
 
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.CreateOperationRequest;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationStatus;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.OperationResponse;
-import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SDNotificationSummary;
+import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
@@ -26,8 +23,7 @@ public class OperationMapper {
 
     private OperationMapper(){}
 
-    public static PnServiceDeskOperations getInitialOperation (CreateOperationRequest operationRequest, String recipientInternalId){
-
+    public static PnServiceDeskOperations getInitialOperation(CreateOperationRequest operationRequest, String recipientInternalId) {
         PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
         pnServiceDeskOperations.setOperationId(Utility.generateOperationId(operationRequest.getTicketId(), operationRequest.getTicketOperationId()));
         pnServiceDeskOperations.setTicketId(operationRequest.getTicketId());
@@ -36,6 +32,19 @@ public class OperationMapper {
         pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
         pnServiceDeskOperations.setRecipientInternalId(recipientInternalId);
 
+        return pnServiceDeskOperations;    }
+
+    public static PnServiceDeskOperations getInitialActOperation(CreateActOperationRequest operationRequest, String recipientInternalId) {
+        PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
+        pnServiceDeskOperations.setOperationId(Utility.generateOperationId(operationRequest.getTicketId(), operationRequest.getTicketOperationId()));
+        pnServiceDeskOperations.setTicketId(operationRequest.getTicketId());
+        pnServiceDeskOperations.setStatus(OperationStatusEnum.CREATING.toString());
+        pnServiceDeskOperations.setOperationStartDate(Instant.now());
+        pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
+        pnServiceDeskOperations.setRecipientInternalId(recipientInternalId);
+        pnServiceDeskOperations.setTicketDate(operationRequest.getTicketDate());
+        pnServiceDeskOperations.setVrDate(operationRequest.getVrDate());
+        pnServiceDeskOperations.setIun(operationRequest.getIun());
         return pnServiceDeskOperations;
     }
 
