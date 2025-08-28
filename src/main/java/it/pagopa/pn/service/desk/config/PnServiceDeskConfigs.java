@@ -23,8 +23,8 @@ public class PnServiceDeskConfigs {
     private String paperChannelBasePath;
     private String externalChannelBasePath;
     private String externalChannelCxId;
-    private String templatesBasePath;
-    private String templatesCxId;
+    private String templatesEngineBasePath;
+    private String templatesEngineCxId;
     private String externalRegistriesBasePath;
     private String userAttributesBasePath;
     private String mandateBasePath;
@@ -49,6 +49,7 @@ public class PnServiceDeskConfigs {
         private String internalQueue;
         private String safeStorageEvents;
         private String paperChannelQueue;
+        private String externalChannelQueue;
     }
 
     @Data

@@ -11,6 +11,7 @@
     "NotifyAttempt": "2",
     "MaxNumberOfPages": "50",
     "AddressManagerBaseUrl": "http://alb.confidential.pn.internal:8080",
+    "ExternalChannelBaseUrl": "http://alb.confidential.pn.internal:8080",
     "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080",
     "PnCronAnalyzer": "-",
     "WireTapLogActivation": "false",

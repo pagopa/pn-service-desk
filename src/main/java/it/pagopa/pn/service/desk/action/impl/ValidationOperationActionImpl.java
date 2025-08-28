@@ -39,6 +39,7 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
@@ -58,12 +59,14 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
     private PnServiceDeskConfigs cfn;
     private PnDataVaultClient pnDataVaultClient;
     private PnExternalChannelClient pnExternalChannelClient;
+    private ExternalChannelMapper externalChannelMapper;
+
 
     public ValidationOperationActionImpl(OperationDAO operationDao, AddressDAO addressDAO,
                                          PnAddressManagerClient addressManagerClient, PnDeliveryPushClient pnDeliveryPushClient,
                                          PnDeliveryClient pnDeliveryClient,
                                          PnPaperChannelClient paperChannelClient, PnSafeStorageClient safeStorageClient,
-                                         PnServiceDeskConfigs cfn, PnDataVaultClient pnDataVaultClient, PnExternalChannelClient pnExternalChannelClient) {
+                                         PnServiceDeskConfigs cfn, PnDataVaultClient pnDataVaultClient, PnExternalChannelClient pnExternalChannelClient, ExternalChannelMapper externalChannelMapper) {
         super(operationDao);
         this.addressDAO = addressDAO;
         this.addressManagerClient = addressManagerClient;
@@ -74,6 +77,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         this.cfn = cfn;
         this.pnDataVaultClient = pnDataVaultClient;
         this.pnExternalChannelClient = pnExternalChannelClient;
+        this.externalChannelMapper = externalChannelMapper;
     }
 
     @Override
@@ -102,6 +106,21 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
     }
 
     private Mono<Void> checkValidationFlow(PnServiceDeskOperations operation, PnServiceDeskAddress address) {
+
+        if ("EMAIL".equalsIgnoreCase(address.getType())) {
+            List<String> iuns = new ArrayList<>();
+            iuns.add(operation.getIun());
+
+            return getAttachmentsList(operation, iuns)
+                    .collectList()
+                    .flatMapMany(lstAttachments -> new SplittingAttachments(lstAttachments, operation, cfn.getMaxNumberOfPages()).splitAttachment())
+                    .flatMap(op -> operationDAO.updateEntity(op)
+                                               .switchIfEmpty(Mono.defer(() -> Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()))))
+                                               .thenReturn(op))
+                    .flatMap(op -> requestToPrepare(op, address))
+                    .then();
+        }
+
         return getIuns(operation.getRecipientInternalId())
                 .collectList()
                 .flatMap(responsePaperNotificationFailed -> {
@@ -229,7 +248,10 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         return Mono.just(AttachmentMapper.initAttachment(iun))
                 .flatMap(entity ->
                         this.getAttachmentsFromDelivery(iun)
-                                .concatWith(getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
+                                .concatWith(
+                                        entityOperation.getIun() != null ?
+                                                Flux.empty():
+                                                getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
                                 .flatMap(this::attachmentInfo)
                                 .map(attachmentInfo -> {
                                     if (StringUtils.isNotEmpty(attachmentInfo.getFileKey())) attachmentInfo.setFileKey(attachmentInfo.getFileKey().contains(Utility.SAFESTORAGE_BASE_URL) ? attachmentInfo.getFileKey() : Utility.SAFESTORAGE_BASE_URL.concat(attachmentInfo.getFileKey()));
@@ -434,7 +456,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
 
         log.debug("recipientInternalId = {}, Calling service for deanonymizing this recipientInternalId", entityOperation.getRecipientInternalId());
         return this.pnDataVaultClient.deAnonymized(entityOperation.getRecipientInternalId())
-                                     .flatMap(fiscalCode -> ExternalChannelMapper.getPrepareCourtesyMail(entityOperation, address, attachments, requestId))
+                                     .flatMap(fiscalCode -> externalChannelMapper.getPrepareCourtesyMail(entityOperation, address, attachments, requestId))
                                      .flatMap(prepareRequestDto -> {
                                          log.info("requestId = {}, prepareRequestDto = {}, Calling prepare api with this requestId and request", requestId, prepareRequestDto);
                                          return this.pnExternalChannelClient.sendCourtesyMail(requestId, cfn.getExternalChannelCxId(), prepareRequestDto);

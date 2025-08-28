@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.mapper;
 
-import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.DigitalCourtesyMailRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pntemplatesengine.v1.dto.LanguageEnumDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pntemplatesengine.v1.dto.NotificationCceForEmailDto;
@@ -8,30 +7,34 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.templatesengine.PnTemplatesEngineClient;
 import lombok.CustomLog;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Component
 @CustomLog
 public class ExternalChannelMapper {
 
-    private ExternalChannelMapper() {}
+    private PnTemplatesEngineClient pnTemplatesEngineClient;
 
-    private static PnTemplatesEngineClient pnTemplatesEngineClient;
-
-    public static void setPnTemplatesEngineClient(PnTemplatesEngineClient client) {
-        pnTemplatesEngineClient = client;
+    public ExternalChannelMapper(PnTemplatesEngineClient pnTemplatesEngineClient) {
+        this.pnTemplatesEngineClient = pnTemplatesEngineClient;
     }
 
-    public static Mono<DigitalCourtesyMailRequestDto> getPrepareCourtesyMail(
+    public  Mono<DigitalCourtesyMailRequestDto> getPrepareCourtesyMail(
             PnServiceDeskOperations operations,
             PnServiceDeskAddress address,
             List<String> attachments,
             String requestId) {
 
+        log.info("Preparing DigitalCourtesyMailRequestDto for requestId: {}", requestId);
+
         Mono<String> renderedTemplateMono = callNotificationCceForEmail(operations, address, LanguageEnumDto.IT);
+
+        log.info("Received rendered template for requestId: {}", requestId);
 
         return renderedTemplateMono.map(renderedTemplate -> {
             DigitalCourtesyMailRequestDto mailRequestDto = new DigitalCourtesyMailRequestDto();
@@ -42,7 +45,7 @@ public class ExternalChannelMapper {
             mailRequestDto.setQos(DigitalCourtesyMailRequestDto.QosEnum.INTERACTIVE);
             mailRequestDto.setClientRequestTimeStamp(java.time.Instant.now());
             mailRequestDto.setReceiverDigitalAddress(address.getAddress());
-            mailRequestDto.setMessageContentType(DigitalCourtesyMailRequestDto.MessageContentTypeEnum.PLAIN);
+            mailRequestDto.setMessageContentType(DigitalCourtesyMailRequestDto.MessageContentTypeEnum.HTML);
             mailRequestDto.setChannel(DigitalCourtesyMailRequestDto.ChannelEnum.EMAIL);
 
 
@@ -55,10 +58,7 @@ public class ExternalChannelMapper {
 
 
             if (attachments != null && !attachments.isEmpty()) {
-                List<String> attachmentUrls = attachments.stream()
-                                                         .map(fileKey -> "safestorage://" + fileKey)
-                                                         .toList();
-                mailRequestDto.setAttachmentUrls(attachmentUrls);
+                mailRequestDto.setAttachmentUrls(attachments);
             }
 
             return mailRequestDto;
@@ -67,21 +67,21 @@ public class ExternalChannelMapper {
 
 
 
-    private static Mono<String> callNotificationCceForEmail(
+    private Mono<String> callNotificationCceForEmail(
             PnServiceDeskOperations operations,
             PnServiceDeskAddress address,
             LanguageEnumDto language) {
-
+log.info("Calling PN Templates Engine for notification template for operationId: {}", operations.getOperationId());
         NotificationCceForEmailDto notificationCceForEmailDto = new NotificationCceForEmailDto();
         notificationCceForEmailDto.setDenomination(address.getFullName());
         notificationCceForEmailDto.setIun(operations.getOperationId());
-        notificationCceForEmailDto.setTicketDate(String.valueOf(operations.getOperationStartDate()));
-        notificationCceForEmailDto.setVrDate(String.valueOf(operations.getOperationLastUpdateDate()));
+        notificationCceForEmailDto.setTicketDate(String.valueOf(operations.getTicketDate()));
+        notificationCceForEmailDto.setVrDate(String.valueOf(operations.getVrDate()));
 
-        return pnTemplatesEngineClient.notificationCceTemplate(language, notificationCceForEmailDto);
+        return this.pnTemplatesEngineClient.notificationCceTemplate(language, notificationCceForEmailDto);
     }
 
-    private static String extractTagContent(String html, String tagName) {
+    private String extractTagContent(String html, String tagName) {
         if (html == null || tagName == null) return null;
         Pattern pattern = Pattern.compile("<" + tagName + "[^>]*>(.*?)</" + tagName + ">", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(html);

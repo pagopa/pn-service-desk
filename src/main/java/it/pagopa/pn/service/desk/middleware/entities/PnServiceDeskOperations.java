@@ -29,6 +29,10 @@ public class PnServiceDeskOperations {
     public static final String COL_ERROR_REASON = "errorReason";
     public static final String COL_EVENTS = "events";
     public static final String COL_ATTACHMENTS = "attachments";
+    public static final String COL_TICKET_DATE = "ticketDate";
+    public static final String COL_VR_DATE = "vrDate";
+    public static final String COL_IUN = "iun";
+
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_OPERATION_ID)}))
     private String operationId;
@@ -56,6 +60,15 @@ public class PnServiceDeskOperations {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ATTACHMENTS)}))
     private List<PnServiceDeskAttachments> attachments;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_TICKET_DATE)}))
+    private String ticketDate;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VR_DATE)}))
+    private String vrDate;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_IUN)}))
+    private String iun;
 
 
 }

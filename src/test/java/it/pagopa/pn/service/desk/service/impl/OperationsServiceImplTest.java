@@ -3,6 +3,9 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationRecipientV24Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileCreationResponse;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
@@ -13,6 +16,8 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperationFileKey;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import org.assertj.core.groups.Tuple;
@@ -36,6 +41,7 @@ import java.nio.charset.Charset;
 import java.sql.Array;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,6 +49,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class OperationsServiceImplTest extends BaseTest {
     @MockBean
     private NotificationService notificationService;
+    @MockBean
+    private PnDeliveryClient pnDeliveryClient;
     @MockBean
     private PnDataVaultClient dataVaultClient;
     @MockBean
@@ -54,6 +62,8 @@ class OperationsServiceImplTest extends BaseTest {
     @Autowired
     private OperationsServiceImpl service;
 
+    private CreateActOperationRequest createActOperationRequest;
+
 
     private final PnServiceDeskOperations pnServiceDeskOperations =new PnServiceDeskOperations();
     private final PnServiceDeskOperationFileKey pnServiceDeskOperationFileKey= new PnServiceDeskOperationFileKey();
@@ -62,6 +72,15 @@ class OperationsServiceImplTest extends BaseTest {
 
     @BeforeEach
     void inizialize(){
+
+        createActOperationRequest = new CreateActOperationRequest();
+        createActOperationRequest.setTaxId("AAAAAA00A00A000A");
+        createActOperationRequest.setIun("iun123");
+        createActOperationRequest.setTicketId("ticket123");
+        createActOperationRequest.setTicketOperationId("op123");
+        createActOperationRequest.setAddress(new ActDigitalAddress().address("test@test.com").type("EMAIL"));
+
+
         pnServiceDeskOperations.setOperationId("123");
         pnServiceDeskOperations.setOperationStartDate(Instant.now());
         pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
@@ -237,6 +256,85 @@ class OperationsServiceImplTest extends BaseTest {
         return request;
     }
 
+    @Test
+    void createActOperation_Success() {
+        SentNotificationV25Dto sentNotificationV25Dto = new SentNotificationV25Dto();
+
+        NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
+        recipient.setTaxId(createActOperationRequest.getTaxId());
+        sentNotificationV25Dto.setRecipients(List.of(recipient));
+        sentNotificationV25Dto.setIun(createActOperationRequest.getIun());
+        sentNotificationV25Dto.setDocumentsAvailable(true);
+
+
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
+                Mockito.eq(createActOperationRequest.getIun())))
+               .thenReturn(Mono.just(sentNotificationV25Dto));
+
+        Mockito.when(operationDAO.getByOperationId(Mockito.any()))
+               .thenReturn(Mono.empty());
+
+        Mockito.when(operationDAO.createOperationAndAddress(Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just(Tuples.of(pnServiceDeskOperations, new PnServiceDeskAddress())));
+
+        StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
+                    .assertNext(response -> {
+                        assertNotNull(response);
+                        assertNotNull(response.getOperationId());
+                    })
+                    .verifyComplete();
+    }
+
+
+
+    @Test
+    void createActOperation_NoLegalFacts_CompletesWithoutError() {
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
+                       Mockito.eq(createActOperationRequest.getIun())))
+               .thenReturn(Mono.empty());
+
+        StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
+                    .verifyComplete();    }
+
+
+    @Test
+    void createActOperation_TaxIdMismatch_ReturnsError() {
+        SentNotificationV25Dto sentNotification = new SentNotificationV25Dto();
+
+        NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
+        // Simuliamo mismatch
+        recipient.setTaxId("DIFFERENT_TAX_ID");
+
+        sentNotification.setRecipients(List.of(recipient));
+        sentNotification.setDocumentsAvailable(true);
+
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
+                       Mockito.eq(createActOperationRequest.getIun())))
+               .thenReturn(Mono.just(sentNotification));
+
+        StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
+                    .expectErrorSatisfies(ex -> {
+                        assertTrue(ex instanceof PnGenericException);
+                        assertTrue(ex.getMessage().contains("Tax ID from request does not match"));
+                    })
+                    .verify();
+    }
+
+
+    @Test
+    void createActOperation_ClientError_PropagatesPnGenericException() {
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
+                       Mockito.eq(createActOperationRequest.getIun())))
+               .thenReturn(Mono.error(new RuntimeException("Simulated client error")));
+
+        StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
+                    .expectErrorSatisfies(ex -> {
+                        assertTrue(ex instanceof PnGenericException);
+                        assertTrue(ex.getMessage().contains("Simulated client error"));
+                    })
+                    .verify();
+    }
+
     private VideoUploadRequest getVideoUploadRequest(){
         VideoUploadRequest request = new VideoUploadRequest();
         request.setPreloadIdx("123");
@@ -252,55 +350,12 @@ class OperationsServiceImplTest extends BaseTest {
     }
 
 
-    @Test
-    void createActOperationTestCaseWithNotification() {
-        NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
-        notificationsUnreachableResponse.setNotificationsCount(1L);
-
-        Mockito.when(notificationService.getUnreachableNotification(Mockito.any(), Mockito.any()))
-               .thenReturn(Mono.just(notificationsUnreachableResponse));
-        Mockito.when(operationDAO.getByOperationId(Mockito.any()))
-               .thenReturn(Mono.empty());
-        Mockito.when(operationDAO.createOperationAndAddress(Mockito.any(), Mockito.any()))
-               .thenReturn(Mono.just(Tuples.of(pnServiceDeskOperations, new PnServiceDeskAddress())));
-
-        assertNotNull(service.createActOperation("1234", getCreateActOperationRequest()).block());
-    }
 
 
-    @Test
-    void createActOperationTestCaseWithoutNotification() {
-        NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
-        notificationsUnreachableResponse.setNotificationsCount(0L);
-
-        Mockito.when(notificationService.getUnreachableNotification(Mockito.any(), Mockito.any()))
-               .thenReturn(Mono.just(notificationsUnreachableResponse));
-        Mockito.when(operationDAO.getByOperationId(Mockito.any()))
-               .thenReturn(Mono.empty());
-        Mockito.when(operationDAO.createOperationAndAddress(Mockito.any(), Mockito.any()))
-               .thenReturn(Mono.just(Tuples.of(pnServiceDeskOperations, new PnServiceDeskAddress())));
-
-        StepVerifier.create(service.createActOperation("1234", getCreateActOperationRequest()))
-                    .expectError(PnGenericException.class)
-                    .verify();
-    }
 
 
-    @Test
-    void whenCallcreateActOperationAndOperationIdAlreadyExistReturnErrorTest() {
-        NotificationsUnreachableResponse notificationsUnreachableResponse = new NotificationsUnreachableResponse();
-        notificationsUnreachableResponse.setNotificationsCount(1L);
 
-        Mockito.when(notificationService.getUnreachableNotification(Mockito.any(), Mockito.any()))
-               .thenReturn(Mono.just(notificationsUnreachableResponse));
-        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
-        StepVerifier.create(service.createActOperation("1234", getCreateActOperationRequest()))
-                    .expectErrorMatches(ex -> {
-                        assertTrue(ex instanceof PnGenericException);
-                        assertEquals(OPERATION_ID_IS_PRESENT, ((PnGenericException) ex).getExceptionType());
-                        return true;
-                    }).verify();
-    }
+
 
 
 }

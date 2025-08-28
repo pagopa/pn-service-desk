@@ -263,6 +263,10 @@ Outputs:
   ServiceDeskKmsEncDecDynamoDataKeyARN:
     Description: Name of KMS Key for Dynamo encode/decode data
     Value: !Sub '${ServiceDeskKmsEncDecDynamoDataKey.Arn}'
+
+  ExternalChannelToServiceDeskQueueName:
+    Value: !GetAtt ExternalChannelToServiceDeskQueue.Outputs.QueueName
+    Description: PN-SERVICE-DESK input queue name
   
   ExternalChannelToServiceDeskQueueARN:
     Value: !GetAtt ExternalChannelToServiceDeskQueue.Outputs.QueueARN
