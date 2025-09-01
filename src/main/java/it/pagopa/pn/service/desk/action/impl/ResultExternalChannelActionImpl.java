@@ -54,9 +54,8 @@ public class ResultExternalChannelActionImpl extends CommonAction implements Res
                 return operationDAO.updateEntity(entityOperation).then();
 
             })
-                .doOnError( error -> {
-                    log.error("Error while processing courtesyMessageProgressEventDto = {}, operationId = {}, error = {}", courtesyMessageProgressEventDto, operationId, error.getMessage());
-                }).onErrorResume( error -> {
+                .doOnError( error -> log.error("Error while processing courtesyMessageProgressEventDto = {}, operationId = {}, error = {}", courtesyMessageProgressEventDto, operationId, error.getMessage()))
+                    .onErrorResume( error -> {
                     if (error instanceof PnEntityNotFoundException) {
                         log.error("Operation with id {} not found", operationId);
                         return Mono.empty();

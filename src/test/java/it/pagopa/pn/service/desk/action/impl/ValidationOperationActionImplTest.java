@@ -319,7 +319,6 @@ class ValidationOperationActionImplTest {
     void executeWithEmailType() {
         // Prepara l'operazione e l'indirizzo
         PnServiceDeskOperations operation = new PnServiceDeskOperations();
-        PnTemplatesEngineClient mockTemplatesEngineClient = Mockito.mock(PnTemplatesEngineClient.class);
 
 
         operation.setOperationId("opIdEmail");
@@ -354,7 +353,6 @@ class ValidationOperationActionImplTest {
     void executeWithEmailType_KO() {
         // --- Prepara l'operazione e l'indirizzo ---
         PnServiceDeskOperations operation = new PnServiceDeskOperations();
-        PnTemplatesEngineClient mockTemplatesEngineClient = Mockito.mock(PnTemplatesEngineClient.class);
 
         operation.setOperationId("opIdEmail");
         operation.setRecipientInternalId("recipientId");

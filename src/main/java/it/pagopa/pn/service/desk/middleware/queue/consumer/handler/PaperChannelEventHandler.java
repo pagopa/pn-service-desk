@@ -27,6 +27,7 @@ public class PaperChannelEventHandler {
                     log.error("Field of payload is empty");
                 }
             } catch (Exception ex) {
+                log.error("Error in pnPaperChannelInboundConsumer {}", ex.getMessage());
                 throw ex;
             }
         };
