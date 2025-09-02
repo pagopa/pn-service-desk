@@ -173,7 +173,7 @@ class OperationsControllerTest {
         CreateActOperationRequest request = new CreateActOperationRequest();
         ActDigitalAddress digitalAddress= new ActDigitalAddress();
         digitalAddress.setAddress("test@test.com");
-        digitalAddress.setType("EMAIL");
+        digitalAddress.setType(ActDigitalAddress.TypeEnum.EMAIL);
 
         request.setIun("ABCD-EFGH-IJKL-123456-M-1");
         request.setTicketDate("2025-07-25");

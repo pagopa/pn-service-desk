@@ -68,7 +68,7 @@ class OperationsServiceImplTest extends BaseTest {
         createActOperationRequest.setIun("iun123");
         createActOperationRequest.setTicketId("ticket123");
         createActOperationRequest.setTicketOperationId("op123");
-        createActOperationRequest.setAddress(new ActDigitalAddress().address("test@test.com").type("EMAIL"));
+        createActOperationRequest.setAddress(new ActDigitalAddress().address("test@test.com").type(ActDigitalAddress.TypeEnum.EMAIL));
 
 
         pnServiceDeskOperations.setOperationId("123");

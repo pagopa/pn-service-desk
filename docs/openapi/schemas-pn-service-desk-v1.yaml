@@ -1667,6 +1667,8 @@ components:
         type:
           type: string
           description: Identifica il tipo di canale di comunicazione da usare
+          enum:
+            - EMAIL
         address:
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string

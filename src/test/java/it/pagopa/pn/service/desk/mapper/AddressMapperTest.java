@@ -11,9 +11,6 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -102,7 +99,7 @@ class AddressMapperTest {
 
     ActDigitalAddress getDigitalAddress() {
         ActDigitalAddress digitalAddress= new ActDigitalAddress();
-        digitalAddress.setType("EMAIL");
+        digitalAddress.setType(ActDigitalAddress.TypeEnum.EMAIL);
         digitalAddress.setAddress("test@test.com");
         return digitalAddress;
     }
