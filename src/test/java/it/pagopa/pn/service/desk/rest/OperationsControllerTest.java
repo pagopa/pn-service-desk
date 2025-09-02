@@ -11,6 +11,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
@@ -101,6 +102,22 @@ class OperationsControllerTest {
                      .bodyValue(getCreateActOperationRequest())
                      .exchange()
                      .expectStatus().isBadRequest();  // Aspettiamo un 400 Bad Request o altro status previsto
+    }
+
+    @Test
+    void createActOperation_WrongAddressType_Ko() {
+        String path = "/service-desk/act-operations";
+        String requestBody = "{\"address\":{\"type\":\"INVALID_TYPE\"}}";
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path(path).build())
+                .header("x-pagopa-pn-uid", "test")
+                .header("x-api-key", "test")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(requestBody)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
     }
 
 
