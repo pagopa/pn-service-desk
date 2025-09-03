@@ -15,6 +15,7 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
+import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import it.pagopa.pn.service.desk.service.OperationsService;
@@ -187,12 +188,20 @@ public class OperationsServiceImpl implements OperationsService {
 
         return operationDAO.getByOperationId(operationId)
                 .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.NOT_FOUND)))
-                .flatMap(operation -> manageOperationFileKey(operationId))
-                .switchIfEmpty(Mono.just(operationId))
-                .flatMap(operationID -> safeStorageClient.getPresignedUrl(videoUploadRequest))
-                .flatMap(fileCreationResponse ->
-                        operationsFileKeyDAO.updateVideoFileKey(OperationsFileKeyMapper.getOperationFileKey(fileCreationResponse.getKey(), operationId))
-                                .thenReturn(fileCreationResponse)
+                .filter(operation -> operation.getStatus().equals(NotificationStatus.StatusEnum.CREATING.getValue()))
+                .switchIfEmpty(Mono.error(new PnGenericException(FILE_ALREADY_UPLOADED, FILE_ALREADY_UPLOADED.getMessage(), HttpStatus.CONFLICT)))
+                .flatMap(operation -> manageOperationFileKey(operationId)
+                        .switchIfEmpty(Mono.just(operationId))
+                        .flatMap(operationID -> safeStorageClient.getPresignedUrl(videoUploadRequest))
+                        .flatMap(fileCreationResponse ->
+                                operationsFileKeyDAO.updateVideoFileKey(OperationsFileKeyMapper.getOperationFileKey(fileCreationResponse.getKey(), operationId))
+                                        .thenReturn(fileCreationResponse)
+                        )
+                        .flatMap(fileCreationResponse -> {
+                            operation.setStatus(OperationStatusEnum.VALIDATION.toString());
+                            return operationDAO.updateEntity(operation)
+                                    .thenReturn(fileCreationResponse);
+                        })
                 )
                 .map(OperationsFileKeyMapper::getVideoUpload);
     }
