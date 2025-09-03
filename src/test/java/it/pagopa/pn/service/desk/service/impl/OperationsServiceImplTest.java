@@ -16,6 +16,7 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
+import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,7 +75,7 @@ class OperationsServiceImplTest extends BaseTest {
         pnServiceDeskOperations.setOperationId("123");
         pnServiceDeskOperations.setOperationStartDate(Instant.now());
         pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
-        pnServiceDeskOperations.setStatus("OK");
+        pnServiceDeskOperations.setStatus("CREATING");
         pnServiceDeskOperations.setRecipientInternalId("1234");
 
         pnServiceDeskOperationFileKey.setOperationId("1234");
@@ -202,6 +203,7 @@ class OperationsServiceImplTest extends BaseTest {
         Mockito.when(safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.error(new WebClientResponseException("Errore durante il recupero del file", HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), null, null, null)));
         Mockito.when(safeStorageClient.getPresignedUrl(Mockito.any())).thenReturn(Mono.just(fileCreationResponse));
         Mockito.when(operationsFileKeyDAO.updateVideoFileKey(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperationFileKey));
+        Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
 
         assertNotNull(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()).block());
 
@@ -209,11 +211,47 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void whenCallpresignedUrlVideoUploadReturnVideoUploadResponseTest() {
+        pnServiceDeskOperations.setStatus(NotificationStatus.StatusEnum.CREATING.getValue());
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.just(new FileDownloadResponse()));
         Mockito.when(safeStorageClient.getPresignedUrl(Mockito.any())).thenReturn(Mono.just(fileCreationResponse));
         Mockito.when(operationsFileKeyDAO.updateVideoFileKey(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperationFileKey));
+        Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
 
         assertNotNull(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()).block());
+    }
+
+    @Test
+    void whenCallPresignedUrlVideoUploadAndOperationNotInCreatingStatusReturn409ConflictTest() {
+        // Setup operation with status different from CREATING
+        pnServiceDeskOperations.setStatus(NotificationStatus.StatusEnum.VALIDATION.getValue());
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
+
+        StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()))
+                .expectErrorMatches((ex) -> {
+                    assertInstanceOf(PnGenericException.class, ex);
+                    assertEquals(FILE_ALREADY_UPLOADED, ((PnGenericException) ex).getExceptionType());
+                    assertEquals(HttpStatus.CONFLICT, ((PnGenericException) ex).getHttpStatus());
+                    return true;
+                }).verify();
+    }
+
+    @Test
+    void whenCallPresignedUrlVideoUploadSuccessfullyThenStatusUpdatedToValidationTest() {
+        // Setup operation with CREATING status
+        pnServiceDeskOperations.setStatus(NotificationStatus.StatusEnum.CREATING.getValue());
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
+        Mockito.when(safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.error(new WebClientResponseException("File not found", HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), null, null, null)));
+        Mockito.when(safeStorageClient.getPresignedUrl(Mockito.any())).thenReturn(Mono.just(fileCreationResponse));
+        Mockito.when(operationsFileKeyDAO.updateVideoFileKey(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperationFileKey));
+        Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
+
+        VideoUploadResponse result = service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()).block();
+        
+        assertNotNull(result);
+        // Verify that updateEntity was called with operation status set to VALIDATION
+        Mockito.verify(operationDAO).updateEntity(Mockito.argThat(operation -> 
+                OperationStatusEnum.VALIDATION.toString().equals(operation.getStatus())));
     }
 
 
