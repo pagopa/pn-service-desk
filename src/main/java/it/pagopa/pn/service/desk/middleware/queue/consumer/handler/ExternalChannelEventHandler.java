@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class ExternalChannelEventHandler {
     private final ExternalChannelResponseHandler externalChannelResponseHandler;
-    private CourtesyMessageProgressEventDto CourtesyMessageProgressEventDto;
+    private CourtesyMessageProgressEventDto courtesyMessageProgressEventDto;
 
 
     public ExternalChannelEventHandler(ExternalChannelResponseHandler externalChannelResponseHandler) {
@@ -30,6 +30,7 @@ public class ExternalChannelEventHandler {
                 SingleStatusUpdateDto singleStatusUpdateDto = message.getPayload();
                 externalChannelResponseHandler.handleResultExternalChannelEventResponse(singleStatusUpdateDto);
             } catch (Exception ex) {
+                log.error("Error in pnExtChannelEventInboundConsumer {}", ex.getMessage());
                 throw ex;
             }
         };

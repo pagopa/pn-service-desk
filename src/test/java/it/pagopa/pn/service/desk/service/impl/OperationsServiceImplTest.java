@@ -5,11 +5,9 @@ import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationRecipientV24Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileCreationResponse;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
-import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
@@ -17,30 +15,23 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperationFileK
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
-import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
+import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.service.NotificationService;
-import org.assertj.core.groups.Tuple;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import java.math.BigDecimal;
-import java.nio.charset.Charset;
-import java.sql.Array;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
@@ -78,13 +69,13 @@ class OperationsServiceImplTest extends BaseTest {
         createActOperationRequest.setIun("iun123");
         createActOperationRequest.setTicketId("ticket123");
         createActOperationRequest.setTicketOperationId("op123");
-        createActOperationRequest.setAddress(new ActDigitalAddress().address("test@test.com").type("EMAIL"));
+        createActOperationRequest.setAddress(new ActDigitalAddress().address("test@test.com").type(ActDigitalAddress.TypeEnum.EMAIL));
 
 
         pnServiceDeskOperations.setOperationId("123");
         pnServiceDeskOperations.setOperationStartDate(Instant.now());
         pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
-        pnServiceDeskOperations.setStatus("OK");
+        pnServiceDeskOperations.setStatus("CREATING");
         pnServiceDeskOperations.setRecipientInternalId("1234");
 
         pnServiceDeskOperationFileKey.setOperationId("1234");
@@ -212,6 +203,7 @@ class OperationsServiceImplTest extends BaseTest {
         Mockito.when(safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.error(new WebClientResponseException("Errore durante il recupero del file", HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), null, null, null)));
         Mockito.when(safeStorageClient.getPresignedUrl(Mockito.any())).thenReturn(Mono.just(fileCreationResponse));
         Mockito.when(operationsFileKeyDAO.updateVideoFileKey(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperationFileKey));
+        Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
 
         assertNotNull(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()).block());
 
@@ -219,11 +211,47 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void whenCallpresignedUrlVideoUploadReturnVideoUploadResponseTest() {
+        pnServiceDeskOperations.setStatus(NotificationStatus.StatusEnum.CREATING.getValue());
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.just(new FileDownloadResponse()));
         Mockito.when(safeStorageClient.getPresignedUrl(Mockito.any())).thenReturn(Mono.just(fileCreationResponse));
         Mockito.when(operationsFileKeyDAO.updateVideoFileKey(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperationFileKey));
+        Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
 
         assertNotNull(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()).block());
+    }
+
+    @Test
+    void whenCallPresignedUrlVideoUploadAndOperationNotInCreatingStatusReturn409ConflictTest() {
+        // Setup operation with status different from CREATING
+        pnServiceDeskOperations.setStatus(NotificationStatus.StatusEnum.VALIDATION.getValue());
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
+
+        StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()))
+                .expectErrorMatches((ex) -> {
+                    assertInstanceOf(PnGenericException.class, ex);
+                    assertEquals(FILE_ALREADY_UPLOADED, ((PnGenericException) ex).getExceptionType());
+                    assertEquals(HttpStatus.CONFLICT, ((PnGenericException) ex).getHttpStatus());
+                    return true;
+                }).verify();
+    }
+
+    @Test
+    void whenCallPresignedUrlVideoUploadSuccessfullyThenStatusUpdatedToValidationTest() {
+        // Setup operation with CREATING status
+        pnServiceDeskOperations.setStatus(NotificationStatus.StatusEnum.CREATING.getValue());
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
+        Mockito.when(safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.error(new WebClientResponseException("File not found", HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), null, null, null)));
+        Mockito.when(safeStorageClient.getPresignedUrl(Mockito.any())).thenReturn(Mono.just(fileCreationResponse));
+        Mockito.when(operationsFileKeyDAO.updateVideoFileKey(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperationFileKey));
+        Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
+
+        VideoUploadResponse result = service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()).block();
+        
+        assertNotNull(result);
+        // Verify that updateEntity was called with operation status set to VALIDATION
+        Mockito.verify(operationDAO).updateEntity(Mockito.argThat(operation -> 
+                OperationStatusEnum.VALIDATION.toString().equals(operation.getStatus())));
     }
 
 
@@ -243,18 +271,6 @@ class OperationsServiceImplTest extends BaseTest {
         return request;
     }
 
-
-    private CreateActOperationRequest getCreateActOperationRequest(){
-        CreateActOperationRequest request = new CreateActOperationRequest();
-        ActDigitalAddress digitalAddress= new ActDigitalAddress();
-        digitalAddress.setAddress("test@test.com");
-       digitalAddress.setType("EMAIL");
-        request.setTaxId("1234567");
-        request.setAddress(digitalAddress);
-        request.setTicketId("1234");
-        request.setTicketOperationId("1234");
-        return request;
-    }
 
     @Test
     void createActOperation_Success() {
@@ -290,7 +306,7 @@ class OperationsServiceImplTest extends BaseTest {
     @Test
     void createActOperation_NoLegalFacts_CompletesWithoutError() {
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
-                       Mockito.eq(createActOperationRequest.getIun())))
+                       createActOperationRequest.getIun()))
                .thenReturn(Mono.empty());
 
         StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
@@ -309,7 +325,7 @@ class OperationsServiceImplTest extends BaseTest {
         sentNotification.setDocumentsAvailable(true);
 
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
-                       Mockito.eq(createActOperationRequest.getIun())))
+                       createActOperationRequest.getIun()))
                .thenReturn(Mono.just(sentNotification));
 
         StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
@@ -324,7 +340,7 @@ class OperationsServiceImplTest extends BaseTest {
     @Test
     void createActOperation_ClientError_PropagatesPnGenericException() {
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
-                       Mockito.eq(createActOperationRequest.getIun())))
+                       createActOperationRequest.getIun()))
                .thenReturn(Mono.error(new RuntimeException("Simulated client error")));
 
         StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))

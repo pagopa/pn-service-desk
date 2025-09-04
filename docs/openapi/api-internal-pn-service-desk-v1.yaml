@@ -116,9 +116,6 @@ paths:
       operationId: createActOperation
       description: >-
         Crea una nuova richiesta di invio digitale su un nuovo indirizzo.
-        Se la coppia _ticketId_ e _ticketOperationId_ è ripetuta rispetto 
-        a una precedente richiesta l'operazione non sarà ricreata e sarà
-        restituito '201'
       tags:
         - Operation
       parameters:

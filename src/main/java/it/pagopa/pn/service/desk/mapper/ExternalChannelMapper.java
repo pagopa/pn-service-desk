@@ -74,7 +74,7 @@ public class ExternalChannelMapper {
 log.info("Calling PN Templates Engine for notification template for operationId: {}", operations.getOperationId());
         NotificationCceForEmailDto notificationCceForEmailDto = new NotificationCceForEmailDto();
         notificationCceForEmailDto.setDenomination(address.getFullName());
-        notificationCceForEmailDto.setIun(operations.getOperationId());
+        notificationCceForEmailDto.setIun(operations.getIun());
         notificationCceForEmailDto.setTicketDate(String.valueOf(operations.getTicketDate()));
         notificationCceForEmailDto.setVrDate(String.valueOf(operations.getVrDate()));
 

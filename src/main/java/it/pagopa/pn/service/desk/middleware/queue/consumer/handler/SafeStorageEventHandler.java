@@ -33,6 +33,7 @@ public class SafeStorageEventHandler {
                 MDC.remove(MDCUtils.MDC_PN_CTX_SAFESTORAGE_FILEKEY);
             } catch (Exception ex) {
                 MDC.remove(MDCUtils.MDC_PN_CTX_SAFESTORAGE_FILEKEY);
+                log.error("Error in pnSafeStorageEventInboundConsumer {}", ex.getMessage());
                 throw ex;
             }
         };

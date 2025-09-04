@@ -38,7 +38,7 @@ class ExternalChannelEventHandlerTestIT {
         consumer.accept(message);
 
         // Assert
-        Mockito.verify(handler).handleResultExternalChannelEventResponse(Mockito.eq(dto));
+        Mockito.verify(handler).handleResultExternalChannelEventResponse(dto);
     }
 
     @Test
