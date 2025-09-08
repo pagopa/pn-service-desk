@@ -237,6 +237,10 @@ Parameters:
     Type: String
     Description: 'Url to the SafeStorage microservice'
 
+  DocumentTypeFilter:
+    Type: String
+    Description: 'Comma-separated list of SafeStorage document types to exclude'
+
   DataVaultBaseUrl:
     Type: String
     Description: 'DataVault BaseUrl'
@@ -400,6 +404,7 @@ Resources:
         ContainerEnvEntry35: !Sub 'PN_SERVICEDESK_EXTERNALCHANNELCXID=${ExternalChannelCxId}'
         ContainerEnvEntry36: !Sub 'PN_SERVICEDESK_TEMPLATESENGINEBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry37: !Sub 'PN_SERVICEDESK_TOPICS_EXTERNALCHANNELQUEUE=${ExternalChannelToServiceDeskQueueName}'
+        ContainerEnvEntry38: !Sub 'PN_SERVICEDESK_DOCUMENT_TYPE_FILTER=${DocumentTypeFilter}'
         ContainerSecret1: !Sub 'PN_SERVICEDESK_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-ServiceDesk-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-ServiceDesk-Secrets
         MappedPaths: '/service-desk/*'
