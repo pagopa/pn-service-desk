@@ -7,6 +7,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Configuration
 @ConfigurationProperties( prefix = "pn.service-desk")
 @Data
@@ -43,6 +46,7 @@ public class PnServiceDeskConfigs {
     private String senderTaxCode;
     private Integer notifyAttempt;
     private Integer maxNumberOfPages;
+    private List<String> documentTypeFilter = new ArrayList<>();
 
     @Data
     public static class Topics {
