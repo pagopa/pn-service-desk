@@ -452,7 +452,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
     private Mono<Void> emailPrepare(PnServiceDeskOperations entityOperation, PnServiceDeskAddress address, List<String> attachments) {
         log.debug("entityOperation = {}, entityAddress = {}, EmailPrepare received input", entityOperation, address);
 
-        String requestId = checkAndGenerateRequestId(entityOperation, attachments);
+        String requestId = Utility.generateRequestId(entityOperation.getOperationId());
 
         log.debug("recipientInternalId = {}, Calling service for deanonymizing this recipientInternalId", entityOperation.getRecipientInternalId());
         return this.pnDataVaultClient.deAnonymized(entityOperation.getRecipientInternalId())
@@ -474,7 +474,6 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                      .then();
     }
 
-//logica comune tra emailPrepare e PaperPrepare
     private String checkAndGenerateRequestId(PnServiceDeskOperations entityOperation, List<String> attachments) {
         String requestId = Utility.generateRequestId(entityOperation.getOperationId());
         log.debug("requestId = {}, Generated a new requestId", requestId);
