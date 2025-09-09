@@ -248,10 +248,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         return Mono.just(AttachmentMapper.initAttachment(iun))
                 .flatMap(entity ->
                         this.getAttachmentsFromDelivery(iun)
-                                .concatWith(
-                                        entityOperation.getIun() != null ?
-                                                Flux.empty():
-                                                getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
+                                .concatWith(getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
                                 .flatMap(this::attachmentInfo)
                                 .map(attachmentInfo -> {
                                     if (StringUtils.isNotEmpty(attachmentInfo.getFileKey())) attachmentInfo.setFileKey(attachmentInfo.getFileKey().contains(Utility.SAFESTORAGE_BASE_URL) ? attachmentInfo.getFileKey() : Utility.SAFESTORAGE_BASE_URL.concat(attachmentInfo.getFileKey()));
