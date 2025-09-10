@@ -14,6 +14,7 @@
     "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080",
     "PnCronAnalyzer": "-",
     "WireTapLogActivation": "false",
-    "MountEfs": "false"
+    "MountEfs": "false",
+    "DocumentTypeFilter": "PN_EXTERNAL_LEGAL_FACTS"
   }
 }

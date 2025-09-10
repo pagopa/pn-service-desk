@@ -248,10 +248,9 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         return Mono.just(AttachmentMapper.initAttachment(iun))
                 .flatMap(entity ->
                         this.getAttachmentsFromDelivery(iun)
-                                .concatWith(
-                                        entityOperation.getIun() != null ?
-                                                Flux.empty():
-                                                getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
+                                .concatWith(getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
+                                // Excluding documents that contains one of the document type in the filter list
+                                .filterWhen(fileKey -> Flux.fromIterable(cfn.getDocumentTypeFilter()).all(dt -> !fileKey.contains(dt)))
                                 .flatMap(this::attachmentInfo)
                                 .map(attachmentInfo -> {
                                     if (StringUtils.isNotEmpty(attachmentInfo.getFileKey())) attachmentInfo.setFileKey(attachmentInfo.getFileKey().contains(Utility.SAFESTORAGE_BASE_URL) ? attachmentInfo.getFileKey() : Utility.SAFESTORAGE_BASE_URL.concat(attachmentInfo.getFileKey()));
@@ -452,7 +451,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
     private Mono<Void> emailPrepare(PnServiceDeskOperations entityOperation, PnServiceDeskAddress address, List<String> attachments) {
         log.debug("entityOperation = {}, entityAddress = {}, EmailPrepare received input", entityOperation, address);
 
-        String requestId = checkAndGenerateRequestId(entityOperation, attachments);
+        String requestId = Utility.generateRequestId(entityOperation.getOperationId());
 
         log.debug("recipientInternalId = {}, Calling service for deanonymizing this recipientInternalId", entityOperation.getRecipientInternalId());
         return this.pnDataVaultClient.deAnonymized(entityOperation.getRecipientInternalId())
@@ -474,7 +473,6 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                      .then();
     }
 
-//logica comune tra emailPrepare e PaperPrepare
     private String checkAndGenerateRequestId(PnServiceDeskOperations entityOperation, List<String> attachments) {
         String requestId = Utility.generateRequestId(entityOperation.getOperationId());
         log.debug("requestId = {}, Generated a new requestId", requestId);
