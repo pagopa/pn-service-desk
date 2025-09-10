@@ -78,6 +78,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         this.pnDataVaultClient = pnDataVaultClient;
         this.pnExternalChannelClient = pnExternalChannelClient;
         this.externalChannelMapper = externalChannelMapper;
+        log.info("Configured document type filter: {}", cfn.getDocumentTypeFilter());
     }
 
     @Override
