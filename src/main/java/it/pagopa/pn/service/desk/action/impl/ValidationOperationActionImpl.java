@@ -358,7 +358,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                             .map(doc -> doc.getRef().getKey());
 
                     if (EMAIL.equalsIgnoreCase(addressType))
-                        documentsFlux.concatWith(getPaymentsFromNotification(sentNotification, recipientId));
+                        documentsFlux = documentsFlux.concatWith(getPaymentsFromNotification(sentNotification, recipientId));
 
                     return documentsFlux;
                 });
