@@ -394,8 +394,6 @@ class ValidationOperationActionImplTest {
         Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(operation));
         Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
-        Mockito.when(pnDeliveryClient.getPresignedUrlPaymentDocument(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(notificationAttachmentDownloadMetadataResponseDto));
         Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
         Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                .thenReturn(Mono.error(new RuntimeException("error sending email")));
