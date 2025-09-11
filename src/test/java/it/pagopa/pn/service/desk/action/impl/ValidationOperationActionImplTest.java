@@ -6,9 +6,7 @@ import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
 import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationAttachmentBodyRefDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationDocumentDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactCategoryV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementV20Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactsIdV20Dto;
@@ -33,7 +31,6 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalchannel.PnExternalChannelClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel.PnPaperChannelClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
-import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.templatesengine.PnTemplatesEngineClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,12 +45,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import static it.pagopa.pn.service.desk.action.impl.ValidationOperationActionImpl.EMAIL;
-import static org.mockito.ArgumentMatchers.eq;
-
 @ExtendWith(MockitoExtension.class)
 class ValidationOperationActionImplTest {
 
+    public static final String RECIPIENT_INTERNAL_ID = "recipientInternalId";
     @InjectMocks
     @Spy
     private ValidationOperationActionImpl validationOperationAction;
@@ -131,7 +126,7 @@ class ValidationOperationActionImplTest {
         pnServiceDeskOperations.setAttachments(pnServiceDeskAttachmentsList);
         pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
         pnServiceDeskOperations.setErrorReason("errorReason");
-        pnServiceDeskOperations.setRecipientInternalId("recipientInternalId");
+        pnServiceDeskOperations.setRecipientInternalId(RECIPIENT_INTERNAL_ID);
 
         responsePaperNotificationFailedDtoDto.setIun("iunResponse");
         legalFactsIdDto.setKey("keyLegalFact");
@@ -142,6 +137,22 @@ class ValidationOperationActionImplTest {
         notificationDocumentDto.setRef(notificationAttachmentBodyRefDto);
         notifications.add(notificationDocumentDto);
         sentNotificationDto.setDocuments(notifications);
+
+        NotificationPaymentItemDto paymentItem = new NotificationPaymentItemDto();
+        
+        paymentItem.setF24(new F24PaymentDto()
+            .metadataAttachment(new NotificationMetadataAttachmentDto()
+                .ref(new NotificationAttachmentBodyRefDto().key("f24AttachmentKey"))));
+        
+        paymentItem.setPagoPa(new PagoPaPaymentDto()
+            .attachment(new NotificationPaymentAttachmentDto()
+                .ref(new NotificationAttachmentBodyRefDto().key("pagopaAttachmentKey"))));
+
+        NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto()
+                .internalId("recipientInternalId")
+                .payments(List.of(paymentItem));
+        
+        sentNotificationDto.setRecipients(List.of(recipient));
     }
 
     @Test
@@ -325,8 +336,9 @@ class ValidationOperationActionImplTest {
 
 
         operation.setOperationId("opIdEmail");
-        operation.setRecipientInternalId("recipientId");
+        operation.setRecipientInternalId(RECIPIENT_INTERNAL_ID);
         operation.setAttachments(pnServiceDeskAttachmentsList);
+        operation.setIun("IUN");
 
         PnServiceDeskAddress address = new PnServiceDeskAddress();
         address.setType("EMAIL");
@@ -338,7 +350,8 @@ class ValidationOperationActionImplTest {
         Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(getDeduplicatesResponse(true)));
         Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(operation));
         Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
-        Mockito.when(validationOperationAction.getAttachmentsList(Mockito.any(), Mockito.any(), eq(EMAIL))).thenReturn(Flux.fromIterable(pnServiceDeskAttachmentsList));
+        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                .thenReturn(Mono.empty());
         Mockito.when(cfn.getExternalChannelCxId()).thenReturn("CXID");
@@ -360,6 +373,7 @@ class ValidationOperationActionImplTest {
         operation.setOperationId("opIdEmail");
         operation.setRecipientInternalId("recipientId");
         operation.setAttachments(pnServiceDeskAttachmentsList);
+        operation.setIun("IUN");
 
         PnServiceDeskAddress address = new PnServiceDeskAddress();
         address.setType("EMAIL");
@@ -371,8 +385,8 @@ class ValidationOperationActionImplTest {
         Mockito.when(addressManagerClient.deduplicates(Mockito.any()))
                .thenReturn(Mono.just(getDeduplicatesResponse(true)));
         Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(operation));
-        Mockito.when(validationOperationAction.getAttachmentsList(Mockito.any(), Mockito.any(), eq(EMAIL)))
-               .thenReturn(Flux.fromIterable(pnServiceDeskAttachmentsList));
+        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
         Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                .thenReturn(Mono.error(new RuntimeException("error sending email")));
