@@ -6,6 +6,7 @@ import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.constraints.NotNull;
+import java.net.URI;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -74,6 +75,15 @@ public static OperationStatusEnum getEcOperationStatusFrom(ProgressEventCategory
             cleanUpOperationId = operationId;
         }
         return cleanUpOperationId;
+    }
+
+    public static String extractFileKeyFromUrl(String url) {
+        if (url != null) {
+            URI uri = URI.create(url);
+            String path = uri.getPath();
+            return path.substring(path.lastIndexOf('/') + 1);
+        }
+        return null;
     }
 
 }

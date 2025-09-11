@@ -42,9 +42,9 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.service.desk.utility.Utility.extractFileKeyFromUrl;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
@@ -53,6 +53,9 @@ import static java.lang.Boolean.TRUE;
 public class ValidationOperationActionImpl extends BaseService implements ValidationOperationAction {
 
     public static final String EMAIL = "EMAIL";
+    public static final String PAGOPA = "PAGOPA";
+    public static final String F_24 = "F24";
+    public static final String HTTPS = "https";
     private AddressDAO addressDAO;
     private PnAddressManagerClient addressManagerClient;
     private PnDeliveryPushClient pnDeliveryPushClient;
@@ -258,7 +261,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                         this.getAttachmentsFromDelivery(iun, entityOperation.getRecipientInternalId(), addressType)
                                 .concatWith(getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
                                 // Excluding documents that contains one of the document type in the filter list
-                                .filterWhen(fileKey -> Flux.fromIterable(cfn.getDocumentTypeFilter()).all(dt -> !fileKey.contains(dt)))
+                                .filterWhen(fileKeyOrUrl -> Flux.fromIterable(cfn.getDocumentTypeFilter()).all(dt -> !fileKeyOrUrl.contains(dt)))
                                 .flatMap(this::attachmentInfo)
                                 .map(attachmentInfo -> {
                                     if (StringUtils.isNotEmpty(attachmentInfo.getFileKey())) attachmentInfo.setFileKey(attachmentInfo.getFileKey().contains(Utility.SAFESTORAGE_BASE_URL) ? attachmentInfo.getFileKey() : Utility.SAFESTORAGE_BASE_URL.concat(attachmentInfo.getFileKey()));
@@ -283,11 +286,20 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                 }));
     }
 
-    private Mono<AttachmentInfo> attachmentInfo(String fileKey) {
-        log.debug("fileKey: {}, IsFileAvailable received input", fileKey);
-        return this.getFileRecursive(5, fileKey, BigDecimal.ZERO)
-                .flatMap(response -> {
-                    AttachmentInfo info = AttachmentMapper.fromSafeStorage(response);
+    private Mono<AttachmentInfo> attachmentInfo(String fileKeyOrUrl) {
+        return Mono.defer(() -> {
+                    // It's a presigned url. No need to call safe storage
+                    if (fileKeyOrUrl.startsWith(HTTPS)) {
+                        AttachmentInfo attachmentInfo = new AttachmentInfo();
+                        attachmentInfo.setUrl(fileKeyOrUrl);
+                        attachmentInfo.setFileKey(extractFileKeyFromUrl(fileKeyOrUrl));
+                        return Mono.just(attachmentInfo);
+                    }
+                    // It's a fileKey. We need to call safe storage
+                    else return getFileRecursive(5, fileKeyOrUrl, BigDecimal.ZERO)
+                            .map(AttachmentMapper::fromSafeStorage);
+                })
+                .flatMap(info -> {
                     if (info.getUrl() == null){
                         info.setAvailable(FALSE);
                         return Mono.just(info);
@@ -297,7 +309,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                 try {
                                     info.setAvailable(TRUE);
                                     info.setNumberOfPage(pdDocument.getNumberOfPages());
-                                    log.info("fileKey {} numberOfPages: {}", fileKey, info.getNumberOfPage());
+                                    log.info("fileKey {} numberOfPages: {}", info.getFileKey(), info.getNumberOfPage());
                                     pdDocument.close();
                                 } catch (IOException e) {
                                     throw new PnGenericException(ERROR_SAFE_STORAGE_BODY_NULL, ERROR_SAFE_STORAGE_BODY_NULL.getMessage());
@@ -357,6 +369,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                             .doOnNext(doc -> log.debug("notificationDocument = {}, Notification received with success", doc))
                             .map(doc -> doc.getRef().getKey());
 
+                    // Retrieve also payment attachments in case of email notification
                     if (EMAIL.equalsIgnoreCase(addressType))
                         documentsFlux = documentsFlux.concatWith(getPaymentsFromNotification(sentNotification, recipientId));
 
@@ -369,32 +382,24 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         return Flux.fromIterable(sentNotification.getRecipients())
                 .filter(notRecipient -> StringUtils.equals(notRecipient.getInternalId(), internalId))
                 .flatMapIterable(NotificationRecipientV24Dto::getPayments)
-                .flatMap(this::extractPaymentAttachments);
+                .index()
+                .flatMap(tuple -> retrievePaymentAttachments(Math.toIntExact(tuple.getT1()), tuple.getT2(), sentNotification.getIun(), internalId));
     }
 
-    private Flux<String> extractPaymentAttachments(NotificationPaymentItemDto payment) {
-        Mono<String> pagopaAttachment = extractPagoPaAttachment(payment);
-        Mono<String> f24Attachment = extractF24Attachment(payment);
+    private Flux<String> retrievePaymentAttachments(int attachmentId, NotificationPaymentItemDto payment, String iun, String internalId) {
+        Flux<String> fileKeys = Flux.empty();
+        if(payment.getPagoPa() != null)
+            fileKeys = fileKeys.concatWith(getPaymentAttachmentUrl(iun, PAGOPA, internalId, attachmentId));
 
-        return Flux.concat(pagopaAttachment, f24Attachment)
-                .filter(StringUtils::isNotBlank);
+        if (payment.getF24() != null)
+            fileKeys = fileKeys.concatWith(getPaymentAttachmentUrl(iun, F_24, internalId, attachmentId));
+
+        return fileKeys;
     }
 
-
-    private Mono<String> extractPagoPaAttachment(NotificationPaymentItemDto payment) {
-        return Mono.justOrEmpty(payment.getPagoPa())
-                .mapNotNull(PagoPaPaymentDto::getAttachment)
-                .mapNotNull(NotificationPaymentAttachmentDto::getRef)
-                .mapNotNull(NotificationAttachmentBodyRefDto::getKey)
-                .doOnNext(key -> log.debug("Found PagoPA attachment: {}", key));
-    }
-
-    private Mono<String> extractF24Attachment(NotificationPaymentItemDto payment) {
-        return Mono.justOrEmpty(payment.getF24())
-                .mapNotNull(F24PaymentDto::getMetadataAttachment)
-                .mapNotNull(NotificationMetadataAttachmentDto::getRef)
-                .mapNotNull(NotificationAttachmentBodyRefDto::getKey)
-                .doOnNext(key -> log.debug("Found F24 attachment: {}", key));
+    Mono<String> getPaymentAttachmentUrl(String iun, String attachmentName, String internalId, int attachmentId) {
+        return pnDeliveryClient.getPresignedUrlPaymentDocument(iun, attachmentName, internalId, attachmentId)
+                .map(NotificationAttachmentDownloadMetadataResponseDto::getUrl);
     }
 
 
