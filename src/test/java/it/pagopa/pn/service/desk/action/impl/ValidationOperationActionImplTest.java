@@ -48,6 +48,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static it.pagopa.pn.service.desk.action.impl.ValidationOperationActionImpl.EMAIL;
+import static org.mockito.ArgumentMatchers.eq;
+
 @ExtendWith(MockitoExtension.class)
 class ValidationOperationActionImplTest {
 
@@ -335,7 +338,7 @@ class ValidationOperationActionImplTest {
         Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(getDeduplicatesResponse(true)));
         Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(operation));
         Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
-        Mockito.when(validationOperationAction.getAttachmentsList(Mockito.any(), Mockito.any())).thenReturn(Flux.fromIterable(pnServiceDeskAttachmentsList));
+        Mockito.when(validationOperationAction.getAttachmentsList(Mockito.any(), Mockito.any(), eq(EMAIL))).thenReturn(Flux.fromIterable(pnServiceDeskAttachmentsList));
         Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                .thenReturn(Mono.empty());
         Mockito.when(cfn.getExternalChannelCxId()).thenReturn("CXID");
@@ -368,7 +371,7 @@ class ValidationOperationActionImplTest {
         Mockito.when(addressManagerClient.deduplicates(Mockito.any()))
                .thenReturn(Mono.just(getDeduplicatesResponse(true)));
         Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(operation));
-        Mockito.when(validationOperationAction.getAttachmentsList(Mockito.any(), Mockito.any()))
+        Mockito.when(validationOperationAction.getAttachmentsList(Mockito.any(), Mockito.any(), eq(EMAIL)))
                .thenReturn(Flux.fromIterable(pnServiceDeskAttachmentsList));
         Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
         Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
