@@ -9,9 +9,9 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pnaddressmanager.v1.
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationAttachmentBodyRefDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationDocumentDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactCategoryV20Dto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementV20Dto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactsIdV20Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactCategoryV28Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactListElementV28Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.LegalFactsIdV28Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.DigitalCourtesyMailRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PaperChannelUpdateDto;
@@ -93,8 +93,8 @@ class ValidationOperationActionImplTest {
     private final NotificationDocumentDto notificationDocumentDto = new NotificationDocumentDto();
     private final List<NotificationDocumentDto> notifications = new ArrayList<>();
     private final NotificationAttachmentBodyRefDto notificationAttachmentBodyRefDto = new NotificationAttachmentBodyRefDto();
-    private final LegalFactListElementV20Dto legalFactListElementDto = new LegalFactListElementV20Dto();
-    private final LegalFactsIdV20Dto legalFactsIdDto = new LegalFactsIdV20Dto();
+    private final LegalFactListElementV28Dto legalFactListElementDto = new LegalFactListElementV28Dto();
+    private final LegalFactsIdV28Dto legalFactsIdDto = new LegalFactsIdV28Dto();
     private final PnServiceDeskAttachments pnServiceDeskAttachments = new PnServiceDeskAttachments();
     private final List<PnServiceDeskAttachments> pnServiceDeskAttachmentsList = new ArrayList<>();
     private final List<String> fileKeys = new ArrayList<>();
@@ -132,7 +132,7 @@ class ValidationOperationActionImplTest {
 
         responsePaperNotificationFailedDtoDto.setIun("iunResponse");
         legalFactsIdDto.setKey("keyLegalFact");
-        legalFactsIdDto.setCategory(LegalFactCategoryV20Dto.ANALOG_DELIVERY);
+        legalFactsIdDto.setCategory(LegalFactCategoryV28Dto.ANALOG_DELIVERY);
         legalFactListElementDto.setLegalFactsId(legalFactsIdDto);
         notificationAttachmentBodyRefDto.setKey("KeyRef");
         notificationAttachmentBodyRefDto.setVersionToken("versionTokenRef");
