@@ -28,6 +28,140 @@ components:
       items:
         $ref: '#/components/schemas/PaSummary'
 
+    PaSummaryExtended:
+      title: PA con informazioni estese
+      description: Informazioni dettagliate riguardo una entità della pubblica amministrazione
+      type: object
+      required:
+        - id
+        - name
+        - childrenList
+      properties:
+        id:
+          type: string
+          description: Identificatore unico dell'entità
+        name:
+          type: string
+          description: Nome dell'entità
+        childrenList:
+          type: array
+          description: Lista delle informazioni estese (figli)
+          items:
+            $ref: '#/components/schemas/PaSummaryExtendedInfo'
+
+    PaSummaryExtendedInfo:
+      title: PA informazioni estese
+      description: Informazioni minimali della singola entità
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          description: Identificatore unico dell'entità
+        name:
+          type: string
+          description: Nome dell'entità
+
+    PaSummaryExtendedResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaSummaryExtended'
+          maxItems: 999999999
+          minItems: 1
+      additionalProperties: false
+      required:
+        - content
+
+    Pageable:
+      type: object
+      properties:
+        offset:
+          type: integer
+          format: int64
+          maximum: 999999999
+          minimum: 1
+        pageNumber:
+          type: integer
+          format: int32
+          maximum: 999999999
+          minimum: 1
+        pageSize:
+          type: integer
+          format: int32
+          maximum: 999999999
+          minimum: 1
+        paged:
+          type: boolean
+        sort:
+          $ref: '#/components/schemas/Sort'
+        unpaged:
+          type: boolean
+      additionalProperties: false
+
+    Sort:
+      type: object
+      properties:
+        empty:
+          type: boolean
+        sorted:
+          type: boolean
+        unsorted:
+          type: boolean
+      additionalProperties: false
+
+    Page:
+      type: object
+      properties:
+        empty:
+          type: boolean
+        first:
+          type: boolean
+        last:
+          type: boolean
+        number:
+          type: integer
+          format: int32
+          maximum: 999999999
+          minimum: 1
+        numberOfElements:
+          type: integer
+          format: int32
+          maximum: 999999999
+          minimum: 1
+        pageable:
+          $ref: '#/components/schemas/Pageable'
+        size:
+          type: integer
+          format: int32
+          maximum: 1024
+          minimum: 1
+        sort:
+          $ref: '#/components/schemas/Sort'
+        totalElements:
+          type: integer
+          format: int64
+          maximum: 1
+          minimum: 1
+        totalPages:
+          type: integer
+          format: int64
+          maximum: 999999999
+          minimum: 1
+      additionalProperties: false
+      required:
+        - number
+        - numberOfElements
+        - size
+        - totalElements
+        - totalPages
+
     SearchNotificationsRequest:
       required:
         - taxId

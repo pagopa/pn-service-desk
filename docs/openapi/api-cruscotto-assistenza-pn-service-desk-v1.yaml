@@ -64,6 +64,39 @@ paths:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
 
+  '/service-desk/pa/v2/activated-on-pn':
+    get:
+      operationId: getExtendedListOfOnboardedPA
+      summary: List all PA and relative children that use PN
+      description: List all PA and relative son that use PN
+      tags:
+        - PA
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/paNameFilter'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/onlyChildren'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/page'
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/PaSummaryExtendedResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/Problem'
+
   '/service-desk/notifications':
     post:
       operationId: searchNotificationsFromTaxId
