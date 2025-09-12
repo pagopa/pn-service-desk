@@ -7,6 +7,7 @@ import it.pagopa.pn.service.desk.exception.ExceptionTypeEnum;
 import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.ResponsePaperNotificationFailedDtoDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PaperChannelUpdateDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.service.desk.utility.Utility.extractFileKeyFromUrl;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
@@ -50,6 +52,10 @@ import static java.lang.Boolean.TRUE;
 @CustomLog
 public class ValidationOperationActionImpl extends BaseService implements ValidationOperationAction {
 
+    public static final String EMAIL = "EMAIL";
+    public static final String PAGOPA = "PAGOPA";
+    public static final String F_24 = "F24";
+    public static final String HTTPS = "https";
     private AddressDAO addressDAO;
     private PnAddressManagerClient addressManagerClient;
     private PnDeliveryPushClient pnDeliveryPushClient;
@@ -78,6 +84,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         this.pnDataVaultClient = pnDataVaultClient;
         this.pnExternalChannelClient = pnExternalChannelClient;
         this.externalChannelMapper = externalChannelMapper;
+        log.info("Configured document type filter: {}", cfn.getDocumentTypeFilter());
     }
 
     @Override
@@ -107,11 +114,11 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
 
     private Mono<Void> checkValidationFlow(PnServiceDeskOperations operation, PnServiceDeskAddress address) {
 
-        if ("EMAIL".equalsIgnoreCase(address.getType())) {
+        if (EMAIL.equalsIgnoreCase(address.getType())) {
             List<String> iuns = new ArrayList<>();
             iuns.add(operation.getIun());
 
-            return getAttachmentsList(operation, iuns)
+            return getAttachmentsList(operation, iuns, address.getType())
                     .collectList()
                     .flatMapMany(lstAttachments -> new SplittingAttachments(lstAttachments, operation, cfn.getMaxNumberOfPages()).splitAttachment())
                     .flatMap(op -> operationDAO.updateEntity(op)
@@ -157,7 +164,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                 .collectList()
                                 .flatMap(attachments -> {
                                     log.info("entityOperation = {}, entityAddress = {}, attachments = {}, All data requirements are available to make the call to prepare", operation, address, attachments);
-                                    return "EMAIL".equalsIgnoreCase(address.getType())?
+                                    return EMAIL.equalsIgnoreCase(address.getType())?
                                             emailPrepare(operation,address,attachments):
                                             paperPrepare(operation, address, attachments);
                                 })
@@ -235,22 +242,26 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                 }).then();
     }
 
-    protected Flux<PnServiceDeskAttachments> getAttachmentsList(PnServiceDeskOperations entityOperation, List<String> iuns) {
+    protected Flux<PnServiceDeskAttachments> getAttachmentsList(PnServiceDeskOperations entityOperation, List<String> iuns, String addressType) {
         if (iuns != null && !iuns.isEmpty()) {
-            return Flux.fromIterable(iuns).flatMap(iun -> getAttachmentsFromIun(entityOperation, iun));
+            return Flux.fromIterable(iuns).flatMap(iun -> getAttachmentsFromIun(entityOperation, iun, addressType));
         }
         return Flux.empty();
     }
 
-    private Mono<PnServiceDeskAttachments> getAttachmentsFromIun(PnServiceDeskOperations entityOperation, String iun) {
+    protected Flux<PnServiceDeskAttachments> getAttachmentsList(PnServiceDeskOperations entityOperation, List<String> iuns) {
+        return getAttachmentsList(entityOperation, iuns, null);
+    }
+
+    protected Mono<PnServiceDeskAttachments> getAttachmentsFromIun(PnServiceDeskOperations entityOperation, String iun, String addressType) {
         log.debug("entityOperation: {}, iun: {}, GetAttachmentsFromIun received input", entityOperation, iun);
 
         return Mono.just(AttachmentMapper.initAttachment(iun))
                 .flatMap(entity ->
-                        this.getAttachmentsFromDelivery(iun)
+                        this.getAttachmentsFromDelivery(iun, entityOperation.getRecipientInternalId(), addressType)
                                 .concatWith(getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
                                 // Excluding documents that contains one of the document type in the filter list
-                                .filterWhen(fileKey -> Flux.fromIterable(cfn.getDocumentTypeFilter()).all(dt -> !fileKey.contains(dt)))
+                                .filterWhen(fileKeyOrUrl -> Flux.fromIterable(cfn.getDocumentTypeFilter()).all(dt -> !fileKeyOrUrl.contains(dt)))
                                 .flatMap(this::attachmentInfo)
                                 .map(attachmentInfo -> {
                                     if (StringUtils.isNotEmpty(attachmentInfo.getFileKey())) attachmentInfo.setFileKey(attachmentInfo.getFileKey().contains(Utility.SAFESTORAGE_BASE_URL) ? attachmentInfo.getFileKey() : Utility.SAFESTORAGE_BASE_URL.concat(attachmentInfo.getFileKey()));
@@ -275,11 +286,20 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                 }));
     }
 
-    private Mono<AttachmentInfo> attachmentInfo(String fileKey) {
-        log.debug("fileKey: {}, IsFileAvailable received input", fileKey);
-        return this.getFileRecursive(5, fileKey, BigDecimal.ZERO)
-                .flatMap(response -> {
-                    AttachmentInfo info = AttachmentMapper.fromSafeStorage(response);
+    private Mono<AttachmentInfo> attachmentInfo(String fileKeyOrUrl) {
+        return Mono.defer(() -> {
+                    // It's a presigned url. No need to call safe storage
+                    if (fileKeyOrUrl.startsWith(HTTPS)) {
+                        AttachmentInfo attachmentInfo = new AttachmentInfo();
+                        attachmentInfo.setUrl(fileKeyOrUrl);
+                        attachmentInfo.setFileKey(extractFileKeyFromUrl(fileKeyOrUrl));
+                        return Mono.just(attachmentInfo);
+                    }
+                    // It's a fileKey. We need to call safe storage
+                    else return getFileRecursive(5, fileKeyOrUrl, BigDecimal.ZERO)
+                            .map(AttachmentMapper::fromSafeStorage);
+                })
+                .flatMap(info -> {
                     if (info.getUrl() == null){
                         info.setAvailable(FALSE);
                         return Mono.just(info);
@@ -289,7 +309,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                 try {
                                     info.setAvailable(TRUE);
                                     info.setNumberOfPage(pdDocument.getNumberOfPages());
-                                    log.info("fileKey {} numberOfPages: {}", fileKey, info.getNumberOfPage());
+                                    log.info("fileKey {} numberOfPages: {}", info.getFileKey(), info.getNumberOfPage());
                                     pdDocument.close();
                                 } catch (IOException e) {
                                     throw new PnGenericException(ERROR_SAFE_STORAGE_BODY_NULL, ERROR_SAFE_STORAGE_BODY_NULL.getMessage());
@@ -332,23 +352,56 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
     /**
      * retrieve file keys from delivery attachments
      * @param iun
+     * @param recipientId
+     * @param addressType
      * @return only fileKeys
      */
-    private Flux<String> getAttachmentsFromDelivery(String iun) {
-        log.debug("iun: {}, GetAttachmentsFromDelivery received input", iun);
-
+    private Flux<String> getAttachmentsFromDelivery(String iun, String recipientId, String addressType) {
+        log.debug("iun: {}, recipientId: {}, addressType: {}, GetAttachmentsFromDelivery received input", iun, recipientId, addressType);
         log.debug("iun = {}, Calling service to obtain notification sent", iun);
         return pnDeliveryClient.getSentNotificationPrivate(iun)
                 .onErrorResume(exception -> {
                     log.error("errorReason = {}, An error occurred while call service for obtain notification sent", exception.getMessage());
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, exception.getMessage()));
                 })
-                .flatMapMany(doc -> Flux.fromIterable(doc.getDocuments()))
-                .map(notificationDocument -> {
-                    log.debug("notificationDocument = {}, Notification received with success", notificationDocument);
-                    return notificationDocument.getRef().getKey();
+                .flatMapMany(sentNotification -> {
+                    Flux<String> documentsFlux = Flux.fromIterable(sentNotification.getDocuments())
+                            .doOnNext(doc -> log.debug("notificationDocument = {}, Notification received with success", doc))
+                            .map(doc -> doc.getRef().getKey());
+
+                    // Retrieve also payment attachments in case of email notification
+                    if (EMAIL.equalsIgnoreCase(addressType))
+                        documentsFlux = documentsFlux.concatWith(getPaymentsFromNotification(sentNotification, recipientId));
+
+                    return documentsFlux;
                 });
     }
+
+    private Flux<String> getPaymentsFromNotification(SentNotificationV25Dto sentNotification, String internalId) {
+        log.debug("sentNotification: {}, internalId: {}, GetPaymentsFromNotification received input", sentNotification, internalId);
+        return Flux.fromIterable(sentNotification.getRecipients())
+                .filter(notRecipient -> StringUtils.equals(notRecipient.getInternalId(), internalId))
+                .flatMapIterable(NotificationRecipientV24Dto::getPayments)
+                .index()
+                .flatMap(tuple -> retrievePaymentAttachments(Math.toIntExact(tuple.getT1()), tuple.getT2(), sentNotification.getIun(), internalId));
+    }
+
+    private Flux<String> retrievePaymentAttachments(int attachmentId, NotificationPaymentItemDto payment, String iun, String internalId) {
+        Flux<String> fileKeys = Flux.empty();
+        if(payment.getPagoPa() != null)
+            fileKeys = fileKeys.concatWith(getPaymentAttachmentUrl(iun, PAGOPA, internalId, attachmentId));
+
+        if (payment.getF24() != null)
+            fileKeys = fileKeys.concatWith(getPaymentAttachmentUrl(iun, F_24, internalId, attachmentId));
+
+        return fileKeys;
+    }
+
+    Mono<String> getPaymentAttachmentUrl(String iun, String attachmentName, String internalId, int attachmentId) {
+        return pnDeliveryClient.getPresignedUrlPaymentDocument(iun, attachmentName, internalId, attachmentId)
+                .map(NotificationAttachmentDownloadMetadataResponseDto::getUrl);
+    }
+
 
     private Mono<Void> updateOperationStatus(PnServiceDeskOperations entityOperation, OperationStatusEnum operationStatusEnum) {
         log.debug("entityOperation = {}, operationStatus = {}, UpdateOperationStatus received input", entityOperation, operationStatusEnum);

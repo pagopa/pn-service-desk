@@ -7,7 +7,6 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.Se
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-
 import java.time.Instant;
 
 @Component
@@ -28,6 +27,11 @@ public class PnDeliveryClientImpl implements PnDeliveryClient{
     @Override
     public Mono<NotificationAttachmentDownloadMetadataResponseDto> getReceivedNotificationDocumentPrivate(String iun, Integer docIdx, String recipientInternalId, String mandateId) {
         return internalOnlyApi.getReceivedNotificationDocumentPrivate(iun, docIdx, recipientInternalId, mandateId);
+    }
+
+    @Override
+    public Mono<NotificationAttachmentDownloadMetadataResponseDto> getPresignedUrlPaymentDocument(String iun, String attachmentName, String recipientInternalId, Integer attachmentIdx) {
+        return this.internalOnlyApi.getReceivedNotificationAttachmentPrivate(iun, attachmentName, recipientInternalId, null, attachmentIdx);
     }
 
 }
