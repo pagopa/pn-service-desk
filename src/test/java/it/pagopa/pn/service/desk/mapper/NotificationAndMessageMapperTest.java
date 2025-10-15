@@ -228,4 +228,44 @@ class NotificationAndMessageMapperTest {
         return sentNotification;
     }
 
+    @Test
+    void getNotificationWithTppChannelTest() {
+        // Arrange
+        NotificationSearchRowDto searchRowDto = new NotificationSearchRowDto();
+        searchRowDto.setSender("Comune di Roma");
+        searchRowDto.setIun("TPP-TEST-IUN");
+        searchRowDto.setSentAt(Instant.now());
+        searchRowDto.setSubject("Test Notifica TPP");
+        searchRowDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusV26Dto.ACCEPTED);
+
+        // Simula un elemento timeline con canale TPP
+        TimelineElementV27Dto tppTimeline = new TimelineElementV27Dto();
+        TimelineElementDetailsV27Dto tppDetails = new TimelineElementDetailsV27Dto();
+        tppDetails.setSendDate(Instant.now());
+        DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
+        digitalAddressDto.setType("TPP"); // 👈 qui simuliamo la notifica via TPP
+        tppDetails.setDigitalAddress(digitalAddressDto);
+
+        tppTimeline.setDetails(tppDetails);
+        tppTimeline.setCategory(TimelineElementCategoryV27Dto.SEND_COURTESY_MESSAGE);
+        tppTimeline.setTimestamp(Instant.now());
+
+        List<TimelineElementV27Dto> tppElements = List.of(tppTimeline);
+
+        // Act
+        NotificationResponse response = NotificationAndMessageMapper.getNotification(searchRowDto, tppElements);
+
+        // Assert
+        assertNotNull(response, "NotificationResponse should not be null");
+        assertNotNull(response.getCourtesyMessages(), "Courtesy messages list should not be null");
+        assertFalse(response.getCourtesyMessages().isEmpty(), "Courtesy messages should not be empty");
+
+        // Verifica che almeno un messaggio abbia canale TPP
+        assertTrue(
+                response.getCourtesyMessages().stream()
+                        .anyMatch(msg -> msg.getChannel() == CourtesyChannelType.TPP),
+                "Expected at least one CourtesyMessage with channel TPP"
+                  );
+    }
+
 }
