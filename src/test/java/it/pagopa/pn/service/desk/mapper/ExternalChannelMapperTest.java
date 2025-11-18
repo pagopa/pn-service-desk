@@ -32,6 +32,8 @@ class ExternalChannelMapperTest {
         externalChannelMapper = new ExternalChannelMapper(mockTemplatesEngineClient);
         operations = new PnServiceDeskOperations();
         operations.setOperationId("OP123");
+        operations.setTicketDate("2025-09-05");
+        operations.setVrDate("2025-09-05");
 
         address = new PnServiceDeskAddress();
         address.setAddress("test@pn.gov.it");
@@ -54,7 +56,7 @@ class ExternalChannelMapperTest {
         attachment2.setFilesKey(List.of("safestorage://file2.jpg"));
         operations.setAttachments(List.of(attachment1, attachment2));
 
-        String fakeHtmlTemplate = "<mj-title>Test Subject</mj-title><body>Test message</body>";
+        String fakeHtmlTemplate = "<title>Test Subject</title><body>Test message</body>";
         Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.eq(LanguageEnumDto.IT), Mockito.any(NotificationCceForEmailDto.class)))
                .thenReturn(Mono.just(fakeHtmlTemplate));
 
@@ -86,8 +88,8 @@ class ExternalChannelMapperTest {
 
     @Test
     void extractTagContent_shouldReturnCorrectContent() throws Exception {
-        String html = "<mj-title>Subject here</mj-title><p>Test</p>";
-        String tagName = "mj-title";
+        String html = "<title>Subject here</title><p>Test</p>";
+        String tagName = "title";
 
         ExternalChannelMapper mapper = new ExternalChannelMapper(mockTemplatesEngineClient);
 
@@ -104,7 +106,7 @@ class ExternalChannelMapperTest {
     @Test
     void testGenerateMailWithoutAttachments() {
         Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.any(), Mockito.any()))
-               .thenReturn(Mono.just("<mj-title>Email di Test</mj-title>Contenuto email"));
+               .thenReturn(Mono.just("<title>Email di Test</title>Contenuto email"));
 
         DigitalCourtesyMailRequestDto result = externalChannelMapper
                 .getPrepareCourtesyMail(operations, address, null, requestId)
@@ -119,7 +121,7 @@ class ExternalChannelMapperTest {
     @Test
     void testGenerateMailWithEmptyAttachments() {
         Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.any(), Mockito.any()))
-               .thenReturn(Mono.just("<mj-title>Email di Test</mj-title>Contenuto email"));
+               .thenReturn(Mono.just("<title>Email di Test</title>Contenuto email"));
 
         DigitalCourtesyMailRequestDto result = externalChannelMapper
                 .getPrepareCourtesyMail(operations, address, List.of(), requestId)
@@ -134,7 +136,7 @@ class ExternalChannelMapperTest {
         List<String> attachments = List.of("safestorage://file1.pdf", "safestorage://file2.jpg");
 
         Mockito.when(mockTemplatesEngineClient.notificationCceTemplate(Mockito.any(), Mockito.any()))
-               .thenReturn(Mono.just("<mj-title>Email di Test</mj-title>Contenuto email"));
+               .thenReturn(Mono.just("<title>Email di Test</title>Contenuto email"));
 
         DigitalCourtesyMailRequestDto result = externalChannelMapper
                 .getPrepareCourtesyMail(operations, address, attachments, requestId)
