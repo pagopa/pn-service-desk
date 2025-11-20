@@ -9,7 +9,7 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.templateseng
 import lombok.CustomLog;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-
+import it.pagopa.pn.service.desk.utility.Utility;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,7 +49,7 @@ public class ExternalChannelMapper {
             mailRequestDto.setChannel(DigitalCourtesyMailRequestDto.ChannelEnum.EMAIL);
 
 
-            String subject = extractTagContent(renderedTemplate, "mj-title");
+            String subject = extractTagContent(renderedTemplate, "title");
             if (subject == null || subject.isEmpty()) {
                 subject = "Oggetto della comunicazione";
             }
@@ -75,8 +75,8 @@ log.info("Calling PN Templates Engine for notification template for operationId:
         NotificationCceForEmailDto notificationCceForEmailDto = new NotificationCceForEmailDto();
         notificationCceForEmailDto.setDenomination(address.getFullName());
         notificationCceForEmailDto.setIun(operations.getIun());
-        notificationCceForEmailDto.setTicketDate(String.valueOf(operations.getTicketDate()));
-        notificationCceForEmailDto.setVrDate(String.valueOf(operations.getVrDate()));
+        notificationCceForEmailDto.setTicketDate(Utility.formatDate(operations.getTicketDate()));
+        notificationCceForEmailDto.setVrDate(Utility.formatDate(operations.getVrDate()));
 
         return this.pnTemplatesEngineClient.notificationCceTemplate(language, notificationCceForEmailDto);
     }

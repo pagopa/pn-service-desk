@@ -8,9 +8,12 @@ import org.apache.commons.lang3.StringUtils;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.EnumMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class Utility {
@@ -84,6 +87,12 @@ public static OperationStatusEnum getEcOperationStatusFrom(ProgressEventCategory
             return path.substring(path.lastIndexOf('/') + 1);
         }
         return null;
+    }
+
+    public static String formatDate(String date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                                                       .withLocale(Locale.ITALY);
+        return LocalDate.parse(date).format(formatter);
     }
 
 }
