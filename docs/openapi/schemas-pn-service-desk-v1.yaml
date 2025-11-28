@@ -157,6 +157,7 @@ components:
         - SMS
         - APPIO
         - PEC
+        - TPP
 
     LegalChannelType:
       type: string
