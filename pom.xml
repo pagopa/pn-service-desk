@@ -21,6 +21,7 @@
 		<jacoco.min.line.cover.ratio>0.00</jacoco.min.line.cover.ratio>
 	</properties>
 
+
 	<dependencies>
 
 		<dependency>
