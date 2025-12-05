@@ -6,6 +6,7 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationRes
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class InfoPaMapper {

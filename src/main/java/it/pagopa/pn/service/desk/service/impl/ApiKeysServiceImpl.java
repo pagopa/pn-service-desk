@@ -9,6 +9,7 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.apikeysmanag
 import it.pagopa.pn.service.desk.service.ApiKeysService;
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import lombok.CustomLog;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
@@ -34,7 +35,7 @@ public class ApiKeysServiceImpl implements ApiKeysService {
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, An error occurred while calling the service to obtain api keys", exception.getMessage(), exception);
                     logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain api keys" + exception.getMessage()).log();
-                    return Mono.error(new PnGenericException(ERROR_ON_KEYS_MANAGER_CLIENT, exception.getStatusCode()));
+                    return Mono.error(new PnGenericException(ERROR_ON_KEYS_MANAGER_CLIENT, (HttpStatus) exception.getStatusCode()));
                 }).map(responseApiKeysDto -> {
                     ResponseApiKeys responseApiKeys = ApiKeysMapper.responseApiKeys(responseApiKeysDto);
                     logEvent.generateSuccess("getApiKeys responseApiKeys = {}", responseApiKeys).log();

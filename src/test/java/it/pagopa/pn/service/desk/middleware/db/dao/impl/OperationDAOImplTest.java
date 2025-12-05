@@ -8,7 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,7 +17,7 @@ class OperationDAOImplTest extends BaseTest {
     @Autowired
     private OperationDAOImpl operationDAO;
 
-    @MockBean
+    @MockitoBean
     private DataEncryption dataEncryption;
 
     private final PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();

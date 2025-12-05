@@ -38,12 +38,12 @@ public class HttpConnectorTest extends BaseTest.WithMockServer {
     private static ClientAndServer mockServer;
 
     @BeforeAll
-    public static void startMockServer() {
+    static void startMockServer() {
         mockServer = startClientAndServer(9998);
     }
 
     @AfterAll
-    public static void stopMockServer() {
+    static void stopMockServer() {
         mockServer.stop();
     }
 

@@ -5,7 +5,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dt
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDate;

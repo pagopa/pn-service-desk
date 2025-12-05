@@ -6,7 +6,7 @@ import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
-import org.springframework.cloud.function.context.MessageRoutingCallback;
+//import org.springframework.cloud.function.context.MessageRoutingCallback;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -33,6 +33,7 @@ public class PnEventInboundService {
         this.externalChannelEventQueueName = cfg.getTopics().getExternalChannelQueue();
     }
 
+    /*
     @Bean
     public MessageRoutingCallback customRouter() {
         return new MessageRoutingCallback() {
@@ -43,6 +44,7 @@ public class PnEventInboundService {
             }
         };
     }
+    */
 
     private void setMdc(Message<?> message) {
         MessageHeaders messageHeaders = message.getHeaders();

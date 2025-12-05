@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
@@ -21,9 +22,9 @@ public class ApiKeysControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;
-    @MockBean
+    @MockitoBean
     private ApiKeysService apiKeysService;
-    @MockBean
+    @MockitoBean
     private PnClientDAO pnClientDAO;
 
     @BeforeEach

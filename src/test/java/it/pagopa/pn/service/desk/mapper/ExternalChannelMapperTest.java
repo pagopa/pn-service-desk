@@ -73,7 +73,7 @@ class ExternalChannelMapperTest {
                         assertEquals("DEFAULT_EVENT_TYPE", mailRequestDto.getEventType());
                         assertEquals(DigitalCourtesyMailRequestDto.QosEnum.INTERACTIVE, mailRequestDto.getQos());
                         assertEquals(address.getAddress(), mailRequestDto.getReceiverDigitalAddress());
-                        assertEquals(DigitalCourtesyMailRequestDto.MessageContentTypeEnum.HTML, mailRequestDto.getMessageContentType());
+                        assertEquals(DigitalCourtesyMailRequestDto.MessageContentTypeEnum.TEXT_HTML, mailRequestDto.getMessageContentType());
                         assertEquals(DigitalCourtesyMailRequestDto.ChannelEnum.EMAIL, mailRequestDto.getChannel());
                         assertEquals("Test Subject", mailRequestDto.getSubjectText());
                         assertEquals(fakeHtmlTemplate, mailRequestDto.getMessageText());

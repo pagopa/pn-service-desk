@@ -9,7 +9,7 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.templateseng
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 @Configuration
 public class ExternalChannelApiConfigurator extends CommonBaseClient {
