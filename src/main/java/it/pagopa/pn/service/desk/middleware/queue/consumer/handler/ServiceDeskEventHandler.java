@@ -21,27 +21,27 @@ public class ServiceDeskEventHandler extends AbstractConsumerMessage {
 
     @SqsListener(value = "${pn.service-desk.topics.internal-queue}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
     public void validationOperationsInboundConsumer(Message<InternalEventBody> message){
-            try {
-                initTraceId(message.getHeaders());
-                log.info("Handle message from InternalQueue with content {}", message);
-                addOperationIdToMdc(message.getPayload().getOperationId());
-                responseHandler.handleInternalEventResponse(message.getPayload());
-            } catch (Exception ex) {
-                log.error("Error in validationOperationsInboundConsumer {}", ex.getMessage());
-                throw ex;
-            }
+        try {
+            initTraceId(message.getHeaders());
+            log.info("Handle message from InternalQueue with content {}", message);
+            addOperationIdToMdc(message.getPayload().getOperationId());
+            responseHandler.handleInternalEventResponse(message.getPayload());
+        } catch (Exception ex) {
+            log.error("Error in validationOperationsInboundConsumer {}", ex.getMessage());
+            throw ex;
+        }
     }
 
     @SqsListener(value = "${pn.service-desk.topics.internal-queue}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
     public void notifyDeliveryPushInboundConsumer(Message<InternalEventBody> message){
-            try {
-                initTraceId(message.getHeaders());
-                log.info("Handle message from InternalQueue with content {}", message);
-                responseHandler.handleNotifyDeliveryPushEventResponse(message.getPayload());
-            } catch (Exception ex) {
-                log.error("Error in notifyDeliveryPushInboundConsumer {}", ex.getMessage());
-                throw ex;
-            }
+        try {
+            initTraceId(message.getHeaders());
+            log.info("Handle message from InternalQueue with content {}", message);
+            responseHandler.handleNotifyDeliveryPushEventResponse(message.getPayload());
+        } catch (Exception ex) {
+            log.error("Error in notifyDeliveryPushInboundConsumer {}", ex.getMessage());
+            throw ex;
+        }
     }
 
     public static void addOperationIdToMdc(String operationId) {
