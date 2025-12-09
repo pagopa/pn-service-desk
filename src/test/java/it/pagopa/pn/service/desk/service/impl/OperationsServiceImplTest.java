@@ -38,7 +38,7 @@ import java.util.List;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Configuration(proxyBeanMethods=false)
+//@Configuration(proxyBeanMethods=false)
 class OperationsServiceImplTest extends BaseTest {
     @MockitoBean
     private NotificationService notificationService;

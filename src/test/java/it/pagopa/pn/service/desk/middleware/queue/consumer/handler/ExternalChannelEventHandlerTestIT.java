@@ -7,12 +7,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.function.context.test.FunctionalSpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.function.Consumer;
 
@@ -23,7 +23,7 @@ class ExternalChannelEventHandlerTestIT {
     @Autowired
     private FunctionCatalog functionCatalog;
 
-    @MockBean
+    @MockitoBean
     private ExternalChannelResponseHandler handler;
 
     @Test

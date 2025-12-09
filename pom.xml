@@ -271,7 +271,7 @@
 							<generateApiTests>false</generateApiTests>
 							<generateModelTests>false</generateModelTests>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
+								<useOneOfInterfaces>false</useOneOfInterfaces>
 								<useJakartaEe>true</useJakartaEe>
 								<basePackage>${project.groupId}.service.desk.generated.openapi.server.v1</basePackage>
 								<modelPackage>${project.groupId}.service.desk.generated.openapi.server.v1.dto</modelPackage>

@@ -13,10 +13,8 @@ import org.springframework.beans.BeanUtils;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -73,9 +71,10 @@ public class OperationMapper {
                 }
             });
         }
-        operationResponse.setOperationCreateTimestamp(OffsetDateTime.from(pnServiceDeskOperations.getOperationStartDate()));
+
+        operationResponse.setOperationCreateTimestamp(Utility.getOffsetDateTimeFromDate(pnServiceDeskOperations.getOperationStartDate()));
         if (pnServiceDeskOperations.getOperationLastUpdateDate() != null) {
-            operationResponse.setOperationUpdateTimestamp(OffsetDateTime.from(pnServiceDeskOperations.getOperationLastUpdateDate()));
+            operationResponse.setOperationUpdateTimestamp(Utility.getOffsetDateTimeFromDate(pnServiceDeskOperations.getOperationLastUpdateDate()));
         }
         NotificationStatus status = new NotificationStatus();
         if (pnServiceDeskOperations.getStatus().equals(OperationStatusEnum.NOTIFY_VIEW.toString())
@@ -91,7 +90,7 @@ public class OperationMapper {
                     .orElse(new PnServiceDeskEvents());
             status.setStatusCode(e.getStatusCode());
             status.setStatusDescription(e.getStatusDescription());
-            if (e.getTimestamp() != null) status.setLastEventTimestamp(OffsetDateTime.from(e.getTimestamp()));
+            if (e.getTimestamp() != null) status.setLastEventTimestamp(Utility.getOffsetDateTimeFromDate(e.getTimestamp()));
         }
 
         if (StringUtils.isNotEmpty(pnServiceDeskOperations.getErrorReason())) {

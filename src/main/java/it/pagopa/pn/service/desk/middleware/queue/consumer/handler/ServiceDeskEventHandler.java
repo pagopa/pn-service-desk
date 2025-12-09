@@ -1,27 +1,28 @@
 package it.pagopa.pn.service.desk.middleware.queue.consumer.handler;
 
+import io.awspring.cloud.sqs.annotation.SqsListener;
+import io.awspring.cloud.sqs.annotation.SqsListenerAcknowledgementMode;
+import it.pagopa.pn.service.desk.middleware.queue.consumer.AbstractConsumerMessage;
+import org.springframework.stereotype.Component;
+
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.service.desk.middleware.queue.model.InternalEventBody;
 import it.pagopa.pn.service.desk.middleware.responsehandler.InternalEventResponseHandler;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 
-import java.util.function.Consumer;
-
-@Configuration
+@Component
 @AllArgsConstructor
 @Slf4j
-public class ServiceDeskEventHandler {
+public class ServiceDeskEventHandler extends AbstractConsumerMessage {
     private InternalEventResponseHandler responseHandler;
 
-    @Bean
-    public Consumer<Message<InternalEventBody>> validationOperationsInboundConsumer(){
-        return message -> {
+    @SqsListener(value = "${pn.service-desk.topics.internal-queue}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
+    public void validationOperationsInboundConsumer(Message<InternalEventBody> message){
             try {
+                initTraceId(message.getHeaders());
                 log.info("Handle message from InternalQueue with content {}", message);
                 addOperationIdToMdc(message.getPayload().getOperationId());
                 responseHandler.handleInternalEventResponse(message.getPayload());
@@ -29,20 +30,18 @@ public class ServiceDeskEventHandler {
                 log.error("Error in validationOperationsInboundConsumer {}", ex.getMessage());
                 throw ex;
             }
-        };
     }
 
-    @Bean
-    public Consumer<Message<InternalEventBody>> notifyDeliveryPushInboundConsumer(){
-        return message -> {
+    @SqsListener(value = "${pn.service-desk.topics.internal-queue}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
+    public void notifyDeliveryPushInboundConsumer(Message<InternalEventBody> message){
             try {
+                initTraceId(message.getHeaders());
                 log.info("Handle message from InternalQueue with content {}", message);
                 responseHandler.handleNotifyDeliveryPushEventResponse(message.getPayload());
             } catch (Exception ex) {
                 log.error("Error in notifyDeliveryPushInboundConsumer {}", ex.getMessage());
                 throw ex;
             }
-        };
     }
 
     public static void addOperationIdToMdc(String operationId) {
