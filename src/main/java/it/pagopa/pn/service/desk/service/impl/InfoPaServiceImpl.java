@@ -14,6 +14,7 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregi
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.InfoPaService;
 import it.pagopa.pn.service.desk.mapper.InfoPaMapper;
+import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.CustomLog;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

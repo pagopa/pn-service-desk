@@ -8,7 +8,7 @@
 		<relativePath />
 	</parent>
 	<artifactId>pn-service-desk</artifactId>
-	<version>1.10.0-SPRINGBOOT3</version>
+	<version>1.11.0-SNAPSHOT</version>
 	<name>pn-service-desk</name>
 	<description>A template for a PN Backend Microservice</description>
 	<scm>
@@ -69,17 +69,6 @@
 			<artifactId>pn-model</artifactId>
 			<version>2.9.0-SPRINGBOOT3</version>
 		</dependency>
-		<!--
-                <dependency>
-                    <groupId>org.springframework.cloud</groupId>
-                    <artifactId>spring-cloud-stream</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>de.idealo.spring</groupId>
-                    <artifactId>spring-cloud-stream-binder-sqs</artifactId>
-                    <version>1.9.0</version>
-                </dependency>
-        -->
 
 		<dependency>
 			<groupId>io.swagger</groupId>
@@ -184,26 +173,7 @@
 					</excludes>
 				</configuration>
 			</plugin>
-			<!-->
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-dependency-plugin</artifactId>
-                            <version>3.1.2</version>
-                            <executions>
-                                <execution>
-                                    <id>unpack-dependencies</id>
-                                    <phase>generate-resources</phase>
-                                    <goals>
-                                        <goal>unpack-dependencies</goal>
-                                    </goals>
-                                    <configuration>
-                                        <includeArtifactIds>pn-commons</includeArtifactIds>
-                                        <outputDirectory>${project.build.directory}/dependency-resources</outputDirectory>
-                                    </configuration>
-                                </execution>
-                            </executions>
-                        </plugin>
-            -->
+
 			<plugin>
 				<groupId>org.openapitools</groupId>
 				<artifactId>openapi-generator-maven-plugin</artifactId>
@@ -232,7 +202,6 @@
 							<generateModelTests>false</generateModelTests>
 							<configOptions>
 								<useSpringBoot3>true</useSpringBoot3>
-								<useJakartaEe>true</useJakartaEe>
 								<basePackage>${project.groupId}.service.desk.generated.openapi.server.v1</basePackage>
 								<modelPackage>${project.groupId}.service.desk.generated.openapi.server.v1.dto</modelPackage>
 								<apiPackage>${project.groupId}.service.desk.generated.openapi.server.v1.api</apiPackage>
@@ -271,26 +240,27 @@
 							<generateApiTests>false</generateApiTests>
 							<generateModelTests>false</generateModelTests>
 							<configOptions>
-								<useOneOfInterfaces>false</useOneOfInterfaces>
-								<useJakartaEe>true</useJakartaEe>
-								<basePackage>${project.groupId}.service.desk.generated.openapi.server.v1</basePackage>
-								<modelPackage>${project.groupId}.service.desk.generated.openapi.server.v1.dto</modelPackage>
-								<apiPackage>${project.groupId}.service.desk.generated.openapi.server.v1.api</apiPackage>
-								<configPackage>${project.groupId}.service.desk.generated.openapi.server.v1.config</configPackage>
-								<dateLibrary>java11</dateLibrary>
-								<delegatePattern>true</delegatePattern>
-								<interfaceOnly>true</interfaceOnly>
-								<annotationLibrary>none</annotationLibrary>
-								<documentationProvider>source</documentationProvider>
-								<openApiNullable>false</openApiNullable>
-								<reactive>true</reactive>
-								<skipDefaultInterface>false</skipDefaultInterface>
-								<useTags>true</useTags>
-							</configOptions>
-						</configuration>
-					</execution>
+					<containerDefaultToNull>true</containerDefaultToNull>
+                    <useOneOfInterfaces>false</useOneOfInterfaces>
+                    <useSpringBoot3>true</useSpringBoot3>
+                    <basePackage>${project.groupId}.service.desk.generated.openapi.server.v1</basePackage>
+                    <modelPackage>${project.groupId}.service.desk.generated.openapi.server.v1.dto</modelPackage>
+                    <apiPackage>${project.groupId}.service.desk.generated.openapi.server.v1.api</apiPackage>
+                    <configPackage>${project.groupId}.service.desk.generated.openapi.server.v1.config</configPackage>
+                    <dateLibrary>java11</dateLibrary>
+                    <delegatePattern>true</delegatePattern>
+                    <interfaceOnly>true</interfaceOnly>
+                    <annotationLibrary>none</annotationLibrary>
+                    <documentationProvider>source</documentationProvider>
+                    <openApiNullable>false</openApiNullable>
+                    <reactive>true</reactive>
+                    <skipDefaultInterface>false</skipDefaultInterface>
+                    <useTags>true</useTags>
+                </configOptions>
+            </configuration>
+        </execution>
 
-					<!-- OPEN API CLIENT PN-SAFE-STORAGE REACTIVE-->
+        <!-- OPEN API CLIENT PN-SAFE-STORAGE REACTIVE-->
 					<execution>
 						<phase>generate-resources</phase>
 						<id>generate-client-pn-safe-storage-reactive</id>
@@ -307,7 +277,6 @@
 							<generateApiTests>false</generateApiTests>
 							<generateModelTests>false</generateModelTests>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.safestorage.api</apiPackage>
 								<modelPackage>${project.groupId}.service.desk.generated.openapi.msclient.safestorage.model</modelPackage>
@@ -341,7 +310,6 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
@@ -369,7 +337,6 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
@@ -397,7 +364,6 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
@@ -425,7 +391,6 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
@@ -453,7 +418,6 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
@@ -481,7 +445,6 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
@@ -509,7 +472,6 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
@@ -537,7 +499,6 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
@@ -565,7 +526,6 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
@@ -593,7 +553,6 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
@@ -621,7 +580,6 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>
@@ -649,7 +607,6 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
-								<useSpringBoot3>true</useSpringBoot3>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>

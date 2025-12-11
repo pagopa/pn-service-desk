@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class PaperChannelEventHandler extends AbstractConsumerMessage {
 
-    @SqsListener(value = "${pn.service-desk.topics.internal-queue}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
+    @SqsListener(value = "${pn.service-desk.topics.paperchannel-queue}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
     public void pnPaperChannelInboundConsumer(PaperChannelResponseHandler responseHandler, Message<PaperChannelUpdateDto> message) {
         try {
             initTraceId(message.getHeaders());

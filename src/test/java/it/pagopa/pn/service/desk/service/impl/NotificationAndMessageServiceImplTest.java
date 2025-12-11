@@ -79,9 +79,8 @@ class NotificationAndMessageServiceImplTest  {
         SearchNotificationsResponse actualResponse = notificationAndMessageService.searchNotificationsFromTaxId(null,null,null,
                 null,null,getSearchMessageRequest(null, RecipientType.PF)).block();
 
-        Assertions.assertNotNull(actualResponse);
         Assertions.assertNull(actualResponse.getMoreResult());
-        Assertions.assertTrue(actualResponse.getNextPagesKey().isEmpty());
+        Assertions.assertNull(actualResponse.getNextPagesKey());
         Assertions.assertEquals(0, actualResponse.getResults().size());
     }
 

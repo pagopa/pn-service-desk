@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.util.Date;
 
 @Slf4j
 @ControllerAdvice
