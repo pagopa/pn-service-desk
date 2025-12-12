@@ -30,7 +30,7 @@ class PaperChannelEventHandlerTestIT {
         PaperChannelUpdateDto paperChannelUpdateDto = new PaperChannelUpdateDto();
         paperChannelUpdateDto.setPrepareEvent(new PrepareEventDto());
         Message<PaperChannelUpdateDto> message = MessageBuilder.withPayload(paperChannelUpdateDto).build();
-        paperChannelEventHandler.pnPaperChannelInboundConsumer(handler, message);
+        paperChannelEventHandler.pnPaperChannelInboundConsumer(message);
         Mockito.verify(handler).handlePreparePaperChannelEventResponse(Mockito.any());
     }
 
@@ -41,7 +41,7 @@ class PaperChannelEventHandlerTestIT {
         Message<PaperChannelUpdateDto> message = MessageBuilder.withPayload(paperChannelUpdateDto).build();
         Mockito.doThrow(new RuntimeException()).when(handler).handlePreparePaperChannelEventResponse(Mockito.any());
         Assertions.assertThrows(RuntimeException.class,
-                                () -> paperChannelEventHandler.pnPaperChannelInboundConsumer(handler, message));
+                                () -> paperChannelEventHandler.pnPaperChannelInboundConsumer(message));
     }
 
     @Test
@@ -49,7 +49,7 @@ class PaperChannelEventHandlerTestIT {
         PaperChannelUpdateDto paperChannelUpdateDto = new PaperChannelUpdateDto();
         paperChannelUpdateDto.setSendEvent(new SendEventDto());
         Message<PaperChannelUpdateDto> message = MessageBuilder.withPayload(paperChannelUpdateDto).build();
-        paperChannelEventHandler.pnPaperChannelInboundConsumer(handler, message);
+        paperChannelEventHandler.pnPaperChannelInboundConsumer(message);
         Mockito.verify(handler).handleResultPaperChannelEventResponse(Mockito.any());
     }
 
@@ -60,7 +60,7 @@ class PaperChannelEventHandlerTestIT {
         Message<PaperChannelUpdateDto> message = MessageBuilder.withPayload(paperChannelUpdateDto).build();
         Mockito.doThrow(new RuntimeException()).when(handler).handleResultPaperChannelEventResponse(Mockito.any());
         Assertions.assertThrows(RuntimeException.class,
-                                () -> paperChannelEventHandler.pnPaperChannelInboundConsumer(handler, message));
+                                () -> paperChannelEventHandler.pnPaperChannelInboundConsumer(message));
     }
 
 }
