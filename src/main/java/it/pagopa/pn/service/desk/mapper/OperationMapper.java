@@ -13,6 +13,7 @@ import org.springframework.beans.BeanUtils;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -71,10 +72,9 @@ public class OperationMapper {
                 }
             });
         }
-
-        operationResponse.setOperationCreateTimestamp(Utility.getOffsetDateTimeFromDate(pnServiceDeskOperations.getOperationStartDate()));
+        operationResponse.setOperationCreateTimestamp(OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationStartDate(), ZoneOffset.UTC));
         if (pnServiceDeskOperations.getOperationLastUpdateDate() != null) {
-            operationResponse.setOperationUpdateTimestamp(Utility.getOffsetDateTimeFromDate(pnServiceDeskOperations.getOperationLastUpdateDate()));
+            operationResponse.setOperationUpdateTimestamp( OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationLastUpdateDate(), ZoneOffset.UTC));
         }
         NotificationStatus status = new NotificationStatus();
         if (pnServiceDeskOperations.getStatus().equals(OperationStatusEnum.NOTIFY_VIEW.toString())

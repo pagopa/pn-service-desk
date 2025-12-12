@@ -188,9 +188,6 @@
 						</goals>
 						<phase>process-resources</phase>
 						<configuration>
-							<typeMappings>
-								<typeMapping>Date=java.time.OffsetDateTime</typeMapping>
-							</typeMappings>
 							<inputSpec>${project.basedir}/docs/openapi/api-internal-pn-service-desk-v1.yaml</inputSpec>
 							<generatorName>spring</generatorName>
 							<library>spring-boot</library>
@@ -206,7 +203,7 @@
 								<modelPackage>${project.groupId}.service.desk.generated.openapi.server.v1.dto</modelPackage>
 								<apiPackage>${project.groupId}.service.desk.generated.openapi.server.v1.api</apiPackage>
 								<configPackage>${project.groupId}.service.desk.generated.openapi.server.v1.config</configPackage>
-								<dateLibrary>java11</dateLibrary>
+								<dateLibrary>java8</dateLibrary>
 								<delegatePattern>true</delegatePattern>
 								<interfaceOnly>true</interfaceOnly>
 								<annotationLibrary>none</annotationLibrary>
@@ -228,7 +225,7 @@
 						<phase>process-resources</phase>
 						<configuration>
 							<typeMappings>
-								<typeMapping>Date=java.time.Instant</typeMapping>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
 							<inputSpec>${project.basedir}/docs/openapi/api-cruscotto-assistenza-pn-service-desk-v1.yaml</inputSpec>
 							<generatorName>spring</generatorName>
@@ -247,7 +244,7 @@
                     <modelPackage>${project.groupId}.service.desk.generated.openapi.server.v1.dto</modelPackage>
                     <apiPackage>${project.groupId}.service.desk.generated.openapi.server.v1.api</apiPackage>
                     <configPackage>${project.groupId}.service.desk.generated.openapi.server.v1.config</configPackage>
-                    <dateLibrary>java11</dateLibrary>
+                    <dateLibrary>java8</dateLibrary>
                     <delegatePattern>true</delegatePattern>
                     <interfaceOnly>true</interfaceOnly>
                     <annotationLibrary>none</annotationLibrary>
@@ -280,7 +277,7 @@
 								<useJakartaEe>true</useJakartaEe>
 								<apiPackage>${project.groupId}.service.desk.generated.openapi.msclient.safestorage.api</apiPackage>
 								<modelPackage>${project.groupId}.service.desk.generated.openapi.msclient.safestorage.model</modelPackage>
-								<dateLibrary>java11</dateLibrary>
+								<dateLibrary>java8</dateLibrary>
 								<delegatePattern>true</delegatePattern>
 								<interfaceOnly>true</interfaceOnly>
 								<annotationLibrary>none</annotationLibrary>
