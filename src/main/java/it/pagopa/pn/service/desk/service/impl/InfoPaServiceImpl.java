@@ -26,6 +26,7 @@ import java.time.Instant;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_EXTERNAL_REGISTRIES_CLIENT;
+import static it.pagopa.pn.service.desk.utility.Utility.convertToHttpStatus;
 
 @Service
 @CustomLog
@@ -50,7 +51,7 @@ public class InfoPaServiceImpl implements InfoPaService {
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, An error occurred while calling the service to obtain list onboarded PA", exception.getMessage());
                     logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain list onboarded PA", exception.getMessage()).log();
-                    return Mono.error(new PnGenericException(ERROR_ON_EXTERNAL_REGISTRIES_CLIENT, (HttpStatus) exception.getStatusCode()));
+                    return Mono.error(new PnGenericException(ERROR_ON_EXTERNAL_REGISTRIES_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                 })
                 .map(baseMapper::toEntity);
     }
@@ -62,7 +63,7 @@ public class InfoPaServiceImpl implements InfoPaService {
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());
                     logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage()).log();
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, (HttpStatus) exception.getStatusCode()));
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                 })
                 .map(notificationSearchResponseDto -> {
                     SearchNotificationsResponse response = InfoPaMapper.getSearchNotificationResponse(notificationSearchResponseDto);

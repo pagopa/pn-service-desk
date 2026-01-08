@@ -44,7 +44,7 @@ public class ServiceDeskEventHandler extends AbstractConsumerMessage {
         else if (NOTIFY_DELIVERY_PUSH.name().equals(eventType))
             responseHandler.handleNotifyDeliveryPushEventResponse(message.getPayload());
         else {
-            log.error("eventType not present, cannot start scheduled action headers={} payload={}", message.getHeaders(), message.getPayload());
+            log.error("eventType not present, cannot start scheduled action headers={} operationId={}", message.getHeaders(), message.getPayload().getOperationId());
             throw new PnInternalException("eventType not present, cannot start scheduled action", ERROR_CODE_SERVICEDESK_EVENTTYPENOTSUPPORTED);
         }
     }

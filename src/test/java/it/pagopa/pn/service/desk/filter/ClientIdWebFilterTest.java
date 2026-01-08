@@ -11,12 +11,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import static it.pagopa.pn.service.desk.utility.Const.*;
 
 class ClientIdWebFilterTest extends BaseTest {
     private static final String DEFAULT_URL_TEST = "/service-desk/notification/unreachable";

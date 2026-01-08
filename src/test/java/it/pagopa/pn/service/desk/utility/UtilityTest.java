@@ -2,6 +2,8 @@ package it.pagopa.pn.service.desk.utility;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 
 class UtilityTest {
 
@@ -40,6 +42,20 @@ class UtilityTest {
 
         operationId = Utility.cleanUpOperationId("TEST-new-UN-6test-unre");
         Assertions.assertEquals("TEST-new-UN-6test-unre", operationId);
+    }
+
+    @Test
+    void testConvertToHttpStatus_Success() {
+        HttpStatusCode statusCode = HttpStatus.OK;
+        HttpStatus result = Utility.convertToHttpStatus(statusCode);
+        Assertions.assertEquals(HttpStatus.OK, result);
+    }
+
+    @Test
+    void testConvertToHttpStatus_InvalidCode() {
+        HttpStatusCode statusCode = HttpStatusCode.valueOf(999);
+        HttpStatus result = Utility.convertToHttpStatus(statusCode);
+        Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result);
     }
 
 }

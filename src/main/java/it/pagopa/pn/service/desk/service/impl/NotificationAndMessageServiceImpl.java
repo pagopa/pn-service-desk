@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.service.desk.utility.Utility.convertToHttpStatus;
 
 @Service
 @CustomLog
@@ -62,8 +63,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                 .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage());
                                     logEvent.generateFailure(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage()).log();
-                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT,
-                                                                             (HttpStatus) exception.getStatusCode()));
+                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                                 })
                 )
                 .flatMapMany(notificationSearchResponseDto -> getNotificationSearchRowFlux(notificationSearchResponseDto, response))
@@ -72,8 +72,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                 .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error("An error occurred while call service for obtain notification history: ", exception);
                                     logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()).log();
-                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT,
-                                                                             (HttpStatus) exception.getStatusCode()));
+                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                                 })
                                 .map(notificationHistoryResponseDto -> NotificationAndMessageMapper
                                         .getNotification(notificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto, TimelineElementCategoryV27Dto.SEND_COURTESY_MESSAGE, getIndexTaxId(request.getTaxId(), notificationSearchRowDto.getRecipients())))
@@ -133,7 +132,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
                     logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, (HttpStatus) exception.getStatusCode()));
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                 })
                 .flatMap(sentNotificationV21Dto -> {
                     if (searchNotificationsRequest != null){
@@ -146,7 +145,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                 .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error("An error occurred while call service for obtain notification history: ", exception);
                                     logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()).log();
-                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, (HttpStatus) exception.getStatusCode()));
+                                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                                 })
                                 .flatMap(notificationHistoryResponse -> filterElementFromTaxId(notificationHistoryResponse, searchNotificationsRequest, sentNotificationV21Dto))
                                 .map(historyResponseDto -> {
@@ -199,7 +198,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                         .onErrorResume(WebClientResponseException.class, exception -> {
                             log.error(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage());
                             logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
-                            return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, (HttpStatus) exception.getStatusCode()));
+                            return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                         })
                 )
                 .flatMapMany(internalIdAndSentNotificationV23Dto ->
@@ -226,7 +225,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                     .switchIfEmpty(Mono.empty())
                                     .onErrorResume(WebClientResponseException.class, exception -> {
                                         log.error("errorReason = {}, An error occurred while calling the service to obtain notification document", exception.getMessage());
-                                        return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, (HttpStatus) exception.getStatusCode()));
+                                        return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                                     }))
                     .map(notificationAttachmentDownloadMetadataResponseDto -> {
                         documentsSize.set(documentsSize.get() + notificationAttachmentDownloadMetadataResponseDto.getContentLength());
@@ -255,7 +254,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage());
                     logEvent.generateFailure(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage()).log();
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, (HttpStatus) exception.getStatusCode()));
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                 })
                 .flatMapMany(notificationSearchResponseDto -> getNotificationSearchRowFlux(notificationSearchResponseDto, searchNotificationsResponse))
                 .map(notificationSearchResponseDto -> NotificationAndMessageMapper
@@ -273,7 +272,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         return pnDeliveryPushClient.getNotificationHistory(iun, sentNotificationV21Dto.getRecipients().size(), sentNotificationV21Dto.getSentAt())
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage());
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, (HttpStatus) exception.getStatusCode()));
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                 }).map(notificationHistoryResponseDto ->
                         cancellationTimelineIsPresent(iun, notificationHistoryResponseDto, cancellationTimelineIsPresent)
                 )
@@ -309,7 +308,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("An error occurred while calling the service to obtain sent notifications: ", exception);
                     logEvent.generateFailure(ERROR_MESSAGE_SENT_NOTIFICATIONS, exception.getMessage()).log();
-                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, (HttpStatus) exception.getStatusCode()));
+                    return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                 });
     }
 
