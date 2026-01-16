@@ -1,11 +1,13 @@
 package it.pagopa.pn.service.desk.config;
 
+import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import it.pagopa.pn.service.desk.LocalStackTestConfig;
 import it.pagopa.pn.service.desk.middleware.queue.producer.InternalQueueMomProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -14,6 +16,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @Slf4j
 @SpringBootTest
+@EnableAutoConfiguration(exclude={SqsAutoConfiguration.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @Import(LocalStackTestConfig.class)

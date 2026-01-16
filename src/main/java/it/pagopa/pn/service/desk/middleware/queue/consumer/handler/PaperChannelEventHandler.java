@@ -17,7 +17,7 @@ public class PaperChannelEventHandler extends AbstractConsumerMessage {
 
     private final PaperChannelResponseHandler responseHandler;
 
-    @SqsListener(value = "${pn.service-desk.topics.paperchannel-queue}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
+    @SqsListener(value = "${pn.service-desk.topics.paperchannel-queue}", acknowledgementMode = SqsListenerAcknowledgementMode.ON_SUCCESS)
     public void pnPaperChannelInboundConsumer(Message<PaperChannelUpdateDto> message) {
         try {
             initTraceId(message.getHeaders());

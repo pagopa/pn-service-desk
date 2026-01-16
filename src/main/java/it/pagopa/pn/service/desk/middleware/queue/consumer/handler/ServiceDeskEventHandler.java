@@ -24,7 +24,7 @@ import static it.pagopa.pn.service.desk.model.EventTypeEnum.VALIDATION_OPERATION
 public class ServiceDeskEventHandler extends AbstractConsumerMessage {
     private InternalEventResponseHandler responseHandler;
 
-    @SqsListener(value = "${pn.service-desk.topics.internal-queue}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
+    @SqsListener(value = "${pn.service-desk.topics.internal-queue}", acknowledgementMode = SqsListenerAcknowledgementMode.ON_SUCCESS)
     public void internalQueueConsumer(Message<InternalEventBody> message){
         try {
             initTraceId(message.getHeaders());

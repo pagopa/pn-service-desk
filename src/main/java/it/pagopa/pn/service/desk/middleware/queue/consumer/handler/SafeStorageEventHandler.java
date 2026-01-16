@@ -21,7 +21,7 @@ public class SafeStorageEventHandler extends AbstractConsumerMessage {
 
     private SafeStorageResponseHandler handler;
 
-    @SqsListener(value = "${pn.service-desk.topics.safe-storage-events}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
+    @SqsListener(value = "${pn.service-desk.topics.safe-storage-events}", acknowledgementMode = SqsListenerAcknowledgementMode.ON_SUCCESS)
     public void pnSafeStorageEventInboundConsumer(Message<FileDownloadResponse> message)  {
         try {
             initTraceId(message.getHeaders());

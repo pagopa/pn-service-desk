@@ -1,14 +1,12 @@
 package it.pagopa.pn.service.desk.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.commons.exceptions.PnInternalException;
-import it.pagopa.pn.service.desk.LocalStackTestConfig;
+import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.middleware.queue.model.InternalEventBody;
 import it.pagopa.pn.service.desk.middleware.responsehandler.InternalEventResponseHandler;
 import it.pagopa.pn.service.desk.model.EventTypeEnum;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.function.context.test.FunctionalSpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -19,9 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@FunctionalSpringBootTest
-@Import(LocalStackTestConfig.class)
-class ServiceDeskEventHandlerTestIT {
+class ServiceDeskEventHandlerTestIT extends BaseTest {
 
     @Autowired
     private ServiceDeskEventHandler serviceDeskEventHandler;

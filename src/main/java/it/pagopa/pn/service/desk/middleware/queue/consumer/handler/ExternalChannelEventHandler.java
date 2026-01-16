@@ -17,7 +17,7 @@ public class ExternalChannelEventHandler extends AbstractConsumerMessage {
 
     private final ExternalChannelResponseHandler externalChannelResponseHandler;
 
-    @SqsListener(value = "${pn.service-desk.topics.externalchannel-queue}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
+    @SqsListener(value = "${pn.service-desk.topics.externalchannel-queue}", acknowledgementMode = SqsListenerAcknowledgementMode.ON_SUCCESS)
     public void pnExtChannelEventInboundConsumer(Message<SingleStatusUpdateDto> message) {
         try {
             initTraceId(message.getHeaders());
