@@ -16,7 +16,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @Slf4j
 @SpringBootTest
-@EnableAutoConfiguration(exclude={SqsAutoConfiguration.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @Import(LocalStackTestConfig.class)
@@ -26,6 +25,7 @@ public abstract class BaseTest {
     @Slf4j
     @SpringBootTest
     @ActiveProfiles("test")
+    @EnableAutoConfiguration(exclude={SqsAutoConfiguration.class})
     public static class WithMockServer {
         @Autowired
         private MockServerBean mockServer;

@@ -140,7 +140,7 @@
 			<plugin>
 				<groupId>org.openapitools</groupId>
 				<artifactId>openapi-generator-maven-plugin</artifactId>
-				<version>7.12.0</version>
+				<version>7.4.0</version>
 				<executions>
 
 					<!-- OPEN API INTERNAL PN-SERVICE_DESK-->
@@ -317,6 +317,8 @@
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
 							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/30ada13a28acbe8eb5770e74f0e98ac86f9af132/docs/openapi/api-private.yaml</inputSpec>
+							<!-- WORKAROUND: Vedere src/main/resources/templates/7.4.0/client/README.md per dettagli. -->
+							<templateDirectory>${project.basedir}/src/main/resources/templates/7.4.0/client</templateDirectory>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
