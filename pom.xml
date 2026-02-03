@@ -15,8 +15,8 @@
 		<connection>${git.conn}</connection>
 		<developerConnection>${git.devConn}</developerConnection>
 		<url>${git.url}</url>
-		<tag>HEAD</tag>
-	</scm>
+	  <tag>HEAD</tag>
+  </scm>
 	<properties>
 		<jacoco.min.line.cover.ratio>0.00</jacoco.min.line.cover.ratio>
 	</properties>
@@ -37,7 +37,7 @@
 			<artifactId>pn-commons</artifactId>
 			<version>2.15.0-SPRINGBOOT3</version>
 		</dependency>
-		<!--		janino required se si esclude le dipendenze di lollipop-->
+<!--		janino required se si esclude le dipendenze di lollipop-->
 		<dependency>
 			<groupId>org.codehaus.janino</groupId>
 			<artifactId>janino</artifactId>
@@ -220,7 +220,7 @@
             </configuration>
         </execution>
 
-        <!-- OPEN API CLIENT PN-SAFE-STORAGE REACTIVE-->
+					<!-- OPEN API CLIENT PN-SAFE-STORAGE REACTIVE-->
 					<execution>
 						<phase>generate-resources</phase>
 						<id>generate-client-pn-safe-storage-reactive</id>
@@ -316,7 +316,7 @@
 							<typeMappings>
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/7a4b6a8f2d61b13a47950cd3fe3b288fc2fdc0ba/docs/openapi/api-private.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/30ada13a28acbe8eb5770e74f0e98ac86f9af132/docs/openapi/api-private.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
@@ -577,7 +577,7 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin>			 		 
 		</plugins>
 	</build>
 </project>
