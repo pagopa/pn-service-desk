@@ -14,15 +14,11 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregi
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.InfoPaService;
 import it.pagopa.pn.service.desk.mapper.InfoPaMapper;
-import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.CustomLog;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.time.Instant;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_EXTERNAL_REGISTRIES_CLIENT;

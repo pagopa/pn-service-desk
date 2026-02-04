@@ -9,7 +9,6 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.apikeysmanag
 import it.pagopa.pn.service.desk.service.ApiKeysService;
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import lombok.CustomLog;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
