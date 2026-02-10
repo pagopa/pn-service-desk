@@ -504,6 +504,10 @@ components:
           * `NOTIFICATION_CANCELLED` - Notifica annullata
           * `PREPARE_ANALOG_DOMICILE_FAILURE` - Fallimento della richiesta di prepare (preparazione ad invio) cartaceo a paperChannel
           * `ANALOG_WORKFLOW_RECIPIENT_DECEASED` - Destinatario deceduto
+          * `PUBLIC_REGISTRY_VALIDATION_CALL` - Ricerca dell'indirizzo di spedizione in fase di validazione notifica
+          * `PUBLIC_REGISTRY_VALIDATION_RESPONSE` - Recupero dell'indirizzo di spedizione dai registri nazionali
+          * `NOTIFICATION_TIMELINE_REWORKED` - Invio richiesta di Rework della timeline per una notifica
+
       enum:
         - SENDER_ACK_CREATION_REQUEST
         - VALIDATE_NORMALIZE_ADDRESSES_REQUEST
@@ -548,6 +552,9 @@ components:
         - NOTIFICATION_CANCELLED
         - PREPARE_ANALOG_DOMICILE_FAILURE
         - ANALOG_WORKFLOW_RECIPIENT_DECEASED
+        - PUBLIC_REGISTRY_VALIDATION_CALL
+        - PUBLIC_REGISTRY_VALIDATION_RESPONSE
+        - NOTIFICATION_TIMELINE_REWORKED
 
     TimelineElementDetail:
       description: The event payload that will be different based on the event.
@@ -1883,3 +1890,99 @@ components:
           OK - operazione eseguita
           KO - operazione non andata a buon fine
           PENDING - operazione presa in carico
+
+    PublicRegistryValidationCallDetails:
+      type: object
+      required:
+        - recIndexes
+        - deliveryMode
+        - sendDate
+      properties:
+        recIndexes:
+          description: Lista destinatari notifica
+          type: array
+          items:
+            type: integer
+            format: int32
+        deliveryMode:
+          $ref: '#/components/schemas/DeliveryMode'
+        sendDate:
+          type: string
+          description: Data invio richiesta ai public registry
+          format: date-time
+
+    DeliveryMode:
+      type: string
+      description: Tipologia Domiciliazione
+      enum:
+        - DIGITAL
+        - ANALOG
+
+    PublicRegistryValidationResponseDetails:
+      allOf:
+        - $ref: '#/components/schemas/PublicRegistryResponseDetails'
+        - type: object
+          properties:
+            registry:
+              type: string
+              description: >
+                Rappresenta il registro consultato per ottenere l'indirizzo.
+                Può assumere i seguenti valori:
+                  - ANPR
+                  - REGISTRO_IMPRESE
+              maxLength: 128
+
+    PublicRegistryResponseDetails:
+      type: object
+      required:
+        - recIndex
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        digitalAddress:
+          $ref: "#/components/schemas/DigitalAddress"
+        physicalAddress:
+          $ref: "#/components/schemas/PhysicalAddress"
+
+    NotificationTimelineReworkedDetails:
+      type: object
+      required:
+        - recIndex
+        - sentAttemptMade
+        - invalidatedTimelineAndStatusHistory
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        sentAttemptMade:
+          type: integer
+          description: numero dei tentativi effettuati
+          format: int32
+        invalidatedTimelineAndStatusHistory:
+          description: elenco degli avanzamenti effettuati dal processo di notifica prima dell'invalidazione
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationStatusHistoryInvalidatedElement"
+
+    NotificationStatusHistoryInvalidatedElement:
+      description: elenco degli avanzamenti effettuati dal processo di notifica
+      type: object
+      required:
+        - status
+        - activeFrom
+        - relatedTimelineElements
+      properties:
+        status:
+          $ref: "#/components/schemas/NotificationStatus"
+        activeFrom:
+          type: string
+          description: data e ora di raggiungimento dello stato di avanzamento
+          format: date-time
+        relatedTimelineElements:
+          type: array
+          description: Eventi avvenuti nello stato
+          items:
+            $ref: "#/components/schemas/TimelineElement"

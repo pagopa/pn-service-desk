@@ -8,8 +8,8 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.No
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV27Dto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV27Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV28Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV28Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoV21Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
@@ -74,7 +74,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getStatusCode()));
                                 })
                                 .map(notificationHistoryResponseDto -> NotificationAndMessageMapper
-                                        .getNotification(notificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto, TimelineElementCategoryV27Dto.SEND_COURTESY_MESSAGE, getIndexTaxId(request.getTaxId(), notificationSearchRowDto.getRecipients())))
+                                        .getNotification(notificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto, TimelineElementCategoryV28Dto.SEND_COURTESY_MESSAGE, getIndexTaxId(request.getTaxId(), notificationSearchRowDto.getRecipients())))
                                 )
                 )
                 .collectList()
@@ -100,8 +100,8 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @NotNull
-    private static List<TimelineElementV27Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, TimelineElementCategoryV27Dto category,  Integer indexTaxId) {
-        List<TimelineElementV27Dto> filteredElements = new ArrayList<>();
+    private static List<TimelineElementV28Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, TimelineElementCategoryV28Dto category,  Integer indexTaxId) {
+        List<TimelineElementV28Dto> filteredElements = new ArrayList<>();
         if (notificationHistoryResponseDto.getTimeline() != null) {
             filteredElements = notificationHistoryResponseDto.getTimeline()
                     .stream()
@@ -282,7 +282,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     private static boolean cancellationTimelineIsPresent(String iun, NotificationHistoryResponseDto notificationHistoryResponseDto, AtomicBoolean cancellationTimelineIsPresent) {
-        var cancellationRequestCategory = TimelineElementCategoryV27Dto.NOTIFICATION_CANCELLATION_REQUEST;
+        var cancellationRequestCategory = TimelineElementCategoryV28Dto.NOTIFICATION_CANCELLATION_REQUEST;
         var cancellationRequestTimeline = notificationHistoryResponseDto.getTimeline().stream()
                 .filter(timelineElement -> cancellationRequestCategory.toString().equals(timelineElement.getCategory().toString()))
                 .findFirst();
