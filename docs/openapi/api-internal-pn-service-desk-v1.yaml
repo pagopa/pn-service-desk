@@ -145,6 +145,41 @@ paths:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
+  '/service-desk/act-operations/bulk':
+    post:
+      operationId: createBulkActOperation
+      description: >-
+        Crea richieste di invio digitale per una lista di IUN su un nuovo indirizzo.
+        Viene creata un'operazione indipendente per ciascun IUN fornito.
+      tags:
+        - Operation
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/BulkCreateActOperationRequest'
+      responses:
+        '200':
+          description: Richiesta processata. La risposta contiene il dettaglio per ogni IUN. Può contenere un mix di successi e fallimenti.
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/BulkOperationsResponse'
+        '400':
+          description: Richiesta errata
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Errore lato server
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
   '/service-desk/{operationId}/video-upload':
     post:
       operationId: presignedUrlVideoUpload
