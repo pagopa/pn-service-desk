@@ -292,11 +292,11 @@ class NotificationAndMessageServiceImplTest  {
         NotificationHistoryResponseDto notificationHistoryResponseDto = new NotificationHistoryResponseDto();
         notificationHistoryResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
 
-        List<TimelineElementV27Dto> timelineElementDtoList = new ArrayList<>();
-        var timelineElementDto = new TimelineElementV27Dto();
-        timelineElementDto.setCategory(TimelineElementCategoryV27Dto.SEND_COURTESY_MESSAGE);
+        List<TimelineElementV28Dto> timelineElementDtoList = new ArrayList<>();
+        var timelineElementDto = new TimelineElementV28Dto();
+        timelineElementDto.setCategory(TimelineElementCategoryV28Dto.SEND_COURTESY_MESSAGE);
         timelineElementDto.setElementId("elementId");
-        timelineElementDto.setDetails(new TimelineElementDetailsV27Dto());
+        timelineElementDto.setDetails(new TimelineElementDetailsV28Dto());
         timelineElementDto.setTimestamp(Instant.now());
 
         List<LegalFactListElementV20Dto> legalFactListElementDtoList = new ArrayList<>();
@@ -350,11 +350,11 @@ class NotificationAndMessageServiceImplTest  {
     private NotificationHistoryResponseDto getHistory (){
         NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
         historyResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
-        var timelineElementDto = new TimelineElementV27Dto();
-        timelineElementDto.setCategory(TimelineElementCategoryV27Dto.REQUEST_ACCEPTED);
-        timelineElementDto.setDetails(new TimelineElementDetailsV27Dto());
+        var timelineElementDto = new TimelineElementV28Dto();
+        timelineElementDto.setCategory(TimelineElementCategoryV28Dto.REQUEST_ACCEPTED);
+        timelineElementDto.setDetails(new TimelineElementDetailsV28Dto());
         timelineElementDto.setTimestamp(Instant.now());
-        List<TimelineElementV27Dto> dtoList = new ArrayList<>();
+        List<TimelineElementV28Dto> dtoList = new ArrayList<>();
         dtoList.add(timelineElementDto);
         historyResponseDto.setTimeline(dtoList);
         return historyResponseDto;
@@ -363,11 +363,11 @@ class NotificationAndMessageServiceImplTest  {
     private NotificationHistoryResponseDto getHistoryNotificationCancellation (){
         NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
         historyResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
-        var timelineElementDto = new TimelineElementV27Dto();
-        timelineElementDto.setCategory(TimelineElementCategoryV27Dto.NOTIFICATION_CANCELLATION_REQUEST);
-        timelineElementDto.setDetails(new TimelineElementDetailsV27Dto());
+        var timelineElementDto = new TimelineElementV28Dto();
+        timelineElementDto.setCategory(TimelineElementCategoryV28Dto.NOTIFICATION_CANCELLATION_REQUEST);
+        timelineElementDto.setDetails(new TimelineElementDetailsV28Dto());
         timelineElementDto.setTimestamp(Instant.now());
-        List<TimelineElementV27Dto> dtoList = new ArrayList<>();
+        List<TimelineElementV28Dto> dtoList = new ArrayList<>();
         dtoList.add(timelineElementDto);
         historyResponseDto.setTimeline(dtoList);
         return historyResponseDto;
