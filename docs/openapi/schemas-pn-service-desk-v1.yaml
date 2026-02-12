@@ -1425,6 +1425,8 @@ components:
     CreateActOperationRequest:
       allOf:
         - $ref: '#/components/schemas/BaseCreateActOperationRequest'
+      required:
+        - iun
       properties:
         iun:
           description: Identificativo Univoco Notifica
@@ -1436,6 +1438,8 @@ components:
     BulkCreateActOperationRequest:
       allOf:
         - $ref: '#/components/schemas/BaseCreateActOperationRequest'
+      required:
+        - iun
       properties:
         iun:
           description: Lista degli Identificativi Univoci Notifica
