@@ -588,7 +588,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: HasAlbDimensionName
     Properties:
-      AlarmName: !Sub "oncall-${ProjectName}-service-desk-alb-alarm"
+      AlarmName: !Sub "${ProjectName}-service-desk-alb-alarm"
       AlarmDescription: "CloudWatch alarm when an application load balancer respond with a HTTP status 500."
       AlarmActions:
         - !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${AlarmSNSTopicName}'
