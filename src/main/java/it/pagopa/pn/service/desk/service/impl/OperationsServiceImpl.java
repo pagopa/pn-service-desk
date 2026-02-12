@@ -4,6 +4,7 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.mapper.AddressMapper;
 import it.pagopa.pn.service.desk.mapper.OperationMapper;
@@ -11,6 +12,8 @@ import it.pagopa.pn.service.desk.mapper.OperationsFileKeyMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
@@ -19,16 +22,21 @@ import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import it.pagopa.pn.service.desk.service.OperationsService;
+import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import java.time.OffsetDateTime;
-import java.util.UUID;
+import java.time.ZoneOffset;
+import java.util.*;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.service.desk.utility.Utility.CONTENT_TYPE_VALUE;
@@ -44,6 +52,7 @@ public class OperationsServiceImpl implements OperationsService {
     private final OperationsFileKeyDAO operationsFileKeyDAO;
     private final PnServiceDeskConfigs cfn;
     private final AuditLogService auditLogService;
+
     private static final String ERROR_MESSAGE_NO_UNREACHABLE_NOTIFICATIONS = "errorReason = {}, no unreachable notifications found";
     private static final String ERROR_MESSAGE_OPERATION_ALREADY_PRESENT = "errorReason = {}, no unreachable notifications found";
     private static final String ERROR_MESSAGE_INVALID_CONTENT_TYPE = "errorReason = {}, invalid content type";
@@ -75,23 +84,23 @@ public class OperationsServiceImpl implements OperationsService {
         String randomUUID = UUID.randomUUID().toString();
 
         return notificationService.getUnreachableNotification(randomUUID, notificationRequest)
-                .flatMap(notificationsUnreachableResponse -> {
-                    log.debug("notificationsUnreachableResponse = {}, Are there unreachable notification?", notificationsUnreachableResponse);
-                    if(notificationsUnreachableResponse.getNotificationsCount().equals(1L)) {
-                        log.debug("notificationsUnreachableCount = {}, There are unreachable notification?", notificationsUnreachableResponse.getNotificationsCount());
-                        return dataVaultClient.anonymized(createOperationRequest.getTaxId())
-                                .map(recipientId -> OperationMapper.getInitialOperation(createOperationRequest, recipientId))
-                                .zipWhen(pnServiceDeskOperations -> {
-                                    PnServiceDeskAddress address = AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn);
-                                    return Mono.just(address);
-                                })
-                                .flatMap(this::checkAndSaveOperation)
-                                .map(operation -> response.operationId(operation.getOperationId()));
-                    }
-                    PnGenericException ex = new PnGenericException(NO_UNREACHABLE_NOTIFICATION,NO_UNREACHABLE_NOTIFICATION.getMessage());
-                    log.error("notificationsUnreachableCount = {}, There are not unreachable notification", notificationsUnreachableResponse.getNotificationsCount());
-                    return Mono.error(ex);
-                });
+                                  .flatMap(notificationsUnreachableResponse -> {
+                                      log.debug("notificationsUnreachableResponse = {}, Are there unreachable notification?", notificationsUnreachableResponse);
+                                      if(notificationsUnreachableResponse.getNotificationsCount().equals(1L)) {
+                                          log.debug("notificationsUnreachableCount = {}, There are unreachable notification?", notificationsUnreachableResponse.getNotificationsCount());
+                                          return dataVaultClient.anonymized(createOperationRequest.getTaxId())
+                                                                .map(recipientId -> OperationMapper.getInitialOperation(createOperationRequest, recipientId))
+                                                                .zipWhen(pnServiceDeskOperations -> {
+                                                                    PnServiceDeskAddress address = AddressMapper.toEntity(createOperationRequest.getAddress(), pnServiceDeskOperations.getOperationId(), cfn);
+                                                                    return Mono.just(address);
+                                                                })
+                                                                .flatMap(this::checkAndSaveOperation)
+                                                                .map(operation -> response.operationId(operation.getOperationId()));
+                                      }
+                                      PnGenericException ex = new PnGenericException(NO_UNREACHABLE_NOTIFICATION,NO_UNREACHABLE_NOTIFICATION.getMessage());
+                                      log.error("notificationsUnreachableCount = {}, There are not unreachable notification", notificationsUnreachableResponse.getNotificationsCount());
+                                      return Mono.error(ex);
+                                  });
     }
 
     @Override
@@ -150,16 +159,16 @@ public class OperationsServiceImpl implements OperationsService {
         PnServiceDeskAddress entityAddress = operationAndAddress.getT2();
 
         return operationDAO.getByOperationId(entityOperation.getOperationId())
-                .flatMap(entityresponse -> {
-                    PnGenericException ex = new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST);
-                    log.error("response = {}, The operation id is already present for the ticket id", entityresponse);
-                    return Mono.error(ex);
-                })
-                .switchIfEmpty(Mono.defer(() -> {
-                    log.debug("entityOperation = {}, entityAddress = {}, Creating operation and address", operationAndAddress.getT1(), operationAndAddress.getT2());
-                    return operationDAO.createOperationAndAddress(entityOperation, entityAddress);
-                }))
-                .thenReturn(entityOperation);
+                           .flatMap(entityresponse -> {
+                               PnGenericException ex = new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST);
+                               log.error("response = {}, The operation id is already present for the ticket id", entityresponse);
+                               return Mono.error(ex);
+                           })
+                           .switchIfEmpty(Mono.defer(() -> {
+                               log.debug("entityOperation = {}, entityAddress = {}, Creating operation and address", operationAndAddress.getT1(), operationAndAddress.getT2());
+                               return operationDAO.createOperationAndAddress(entityOperation, entityAddress);
+                           }))
+                           .thenReturn(entityOperation);
     }
 
     @Override
@@ -167,15 +176,35 @@ public class OperationsServiceImpl implements OperationsService {
         SearchResponse response = new SearchResponse();
 
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
-                .flatMapMany(operationDAO::searchOperationsFromRecipientInternalId)
-                .map(operationResponseMapper -> OperationMapper.operationResponseMapper(cfn, operationResponseMapper, searchNotificationRequest.getTaxId()))
-                .collectSortedList((op1, op2) ->
-                        (op2.getOperationUpdateTimestamp() != null ? op2.getOperationUpdateTimestamp()  : OffsetDateTime.now())
-                                .compareTo((op1.getOperationUpdateTimestamp() != null ? op1.getOperationUpdateTimestamp()  : OffsetDateTime.now())))
-                .map(operations -> {
-                    response.setOperations(operations);
-                    return response;
-                });
+                              .flatMapMany(operationDAO::searchOperationsFromRecipientInternalId)
+                              .map(pnServiceDeskOperations -> Tuples.of(pnServiceDeskOperations.getAttachments(), OperationMapper.operationResponseMapper(pnServiceDeskOperations, searchNotificationRequest.getTaxId())))
+                              .flatMap(tuple -> enhanceIuns(tuple.getT1(), tuple.getT2()))
+                              .collectSortedList((op1, op2) ->
+                                                         (op2.getOperationUpdateTimestamp() != null ? op2.getOperationUpdateTimestamp()  : OffsetDateTime.now())
+                                                                 .compareTo((op1.getOperationUpdateTimestamp() != null ? op1.getOperationUpdateTimestamp()  : OffsetDateTime.now())))
+                              .map(operations -> {
+                                  response.setOperations(operations);
+                                  return response;
+                              });
+    }
+
+    private Mono<OperationResponse> enhanceIuns(List<PnServiceDeskAttachments> attachments, OperationResponse operationResponse) {
+        return Flux.fromIterable(attachments)
+                   .flatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun()))
+                   .doOnNext(att -> {
+                       SDNotificationSummary summary = new SDNotificationSummary();
+                       summary.setIun(att.getIun());
+                       summary.setSenderPaInternalId(att.getSenderPaId());
+                       summary.setSenderPaIpaCode("");
+                       summary.setSenderPaTaxCode(att.getSenderTaxId());
+                       summary.setSenderPaDescription(att.getSenderDenomination());
+                       if (Boolean.TRUE.equals(att.getDocumentsAvailable())) {
+                           operationResponse.getIuns().add(summary);
+                       } else {
+                           operationResponse.getUncompletedIuns().add(summary);
+                       }
+                   })
+                   .then(Mono.just(operationResponse));
     }
 
     @Override
@@ -187,35 +216,35 @@ public class OperationsServiceImpl implements OperationsService {
         }
 
         return operationDAO.getByOperationId(operationId)
-                .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.NOT_FOUND)))
-                .filter(operation -> operation.getStatus().equals(NotificationStatus.StatusEnum.CREATING.getValue()))
-                .switchIfEmpty(Mono.error(new PnGenericException(FILE_ALREADY_UPLOADED, FILE_ALREADY_UPLOADED.getMessage(), HttpStatus.CONFLICT)))
-                .flatMap(operation -> manageOperationFileKey(operationId)
-                        .switchIfEmpty(Mono.just(operationId))
-                        .flatMap(operationID -> safeStorageClient.getPresignedUrl(videoUploadRequest))
-                        .flatMap(fileCreationResponse ->
-                                operationsFileKeyDAO.updateVideoFileKey(OperationsFileKeyMapper.getOperationFileKey(fileCreationResponse.getKey(), operationId))
-                                        .thenReturn(fileCreationResponse)
-                        )
-                        .flatMap(fileCreationResponse -> {
-                            operation.setStatus(OperationStatusEnum.VALIDATION.toString());
-                            return operationDAO.updateEntity(operation)
-                                    .thenReturn(fileCreationResponse);
-                        })
-                )
-                .map(OperationsFileKeyMapper::getVideoUpload);
+                           .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.NOT_FOUND)))
+                           .filter(operation -> operation.getStatus().equals(NotificationStatus.StatusEnum.CREATING.getValue()))
+                           .switchIfEmpty(Mono.error(new PnGenericException(FILE_ALREADY_UPLOADED, FILE_ALREADY_UPLOADED.getMessage(), HttpStatus.CONFLICT)))
+                           .flatMap(operation -> manageOperationFileKey(operationId)
+                                            .switchIfEmpty(Mono.just(operationId))
+                                            .flatMap(operationID -> safeStorageClient.getPresignedUrl(videoUploadRequest))
+                                            .flatMap(fileCreationResponse ->
+                                                             operationsFileKeyDAO.updateVideoFileKey(OperationsFileKeyMapper.getOperationFileKey(fileCreationResponse.getKey(), operationId))
+                                                                                 .thenReturn(fileCreationResponse)
+                                                    )
+                                            .flatMap(fileCreationResponse -> {
+                                                operation.setStatus(OperationStatusEnum.VALIDATION.toString());
+                                                return operationDAO.updateEntity(operation)
+                                                                   .thenReturn(fileCreationResponse);
+                                            })
+                                   )
+                           .map(OperationsFileKeyMapper::getVideoUpload);
     }
 
     private Mono<String> manageOperationFileKey(String operationId){
         return operationsFileKeyDAO.getFileKeyByOperationId(operationId)
-                .flatMap(operationFileKey -> safeStorageClient.getFile(operationFileKey.getFileKey()))
-                .map(response -> operationId)
-                .onErrorResume(PnRetryStorageException.class, ex -> Mono.error(new PnGenericException(SAFE_STORAGE_FILE_LOADING, SAFE_STORAGE_FILE_LOADING.getMessage(), HttpStatus.BAD_REQUEST)))
-                .onErrorResume(WebClientResponseException.class, ex -> {
-                    if (ex.getStatusCode() == HttpStatus.NOT_FOUND) return Mono.just(operationId);
-                    PnGenericException exception = new PnGenericException(ERROR_DURING_RECOVERING_FILE, ERROR_DURING_RECOVERING_FILE.getMessage(), HttpStatus.BAD_REQUEST);
-                    return Mono.error(exception);
-                });
+                                   .flatMap(operationFileKey -> safeStorageClient.getFile(operationFileKey.getFileKey()))
+                                   .map(response -> operationId)
+                                   .onErrorResume(PnRetryStorageException.class, ex -> Mono.error(new PnGenericException(SAFE_STORAGE_FILE_LOADING, SAFE_STORAGE_FILE_LOADING.getMessage(), HttpStatus.BAD_REQUEST)))
+                                   .onErrorResume(WebClientResponseException.class, ex -> {
+                                       if (ex.getStatusCode() == HttpStatus.NOT_FOUND) return Mono.just(operationId);
+                                       PnGenericException exception = new PnGenericException(ERROR_DURING_RECOVERING_FILE, ERROR_DURING_RECOVERING_FILE.getMessage(), HttpStatus.BAD_REQUEST);
+                                       return Mono.error(exception);
+                                   });
 
     }
 
@@ -242,4 +271,5 @@ public class OperationsServiceImpl implements OperationsService {
                                                                         HttpStatus.BAD_REQUEST));
                            });
     }
+
 }
