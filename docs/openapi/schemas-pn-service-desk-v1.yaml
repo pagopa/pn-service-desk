@@ -1465,7 +1465,7 @@ components:
         iun:
           description: Lista degli Identificativi Univoci Notifica
           type: array
-          minItems: 2
+          minItems: 1
           maxItems: 5
           items:
             type: string
