@@ -17,7 +17,6 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.Pn
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
-import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import it.pagopa.pn.service.desk.service.OperationsService;
 import it.pagopa.pn.service.desk.utility.Utility;
@@ -49,17 +48,10 @@ public class OperationsServiceImpl implements OperationsService {
     private final OperationDAO operationDAO;
     private final OperationsFileKeyDAO operationsFileKeyDAO;
     private final PnServiceDeskConfigs cfn;
-    private final AuditLogService auditLogService;
-    private static final String ERROR_MESSAGE_NO_UNREACHABLE_NOTIFICATIONS = "errorReason = {}, no unreachable notifications found";
-    private static final String ERROR_MESSAGE_OPERATION_ALREADY_PRESENT = "errorReason = {}, no unreachable notifications found";
-    private static final String ERROR_MESSAGE_INVALID_CONTENT_TYPE = "errorReason = {}, invalid content type";
-    private static final String ERROR_MESSAGE_SAFE_STORAGE_FILE_LOADING = "errorReason = {}, file loading";
-    private static final String ERROR_MESSAGE_RECOVERING_FILE = "errorReason = {}, error during file recover";
 
     public OperationsServiceImpl(NotificationService notificationService, PnDataVaultClient dataVaultClient,
                                  PnSafeStorageClient safeStorageClient, PnDeliveryClient pnDeliveryClient, OperationDAO operationDAO,
-                                 OperationsFileKeyDAO operationsFileKeyDAO, PnServiceDeskConfigs cfn,
-                                 AuditLogService auditLogService) {
+                                 OperationsFileKeyDAO operationsFileKeyDAO, PnServiceDeskConfigs cfn) {
         this.notificationService = notificationService;
         this.dataVaultClient = dataVaultClient;
         this.safeStorageClient = safeStorageClient;
@@ -67,7 +59,6 @@ public class OperationsServiceImpl implements OperationsService {
         this.operationDAO = operationDAO;
         this.operationsFileKeyDAO = operationsFileKeyDAO;
         this.cfn = cfn;
-        this.auditLogService = auditLogService;
     }
 
 
