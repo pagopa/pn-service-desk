@@ -477,7 +477,7 @@ class OperationsServiceImplTest extends BaseTest {
     }
 
     @Test
-    void createActOperationV2_AllFail_ReturnsResultsWithoutDbWrite() {
+    void createActOperationV2_AllFail_CreatesParentWithKoStatus() {
         SentNotificationV25Dto mismatchNotification = new SentNotificationV25Dto();
         NotificationRecipientV24Dto mismatchRecipient = new NotificationRecipientV24Dto();
         mismatchRecipient.setTaxId("DIFFERENT_TAX_ID");
@@ -487,6 +487,8 @@ class OperationsServiceImplTest extends BaseTest {
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
                .thenReturn(Mono.just(mismatchNotification));
+        Mockito.when(operationDAO.createOperation(Mockito.any()))
+               .thenReturn(Mono.just(pnServiceDeskOperations));
 
         CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
 
@@ -499,15 +501,21 @@ class OperationsServiceImplTest extends BaseTest {
                     })
                     .verifyComplete();
 
+        Mockito.verify(operationDAO).createOperation(
+                Mockito.argThat(parent -> OperationStatusEnum.KO.toString().equals(parent.getStatus())
+                        && parent.getSubOperationsIds().isEmpty())
+        );
         Mockito.verify(operationDAO, Mockito.never())
                .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
-    void createActOperationV2_DeliveryClientError_MarksIunAsKo() {
+    void createActOperationV2_DeliveryClientError_MarksIunAsKoAndCreatesParent() {
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
                .thenReturn(Mono.error(new RuntimeException("Delivery service unavailable")));
+        Mockito.when(operationDAO.createOperation(Mockito.any()))
+               .thenReturn(Mono.just(pnServiceDeskOperations));
 
         CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
 
@@ -522,6 +530,13 @@ class OperationsServiceImplTest extends BaseTest {
                         });
                     })
                     .verifyComplete();
+
+        Mockito.verify(operationDAO).createOperation(
+                Mockito.argThat(parent -> OperationStatusEnum.KO.toString().equals(parent.getStatus())
+                        && parent.getSubOperationsIds().isEmpty())
+        );
+        Mockito.verify(operationDAO, Mockito.never())
+               .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     private CreateActOperationRequestV2 getCreateActOperationRequestV2() {

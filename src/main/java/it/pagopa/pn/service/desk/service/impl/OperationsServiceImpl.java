@@ -201,10 +201,13 @@ public class OperationsServiceImpl implements OperationsService {
                             .flatMap(itemResults -> {
                                 results.addAll(itemResults);
                                 if (validSubOps.isEmpty()) {
-                                    log.warn("parentOperationId={}, All IUNs failed validation, no DB write performed", parentOperationId);
-                                    return Mono.just(new CreateOperationsResponseV2()
-                                            .operationId(parentOperationId)
-                                            .results(results));
+                                    log.warn("parentOperationId={}, All IUNs failed validation, creating parent operation with KO status", parentOperationId);
+                                    PnServiceDeskOperations koParent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, new ArrayList<>());
+                                    koParent.setStatus("KO");
+                                    return operationDAO.createOperation(koParent)
+                                            .map(savedParent -> new CreateOperationsResponseV2()
+                                                    .operationId(savedParent.getOperationId())
+                                                    .results(results));
                                 }
 
                                 List<String> subOpIds = new ArrayList<>();

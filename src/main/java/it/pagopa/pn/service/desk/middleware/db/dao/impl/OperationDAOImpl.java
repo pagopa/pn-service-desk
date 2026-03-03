@@ -48,6 +48,11 @@ public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implement
     }
 
     @Override
+    public Mono<PnServiceDeskOperations> createOperation(PnServiceDeskOperations operations) {
+        return Mono.fromFuture(super.put(operations));
+    }
+
+    @Override
     public Mono<PnServiceDeskOperations> createParentOperationWithSubOpsAndAddress(PnServiceDeskOperations parent,
                                                                                     PnServiceDeskAddress address,
                                                                                     List<PnServiceDeskSubOperations> subOperations) {
