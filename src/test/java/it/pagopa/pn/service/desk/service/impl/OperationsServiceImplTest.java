@@ -403,6 +403,26 @@ class OperationsServiceImplTest extends BaseTest {
     }
 
     @Test
+    void createActOperationV2_DuplicateIun_Returns400() {
+        CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
+        request.setIun(List.of("IUN1", "IUN2", "IUN1"));
+
+        StepVerifier.create(service.createActOperationV2("uid", request))
+                    .expectErrorMatches(ex -> {
+                        assertInstanceOf(PnGenericException.class, ex);
+                        assertEquals(DUPLICATE_IUN_IN_REQUEST, ((PnGenericException) ex).getExceptionType());
+                        assertEquals(HttpStatus.BAD_REQUEST, ((PnGenericException) ex).getHttpStatus());
+                        return true;
+                    })
+                    .verify();
+
+        Mockito.verify(operationDAO, Mockito.never())
+               .getByOperationId(Mockito.any());
+        Mockito.verify(operationDAO, Mockito.never())
+               .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
     void createActOperationV2_DuplicateOperationId_Returns400() {
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
 

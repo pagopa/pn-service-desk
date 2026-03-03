@@ -31,6 +31,7 @@ import reactor.util.function.Tuple2;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -147,6 +148,11 @@ public class OperationsServiceImpl implements OperationsService {
 
         String taxId = request.getTaxId();
         String parentOperationId = Utility.generateOperationId(request.getTicketId(), request.getTicketOperationId());
+
+        List<String> iuns = request.getIun();
+        if (iuns != null && iuns.size() != new HashSet<>(iuns).size()) {
+            return Mono.error(new PnGenericException(DUPLICATE_IUN_IN_REQUEST, DUPLICATE_IUN_IN_REQUEST.getMessage(), HttpStatus.BAD_REQUEST));
+        }
 
         return operationDAO.getByOperationId(parentOperationId)
                 .flatMap(existing -> {

@@ -44,7 +44,8 @@ public enum ExceptionTypeEnum {
     ERROR_ON_MANDATE_CLIENT("ERROR_ON_MANDATE_CLIENT", "Error in Mandate failed service"),
     ERROR_ON_KEYS_MANAGER_CLIENT("ERROR_ON_KEYS_MANAGER_CLIENT","Error in Keys Manager failed service"),
     ERROR_ON_EXTERNAL_REGISTRIES_CLIENT("ERROR_ON_EXTERNAL_REGISTRIES_CLIENT","Error in External Registries failed service"),
-    TAX_ID_NOT_FOUND("TAX_ID_NOT_FOUND", "TaxId does not match for any recipient");
+    TAX_ID_NOT_FOUND("TAX_ID_NOT_FOUND", "TaxId does not match for any recipient"),
+    DUPLICATE_IUN_IN_REQUEST("DUPLICATE_IUN_IN_REQUEST", "The IUN list contains duplicate values");
 
     private final String title;
     private final String message;
