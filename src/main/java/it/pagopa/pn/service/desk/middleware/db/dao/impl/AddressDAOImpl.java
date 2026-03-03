@@ -27,7 +27,7 @@ public class AddressDAOImpl extends BaseDAO<PnServiceDeskAddress> implements Add
 
     @Override
     public Mono<PnServiceDeskAddress> getAddress(String operationId) {
-        return Mono.fromFuture(super.get(Utility.cleanUpOperationId(operationId), null).thenApply(item -> item));
+        return Mono.fromFuture(super.get(Utility.resolveAddressOperationId(operationId), null).thenApply(item -> item));
     }
 
     @Override

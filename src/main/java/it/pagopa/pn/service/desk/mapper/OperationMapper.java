@@ -5,6 +5,7 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskSubOperations;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.extern.slf4j.Slf4j;
@@ -100,6 +101,42 @@ public class OperationMapper {
         operationResponse.setTaxId(taxId);
 
         return operationResponse;
+    }
+
+    public static PnServiceDeskOperations getInitialParentOperation(CreateActOperationRequestV2 request,
+                                                                    String recipientInternalId,
+                                                                    String operationId,
+                                                                    List<String> subOperationIds) {
+        PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
+        pnServiceDeskOperations.setOperationId(operationId);
+        pnServiceDeskOperations.setTicketId(request.getTicketId());
+        pnServiceDeskOperations.setStatus(OperationStatusEnum.CREATING.toString());
+        pnServiceDeskOperations.setOperationStartDate(Instant.now());
+        pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
+        pnServiceDeskOperations.setRecipientInternalId(recipientInternalId);
+        pnServiceDeskOperations.setTicketDate(request.getTicketDate());
+        pnServiceDeskOperations.setVrDate(request.getVrDate());
+        pnServiceDeskOperations.setIsSubOperation(false);
+        pnServiceDeskOperations.setSubOperationsIds(subOperationIds);
+        return pnServiceDeskOperations;
+    }
+
+    public static PnServiceDeskSubOperations getInitialSubOperation(String parentOperationId,
+                                                                    String iun,
+                                                                    String recipientInternalId,
+                                                                    CreateActOperationRequestV2 request) {
+        PnServiceDeskSubOperations subOperation = new PnServiceDeskSubOperations();
+        subOperation.setOperationId("SUB#" + parentOperationId + "#" + iun);
+        subOperation.setTicketId(request.getTicketId());
+        subOperation.setStatus(OperationStatusEnum.CREATING.toString());
+        subOperation.setOperationStartDate(Instant.now());
+        subOperation.setOperationLastUpdateDate(Instant.now());
+        subOperation.setRecipientInternalId(recipientInternalId);
+        subOperation.setTicketDate(request.getTicketDate());
+        subOperation.setVrDate(request.getVrDate());
+        subOperation.setIun(iun);
+        subOperation.setIsSubOperation(true);
+        return subOperation;
     }
 
     public static PnServiceDeskOperations copyOperation (PnServiceDeskOperations operations){

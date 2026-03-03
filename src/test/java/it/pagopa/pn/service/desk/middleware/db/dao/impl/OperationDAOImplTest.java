@@ -72,4 +72,25 @@ class OperationDAOImplTest extends BaseTest {
         assertNotNull(updateRequest);
         assertEquals(updateRequest.getOperationId(), pnServiceDeskOperations.getOperationId());
     }
+
+    @Test
+    void createParentOperationWithSubOpsAndAddress() {
+        Mockito.when(dataEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
+        Mockito.when(dataEncryption.decode(Mockito.any())).thenReturn("returnOk");
+
+        it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskSubOperations subOp =
+                new it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskSubOperations();
+        subOp.setOperationId("SUB#1234#IUN1");
+        subOp.setIsSubOperation(true);
+        subOp.setStatus("CREATING");
+
+        pnServiceDeskOperations.setOperationId("parent-1234");
+        pnServiceDeskOperations.setIsSubOperation(false);
+        pnServiceDeskOperations.setSubOperationsIds(java.util.List.of("SUB#1234#IUN1"));
+
+        pnServiceDeskAddress.setOperationId("parent-1234");
+
+        assertNotNull(operationDAO.createParentOperationWithSubOpsAndAddress(
+                pnServiceDeskOperations, pnServiceDeskAddress, java.util.List.of(subOp)).block());
+    }
 }

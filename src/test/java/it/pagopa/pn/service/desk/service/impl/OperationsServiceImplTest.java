@@ -374,4 +374,125 @@ class OperationsServiceImplTest extends BaseTest {
 
 
 
+
+    @Test
+    void createActOperationV2_AllValid_CreatesParentAndSubOps() {
+        SentNotificationV25Dto sentNotificationV25Dto = new SentNotificationV25Dto();
+        NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
+        recipient.setTaxId("AAAAAA00A00A000A");
+        sentNotificationV25Dto.setRecipients(List.of(recipient));
+        sentNotificationV25Dto.setDocumentsAvailable(true);
+
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
+               .thenReturn(Mono.just(sentNotificationV25Dto));
+        Mockito.when(operationDAO.createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just(pnServiceDeskOperations));
+
+        CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
+
+        StepVerifier.create(service.createActOperationV2("uid", request))
+                    .assertNext(response -> {
+                        assertNotNull(response);
+                        assertNotNull(response.getOperationId());
+                        assertNotNull(response.getResults());
+                        assertEquals(2, response.getResults().size());
+                        response.getResults().forEach(r -> assertEquals("CREATING", r.getStatus()));
+                    })
+                    .verifyComplete();
+    }
+
+    @Test
+    void createActOperationV2_PartialValid_CreatesWithValidSubOpsOnly() {
+        SentNotificationV25Dto validNotification = new SentNotificationV25Dto();
+        NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
+        recipient.setTaxId("AAAAAA00A00A000A");
+        validNotification.setRecipients(List.of(recipient));
+        validNotification.setDocumentsAvailable(true);
+
+        SentNotificationV25Dto mismatchNotification = new SentNotificationV25Dto();
+        NotificationRecipientV24Dto mismatchRecipient = new NotificationRecipientV24Dto();
+        mismatchRecipient.setTaxId("DIFFERENT_TAX_ID");
+        mismatchNotification.setRecipients(List.of(mismatchRecipient));
+        mismatchNotification.setDocumentsAvailable(true);
+
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate("IUN1"))
+               .thenReturn(Mono.just(validNotification));
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate("IUN2"))
+               .thenReturn(Mono.just(mismatchNotification));
+        Mockito.when(operationDAO.createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just(pnServiceDeskOperations));
+
+        CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
+
+        StepVerifier.create(service.createActOperationV2("uid", request))
+                    .assertNext(response -> {
+                        assertNotNull(response);
+                        assertNotNull(response.getResults());
+                        assertEquals(2, response.getResults().size());
+                        long okCount = response.getResults().stream().filter(r -> "CREATING".equals(r.getStatus())).count();
+                        long koCount = response.getResults().stream().filter(r -> "KO".equals(r.getStatus())).count();
+                        assertEquals(1, okCount);
+                        assertEquals(1, koCount);
+                    })
+                    .verifyComplete();
+    }
+
+    @Test
+    void createActOperationV2_AllFail_ReturnsResultsWithoutDbWrite() {
+        SentNotificationV25Dto mismatchNotification = new SentNotificationV25Dto();
+        NotificationRecipientV24Dto mismatchRecipient = new NotificationRecipientV24Dto();
+        mismatchRecipient.setTaxId("DIFFERENT_TAX_ID");
+        mismatchNotification.setRecipients(List.of(mismatchRecipient));
+        mismatchNotification.setDocumentsAvailable(true);
+
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
+               .thenReturn(Mono.just(mismatchNotification));
+
+        CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
+
+        StepVerifier.create(service.createActOperationV2("uid", request))
+                    .assertNext(response -> {
+                        assertNotNull(response);
+                        assertNotNull(response.getResults());
+                        assertEquals(2, response.getResults().size());
+                        response.getResults().forEach(r -> assertEquals("KO", r.getStatus()));
+                    })
+                    .verifyComplete();
+
+        Mockito.verify(operationDAO, Mockito.never())
+               .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void createActOperationV2_DeliveryClientError_MarksIunAsKo() {
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
+               .thenReturn(Mono.error(new RuntimeException("Delivery service unavailable")));
+
+        CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
+
+        StepVerifier.create(service.createActOperationV2("uid", request))
+                    .assertNext(response -> {
+                        assertNotNull(response);
+                        assertNotNull(response.getResults());
+                        assertEquals(2, response.getResults().size());
+                        response.getResults().forEach(r -> {
+                            assertEquals("KO", r.getStatus());
+                            assertNotNull(r.getErrorReason());
+                        });
+                    })
+                    .verifyComplete();
+    }
+
+    private CreateActOperationRequestV2 getCreateActOperationRequestV2() {
+        CreateActOperationRequestV2 request = new CreateActOperationRequestV2();
+        request.setTaxId("AAAAAA00A00A000A");
+        request.setIun(List.of("IUN1", "IUN2"));
+        request.setTicketId("ticket123");
+        request.setTicketOperationId("op123");
+        request.setTicketDate("2024-01-01");
+        request.setVrDate("2024-01-02");
+        request.setAddress(new ActDigitalAddress().address("test@test.com").type(ActDigitalAddress.TypeEnum.EMAIL));
+        return request;
+    }
+
 }

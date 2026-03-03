@@ -80,6 +80,21 @@ public static OperationStatusEnum getEcOperationStatusFrom(ProgressEventCategory
         return cleanUpOperationId;
     }
 
+    /**
+     * Resolves the operationId to use for address table lookups.
+     * Sub-operations have format "SUB#{parentOperationId}#{iun}" and share the parent's address,
+     * so the parentOperationId is extracted via string parsing (no extra DynamoDB call needed).
+     * Regular IDs pass through cleanUpOperationId() unchanged.
+     */
+    public static String resolveAddressOperationId(String operationId) {
+        if (operationId != null && operationId.startsWith("SUB#")) {
+            String withoutPrefix = operationId.substring("SUB#".length());
+            int iunSeparator = withoutPrefix.indexOf('#');
+            return iunSeparator != -1 ? withoutPrefix.substring(0, iunSeparator) : withoutPrefix;
+        }
+        return cleanUpOperationId(operationId);
+    }
+
     public static String extractFileKeyFromUrl(String url) {
         if (url != null) {
             URI uri = URI.create(url);
