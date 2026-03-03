@@ -132,7 +132,7 @@ class OperationsServiceImplTest extends BaseTest {
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
         StepVerifier.create(service.createOperation("1234", getCreateOperationRequest()))
                 .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(OPERATION_ID_IS_PRESENT, ((PnGenericException) ex).getExceptionType());
                     return true;
                 }).verify();
@@ -152,7 +152,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", videoUploadRequest))
                 .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(ERROR_CONTENT_TYPE, ((PnGenericException) ex).getExceptionType());
                     return true;
                 }).verify();
@@ -165,7 +165,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()))
                 .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(OPERATION_IS_NOT_PRESENT, ((PnGenericException) ex).getExceptionType());
                     return true;
                 }).verify();
@@ -178,7 +178,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()))
                 .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(SAFE_STORAGE_FILE_LOADING, ((PnGenericException) ex).getExceptionType());
                     return true;
                 }).verify();
@@ -191,7 +191,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()))
                 .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(ERROR_DURING_RECOVERING_FILE, ((PnGenericException) ex).getExceptionType());
                     return true;
                 }).verify();
@@ -330,7 +330,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
                     .expectErrorSatisfies(ex -> {
-                        assertTrue(ex instanceof PnGenericException);
+                        assertInstanceOf(PnGenericException.class, ex);
                         assertTrue(ex.getMessage().contains("Tax ID from request does not match"));
                     })
                     .verify();
@@ -345,7 +345,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
                     .expectErrorSatisfies(ex -> {
-                        assertTrue(ex instanceof PnGenericException);
+                        assertInstanceOf(PnGenericException.class, ex);
                         assertTrue(ex.getMessage().contains("Simulated client error"));
                     })
                     .verify();
@@ -383,6 +383,7 @@ class OperationsServiceImplTest extends BaseTest {
         sentNotificationV25Dto.setRecipients(List.of(recipient));
         sentNotificationV25Dto.setDocumentsAvailable(true);
 
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
                .thenReturn(Mono.just(sentNotificationV25Dto));
         Mockito.when(operationDAO.createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any()))
@@ -402,6 +403,23 @@ class OperationsServiceImplTest extends BaseTest {
     }
 
     @Test
+    void createActOperationV2_DuplicateOperationId_Returns400() {
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
+
+        StepVerifier.create(service.createActOperationV2("uid", getCreateActOperationRequestV2()))
+                    .expectErrorMatches(ex -> {
+                        assertInstanceOf(PnGenericException.class, ex);
+                        assertEquals(OPERATION_ID_IS_PRESENT, ((PnGenericException) ex).getExceptionType());
+                        assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ((PnGenericException) ex).getHttpStatus());
+                        return true;
+                    })
+                    .verify();
+
+        Mockito.verify(operationDAO, Mockito.never())
+               .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
     void createActOperationV2_PartialValid_CreatesWithValidSubOpsOnly() {
         SentNotificationV25Dto validNotification = new SentNotificationV25Dto();
         NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
@@ -415,6 +433,7 @@ class OperationsServiceImplTest extends BaseTest {
         mismatchNotification.setRecipients(List.of(mismatchRecipient));
         mismatchNotification.setDocumentsAvailable(true);
 
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate("IUN1"))
                .thenReturn(Mono.just(validNotification));
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate("IUN2"))
@@ -445,6 +464,7 @@ class OperationsServiceImplTest extends BaseTest {
         mismatchNotification.setRecipients(List.of(mismatchRecipient));
         mismatchNotification.setDocumentsAvailable(true);
 
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
                .thenReturn(Mono.just(mismatchNotification));
 
@@ -465,6 +485,7 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void createActOperationV2_DeliveryClientError_MarksIunAsKo() {
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
                .thenReturn(Mono.error(new RuntimeException("Delivery service unavailable")));
 

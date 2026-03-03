@@ -156,12 +156,17 @@ public class OperationsServiceImpl implements OperationsService {
         String taxId = request.getTaxId();
         String parentOperationId = Utility.generateOperationId(request.getTicketId(), request.getTicketOperationId());
 
-        return dataVaultClient.anonymized(taxId)
-                .flatMap(recipientId -> {
-                    List<PnServiceDeskSubOperations> validSubOps = new ArrayList<>();
-                    List<OperationItemResponse> results = new ArrayList<>();
+        return operationDAO.getByOperationId(parentOperationId)
+                .flatMap(existing -> {
+                    log.error("parentOperationId={}, Operation id is already present for the ticket id", parentOperationId);
+                    return Mono.<CreateOperationsResponseV2>error(new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST));
+                })
+                .switchIfEmpty(Mono.defer(() -> dataVaultClient.anonymized(taxId)
+                        .flatMap(recipientId -> {
+                            List<PnServiceDeskSubOperations> validSubOps = new ArrayList<>();
+                            List<OperationItemResponse> results = new ArrayList<>();
 
-                    return Flux.fromIterable(request.getIun())
+                            return Flux.fromIterable(request.getIun())
                             .flatMap(iun ->
                                     pnDeliveryClient.getSentNotificationPrivate(iun)
                                             .map(sentNotification -> {
@@ -217,7 +222,7 @@ public class OperationsServiceImpl implements OperationsService {
                                                     .results(results);
                                         });
                             });
-                });
+                })));
     }
 
     private Mono<PnServiceDeskOperations> checkAndSaveOperation(Tuple2<PnServiceDeskOperations, PnServiceDeskAddress> operationAndAddress){
