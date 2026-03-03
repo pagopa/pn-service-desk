@@ -34,6 +34,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.service.desk.utility.Utility.CONTENT_TYPE_VALUE;
@@ -165,16 +166,18 @@ public class OperationsServiceImpl implements OperationsService {
                         .flatMap(recipientId -> {
                             List<PnServiceDeskSubOperations> validSubOps = new ArrayList<>();
                             List<OperationItemResponse> results = new ArrayList<>();
+                            AtomicReference<String> denominationRef = new AtomicReference<>();
 
                             return Flux.fromIterable(request.getIun())
                             .flatMap(iun ->
                                     pnDeliveryClient.getSentNotificationPrivate(iun)
                                             .map(sentNotification -> {
-                                                boolean recipientMatch = sentNotification.getRecipients().stream()
-                                                        .anyMatch(r -> StringUtils.equalsIgnoreCase(r.getTaxId(), taxId));
-                                                if (recipientMatch) {
-                                                    PnServiceDeskSubOperations subOp = OperationMapper.getInitialSubOperation(
-                                                            parentOperationId, iun, recipientId, request);
+                                                var matchingRecipient = sentNotification.getRecipients().stream()
+                                                        .filter(r -> StringUtils.equalsIgnoreCase(r.getTaxId(), taxId))
+                                                        .findFirst();
+                                                if (matchingRecipient.isPresent()) {
+                                                    denominationRef.compareAndSet(null, matchingRecipient.get().getDenomination());
+                                                    PnServiceDeskSubOperations subOp = OperationMapper.getInitialSubOperation(parentOperationId, iun, recipientId, request);
                                                     validSubOps.add(subOp);
                                                     return new OperationItemResponse()
                                                             .iun(iun)
@@ -211,7 +214,7 @@ public class OperationsServiceImpl implements OperationsService {
                                 validSubOps.forEach(sub -> subOpIds.add(sub.getOperationId()));
 
                                 PnServiceDeskOperations parent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, subOpIds);
-                                PnServiceDeskAddress address = AddressMapper.toActEntity(request.getAddress(), parentOperationId, cfn, null);
+                                PnServiceDeskAddress address = AddressMapper.toActEntity(request.getAddress(), parentOperationId, cfn, denominationRef.get());
 
                                 return operationDAO.createParentOperationWithSubOpsAndAddress(parent, address, validSubOps)
                                         .map(savedParent -> {
