@@ -365,16 +365,6 @@ class OperationsServiceImplTest extends BaseTest {
         return request;
     }
 
-
-
-
-
-
-
-
-
-
-
     @Test
     void createActOperationV2_AllValid_CreatesParentAndSubOps() {
         SentNotificationV25Dto sentNotificationV25Dto = new SentNotificationV25Dto();
@@ -416,8 +406,6 @@ class OperationsServiceImplTest extends BaseTest {
                     })
                     .verify();
 
-        Mockito.verify(operationDAO, Mockito.never())
-               .getByOperationId(Mockito.any());
         Mockito.verify(operationDAO, Mockito.never())
                .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());
     }

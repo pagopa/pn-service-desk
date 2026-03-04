@@ -4,6 +4,8 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationRecipientV24Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.mapper.AddressMapper;
 import it.pagopa.pn.service.desk.mapper.OperationMapper;
@@ -33,10 +35,12 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.service.desk.model.OperationStatusEnum.CREATING;
+import static it.pagopa.pn.service.desk.model.OperationStatusEnum.KO;
 import static it.pagopa.pn.service.desk.utility.Utility.CONTENT_TYPE_VALUE;
 
 @Slf4j
@@ -49,6 +53,7 @@ public class OperationsServiceImpl implements OperationsService {
     private final OperationDAO operationDAO;
     private final OperationsFileKeyDAO operationsFileKeyDAO;
     private final PnServiceDeskConfigs cfn;
+    private record IunResult(OperationItemResponse response, PnServiceDeskSubOperations subOp, String denomination) {}
 
     public OperationsServiceImpl(NotificationService notificationService, PnDataVaultClient dataVaultClient,
                                  PnSafeStorageClient safeStorageClient, PnDeliveryClient pnDeliveryClient, OperationDAO operationDAO,
@@ -141,93 +146,6 @@ public class OperationsServiceImpl implements OperationsService {
                                       );
     }
 
-    @Override
-    public Mono<CreateOperationsResponseV2> createActOperationV2(String xPagopaPnUid, CreateActOperationRequestV2 request) {
-        log.debug("xPagopaPnUid = {}, createActOperationRequestV2 = {}, CreateActOperationV2 received input",
-                  xPagopaPnUid, request);
-
-        String taxId = request.getTaxId();
-        String parentOperationId = Utility.generateOperationId(request.getTicketId(), request.getTicketOperationId());
-
-        List<String> iuns = request.getIun();
-        if (iuns != null && iuns.size() != new HashSet<>(iuns).size()) {
-            return Mono.error(new PnGenericException(DUPLICATE_IUN_IN_REQUEST, DUPLICATE_IUN_IN_REQUEST.getMessage(), HttpStatus.BAD_REQUEST));
-        }
-
-        return operationDAO.getByOperationId(parentOperationId)
-                .flatMap(existing -> {
-                    log.error("parentOperationId={}, Operation id is already present for the ticket id", parentOperationId);
-                    return Mono.<CreateOperationsResponseV2>error(new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST));
-                })
-                .switchIfEmpty(Mono.defer(() -> dataVaultClient.anonymized(taxId)
-                        .flatMap(recipientId -> {
-                            List<PnServiceDeskSubOperations> validSubOps = new ArrayList<>();
-                            List<OperationItemResponse> results = new ArrayList<>();
-                            AtomicReference<String> denominationRef = new AtomicReference<>();
-
-                            return Flux.fromIterable(request.getIun())
-                            .flatMap(iun ->
-                                    pnDeliveryClient.getSentNotificationPrivate(iun)
-                                            .map(sentNotification -> {
-                                                var matchingRecipient = sentNotification.getRecipients().stream()
-                                                        .filter(r -> StringUtils.equalsIgnoreCase(r.getTaxId(), taxId))
-                                                        .findFirst();
-                                                if (matchingRecipient.isPresent()) {
-                                                    denominationRef.compareAndSet(null, matchingRecipient.get().getDenomination());
-                                                    PnServiceDeskSubOperations subOp = OperationMapper.getInitialSubOperation(parentOperationId, iun, recipientId, request);
-                                                    validSubOps.add(subOp);
-                                                    return new OperationItemResponse()
-                                                            .iun(iun)
-                                                            .status(OperationStatusEnum.CREATING.toString());
-                                                } else {
-                                                    log.error("recipientId={}, iun={}, Tax ID from request does not match any recipient in the notification",
-                                                              recipientId, iun);
-                                                    return new OperationItemResponse()
-                                                            .iun(iun)
-                                                            .status("KO")
-                                                            .errorReason("Tax ID does not match any recipient of the notification");
-                                                }
-                                            })
-                                            .onErrorResume(ex -> {
-                                                log.error("recipientId={}, iun={}, errorReason={}, Error while calling Delivery service",
-                                                          recipientId, iun, ex.getMessage(), ex);
-                                                return Mono.just(new OperationItemResponse()
-                                                        .iun(iun)
-                                                        .status("KO")
-                                                        .errorReason(ex.getMessage()));
-                                            })
-                            )
-                            .collectList()
-                            .flatMap(itemResults -> {
-                                results.addAll(itemResults);
-                                if (validSubOps.isEmpty()) {
-                                    log.warn("parentOperationId={}, All IUNs failed validation, creating parent operation with KO status", parentOperationId);
-                                    PnServiceDeskOperations koParent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, new ArrayList<>());
-                                    koParent.setStatus("KO");
-                                    return operationDAO.createOperation(koParent)
-                                            .map(savedParent -> new CreateOperationsResponseV2()
-                                                    .operationId(savedParent.getOperationId())
-                                                    .results(results));
-                                }
-
-                                List<String> subOpIds = new ArrayList<>();
-                                validSubOps.forEach(sub -> subOpIds.add(sub.getOperationId()));
-
-                                PnServiceDeskOperations parent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, subOpIds);
-                                PnServiceDeskAddress address = AddressMapper.toActEntity(request.getAddress(), parentOperationId, cfn, denominationRef.get());
-
-                                return operationDAO.createParentOperationWithSubOpsAndAddress(parent, address, validSubOps)
-                                        .map(savedParent -> {
-                                            log.debug("parentOperationId={}, V2 parent operation created with {} sub-ops",
-                                                      parentOperationId, validSubOps.size());
-                                            return new CreateOperationsResponseV2()
-                                                    .operationId(savedParent.getOperationId())
-                                                    .results(results);
-                                        });
-                            });
-                })));
-    }
-
     private Mono<PnServiceDeskOperations> checkAndSaveOperation(Tuple2<PnServiceDeskOperations, PnServiceDeskAddress> operationAndAddress){
         log.debug("entityOperation = {}, entityAddress = {}, CheckAndSaveOperation received input", operationAndAddress.getT1(), operationAndAddress.getT2());
 
@@ -245,6 +163,85 @@ public class OperationsServiceImpl implements OperationsService {
                     return operationDAO.createOperationAndAddress(entityOperation, entityAddress);
                 }))
                 .thenReturn(entityOperation);
+    }
+
+    @Override
+    public Mono<CreateOperationsResponseV2> createActOperationV2(String xPagopaPnUid, CreateActOperationRequestV2 request) {
+        log.debug("xPagopaPnUid = {}, createActOperationRequestV2 = {}, CreateActOperationV2 received input", xPagopaPnUid, request);
+        String taxId = request.getTaxId();
+        String parentOperationId = Utility.generateOperationId(request.getTicketId(), request.getTicketOperationId());
+        return validateNoDuplicateIuns(request.getIun())
+                .then(ensureOperationNotExists(parentOperationId))
+                .then(dataVaultClient.anonymized(taxId))
+                .flatMap(recipientId -> processAllIuns(request, taxId, recipientId, parentOperationId));
+    }
+
+    private Mono<Void> validateNoDuplicateIuns(List<String> iuns) {
+        if (iuns != null && iuns.size() != new HashSet<>(iuns).size()) {
+            return Mono.error(new PnGenericException(DUPLICATE_IUN_IN_REQUEST, DUPLICATE_IUN_IN_REQUEST.getMessage(), HttpStatus.BAD_REQUEST));
+        }
+        return Mono.empty();
+    }
+
+    private Mono<Void> ensureOperationNotExists(String parentOperationId) {
+        return operationDAO.getByOperationId(parentOperationId)
+                .flatMap(existing -> {
+                    PnGenericException ex = new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST);
+                    log.error("response = {}, The operation id is already present for the ticket id", existing);
+                    return Mono.error(ex);
+                })
+                .then();
+    }
+
+    private Mono<CreateOperationsResponseV2> processAllIuns(CreateActOperationRequestV2 request, String taxId, String recipientId, String parentOperationId) {
+        return Flux.fromIterable(request.getIun())
+                .flatMap(iun -> processIun(iun, taxId, recipientId, parentOperationId, request))
+                .collectList()
+                .flatMap(iunResults -> persistParentOperation(request, recipientId, parentOperationId, iunResults));
+    }
+
+    private Mono<IunResult> processIun(String iun, String taxId, String recipientId, String parentOperationId, CreateActOperationRequestV2 request) {
+        return pnDeliveryClient.getSentNotificationPrivate(iun)
+                .map(sentNotification -> sentNotification.getRecipients().stream()
+                        .filter(r -> StringUtils.equalsIgnoreCase(r.getTaxId(), taxId))
+                        .findFirst()
+                        .map(recipient -> {
+                            PnServiceDeskSubOperations subOp = OperationMapper.getInitialSubOperation(parentOperationId, iun, recipientId, request);
+                            return new IunResult(new OperationItemResponse().iun(iun).status(CREATING.toString()), subOp, recipient.getDenomination());
+                        })
+                        .orElseGet(() -> {
+                            String errorMsg = "Tax ID from request does not match the Tax ID from the notification";
+                            log.error("recipientId={}, iun={}, {}", recipientId, iun, errorMsg);
+                            return new IunResult(new OperationItemResponse().iun(iun).status(KO.toString()).errorReason(errorMsg), null, null);
+                        }))
+                .onErrorResume(ex -> {
+                    log.error("recipientId={}, iun={}, errorReason={}, Error while calling Delivery notifications service", recipientId, iun, ex.getMessage(), ex);
+                    return Mono.just(new IunResult(new OperationItemResponse().iun(iun).status(KO.toString()).errorReason(ex.getMessage()), null, null));
+                });
+    }
+
+    private Mono<CreateOperationsResponseV2> persistParentOperation(CreateActOperationRequestV2 request, String recipientId, String parentOperationId, List<IunResult> iunResults) {
+        List<OperationItemResponse> responses = iunResults.stream().map(r -> r.response).toList();
+        List<PnServiceDeskSubOperations> validSubOps = iunResults.stream().filter(r -> r.subOp != null).map(r -> r.subOp).toList();
+
+        if (validSubOps.isEmpty()) {
+            log.warn("parentOperationId={}, All IUNs failed validation, creating parent operation with KO status", parentOperationId);
+            PnServiceDeskOperations koParent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, new ArrayList<>());
+            koParent.setStatus(KO.toString());
+            return operationDAO.createOperation(koParent)
+                    .map(saved -> new CreateOperationsResponseV2().operationId(saved.getOperationId()).results(responses));
+        }
+
+        String denomination = iunResults.stream().map(r -> r.denomination).filter(Objects::nonNull).findFirst().orElse(null);
+        List<String> subOpIds = validSubOps.stream().map(PnServiceDeskSubOperations::getOperationId).toList();
+        PnServiceDeskOperations parent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, subOpIds);
+        PnServiceDeskAddress address = AddressMapper.toActEntity(request.getAddress(), parentOperationId, cfn, denomination);
+
+        return operationDAO.createParentOperationWithSubOpsAndAddress(parent, address, validSubOps)
+                .map(saved -> {
+                    log.debug("parentOperationId={}, V2 parent operation created with {} sub-ops", parentOperationId, validSubOps.size());
+                    return new CreateOperationsResponseV2().operationId(saved.getOperationId()).results(responses);
+                });
     }
 
     @Override
