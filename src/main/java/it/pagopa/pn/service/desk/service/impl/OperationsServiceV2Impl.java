@@ -8,6 +8,7 @@ import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.service.OperationsServiceV2;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -38,7 +39,7 @@ public class OperationsServiceV2Impl implements OperationsServiceV2 {
                                return Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.NOT_FOUND));
                            }))
                            .doOnNext(op -> log.info("Operation with id {} found, status: {}", operationId, op.getStatus()))
-                           .filter(operation -> !operation.getIsSubOperation())
+                           .filter(operation -> !Boolean.TRUE.equals(operation.getIsSubOperation()))
                            .switchIfEmpty(Mono.defer(() -> {
                                log.warn("Operation is a sub-operation - operationId={}", operationId);
                                return Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.NOT_FOUND));
@@ -46,7 +47,7 @@ public class OperationsServiceV2Impl implements OperationsServiceV2 {
                            .flatMap(operation -> {
                                response.setStatus(operation.getStatus());
                                response.setErrorReason(operation.getErrorReason());
-                               return operation.getIun() != null
+                               return StringUtils.isNotBlank(operation.getIun())
                                        ? buildOperationResponseV1(operation, response).doOnSuccess( res -> log.info("getOperation completed for V1 operation - operationId={}, finalStatus={}", operationId, res.getStatus()))
                                        : Flux.fromIterable(operation.getSubOperationsIds())
                                           .flatMap(operationDAO::getByOperationId)
