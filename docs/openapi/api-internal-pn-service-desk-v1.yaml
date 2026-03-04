@@ -310,5 +310,40 @@ paths:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
+  '/service-desk/v2/operations/{operationId}':
+    get:
+      operationId: getOperationV2
+      description: >-
+        Recupera i dettagli di un operazione e delle sue sotto operazioni se presenti.
+      tags:
+        - OperationV2
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+        - name: operationId
+          in: path
+          required: true
+          description: ID dell'operation
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Dettaglio operation trovato.
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/GetOperationsResponseV2'
+        '404':
+          description: Operation non trovata.
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Errore lato server.
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
 security:                 # ONLY EXTERNAL
   - ApiKeyAuth: [] # use the same name as under securitySchemes    # ONLY EXTERNAL
