@@ -280,7 +280,7 @@
 							<typeMappings>
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
-							<inputSpec>${project.basedir}/docs/wsclient/pn-safe-storage/pn-safestorage-v1-api.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-ss/e46d61b9797bd4236e62ac4eca2aa4758d23f2b8/docs/openapi/pn-safestorage-v1.1-api.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiTests>false</generateApiTests>
