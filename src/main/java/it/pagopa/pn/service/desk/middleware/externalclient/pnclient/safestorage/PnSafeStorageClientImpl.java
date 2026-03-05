@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage;
 
-
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
@@ -18,19 +17,18 @@ import reactor.core.publisher.Mono;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_SAFE_STORAGE_BODY_NULL;
 
-
 @Component
 @Slf4j
 @CustomLog
 @AllArgsConstructor
 public class PnSafeStorageClientImpl implements PnSafeStorageClient {
+
     private static final String CHECKSUM = "SHA256";
     private static final String STATUS_SAVED = "SAVED";
 
     private PnServiceDeskConfigs pnServiceDeskConfig;
     private FileUploadApi fileUploadApi;
     private FileDownloadApi fileDownloadApi;
-
 
     @Override
     public Mono<FileCreationResponse> getPresignedUrl(VideoUploadRequest videoUploadRequest) {
@@ -54,19 +52,19 @@ public class PnSafeStorageClientImpl implements PnSafeStorageClient {
         }
         log.debug("Req params : {}", fileKey);
 
-        return fileDownloadApi.getFile(fileKey, this.pnServiceDeskConfig.getSafeStorageCxId(), false)
-                .switchIfEmpty(Mono.error(new PnGenericException(ERROR_SAFE_STORAGE_BODY_NULL, ERROR_SAFE_STORAGE_BODY_NULL.getMessage().concat(fileKey))))
-                .map(response -> {
-                    if(response.getDownload() != null && response.getDownload().getRetryAfter() != null) {
-                        throw new PnRetryStorageException(response.getDownload().getRetryAfter());
-                    }
-                    response.setKey(reqFileKey);
-                    return response;
-                })
-                .onErrorResume(WebClientResponseException.class, ex -> {
-                    log.error(ex.getResponseBodyAsString());
-                    return Mono.error(ex);
-                });
+        return fileDownloadApi.getFile(fileKey, this.pnServiceDeskConfig.getSafeStorageCxId(), false, false)
+                              .switchIfEmpty(Mono.error(new PnGenericException(ERROR_SAFE_STORAGE_BODY_NULL, ERROR_SAFE_STORAGE_BODY_NULL.getMessage().concat(fileKey))))
+                              .map(response -> {
+                                  if(response.getDownload() != null && response.getDownload().getRetryAfter() != null) {
+                                      throw new PnRetryStorageException(response.getDownload().getRetryAfter());
+                                  }
+                                  response.setKey(reqFileKey);
+                                  return response;
+                              })
+                              .onErrorResume(WebClientResponseException.class, ex -> {
+                                  log.error(ex.getResponseBodyAsString());
+                                  return Mono.error(ex);
+                              });
     }
 
 }
