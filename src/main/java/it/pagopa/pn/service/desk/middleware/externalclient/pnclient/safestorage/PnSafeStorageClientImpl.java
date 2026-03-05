@@ -54,7 +54,7 @@ public class PnSafeStorageClientImpl implements PnSafeStorageClient {
         }
         log.debug("Req params : {}", fileKey);
 
-        return fileDownloadApi.getFile(fileKey, this.pnServiceDeskConfig.getSafeStorageCxId(), false, false)
+        return fileDownloadApi.getFile(fileKey, this.pnServiceDeskConfig.getSafeStorageCxId(), false)
                 .switchIfEmpty(Mono.error(new PnGenericException(ERROR_SAFE_STORAGE_BODY_NULL, ERROR_SAFE_STORAGE_BODY_NULL.getMessage().concat(fileKey))))
                 .map(response -> {
                     if(response.getDownload() != null && response.getDownload().getRetryAfter() != null) {
