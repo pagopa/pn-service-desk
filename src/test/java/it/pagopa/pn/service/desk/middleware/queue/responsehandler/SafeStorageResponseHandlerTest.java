@@ -55,6 +55,7 @@ class SafeStorageResponseHandlerTest {
         op1.setOperationId("operationId");
         op1.setIun("Iun");
         op1.setIsSubOperation(false);
+        op1.setSubOperationsIds(null);
 
         PnServiceDeskOperations op2 = new PnServiceDeskOperations();
         op2.setOperationId("operationId");

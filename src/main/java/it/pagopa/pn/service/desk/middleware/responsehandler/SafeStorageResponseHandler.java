@@ -34,9 +34,9 @@ public class SafeStorageResponseHandler {
                             .flatMapMany(ofk ->
                                                  operationDAO.getByOperationId(ofk.getOperationId())
                                                              .flatMapMany(op ->
-                                                                                  op.getIun() != null && !op.getIsSubOperation()
-                                                                                          ? Flux.just(ofk.getOperationId())
-                                                                                          : Flux.fromIterable( Optional.ofNullable(op.getSubOperationsIds()).orElse(List.of()) )
+                                                                                  op.getSubOperationsIds() != null && !op.getSubOperationsIds().isEmpty()
+                                                                                          ? Flux.fromIterable(Optional.of(op.getSubOperationsIds()).orElse(List.of()))
+                                                                                          : Flux.just(ofk.getOperationId())
                                                                          )
                                         )
                             .flatMap(id ->
