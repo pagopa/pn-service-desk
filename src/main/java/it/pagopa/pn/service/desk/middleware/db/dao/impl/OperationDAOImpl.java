@@ -4,11 +4,9 @@ import it.pagopa.pn.service.desk.config.springbootcfg.AwsConfigsActivation;
 import it.pagopa.pn.service.desk.encryption.DataEncryption;
 import it.pagopa.pn.service.desk.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
-import it.pagopa.pn.service.desk.middleware.db.dao.SubOperationDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
-import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskSubOperations;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -24,18 +22,15 @@ import java.util.List;
 @Service
 public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implements OperationDAO {
     private final AddressDAO addressDAO;
-    private final SubOperationDAO subOperationDAO;
 
     protected OperationDAOImpl(DataEncryption kmsEncryption,
                                DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                DynamoDbAsyncClient dynamoDbAsyncClient,
                                AddressDAO addressDAO,
-                               SubOperationDAO subOperationDAO,
                                AwsConfigsActivation awsPropertiesConfig) {
         super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbOperationsTable(), PnServiceDeskOperations.class);
         this.addressDAO = addressDAO;
-        this.subOperationDAO = subOperationDAO;
     }
 
     @Override
@@ -55,11 +50,11 @@ public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implement
     @Override
     public Mono<PnServiceDeskOperations> createParentOperationWithSubOpsAndAddress(PnServiceDeskOperations parent,
                                                                                     PnServiceDeskAddress address,
-                                                                                    List<PnServiceDeskSubOperations> subOperations) {
+                                                                                    List<PnServiceDeskOperations> subOperations) {
         TransactWriteItemsEnhancedRequest.Builder builder = TransactWriteItemsEnhancedRequest.builder();
         this.createTransaction(builder, parent);
         this.addressDAO.createWithTransaction(builder, address);
-        subOperations.forEach(subOp -> subOperationDAO.createTransaction(builder, subOp));
+        subOperations.forEach(subOp -> this.createTransaction(builder, subOp));
         return Mono.fromFuture(super.putWithTransact(builder.build()).thenApply(response -> parent));
     }
 

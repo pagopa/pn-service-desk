@@ -14,7 +14,6 @@ import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
-import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskSubOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
@@ -53,7 +52,7 @@ public class OperationsServiceImpl implements OperationsService {
     private final OperationDAO operationDAO;
     private final OperationsFileKeyDAO operationsFileKeyDAO;
     private final PnServiceDeskConfigs cfn;
-    private record IunResult(OperationItemResponse response, PnServiceDeskSubOperations subOp, String denomination) {}
+    private record IunResult(OperationItemResponse response, PnServiceDeskOperations subOp, String denomination) {}
 
     public OperationsServiceImpl(NotificationService notificationService, PnDataVaultClient dataVaultClient,
                                  PnSafeStorageClient safeStorageClient, PnDeliveryClient pnDeliveryClient, OperationDAO operationDAO,
@@ -206,7 +205,7 @@ public class OperationsServiceImpl implements OperationsService {
                         .filter(r -> StringUtils.equalsIgnoreCase(r.getTaxId(), taxId))
                         .findFirst()
                         .map(recipient -> {
-                            PnServiceDeskSubOperations subOp = OperationMapper.getInitialSubOperation(parentOperationId, iun, recipientId, request);
+                            PnServiceDeskOperations subOp = OperationMapper.getInitialSubOperation(parentOperationId, iun, recipientId, request);
                             return new IunResult(new OperationItemResponse().iun(iun).status(CREATING.toString()), subOp, recipient.getDenomination());
                         })
                         .orElseGet(() -> {
@@ -222,7 +221,7 @@ public class OperationsServiceImpl implements OperationsService {
 
     private Mono<CreateOperationsResponseV2> persistParentOperation(CreateActOperationRequestV2 request, String recipientId, String parentOperationId, List<IunResult> iunResults) {
         List<OperationItemResponse> responses = iunResults.stream().map(r -> r.response).toList();
-        List<PnServiceDeskSubOperations> validSubOps = iunResults.stream().filter(r -> r.subOp != null).map(r -> r.subOp).toList();
+        List<PnServiceDeskOperations> validSubOps = iunResults.stream().filter(r -> r.subOp != null).map(r -> r.subOp).toList();
 
         if (validSubOps.isEmpty()) {
             log.warn("parentOperationId={}, All IUNs failed validation, creating parent operation with KO status", parentOperationId);
@@ -233,7 +232,7 @@ public class OperationsServiceImpl implements OperationsService {
         }
 
         String denomination = iunResults.stream().map(r -> r.denomination).filter(Objects::nonNull).findFirst().orElse(null);
-        List<String> subOpIds = validSubOps.stream().map(PnServiceDeskSubOperations::getOperationId).toList();
+        List<String> subOpIds = validSubOps.stream().map(PnServiceDeskOperations::getOperationId).toList();
         PnServiceDeskOperations parent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, subOpIds);
         PnServiceDeskAddress address = AddressMapper.toActEntity(request.getAddress(), parentOperationId, cfn, denomination);
 

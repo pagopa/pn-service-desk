@@ -5,7 +5,6 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
-import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskSubOperations;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.extern.slf4j.Slf4j;
@@ -121,11 +120,11 @@ public class OperationMapper {
         return pnServiceDeskOperations;
     }
 
-    public static PnServiceDeskSubOperations getInitialSubOperation(String parentOperationId,
-                                                                    String iun,
-                                                                    String recipientInternalId,
-                                                                    CreateActOperationRequestV2 request) {
-        PnServiceDeskSubOperations subOperation = new PnServiceDeskSubOperations();
+    public static PnServiceDeskOperations getInitialSubOperation(String parentOperationId,
+                                                                  String iun,
+                                                                  String recipientInternalId,
+                                                                  CreateActOperationRequestV2 request) {
+        PnServiceDeskOperations subOperation = new PnServiceDeskOperations();
         subOperation.setOperationId("SUB#" + parentOperationId + "#" + iun);
         subOperation.setTicketId(request.getTicketId());
         subOperation.setStatus(OperationStatusEnum.CREATING.toString());

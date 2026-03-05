@@ -78,8 +78,7 @@ class OperationDAOImplTest extends BaseTest {
         Mockito.when(dataEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
         Mockito.when(dataEncryption.decode(Mockito.any())).thenReturn("returnOk");
 
-        it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskSubOperations subOp =
-                new it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskSubOperations();
+        PnServiceDeskOperations subOp = new PnServiceDeskOperations();
         subOp.setOperationId("SUB#1234#IUN1");
         subOp.setIsSubOperation(true);
         subOp.setStatus("CREATING");
