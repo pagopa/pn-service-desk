@@ -4,6 +4,8 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationRecipientV24Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.mapper.AddressMapper;
 import it.pagopa.pn.service.desk.mapper.OperationMapper;
@@ -16,21 +18,28 @@ import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.Pn
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.safestorage.PnSafeStorageClient;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
-import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import it.pagopa.pn.service.desk.service.OperationsService;
+import it.pagopa.pn.service.desk.utility.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.service.desk.model.OperationStatusEnum.CREATING;
+import static it.pagopa.pn.service.desk.model.OperationStatusEnum.KO;
 import static it.pagopa.pn.service.desk.utility.Utility.CONTENT_TYPE_VALUE;
 
 @Slf4j
@@ -43,17 +52,11 @@ public class OperationsServiceImpl implements OperationsService {
     private final OperationDAO operationDAO;
     private final OperationsFileKeyDAO operationsFileKeyDAO;
     private final PnServiceDeskConfigs cfn;
-    private final AuditLogService auditLogService;
-    private static final String ERROR_MESSAGE_NO_UNREACHABLE_NOTIFICATIONS = "errorReason = {}, no unreachable notifications found";
-    private static final String ERROR_MESSAGE_OPERATION_ALREADY_PRESENT = "errorReason = {}, no unreachable notifications found";
-    private static final String ERROR_MESSAGE_INVALID_CONTENT_TYPE = "errorReason = {}, invalid content type";
-    private static final String ERROR_MESSAGE_SAFE_STORAGE_FILE_LOADING = "errorReason = {}, file loading";
-    private static final String ERROR_MESSAGE_RECOVERING_FILE = "errorReason = {}, error during file recover";
+    private record IunResult(OperationItemResponse response, PnServiceDeskOperations subOp, String denomination) {}
 
     public OperationsServiceImpl(NotificationService notificationService, PnDataVaultClient dataVaultClient,
                                  PnSafeStorageClient safeStorageClient, PnDeliveryClient pnDeliveryClient, OperationDAO operationDAO,
-                                 OperationsFileKeyDAO operationsFileKeyDAO, PnServiceDeskConfigs cfn,
-                                 AuditLogService auditLogService) {
+                                 OperationsFileKeyDAO operationsFileKeyDAO, PnServiceDeskConfigs cfn) {
         this.notificationService = notificationService;
         this.dataVaultClient = dataVaultClient;
         this.safeStorageClient = safeStorageClient;
@@ -61,7 +64,6 @@ public class OperationsServiceImpl implements OperationsService {
         this.operationDAO = operationDAO;
         this.operationsFileKeyDAO = operationsFileKeyDAO;
         this.cfn = cfn;
-        this.auditLogService = auditLogService;
     }
 
 
@@ -160,6 +162,85 @@ public class OperationsServiceImpl implements OperationsService {
                     return operationDAO.createOperationAndAddress(entityOperation, entityAddress);
                 }))
                 .thenReturn(entityOperation);
+    }
+
+    @Override
+    public Mono<CreateOperationsResponseV2> createActOperationV2(String xPagopaPnUid, CreateActOperationRequestV2 request) {
+        log.debug("xPagopaPnUid = {}, createActOperationRequestV2 = {}, CreateActOperationV2 received input", xPagopaPnUid, request);
+        String taxId = request.getTaxId();
+        String parentOperationId = Utility.generateOperationId(request.getTicketId(), request.getTicketOperationId());
+        return validateNoDuplicateIuns(request.getIun())
+                .then(ensureOperationNotExists(parentOperationId))
+                .then(dataVaultClient.anonymized(taxId))
+                .flatMap(recipientId -> processAllIuns(request, taxId, recipientId, parentOperationId));
+    }
+
+    private Mono<Void> validateNoDuplicateIuns(List<String> iuns) {
+        if (iuns != null && iuns.size() != new HashSet<>(iuns).size()) {
+            return Mono.error(new PnGenericException(DUPLICATE_IUN_IN_REQUEST, DUPLICATE_IUN_IN_REQUEST.getMessage(), HttpStatus.BAD_REQUEST));
+        }
+        return Mono.empty();
+    }
+
+    private Mono<Void> ensureOperationNotExists(String parentOperationId) {
+        return operationDAO.getByOperationId(parentOperationId)
+                .flatMap(existing -> {
+                    PnGenericException ex = new PnGenericException(OPERATION_ID_IS_PRESENT, OPERATION_ID_IS_PRESENT.getMessage(), HttpStatus.BAD_REQUEST);
+                    log.error("response = {}, The operation id is already present for the ticket id", existing);
+                    return Mono.error(ex);
+                })
+                .then();
+    }
+
+    private Mono<CreateOperationsResponseV2> processAllIuns(CreateActOperationRequestV2 request, String taxId, String recipientId, String parentOperationId) {
+        return Flux.fromIterable(request.getIun())
+                .flatMap(iun -> processIun(iun, taxId, recipientId, parentOperationId, request))
+                .collectList()
+                .flatMap(iunResults -> persistParentOperation(request, recipientId, parentOperationId, iunResults));
+    }
+
+    private Mono<IunResult> processIun(String iun, String taxId, String recipientId, String parentOperationId, CreateActOperationRequestV2 request) {
+        return pnDeliveryClient.getSentNotificationPrivate(iun)
+                .map(sentNotification -> sentNotification.getRecipients().stream()
+                        .filter(r -> StringUtils.equalsIgnoreCase(r.getTaxId(), taxId))
+                        .findFirst()
+                        .map(recipient -> {
+                            PnServiceDeskOperations subOp = OperationMapper.getInitialSubOperation(parentOperationId, iun, recipientId, request);
+                            return new IunResult(new OperationItemResponse().iun(iun).status(CREATING.toString()), subOp, recipient.getDenomination());
+                        })
+                        .orElseGet(() -> {
+                            String errorMsg = "Tax ID from request does not match the Tax ID from the notification";
+                            log.error("recipientId={}, iun={}, {}", recipientId, iun, errorMsg);
+                            return new IunResult(new OperationItemResponse().iun(iun).status(KO.toString()).errorReason(errorMsg), null, null);
+                        }))
+                .onErrorResume(ex -> {
+                    log.error("recipientId={}, iun={}, errorReason={}, Error while calling Delivery notifications service", recipientId, iun, ex.getMessage(), ex);
+                    return Mono.just(new IunResult(new OperationItemResponse().iun(iun).status(KO.toString()).errorReason(ex.getMessage()), null, null));
+                });
+    }
+
+    private Mono<CreateOperationsResponseV2> persistParentOperation(CreateActOperationRequestV2 request, String recipientId, String parentOperationId, List<IunResult> iunResults) {
+        List<OperationItemResponse> responses = iunResults.stream().map(r -> r.response).toList();
+        List<PnServiceDeskOperations> validSubOps = iunResults.stream().filter(r -> r.subOp != null).map(r -> r.subOp).toList();
+
+        if (validSubOps.isEmpty()) {
+            log.warn("parentOperationId={}, All IUNs failed validation, creating parent operation with KO status", parentOperationId);
+            PnServiceDeskOperations koParent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, new ArrayList<>());
+            koParent.setStatus(KO.toString());
+            return operationDAO.createOperation(koParent)
+                    .map(saved -> new CreateOperationsResponseV2().operationId(saved.getOperationId()).results(responses));
+        }
+
+        String denomination = iunResults.stream().map(r -> r.denomination).filter(Objects::nonNull).findFirst().orElse(null);
+        List<String> subOpIds = validSubOps.stream().map(PnServiceDeskOperations::getOperationId).toList();
+        PnServiceDeskOperations parent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, subOpIds);
+        PnServiceDeskAddress address = AddressMapper.toActEntity(request.getAddress(), parentOperationId, cfn, denomination);
+
+        return operationDAO.createParentOperationWithSubOpsAndAddress(parent, address, validSubOps)
+                .map(saved -> {
+                    log.debug("parentOperationId={}, V2 parent operation created with {} sub-ops", parentOperationId, validSubOps.size());
+                    return new CreateOperationsResponseV2().operationId(saved.getOperationId()).results(responses);
+                });
     }
 
     @Override

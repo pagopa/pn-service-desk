@@ -132,7 +132,7 @@ class OperationsServiceImplTest extends BaseTest {
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
         StepVerifier.create(service.createOperation("1234", getCreateOperationRequest()))
                 .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(OPERATION_ID_IS_PRESENT, ((PnGenericException) ex).getExceptionType());
                     return true;
                 }).verify();
@@ -152,7 +152,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", videoUploadRequest))
                 .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(ERROR_CONTENT_TYPE, ((PnGenericException) ex).getExceptionType());
                     return true;
                 }).verify();
@@ -165,7 +165,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()))
                 .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(OPERATION_IS_NOT_PRESENT, ((PnGenericException) ex).getExceptionType());
                     return true;
                 }).verify();
@@ -178,7 +178,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()))
                 .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(SAFE_STORAGE_FILE_LOADING, ((PnGenericException) ex).getExceptionType());
                     return true;
                 }).verify();
@@ -191,7 +191,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.presignedUrlVideoUpload("1234", "1234", getVideoUploadRequest()))
                 .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(ERROR_DURING_RECOVERING_FILE, ((PnGenericException) ex).getExceptionType());
                     return true;
                 }).verify();
@@ -330,7 +330,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
                     .expectErrorSatisfies(ex -> {
-                        assertTrue(ex instanceof PnGenericException);
+                        assertInstanceOf(PnGenericException.class, ex);
                         assertTrue(ex.getMessage().contains("Tax ID from request does not match"));
                     })
                     .verify();
@@ -345,7 +345,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.createActOperation("someUid", createActOperationRequest))
                     .expectErrorSatisfies(ex -> {
-                        assertTrue(ex instanceof PnGenericException);
+                        assertInstanceOf(PnGenericException.class, ex);
                         assertTrue(ex.getMessage().contains("Simulated client error"));
                     })
                     .verify();
@@ -365,13 +365,178 @@ class OperationsServiceImplTest extends BaseTest {
         return request;
     }
 
+    @Test
+    void createActOperationV2_AllValid_CreatesParentAndSubOps() {
+        SentNotificationV25Dto sentNotificationV25Dto = new SentNotificationV25Dto();
+        NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
+        recipient.setTaxId("AAAAAA00A00A000A");
+        sentNotificationV25Dto.setRecipients(List.of(recipient));
+        sentNotificationV25Dto.setDocumentsAvailable(true);
 
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
+               .thenReturn(Mono.just(sentNotificationV25Dto));
+        Mockito.when(operationDAO.createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just(pnServiceDeskOperations));
 
+        CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
 
+        StepVerifier.create(service.createActOperationV2("uid", request))
+                    .assertNext(response -> {
+                        assertNotNull(response);
+                        assertNotNull(response.getOperationId());
+                        assertNotNull(response.getResults());
+                        assertEquals(2, response.getResults().size());
+                        response.getResults().forEach(r -> assertEquals("CREATING", r.getStatus()));
+                    })
+                    .verifyComplete();
+    }
 
+    @Test
+    void createActOperationV2_DuplicateIun_Returns400() {
+        CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
+        request.setIun(List.of("IUN1", "IUN2", "IUN1"));
 
+        StepVerifier.create(service.createActOperationV2("uid", request))
+                    .expectErrorMatches(ex -> {
+                        assertInstanceOf(PnGenericException.class, ex);
+                        assertEquals(DUPLICATE_IUN_IN_REQUEST, ((PnGenericException) ex).getExceptionType());
+                        assertEquals(HttpStatus.BAD_REQUEST, ((PnGenericException) ex).getHttpStatus());
+                        return true;
+                    })
+                    .verify();
 
+        Mockito.verify(operationDAO, Mockito.never())
+               .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());
+    }
 
+    @Test
+    void createActOperationV2_DuplicateOperationId_Returns400() {
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
 
+        StepVerifier.create(service.createActOperationV2("uid", getCreateActOperationRequestV2()))
+                    .expectErrorMatches(ex -> {
+                        assertInstanceOf(PnGenericException.class, ex);
+                        assertEquals(OPERATION_ID_IS_PRESENT, ((PnGenericException) ex).getExceptionType());
+                        assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ((PnGenericException) ex).getHttpStatus());
+                        return true;
+                    })
+                    .verify();
+
+        Mockito.verify(operationDAO, Mockito.never())
+               .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void createActOperationV2_PartialValid_CreatesWithValidSubOpsOnly() {
+        SentNotificationV25Dto validNotification = new SentNotificationV25Dto();
+        NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
+        recipient.setTaxId("AAAAAA00A00A000A");
+        validNotification.setRecipients(List.of(recipient));
+        validNotification.setDocumentsAvailable(true);
+
+        SentNotificationV25Dto mismatchNotification = new SentNotificationV25Dto();
+        NotificationRecipientV24Dto mismatchRecipient = new NotificationRecipientV24Dto();
+        mismatchRecipient.setTaxId("DIFFERENT_TAX_ID");
+        mismatchNotification.setRecipients(List.of(mismatchRecipient));
+        mismatchNotification.setDocumentsAvailable(true);
+
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate("IUN1"))
+               .thenReturn(Mono.just(validNotification));
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate("IUN2"))
+               .thenReturn(Mono.just(mismatchNotification));
+        Mockito.when(operationDAO.createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+               .thenReturn(Mono.just(pnServiceDeskOperations));
+
+        CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
+
+        StepVerifier.create(service.createActOperationV2("uid", request))
+                    .assertNext(response -> {
+                        assertNotNull(response);
+                        assertNotNull(response.getResults());
+                        assertEquals(2, response.getResults().size());
+                        long okCount = response.getResults().stream().filter(r -> "CREATING".equals(r.getStatus())).count();
+                        long koCount = response.getResults().stream().filter(r -> "KO".equals(r.getStatus())).count();
+                        assertEquals(1, okCount);
+                        assertEquals(1, koCount);
+                    })
+                    .verifyComplete();
+    }
+
+    @Test
+    void createActOperationV2_AllFail_CreatesParentWithKoStatus() {
+        SentNotificationV25Dto mismatchNotification = new SentNotificationV25Dto();
+        NotificationRecipientV24Dto mismatchRecipient = new NotificationRecipientV24Dto();
+        mismatchRecipient.setTaxId("DIFFERENT_TAX_ID");
+        mismatchNotification.setRecipients(List.of(mismatchRecipient));
+        mismatchNotification.setDocumentsAvailable(true);
+
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
+               .thenReturn(Mono.just(mismatchNotification));
+        Mockito.when(operationDAO.createOperation(Mockito.any()))
+               .thenReturn(Mono.just(pnServiceDeskOperations));
+
+        CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
+
+        StepVerifier.create(service.createActOperationV2("uid", request))
+                    .assertNext(response -> {
+                        assertNotNull(response);
+                        assertNotNull(response.getResults());
+                        assertEquals(2, response.getResults().size());
+                        response.getResults().forEach(r -> assertEquals("KO", r.getStatus()));
+                    })
+                    .verifyComplete();
+
+        Mockito.verify(operationDAO).createOperation(
+                Mockito.argThat(parent -> OperationStatusEnum.KO.toString().equals(parent.getStatus())
+                        && parent.getSubOperationsIds().isEmpty())
+        );
+        Mockito.verify(operationDAO, Mockito.never())
+               .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void createActOperationV2_DeliveryClientError_MarksIunAsKoAndCreatesParent() {
+        Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
+               .thenReturn(Mono.error(new RuntimeException("Delivery service unavailable")));
+        Mockito.when(operationDAO.createOperation(Mockito.any()))
+               .thenReturn(Mono.just(pnServiceDeskOperations));
+
+        CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
+
+        StepVerifier.create(service.createActOperationV2("uid", request))
+                    .assertNext(response -> {
+                        assertNotNull(response);
+                        assertNotNull(response.getResults());
+                        assertEquals(2, response.getResults().size());
+                        response.getResults().forEach(r -> {
+                            assertEquals("KO", r.getStatus());
+                            assertNotNull(r.getErrorReason());
+                        });
+                    })
+                    .verifyComplete();
+
+        Mockito.verify(operationDAO).createOperation(
+                Mockito.argThat(parent -> OperationStatusEnum.KO.toString().equals(parent.getStatus())
+                        && parent.getSubOperationsIds().isEmpty())
+        );
+        Mockito.verify(operationDAO, Mockito.never())
+               .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    private CreateActOperationRequestV2 getCreateActOperationRequestV2() {
+        CreateActOperationRequestV2 request = new CreateActOperationRequestV2();
+        request.setTaxId("AAAAAA00A00A000A");
+        request.setIun(List.of("IUN1", "IUN2"));
+        request.setTicketId("ticket123");
+        request.setTicketOperationId("op123");
+        request.setTicketDate("2024-01-01");
+        request.setVrDate("2024-01-02");
+        request.setAddress(new ActDigitalAddress().address("test@test.com").type(ActDigitalAddress.TypeEnum.EMAIL));
+        return request;
+    }
 
 }
