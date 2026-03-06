@@ -249,6 +249,7 @@ public class OperationsServiceImpl implements OperationsService {
 
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
                 .flatMapMany(operationDAO::searchOperationsFromRecipientInternalId)
+                .filter(operation -> !Boolean.TRUE.equals(operation.getIsSubOperation()))
                 .map(operationResponseMapper -> OperationMapper.operationResponseMapper(cfn, operationResponseMapper, searchNotificationRequest.getTaxId()))
                 .collectSortedList((op1, op2) ->
                         (op2.getOperationUpdateTimestamp() != null ? op2.getOperationUpdateTimestamp()  : OffsetDateTime.now())
