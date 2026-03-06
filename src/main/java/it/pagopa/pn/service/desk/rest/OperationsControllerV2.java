@@ -17,7 +17,7 @@ public class OperationsControllerV2 implements OperationV2Api {
     private final OperationsServiceV2 operationServiceV2;
 
     @Override
-    public Mono<ResponseEntity<GetOperationsResponseV2>> getOperationV2(String xPagopaPnUid, String operationId, ServerWebExchange exchange) {
+    public Mono<ResponseEntity<GetOperationsResponseV2>> getOperationV2(String operationId, ServerWebExchange exchange) {
         return Mono.just(operationId)
                    .flatMap(operationServiceV2::getOperation)
                 .map(response -> ResponseEntity.status(HttpStatus.OK).body(response));

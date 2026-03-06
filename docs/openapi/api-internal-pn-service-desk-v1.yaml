@@ -318,13 +318,13 @@ paths:
       tags:
         - OperationV2
       parameters:
-        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
         - name: operationId
           in: path
           required: true
           description: ID dell'operation
           schema:
             type: string
+            maxLength: 32
       responses:
         '200':
           description: Dettaglio operation trovato.
@@ -332,6 +332,18 @@ paths:
             application/json:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/GetOperationsResponseV2'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '403':
+          description: Permissions are not granted for the requested resource
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
         '404':
           description: Operation non trovata.
           content:
