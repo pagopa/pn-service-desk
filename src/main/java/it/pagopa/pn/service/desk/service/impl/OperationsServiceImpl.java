@@ -208,22 +208,20 @@ public class OperationsServiceImpl implements OperationsService {
                             PnServiceDeskOperations subOp = OperationMapper.getInitialSubOperation(parentOperationId, iun, recipientId, request);
                             return new IunResult(new OperationItemResponse().iun(iun).status(CREATING.toString()), subOp, recipient.getDenomination());
                         })
-                        .orElseGet(() -> {
-                            String errorMsg = "Tax ID from request does not match the Tax ID from the notification";
-                            log.error("recipientId={}, iun={}, {}", recipientId, iun, errorMsg);
-                            return new IunResult(new OperationItemResponse().iun(iun).status(KO.toString()).errorReason(errorMsg), null, null);
-                        }))
+                        .orElseThrow(() -> new PnGenericException(NOT_NOTIFICATION_FOUND, "Tax ID from request does not match the Tax ID from the notification")))
                 .onErrorResume(ex -> {
-                    log.error("recipientId={}, iun={}, errorReason={}, Error while calling Delivery notifications service", recipientId, iun, ex.getMessage(), ex);
-                    return Mono.just(new IunResult(new OperationItemResponse().iun(iun).status(KO.toString()).errorReason(ex.getMessage()), null, null));
+                    log.error("recipientId={}, iun={}, errorReason={}, Error while creating subOperation", recipientId, iun, ex.getMessage(), ex);
+                    PnServiceDeskOperations subOp = OperationMapper.getFailedSubOperation(parentOperationId, iun, recipientId, request);
+                    return Mono.just(new IunResult(new OperationItemResponse().iun(iun).status(KO.toString()).errorReason(ex.getMessage()), subOp, null));
                 });
     }
 
     private Mono<CreateOperationsResponseV2> persistParentOperation(CreateActOperationRequestV2 request, String recipientId, String parentOperationId, List<IunResult> iunResults) {
         List<OperationItemResponse> responses = iunResults.stream().map(r -> r.response).toList();
-        List<PnServiceDeskOperations> validSubOps = iunResults.stream().filter(r -> r.subOp != null).map(r -> r.subOp).toList();
+        List<PnServiceDeskOperations> subOps = iunResults.stream().filter(r -> r.subOp != null).map(r -> r.subOp).toList();
+        boolean allSubOpsFailed = subOps.stream().allMatch(subOp -> KO.toString().equals(subOp.getStatus()));
 
-        if (validSubOps.isEmpty()) {
+        if (allSubOpsFailed) {
             log.warn("parentOperationId={}, All IUNs failed validation, creating parent operation with KO status", parentOperationId);
             PnServiceDeskOperations koParent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, new ArrayList<>());
             koParent.setStatus(KO.toString());
@@ -232,13 +230,13 @@ public class OperationsServiceImpl implements OperationsService {
         }
 
         String denomination = iunResults.stream().map(r -> r.denomination).filter(Objects::nonNull).findFirst().orElse(null);
-        List<String> subOpIds = validSubOps.stream().map(PnServiceDeskOperations::getOperationId).toList();
+        List<String> subOpIds = subOps.stream().map(PnServiceDeskOperations::getOperationId).toList();
         PnServiceDeskOperations parent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, subOpIds);
         PnServiceDeskAddress address = AddressMapper.toActEntity(request.getAddress(), parentOperationId, cfn, denomination);
 
-        return operationDAO.createParentOperationWithSubOpsAndAddress(parent, address, validSubOps)
+        return operationDAO.createParentOperationWithSubOpsAndAddress(parent, address, subOps)
                 .map(saved -> {
-                    log.debug("parentOperationId={}, V2 parent operation created with {} sub-ops", parentOperationId, validSubOps.size());
+                    log.debug("parentOperationId={}, V2 parent operation created with {} sub-ops", parentOperationId, subOps.size());
                     return new CreateOperationsResponseV2().operationId(saved.getOperationId()).results(responses);
                 });
     }

@@ -124,10 +124,25 @@ public class OperationMapper {
                                                                   String iun,
                                                                   String recipientInternalId,
                                                                   CreateActOperationRequestV2 request) {
+        return createSubOperation(parentOperationId, iun, recipientInternalId, OperationStatusEnum.CREATING, request);
+    }
+
+    public static PnServiceDeskOperations getFailedSubOperation(String parentOperationId,
+                                                                String iun,
+                                                                String recipientInternalId,
+                                                                CreateActOperationRequestV2 request) {
+        return createSubOperation(parentOperationId, iun, recipientInternalId, OperationStatusEnum.KO, request);
+    }
+
+    private static PnServiceDeskOperations createSubOperation(String parentOperationId,
+                                                             String iun,
+                                                             String recipientInternalId,
+                                                             OperationStatusEnum status,
+                                                             CreateActOperationRequestV2 request) {
         PnServiceDeskOperations subOperation = new PnServiceDeskOperations();
         subOperation.setOperationId("SUB#" + parentOperationId + "#" + iun);
         subOperation.setTicketId(request.getTicketId());
-        subOperation.setStatus(OperationStatusEnum.CREATING.toString());
+        subOperation.setStatus(status.toString());
         subOperation.setOperationStartDate(Instant.now());
         subOperation.setOperationLastUpdateDate(Instant.now());
         subOperation.setRecipientInternalId(recipientInternalId);
