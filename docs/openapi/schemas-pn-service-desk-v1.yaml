@@ -2049,3 +2049,28 @@ components:
           description: Eventi avvenuti nello stato
           items:
             $ref: "#/components/schemas/TimelineElement"
+
+    GetOperationsResponseV2:
+      allOf:
+        - $ref: '#/components/schemas/OperationDetail'
+      properties:
+        subOperations:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationDetail'
+
+    OperationDetail:
+      type: object
+      properties:
+        iun:
+          type: string
+          description: Lo IUN a cui si riferisce il risultato.
+        status:
+          type: string
+          description: Stato dell'operazione per questo specifico IUN.
+        errorReason:
+          type: string
+          description: Motivo del fallimento operazione
+      required:
+        - iun
+        - status

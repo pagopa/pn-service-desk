@@ -102,6 +102,42 @@ public class OperationMapper {
         return operationResponse;
     }
 
+    public static PnServiceDeskOperations getInitialParentOperation(CreateActOperationRequestV2 request,
+                                                                    String recipientInternalId,
+                                                                    String operationId,
+                                                                    List<String> subOperationIds) {
+        PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
+        pnServiceDeskOperations.setOperationId(operationId);
+        pnServiceDeskOperations.setTicketId(request.getTicketId());
+        pnServiceDeskOperations.setStatus(OperationStatusEnum.CREATING.toString());
+        pnServiceDeskOperations.setOperationStartDate(Instant.now());
+        pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
+        pnServiceDeskOperations.setRecipientInternalId(recipientInternalId);
+        pnServiceDeskOperations.setTicketDate(request.getTicketDate());
+        pnServiceDeskOperations.setVrDate(request.getVrDate());
+        pnServiceDeskOperations.setIsSubOperation(false);
+        pnServiceDeskOperations.setSubOperationsIds(subOperationIds);
+        return pnServiceDeskOperations;
+    }
+
+    public static PnServiceDeskOperations getInitialSubOperation(String parentOperationId,
+                                                                  String iun,
+                                                                  String recipientInternalId,
+                                                                  CreateActOperationRequestV2 request) {
+        PnServiceDeskOperations subOperation = new PnServiceDeskOperations();
+        subOperation.setOperationId("SUB#" + parentOperationId + "#" + iun);
+        subOperation.setTicketId(request.getTicketId());
+        subOperation.setStatus(OperationStatusEnum.CREATING.toString());
+        subOperation.setOperationStartDate(Instant.now());
+        subOperation.setOperationLastUpdateDate(Instant.now());
+        subOperation.setRecipientInternalId(recipientInternalId);
+        subOperation.setTicketDate(request.getTicketDate());
+        subOperation.setVrDate(request.getVrDate());
+        subOperation.setIun(iun);
+        subOperation.setIsSubOperation(true);
+        return subOperation;
+    }
+
     public static PnServiceDeskOperations copyOperation (PnServiceDeskOperations operations){
         PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
         BeanUtils.copyProperties(operations, pnServiceDeskOperations);

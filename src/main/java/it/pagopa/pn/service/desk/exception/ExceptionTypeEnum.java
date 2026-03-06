@@ -18,6 +18,7 @@ public enum ExceptionTypeEnum {
     ERROR_DURING_VIDEO_UPLOAD("ERROR_DURING_VIDEO_UPLOAD", "Errore durante l'upload del video"),
     ERROR_PRESIGNED_URL_VIDEO_UPLOAD("ERROR_PRESIGNED_URL_UPLOAD", "ERROR_PRESIGNED_URL_UPLOAD"),
     ERROR_DURING_RECOVERING_FILE("ERROR_DURING_RECOVERING_FILE", "Errore durante il recupero del file"),
+    ERROR_DURING_GET_OPERATION_V2("ERROR_DURING_GET_OPERATION_V2", "Errore durante il recupero dell'operation"),
     ERROR_DURING_PAPER_SEND("ERROR_DURING_PAPER_SEND", "Errore durante la chiamata send di paperchannel "),
     SAFE_STORAGE_FILE_LOADING("SAFE_STORAGE_FILE_LOADING", "Caricamento in corso"),
     ENTITY_NOT_FOUND("ENTITY_NOT_FOUND", "The searched entity is not present in the Database "),
@@ -44,7 +45,8 @@ public enum ExceptionTypeEnum {
     ERROR_ON_MANDATE_CLIENT("ERROR_ON_MANDATE_CLIENT", "Error in Mandate failed service"),
     ERROR_ON_KEYS_MANAGER_CLIENT("ERROR_ON_KEYS_MANAGER_CLIENT","Error in Keys Manager failed service"),
     ERROR_ON_EXTERNAL_REGISTRIES_CLIENT("ERROR_ON_EXTERNAL_REGISTRIES_CLIENT","Error in External Registries failed service"),
-    TAX_ID_NOT_FOUND("TAX_ID_NOT_FOUND", "TaxId does not match for any recipient");
+    TAX_ID_NOT_FOUND("TAX_ID_NOT_FOUND", "TaxId does not match for any recipient"),
+    DUPLICATE_IUN_IN_REQUEST("DUPLICATE_IUN_IN_REQUEST", "The IUN list contains duplicate values");
 
     private final String title;
     private final String message;
