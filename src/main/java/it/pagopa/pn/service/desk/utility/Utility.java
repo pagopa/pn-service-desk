@@ -86,7 +86,7 @@ public static OperationStatusEnum getEcOperationStatusFrom(ProgressEventCategory
      * so the parentOperationId is extracted via string parsing (no extra DynamoDB call needed).
      * Regular IDs pass through cleanUpOperationId() unchanged.
      */
-    public static String resolveAddressOperationId(String operationId) {
+    public static String resolveAddressOperationId(@NotNull String operationId) {
         if (operationId != null && operationId.startsWith("SUB#")) {
             String withoutPrefix = operationId.substring("SUB#".length());
             int iunSeparator = withoutPrefix.indexOf('#');

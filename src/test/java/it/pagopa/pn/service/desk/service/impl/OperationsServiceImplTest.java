@@ -57,6 +57,7 @@ class OperationsServiceImplTest extends BaseTest {
 
 
     private final PnServiceDeskOperations pnServiceDeskOperations =new PnServiceDeskOperations();
+    private final PnServiceDeskOperations operationV2 =new PnServiceDeskOperations();
     private final PnServiceDeskOperationFileKey pnServiceDeskOperationFileKey= new PnServiceDeskOperationFileKey();
     private final FileCreationResponse fileCreationResponse=new FileCreationResponse();
 
@@ -84,6 +85,11 @@ class OperationsServiceImplTest extends BaseTest {
         fileCreationResponse.setKey("123");
         fileCreationResponse.setUploadUrl("test");
         fileCreationResponse.setSecret("secret");
+
+        operationV2.setOperationId("op123");
+        operationV2.setStatus("WARNING");
+        operationV2.setErrorReason(null);
+        operationV2.setIsSubOperation(false);
 
         Mockito.when(dataVaultClient.anonymized(Mockito.any())).thenReturn(Mono.just("abcdefghilmno"));
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
@@ -525,6 +531,114 @@ class OperationsServiceImplTest extends BaseTest {
         );
         Mockito.verify(operationDAO, Mockito.never())
                .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void getOperation_V1Operation_ReturnsResponse() {
+
+        operationV2.setIun("iun123");
+
+        Mockito.when(operationDAO.getByOperationId("op123"))
+                .thenReturn(Mono.just(operationV2));
+
+        StepVerifier.create(service.getOperationV2("op123"))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertEquals("WARNING", response.getStatus());
+                    assertEquals("iun123", response.getIun());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void getOperation_WithSubOperations_ReturnsSubOperations() {
+
+        operationV2.setSubOperationsIds(List.of("sub1", "sub2"));
+
+        PnServiceDeskOperations sub1 = new PnServiceDeskOperations();
+        sub1.setStatus("OK");
+        sub1.setIun("iun1");
+        sub1.setOperationId("sub1");
+
+        PnServiceDeskOperations sub2 = new PnServiceDeskOperations();
+        sub2.setStatus("KO");
+        sub2.setErrorReason("ERROR");
+        sub2.setIun("iun2");
+        sub2.setOperationId("sub2");
+
+        Mockito.when(operationDAO.getByOperationId("op123"))
+                .thenReturn(Mono.just(operationV2));
+
+        Mockito.when(operationDAO.getByOperationId("sub1"))
+                .thenReturn(Mono.just(sub1));
+
+        Mockito.when(operationDAO.getByOperationId("sub2"))
+                .thenReturn(Mono.just(sub2));
+
+        StepVerifier.create(service.getOperationV2("op123"))
+                .assertNext(response -> {
+                    assertEquals(2, response.getSubOperations().size());
+
+                    OperationDetail first = response.getSubOperations().get(0);
+                    assertEquals("OK", first.getStatus());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void getOperation_NotFound_Returns404() {
+
+        Mockito.when(operationDAO.getByOperationId("op123"))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(service.getOperationV2("op123"))
+                .expectErrorMatches(ex -> {
+                    assertTrue(ex instanceof PnGenericException);
+                    assertEquals(OPERATION_IS_NOT_PRESENT,
+                            ((PnGenericException) ex).getExceptionType());
+                    assertEquals(HttpStatus.NOT_FOUND,
+                            ((PnGenericException) ex).getHttpStatus());
+                    return true;
+                })
+                .verify();
+    }
+
+    @Test
+    void getOperation_IsSubOperation_Returns404() {
+
+        operationV2.setIsSubOperation(true);
+
+        Mockito.when(operationDAO.getByOperationId("op123"))
+                .thenReturn(Mono.just(operationV2));
+
+        StepVerifier.create(service.getOperationV2("op123"))
+                .expectError(PnGenericException.class)
+                .verify();
+    }
+
+    @Test
+    void getOperation_WebClientException_ReturnsBadRequest() {
+
+        Mockito.when(operationDAO.getByOperationId("op123"))
+                .thenReturn(Mono.error(
+                        new WebClientResponseException(
+                                "Error",
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                null,
+                                null,
+                                null)));
+
+        StepVerifier.create(service.getOperationV2("op123"))
+                .expectErrorMatches(ex -> {
+                    assertTrue(ex instanceof PnGenericException);
+                    assertEquals(ERROR_DURING_GET_OPERATION_V2,
+                            ((PnGenericException) ex).getExceptionType());
+                    assertEquals(HttpStatus.BAD_REQUEST,
+                            ((PnGenericException) ex).getHttpStatus());
+                    return true;
+                })
+                .verify();
     }
 
     private CreateActOperationRequestV2 getCreateActOperationRequestV2() {

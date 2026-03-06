@@ -15,8 +15,8 @@
 		<connection>${git.conn}</connection>
 		<developerConnection>${git.devConn}</developerConnection>
 		<url>${git.url}</url>
-	  <tag>HEAD</tag>
-  </scm>
+		<tag>HEAD</tag>
+	</scm>
 	<properties>
 		<jacoco.min.line.cover.ratio>0.00</jacoco.min.line.cover.ratio>
 	</properties>
@@ -46,7 +46,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-<!--		janino required se si esclude le dipendenze di lollipop-->
+		<!--		janino required se si esclude le dipendenze di lollipop-->
 		<dependency>
 			<groupId>org.codehaus.janino</groupId>
 			<artifactId>janino</artifactId>
@@ -362,9 +362,9 @@
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
-                            <typeMappings>
-                                <typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
-                            </typeMappings>
+							<typeMappings>
+								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
+							</typeMappings>
 							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/c4ddeb8cfb2e566a9400245b266f600fe2452da8/docs/openapi/api-private.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
@@ -621,7 +621,7 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>			 		 
+			</plugin>
 		</plugins>
 	</build>
 </project>

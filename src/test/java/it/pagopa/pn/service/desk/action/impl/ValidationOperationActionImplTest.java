@@ -441,6 +441,56 @@ class ValidationOperationActionImplTest {
         return response;
     }
 
+    @Test
+    void executeSkipsParentV2Operation() {
+        PnServiceDeskOperations parentOp = new PnServiceDeskOperations();
+        parentOp.setOperationId("parentId");
+        parentOp.setSubOperationsIds(List.of("SUB#parentId#IUN-001", "SUB#parentId#IUN-002"));
+
+        Mockito.when(operationDAO.getByOperationId("parentId")).thenReturn(Mono.just(parentOp));
+
+        Assertions.assertDoesNotThrow(() -> validationOperationAction.execute("parentId"));
+
+        Mockito.verify(addressDAO, Mockito.never()).getAddress(Mockito.any());
+        Mockito.verify(addressManagerClient, Mockito.never()).deduplicates(Mockito.any());
+        Mockito.verify(pnDeliveryPushClient, Mockito.never()).paperNotificationFailed(Mockito.any());
+        Mockito.verify(externalChannelClient, Mockito.never()).sendCourtesyMail(Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void executeSubOperation_resolvesAddressFromParent() {
+        PnServiceDeskOperations subOp = new PnServiceDeskOperations();
+        subOp.setOperationId("SUB#parentId#IUN-123");
+        subOp.setIsSubOperation(Boolean.TRUE);
+        subOp.setIun("IUN-123");
+        subOp.setRecipientInternalId(RECIPIENT_INTERNAL_ID);
+        subOp.setAttachments(pnServiceDeskAttachmentsList);
+
+        PnServiceDeskAddress address = new PnServiceDeskAddress();
+        address.setType("EMAIL");
+        address.setAddress("test@test.com");
+
+        Mockito.when(operationDAO.getByOperationId("SUB#parentId#IUN-123")).thenReturn(Mono.just(subOp));
+        Mockito.when(addressDAO.getAddress("parentId")).thenReturn(Mono.just(address));
+        Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(getDeduplicatesResponse(true)));
+        Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(subOp));
+        Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
+        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
+        Mockito.when(pnDeliveryClient.getPresignedUrlPaymentDocument(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(notificationAttachmentDownloadMetadataResponseDto));
+        Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
+               .thenReturn(Mono.empty());
+        Mockito.when(cfn.getExternalChannelCxId()).thenReturn("CXID");
+        Mockito.when(externalChannelMapper.getPrepareCourtesyMail(
+                       Mockito.any(), Mockito.any(), Mockito.anyList(), Mockito.anyString()))
+               .thenReturn(Mono.just(new DigitalCourtesyMailRequestDto()));
+
+        Assertions.assertDoesNotThrow(() -> validationOperationAction.execute("SUB#parentId#IUN-123"));
+
+        Mockito.verify(addressDAO).getAddress("parentId");
+        Mockito.verify(externalChannelClient).sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any());
+    }
 
 
 }

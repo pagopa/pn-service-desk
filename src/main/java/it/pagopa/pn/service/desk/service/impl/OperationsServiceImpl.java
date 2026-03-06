@@ -249,6 +249,7 @@ public class OperationsServiceImpl implements OperationsService {
 
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
                 .flatMapMany(operationDAO::searchOperationsFromRecipientInternalId)
+                .filter(operation -> !Boolean.TRUE.equals(operation.getIsSubOperation()))
                 .map(operationResponseMapper -> OperationMapper.operationResponseMapper(cfn, operationResponseMapper, searchNotificationRequest.getTaxId()))
                 .collectSortedList((op1, op2) ->
                         (op2.getOperationUpdateTimestamp() != null ? op2.getOperationUpdateTimestamp()  : OffsetDateTime.now())
@@ -322,5 +323,53 @@ public class OperationsServiceImpl implements OperationsService {
                                                                         ERROR_DURING_RECOVERING_FILE.getMessage(),
                                                                         HttpStatus.BAD_REQUEST));
                            });
+    }
+
+    @Override
+    public Mono<GetOperationsResponseV2> getOperationV2(String operationId) {
+        GetOperationsResponseV2 response = new GetOperationsResponseV2();
+        log.info("Getting operation with id {}", operationId);
+        return operationDAO.getByOperationId(operationId)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.warn("Operation with id {} not found", operationId);
+                    return Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.NOT_FOUND));
+                }))
+                .doOnNext(op -> log.info("Operation with id {} found, status: {}", operationId, op.getStatus()))
+                .filter(operation -> !Boolean.TRUE.equals(operation.getIsSubOperation()))
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.warn("Operation is a sub-operation - operationId={}", operationId);
+                    return Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT, OPERATION_IS_NOT_PRESENT.getMessage(), HttpStatus.NOT_FOUND));
+                }))
+                .flatMap(operation -> {
+                    response.setStatus(operation.getStatus());
+                    response.setErrorReason(operation.getErrorReason());
+                    return StringUtils.isNotBlank(operation.getIun())
+                            ? buildOperationResponseV1(operation, response).doOnSuccess( res -> log.info("getOperation completed for V1 operation - operationId={}, finalStatus={}", operationId, res.getStatus()))
+                            : Flux.fromIterable(operation.getSubOperationsIds())
+                            .flatMap(operationDAO::getByOperationId)
+                            .doOnNext(subOp -> log.info("SubOperation - id={}, status={}", subOp.getOperationId(), subOp.getStatus()))
+                            .map(this::toOperationDetail)
+                            .doOnNext(response::addSubOperationsItem)
+                            .then(Mono.just(response))
+                            .doOnSuccess(res ->
+                                    log.info("getOperation completed - operationId={}, finalStatus={}, subOperationsCount={}", operationId, res.getStatus(), res.getSubOperations() != null ? res.getSubOperations().size() : 0));})
+                .onErrorResume(WebClientResponseException.class, exception -> {
+                    log.error( "Error during get operation with id {}, error: {}", operationId, exception.getMessage());
+                    return Mono.error(new PnGenericException(ERROR_DURING_GET_OPERATION_V2, ERROR_DURING_GET_OPERATION_V2.getMessage(), HttpStatus.BAD_REQUEST));                           });
+    }
+
+    private static Mono<GetOperationsResponseV2> buildOperationResponseV1(PnServiceDeskOperations operation, GetOperationsResponseV2 response) {
+        log.info("Operation with id {} is a V1-operation, building response with iun {}", operation.getOperationId(), operation.getIun());
+        response.setIun(operation.getIun());
+
+        return Mono.just(response);
+    }
+
+    private OperationDetail toOperationDetail(PnServiceDeskOperations subOperation) {
+        OperationDetail detail = new OperationDetail();
+        detail.setStatus(subOperation.getStatus());
+        detail.setIun(subOperation.getIun());
+        detail.setErrorReason(subOperation.getErrorReason());
+        return detail;
     }
 }
