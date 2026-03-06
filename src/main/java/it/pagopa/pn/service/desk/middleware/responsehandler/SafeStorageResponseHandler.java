@@ -8,6 +8,7 @@ import it.pagopa.pn.service.desk.middleware.queue.model.InternalEvent;
 import it.pagopa.pn.service.desk.middleware.queue.model.InternalEventBody;
 import it.pagopa.pn.service.desk.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.service.desk.model.EventTypeEnum;
+import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.utility.Const;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
@@ -17,7 +18,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -31,19 +31,22 @@ public class SafeStorageResponseHandler {
 
     public void handleSafeStorageResponse(FileDownloadResponse response) {
         operationsFileKeyDAO.getOperationFileKey(response.getKey())
-                            .flatMapMany(ofk ->
-                                                 operationDAO.getByOperationId(ofk.getOperationId())
-                                                             .flatMapMany(op ->
-                                                                                  op.getSubOperationsIds() != null && !op.getSubOperationsIds().isEmpty()
-                                                                                          ? Flux.fromIterable(Optional.of(op.getSubOperationsIds()).orElse(List.of()))
-                                                                                          : Flux.just(ofk.getOperationId())
-                                                                         )
-                                        )
-                            .flatMap(id ->
-                                             Mono.fromRunnable(() -> internalQueueMomProducer.push(getInternalEvent(id)) )
-                                    )
-                            .then()
-                            .block();
+                .flatMap(operationFileKey ->
+                        operationDAO.getByOperationId(operationFileKey.getOperationId())
+                                .flatMap(operation -> {
+                                    List<String> subOpsIds = operation.getSubOperationsIds();
+                                    if (subOpsIds != null && !subOpsIds.isEmpty()) {
+                                        return Flux.fromIterable(subOpsIds)
+                                                .flatMap(operationDAO::getByOperationId)
+                                                .filter(subOp -> OperationStatusEnum.CREATING.name().equals(subOp.getStatus()))
+                                                .doOnNext(subOp -> internalQueueMomProducer.push(getInternalEvent(subOp.getOperationId())))
+                                                .then();
+                                    }
+                                    internalQueueMomProducer.push(getInternalEvent(operationFileKey.getOperationId()));
+                                    return Mono.empty();
+                                })
+                )
+                .block();
     }
 
     private InternalEvent getInternalEvent(String operationId){

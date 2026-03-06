@@ -8,15 +8,13 @@ import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.queue.model.InternalEvent;
 import it.pagopa.pn.service.desk.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.service.desk.middleware.responsehandler.SafeStorageResponseHandler;
+import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.mockito.Mockito.when;
 
@@ -35,35 +33,79 @@ class SafeStorageResponseHandlerTest {
         handler = new SafeStorageResponseHandler(internalQueueMomProducer, operationsFileKeyDAO, operationDAO);
     }
 
-    @ParameterizedTest
-    @MethodSource("operations")
-    void handleSafeStorageResponseTest(PnServiceDeskOperations operation, int expectedPushes) {
+    @Test
+    void handleSafeStorageResponseTest() {
         PnServiceDeskOperationFileKey pnServiceDeskOperationFileKey = new PnServiceDeskOperationFileKey();
         pnServiceDeskOperationFileKey.setFileKey("fileKey");
-        pnServiceDeskOperationFileKey.setOperationId("operationId");
+        pnServiceDeskOperationFileKey.setOperationId("1");
         when(operationsFileKeyDAO.getOperationFileKey(Mockito.anyString())).thenReturn(Mono.just(pnServiceDeskOperationFileKey));
-        when(operationDAO.getByOperationId(Mockito.anyString())).thenReturn(Mono.just(operation));
+
+        PnServiceDeskOperations legacyOp = new PnServiceDeskOperations();
+        legacyOp.setOperationId("1");
+        when(operationDAO.getByOperationId("1")).thenReturn(Mono.just(legacyOp));
 
         FileDownloadResponse fileDownloadResponse = new FileDownloadResponse();
         fileDownloadResponse.setKey("fileKey");
         handler.handleSafeStorageResponse(fileDownloadResponse);
-        Mockito.verify(internalQueueMomProducer, Mockito.times(expectedPushes)).push(Mockito.any(InternalEvent.class));
+        Mockito.verify(internalQueueMomProducer, Mockito.times(1)).push(Mockito.any(InternalEvent.class));
     }
 
-    static Stream<Arguments> operations() {
-        PnServiceDeskOperations op1 = new PnServiceDeskOperations();
-        op1.setOperationId("operationId");
-        op1.setIun("Iun");
-        op1.setIsSubOperation(false);
-        op1.setSubOperationsIds(null);
+    @Test
+    void handleSafeStorageResponse_parentWithSubOps() {
+        PnServiceDeskOperationFileKey fileKey = new PnServiceDeskOperationFileKey();
+        fileKey.setFileKey("fileKey");
+        fileKey.setOperationId("parentId");
+        when(operationsFileKeyDAO.getOperationFileKey("fileKey")).thenReturn(Mono.just(fileKey));
 
-        PnServiceDeskOperations op2 = new PnServiceDeskOperations();
-        op2.setOperationId("operationId");
-        op2.setIun(null);
-        List<String> ids = List.of("1","2","3");
-        op2.setSubOperationsIds(ids);
+        PnServiceDeskOperations parentOp = new PnServiceDeskOperations();
+        parentOp.setOperationId("parentId");
+        parentOp.setSubOperationsIds(List.of("SUB#parentId#IUN-001", "SUB#parentId#IUN-002"));
+        when(operationDAO.getByOperationId("parentId")).thenReturn(Mono.just(parentOp));
 
-        return Stream.of(Arguments.of(op1, 1), Arguments.of(op2, 3));
+        PnServiceDeskOperations subOp1 = new PnServiceDeskOperations();
+        subOp1.setOperationId("SUB#parentId#IUN-001");
+        subOp1.setStatus(OperationStatusEnum.CREATING.name());
+        when(operationDAO.getByOperationId("SUB#parentId#IUN-001")).thenReturn(Mono.just(subOp1));
+
+        PnServiceDeskOperations subOp2 = new PnServiceDeskOperations();
+        subOp2.setOperationId("SUB#parentId#IUN-002");
+        subOp2.setStatus(OperationStatusEnum.CREATING.name());
+        when(operationDAO.getByOperationId("SUB#parentId#IUN-002")).thenReturn(Mono.just(subOp2));
+
+        FileDownloadResponse fileDownloadResponse = new FileDownloadResponse();
+        fileDownloadResponse.setKey("fileKey");
+        handler.handleSafeStorageResponse(fileDownloadResponse);
+
+        Mockito.verify(internalQueueMomProducer, Mockito.times(2)).push(Mockito.any(InternalEvent.class));
+    }
+
+    @Test
+    void handleSafeStorageResponse_parentWithSubOps_skipsNonCreating() {
+        PnServiceDeskOperationFileKey fileKey = new PnServiceDeskOperationFileKey();
+        fileKey.setFileKey("fileKey");
+        fileKey.setOperationId("parentId");
+        when(operationsFileKeyDAO.getOperationFileKey("fileKey")).thenReturn(Mono.just(fileKey));
+
+        PnServiceDeskOperations parentOp = new PnServiceDeskOperations();
+        parentOp.setOperationId("parentId");
+        parentOp.setSubOperationsIds(List.of("SUB#parentId#IUN-001", "SUB#parentId#IUN-002"));
+        when(operationDAO.getByOperationId("parentId")).thenReturn(Mono.just(parentOp));
+
+        PnServiceDeskOperations subOp1 = new PnServiceDeskOperations();
+        subOp1.setOperationId("SUB#parentId#IUN-001");
+        subOp1.setStatus(OperationStatusEnum.CREATING.name());
+        when(operationDAO.getByOperationId("SUB#parentId#IUN-001")).thenReturn(Mono.just(subOp1));
+
+        PnServiceDeskOperations subOp2 = new PnServiceDeskOperations();
+        subOp2.setOperationId("SUB#parentId#IUN-002");
+        subOp2.setStatus(OperationStatusEnum.KO.name());
+        when(operationDAO.getByOperationId("SUB#parentId#IUN-002")).thenReturn(Mono.just(subOp2));
+
+        FileDownloadResponse fileDownloadResponse = new FileDownloadResponse();
+        fileDownloadResponse.setKey("fileKey");
+        handler.handleSafeStorageResponse(fileDownloadResponse);
+
+        Mockito.verify(internalQueueMomProducer, Mockito.times(1)).push(Mockito.any(InternalEvent.class));
     }
 
 }
