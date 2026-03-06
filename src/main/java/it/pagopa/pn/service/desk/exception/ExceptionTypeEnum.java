@@ -18,6 +18,7 @@ public enum ExceptionTypeEnum {
     ERROR_DURING_VIDEO_UPLOAD("ERROR_DURING_VIDEO_UPLOAD", "Errore durante l'upload del video"),
     ERROR_PRESIGNED_URL_VIDEO_UPLOAD("ERROR_PRESIGNED_URL_UPLOAD", "ERROR_PRESIGNED_URL_UPLOAD"),
     ERROR_DURING_RECOVERING_FILE("ERROR_DURING_RECOVERING_FILE", "Errore durante il recupero del file"),
+    ERROR_DURING_GET_OPERATION_V2("ERROR_DURING_GET_OPERATION_V2", "Errore durante il recupero dell'operation"),
     ERROR_DURING_PAPER_SEND("ERROR_DURING_PAPER_SEND", "Errore durante la chiamata send di paperchannel "),
     SAFE_STORAGE_FILE_LOADING("SAFE_STORAGE_FILE_LOADING", "Caricamento in corso"),
     ENTITY_NOT_FOUND("ENTITY_NOT_FOUND", "The searched entity is not present in the Database "),
