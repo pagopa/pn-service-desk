@@ -388,7 +388,8 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
 
     private Flux<String> retrievePaymentAttachments(int attachmentId, NotificationPaymentItemDto payment, String iun, String internalId) {
         Flux<String> fileKeys = Flux.empty();
-        if(payment.getPagoPa() != null)
+
+        if(payment.getPagoPa() != null && payment.getPagoPa().getAttachment() != null)
             fileKeys = fileKeys.concatWith(getPaymentAttachmentUrl(iun, PAGOPA, internalId, attachmentId));
 
         if (payment.getF24() != null)
