@@ -130,8 +130,11 @@ public class OperationMapper {
     public static PnServiceDeskOperations getFailedSubOperation(String parentOperationId,
                                                                 String iun,
                                                                 String recipientInternalId,
+                                                                String errorReason,
                                                                 CreateActOperationRequestV2 request) {
-        return createSubOperation(parentOperationId, iun, recipientInternalId, OperationStatusEnum.KO, request);
+        PnServiceDeskOperations subOperation = createSubOperation(parentOperationId, iun, recipientInternalId, OperationStatusEnum.KO, request);
+        subOperation.setErrorReason(errorReason);
+        return subOperation;
     }
 
     private static PnServiceDeskOperations createSubOperation(String parentOperationId,

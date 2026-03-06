@@ -211,7 +211,7 @@ public class OperationsServiceImpl implements OperationsService {
                         .orElseThrow(() -> new PnGenericException(NOT_NOTIFICATION_FOUND, "Tax ID from request does not match the Tax ID from the notification")))
                 .onErrorResume(ex -> {
                     log.error("recipientId={}, iun={}, errorReason={}, Error while creating subOperation", recipientId, iun, ex.getMessage(), ex);
-                    PnServiceDeskOperations subOp = OperationMapper.getFailedSubOperation(parentOperationId, iun, recipientId, request);
+                    PnServiceDeskOperations subOp = OperationMapper.getFailedSubOperation(parentOperationId, iun, recipientId, ex.getMessage(), request);
                     return Mono.just(new IunResult(new OperationItemResponse().iun(iun).status(KO.toString()).errorReason(ex.getMessage()), subOp, null));
                 });
     }
