@@ -87,7 +87,7 @@ public static OperationStatusEnum getEcOperationStatusFrom(ProgressEventCategory
      * Regular IDs pass through cleanUpOperationId() unchanged.
      */
     public static String resolveAddressOperationId(@NotNull String operationId) {
-        if (operationId != null && operationId.startsWith("SUB#")) {
+        if (operationId.startsWith("SUB#")) {
             String withoutPrefix = operationId.substring("SUB#".length());
             int iunSeparator = withoutPrefix.indexOf('#');
             return iunSeparator != -1 ? withoutPrefix.substring(0, iunSeparator) : withoutPrefix;

@@ -306,7 +306,7 @@ public class OperationsServiceImpl implements OperationsService {
                            .switchIfEmpty(Mono.error(new PnGenericException(OPERATION_IS_NOT_PRESENT,
                                                                             OPERATION_IS_NOT_PRESENT.getMessage(),
                                                                             HttpStatus.NOT_FOUND)))
-                           .map(operation -> operation.getStatus())
+                           .map(PnServiceDeskOperations::getStatus)
                            .onErrorResume(PnRetryStorageException.class,
                                           ex -> Mono.error(new PnGenericException(SAFE_STORAGE_FILE_LOADING,
                                                                                   SAFE_STORAGE_FILE_LOADING.getMessage(),
@@ -349,11 +349,15 @@ public class OperationsServiceImpl implements OperationsService {
                             .map(this::toOperationDetail)
                             .doOnNext(response::addSubOperationsItem)
                             .then(Mono.just(response))
-                            .doOnSuccess(res ->
-                                    log.info("getOperation completed - operationId={}, finalStatus={}, subOperationsCount={}", operationId, res.getStatus(), res.getSubOperations() != null ? res.getSubOperations().size() : 0));})
+                            .doOnSuccess(res -> {
+                                    int subOperationsCount = res.getSubOperations() != null ? res.getSubOperations().size() : 0;
+                                    log.info("getOperation completed - operationId={}, finalStatus={}, subOperationsCount={}", operationId, res.getStatus(), subOperationsCount);
+                                    });
+                })
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error( "Error during get operation with id {}, error: {}", operationId, exception.getMessage());
-                    return Mono.error(new PnGenericException(ERROR_DURING_GET_OPERATION_V2, ERROR_DURING_GET_OPERATION_V2.getMessage(), HttpStatus.BAD_REQUEST));                           });
+                    return Mono.error(new PnGenericException(ERROR_DURING_GET_OPERATION_V2, ERROR_DURING_GET_OPERATION_V2.getMessage(), HttpStatus.BAD_REQUEST));
+                });
     }
 
     private static Mono<GetOperationsResponseV2> buildOperationResponseV1(PnServiceDeskOperations operation, GetOperationsResponseV2 response) {
