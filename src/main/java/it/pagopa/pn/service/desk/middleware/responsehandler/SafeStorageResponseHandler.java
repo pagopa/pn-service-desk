@@ -39,14 +39,17 @@ public class SafeStorageResponseHandler {
                                         return Flux.fromIterable(subOpsIds)
                                                 .flatMap(operationDAO::getByOperationId)
                                                 .filter(subOp -> OperationStatusEnum.CREATING.name().equals(subOp.getStatus()))
-                                                .doOnNext(subOp -> internalQueueMomProducer.push(getInternalEvent(subOp.getOperationId())))
+                                                .flatMap(subOp -> sendEventToQueue(subOp.getOperationId()))
                                                 .then();
                                     }
-                                    internalQueueMomProducer.push(getInternalEvent(operationFileKey.getOperationId()));
-                                    return Mono.empty();
+                                    return sendEventToQueue(operationFileKey.getOperationId());
                                 })
                 )
                 .block();
+    }
+
+    private Mono<Void> sendEventToQueue(String operationId) {
+        return Mono.fromRunnable(() -> internalQueueMomProducer.push(getInternalEvent(operationId)));
     }
 
     private InternalEvent getInternalEvent(String operationId){

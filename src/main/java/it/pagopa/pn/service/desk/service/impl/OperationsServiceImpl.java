@@ -361,9 +361,10 @@ public class OperationsServiceImpl implements OperationsService {
                 .flatMap(operation -> {
                     response.setStatus(operation.getStatus());
                     response.setErrorReason(operation.getErrorReason());
+                    List<String> subOpIds = operation.getSubOperationsIds();
                     return StringUtils.isNotBlank(operation.getIun())
                             ? buildOperationResponseV1(operation, response).doOnSuccess( res -> log.info("getOperation completed for V1 operation - operationId={}, finalStatus={}", operationId, res.getStatus()))
-                            : Flux.fromIterable(operation.getSubOperationsIds())
+                            : Flux.fromIterable(subOpIds != null ? subOpIds : List.of())
                             .flatMap(operationDAO::getByOperationId)
                             .doOnNext(subOp -> log.info("SubOperation - id={}, status={}", subOp.getOperationId(), subOp.getStatus()))
                             .map(this::toOperationDetail)
