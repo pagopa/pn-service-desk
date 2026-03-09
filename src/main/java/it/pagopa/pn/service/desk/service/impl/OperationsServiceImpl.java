@@ -4,8 +4,6 @@ package it.pagopa.pn.service.desk.service.impl;
 import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationRecipientV24Dto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.mapper.AddressMapper;
 import it.pagopa.pn.service.desk.mapper.OperationMapper;
@@ -13,6 +11,7 @@ import it.pagopa.pn.service.desk.mapper.OperationsFileKeyMapper;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationsFileKeyDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAddress;
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
@@ -29,6 +28,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -248,7 +248,8 @@ public class OperationsServiceImpl implements OperationsService {
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
                 .flatMapMany(operationDAO::searchOperationsFromRecipientInternalId)
                 .filter(operation -> !Boolean.TRUE.equals(operation.getIsSubOperation()))
-                .map(operationResponseMapper -> OperationMapper.operationResponseMapper(cfn, operationResponseMapper, searchNotificationRequest.getTaxId()))
+                .map(pnServiceDeskOperations -> Tuples.of(pnServiceDeskOperations.getAttachments(), OperationMapper.operationResponseMapper(pnServiceDeskOperations, searchNotificationRequest.getTaxId())))
+                .flatMap(tuple -> enhanceIuns(tuple.getT1(), tuple.getT2()))
                 .collectSortedList((op1, op2) ->
                         (op2.getOperationUpdateTimestamp() != null ? op2.getOperationUpdateTimestamp()  : OffsetDateTime.now())
                                 .compareTo((op1.getOperationUpdateTimestamp() != null ? op1.getOperationUpdateTimestamp()  : OffsetDateTime.now())))
@@ -256,6 +257,25 @@ public class OperationsServiceImpl implements OperationsService {
                     response.setOperations(operations);
                     return response;
                 });
+    }
+
+    private Mono<OperationResponse> enhanceIuns(List<PnServiceDeskAttachments> attachments, OperationResponse operationResponse) {
+        return Flux.fromIterable(attachments)
+                   .flatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun()))
+                   .doOnNext(att -> {
+                       SDNotificationSummary summary = new SDNotificationSummary();
+                       summary.setIun(att.getIun());
+                       summary.setSenderPaInternalId(att.getSenderPaId());
+                       summary.setSenderPaIpaCode("");
+                       summary.setSenderPaTaxCode(att.getSenderTaxId());
+                       summary.setSenderPaDescription(att.getSenderDenomination());
+                       if (Boolean.TRUE.equals(att.getDocumentsAvailable())) {
+                           operationResponse.getIuns().add(summary);
+                       } else {
+                           operationResponse.getUncompletedIuns().add(summary);
+                       }
+                   })
+                   .then(Mono.just(operationResponse));
     }
 
     @Override

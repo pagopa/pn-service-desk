@@ -1,8 +1,6 @@
 package it.pagopa.pn.service.desk.mapper;
 
-import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
-import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskEvents;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
@@ -48,46 +46,23 @@ public class OperationMapper {
         return pnServiceDeskOperations;
     }
 
-    public static OperationResponse operationResponseMapper(PnServiceDeskConfigs pnServiceDeskConfigs, PnServiceDeskOperations pnServiceDeskOperations, String taxId){
+    public static OperationResponse operationResponseMapper(PnServiceDeskOperations pnServiceDeskOperations, String taxId){
         OperationResponse operationResponse = new OperationResponse();
-        operationResponse.setOperationId(Utility.cleanUpOperationId(pnServiceDeskOperations.getOperationId()));
         List<SDNotificationSummary> iunsList = new ArrayList<>();
         List<SDNotificationSummary> uncompletedIunsList = new ArrayList<>();
-        operationResponse.setIuns(iunsList);
-        operationResponse.setUncompletedIuns(uncompletedIunsList);
 
-        List<PnServiceDeskAttachments> attachments = pnServiceDeskOperations.getAttachments();
-        if (attachments != null) {
-            attachments.forEach(att -> {
-                SDNotificationSummary summary = new SDNotificationSummary();
-                summary.setIun(att.getIun());
-                summary.setSenderPaInternalId(pnServiceDeskConfigs.getSenderPaId());
-                summary.setSenderPaIpaCode(pnServiceDeskConfigs.getSenderIpaCode());
-                summary.setSenderPaTaxCode(pnServiceDeskConfigs.getSenderTaxCode());
-                summary.setSenderPaDescription(pnServiceDeskConfigs.getSenderAddress().getFullname());
-                if (Boolean.TRUE.equals(att.getIsAvailable())) {
-                    operationResponse.getIuns().add(summary);
-                } else {
-                    operationResponse.getUncompletedIuns().add(summary);
-                }
-            });
-        }
-        operationResponse.setOperationCreateTimestamp(OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationStartDate(), ZoneOffset.UTC));
-        if (pnServiceDeskOperations.getOperationLastUpdateDate() != null) {
-            operationResponse.setOperationUpdateTimestamp( OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationLastUpdateDate(), ZoneOffset.UTC));
-        }
         NotificationStatus status = new NotificationStatus();
         if (pnServiceDeskOperations.getStatus().equals(OperationStatusEnum.NOTIFY_VIEW.toString())
-                || pnServiceDeskOperations.getStatus().equals(OperationStatusEnum.NOTIFY_VIEW_ERROR.toString())) {
+            || pnServiceDeskOperations.getStatus().equals(OperationStatusEnum.NOTIFY_VIEW_ERROR.toString())) {
             pnServiceDeskOperations.setStatus(OperationStatusEnum.OK.toString());
         }
         status.setStatus(NotificationStatus.StatusEnum.fromValue(pnServiceDeskOperations.getStatus()));
 
         if (pnServiceDeskOperations.getEvents() != null && !pnServiceDeskOperations.getEvents().isEmpty()) {
             PnServiceDeskEvents e = pnServiceDeskOperations.getEvents().stream()
-                    .filter(events -> events.getTimestamp() != null)
-                    .max(Comparator.comparing(PnServiceDeskEvents::getTimestamp))
-                    .orElse(new PnServiceDeskEvents());
+                                                           .filter(events -> events.getTimestamp() != null)
+                                                           .max(Comparator.comparing(PnServiceDeskEvents::getTimestamp))
+                                                           .orElse(new PnServiceDeskEvents());
             status.setStatusCode(e.getStatusCode());
             status.setStatusDescription(e.getStatusDescription());
             if (e.getTimestamp() != null) status.setLastEventTimestamp(Utility.getOffsetDateTimeFromDate(e.getTimestamp()));
@@ -95,6 +70,14 @@ public class OperationMapper {
 
         if (StringUtils.isNotEmpty(pnServiceDeskOperations.getErrorReason())) {
             status.setStatusDescription(pnServiceDeskOperations.getErrorReason());
+        }
+
+        operationResponse.setOperationId(Utility.cleanUpOperationId(pnServiceDeskOperations.getOperationId()));
+        operationResponse.setIuns(iunsList);
+        operationResponse.setUncompletedIuns(uncompletedIunsList);
+        operationResponse.setOperationCreateTimestamp(OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationStartDate(), ZoneOffset.UTC));
+        if (pnServiceDeskOperations.getOperationLastUpdateDate() != null) {
+            operationResponse.setOperationUpdateTimestamp( OffsetDateTime.ofInstant(pnServiceDeskOperations.getOperationLastUpdateDate(), ZoneOffset.UTC));
         }
         operationResponse.setNotificationStatus(status);
         operationResponse.setTaxId(taxId);
