@@ -248,7 +248,10 @@ public class OperationsServiceImpl implements OperationsService {
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
                 .flatMapMany(operationDAO::searchOperationsFromRecipientInternalId)
                 .filter(operation -> !Boolean.TRUE.equals(operation.getIsSubOperation()))
-                .map(pnServiceDeskOperations -> Tuples.of(pnServiceDeskOperations.getAttachments(), OperationMapper.operationResponseMapper(pnServiceDeskOperations, searchNotificationRequest.getTaxId())))
+                .map(pnServiceDeskOperations -> Tuples.of(
+                        Objects.requireNonNullElse(pnServiceDeskOperations.getAttachments(), new ArrayList<PnServiceDeskAttachments>()),
+                        OperationMapper.operationResponseMapper(pnServiceDeskOperations, searchNotificationRequest.getTaxId())
+                ))
                 .flatMap(tuple -> enhanceIuns(tuple.getT1(), tuple.getT2()))
                 .collectSortedList((op1, op2) ->
                         (op2.getOperationUpdateTimestamp() != null ? op2.getOperationUpdateTimestamp()  : OffsetDateTime.now())
