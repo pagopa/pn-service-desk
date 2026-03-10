@@ -25,6 +25,9 @@ tags:
   - name: Operation
     description: >-
       Invocazioni per eseguire azioni di Ops come il caricamento del video
+  - name: OperationV2
+    description: >-
+      Invocazioni v2 per la gestione massiva delle operazioni CCE
 
 paths:
   '/status':
@@ -132,6 +135,41 @@ paths:
             application/json:
               schema:
                 $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/OperationsResponse'
+        '400':
+          description: Richiesta errata
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Errore lato server
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+  '/service-desk/v2/act-operations':
+    post:
+      operationId: createActOperationV2
+      description: >-
+        Crea richieste di invio digitale per una lista di IUN su un nuovo indirizzo.
+        Viene creata una sotto operazione indipendente per ciascun IUN fornito.
+      tags:
+        - OperationV2
+      parameters:
+        - $ref: 'parameters-pn-service-desk-v1.yaml#/components/parameters/cxOperatorClientAuthFleet'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/CreateActOperationRequestV2'
+      responses:
+        '200':
+          description: Richiesta processata. La risposta contiene il dettaglio per ogni IUN. Può contenere un mix di successi e fallimenti.
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/CreateOperationsResponseV2'
         '400':
           description: Richiesta errata
           content:
@@ -267,6 +305,53 @@ paths:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
         '500':
           description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+  '/service-desk/v2/operations/{operationId}':
+    get:
+      operationId: getOperationV2
+      description: >-
+        Recupera i dettagli di un operazione e delle sue sotto operazioni se presenti.
+      tags:
+        - OperationV2
+      parameters:
+        - name: operationId
+          in: path
+          required: true
+          description: ID dell'operation
+          schema:
+            type: string
+            maxLength: 32
+      responses:
+        '200':
+          description: Dettaglio operation trovato.
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas-pn-service-desk-v1.yaml#/components/schemas/GetOperationsResponseV2'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '403':
+          description: Permissions are not granted for the requested resource
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '404':
+          description: Operation non trovata.
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Errore lato server.
           content:
             application/problem+json:
               schema:

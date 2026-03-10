@@ -32,6 +32,8 @@ public class PnServiceDeskOperations {
     public static final String COL_TICKET_DATE = "ticketDate";
     public static final String COL_VR_DATE = "vrDate";
     public static final String COL_IUN = "iun";
+    public static final String COL_SUB_OPERATIONS_IDS = "subOperationsIds";
+    public static final String COL_IS_SUB_OPERATION = "isSubOperation";
 
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_OPERATION_ID)}))
@@ -70,5 +72,10 @@ public class PnServiceDeskOperations {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_IUN)}))
     private String iun;
 
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_SUB_OPERATIONS_IDS)}))
+    private List<String> subOperationsIds;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_IS_SUB_OPERATION)}))
+    private Boolean isSubOperation;
 
 }
