@@ -13,6 +13,7 @@ public interface OperationDAO {
     Mono<Tuple2<PnServiceDeskOperations, PnServiceDeskAddress>> createOperationAndAddress(PnServiceDeskOperations operations, PnServiceDeskAddress pnServiceDeskAddress);
     Mono<PnServiceDeskOperations> createOperation(PnServiceDeskOperations operations);
     Mono<PnServiceDeskOperations> createParentOperationWithSubOpsAndAddress(PnServiceDeskOperations parent, PnServiceDeskAddress address, List<PnServiceDeskOperations> subOperations);
+    Mono<PnServiceDeskOperations> createParentOperationWithSubOps(PnServiceDeskOperations parent, List<PnServiceDeskOperations> subOperations);
     Flux<PnServiceDeskOperations> searchOperationsFromRecipientInternalId(String taxId);
     Mono<PnServiceDeskOperations> getByOperationId(String operationId);
     Mono<PnServiceDeskOperations> updateEntity(PnServiceDeskOperations operations);
