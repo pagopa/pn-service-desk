@@ -30,8 +30,10 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.function.Tuples;
 
+import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskAttachments;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
@@ -145,10 +147,49 @@ class OperationsServiceImplTest extends BaseTest {
     }
 
     @Test
-    void searchOperationsFromRecipientInternalIdTest() {
+    void searchOperationsFromRecipientInternalId_WithNullAttachments_CompletesWithoutNPE() {
+        // Reproduces PN-18410 bug: getAttachments() == null causes NullPointerException: t1
+        // in Tuples.of() because Reactor rejects null tuple elements.
         pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
-        Mockito.when(operationDAO.searchOperationsFromRecipientInternalId(Mockito.any())).thenReturn(Flux.just(pnServiceDeskOperations));
-        assertNotNull(service.searchOperationsFromRecipientInternalId("1234", getNotificationRequest()));
+        pnServiceDeskOperations.setAttachments(null);
+        Mockito.when(operationDAO.searchOperationsFromRecipientInternalId(Mockito.any()))
+                .thenReturn(Flux.just(pnServiceDeskOperations));
+
+        StepVerifier.create(service.searchOperationsFromRecipientInternalId("1234", getNotificationRequest()))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertNotNull(response.getOperations());
+                    assertEquals(1, response.getOperations().size());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void searchOperationsFromRecipientInternalId_WithAttachments_EnhancesIuns() {
+        SentNotificationV25Dto sentNotification = new SentNotificationV25Dto();
+        sentNotification.setIun("iun-test");
+        sentNotification.setSenderPaId("pa-id");
+        sentNotification.setSenderTaxId("pa-tax");
+        sentNotification.setSenderDenomination("pa-name");
+        sentNotification.setDocumentsAvailable(true);
+
+        PnServiceDeskAttachments attachment = new PnServiceDeskAttachments();
+        attachment.setIun("iun-test");
+
+        pnServiceDeskOperations.setOperationLastUpdateDate(Instant.now());
+        pnServiceDeskOperations.setAttachments(new ArrayList<>(List.of(attachment)));
+
+        Mockito.when(operationDAO.searchOperationsFromRecipientInternalId(Mockito.any()))
+                .thenReturn(Flux.just(pnServiceDeskOperations));
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate("iun-test"))
+                .thenReturn(Mono.just(sentNotification));
+
+        StepVerifier.create(service.searchOperationsFromRecipientInternalId("1234", getNotificationRequest()))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertEquals(1, response.getOperations().size());
+                })
+                .verifyComplete();
     }
 
     @Test
@@ -481,7 +522,7 @@ class OperationsServiceImplTest extends BaseTest {
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
                .thenReturn(Mono.just(mismatchNotification));
-        Mockito.when(operationDAO.createOperation(Mockito.any()))
+        Mockito.when(operationDAO.createParentOperationWithSubOps(Mockito.any(), Mockito.any()))
                .thenReturn(Mono.just(pnServiceDeskOperations));
 
         CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
@@ -495,9 +536,11 @@ class OperationsServiceImplTest extends BaseTest {
                     })
                     .verifyComplete();
 
-        Mockito.verify(operationDAO).createOperation(
+        Mockito.verify(operationDAO).createParentOperationWithSubOps(
                 Mockito.argThat(parent -> OperationStatusEnum.KO.toString().equals(parent.getStatus())
-                        && parent.getSubOperationsIds().isEmpty())
+                        && parent.getSubOperationsIds().size() == 2),
+                Mockito.argThat(subOps -> subOps.size() == 2
+                        && subOps.stream().allMatch(s -> OperationStatusEnum.KO.toString().equals(s.getStatus())))
         );
         Mockito.verify(operationDAO, Mockito.never())
                .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());
@@ -508,7 +551,7 @@ class OperationsServiceImplTest extends BaseTest {
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
                .thenReturn(Mono.error(new RuntimeException("Delivery service unavailable")));
-        Mockito.when(operationDAO.createOperation(Mockito.any()))
+        Mockito.when(operationDAO.createParentOperationWithSubOps(Mockito.any(), Mockito.any()))
                .thenReturn(Mono.just(pnServiceDeskOperations));
 
         CreateActOperationRequestV2 request = getCreateActOperationRequestV2();
@@ -525,9 +568,11 @@ class OperationsServiceImplTest extends BaseTest {
                     })
                     .verifyComplete();
 
-        Mockito.verify(operationDAO).createOperation(
+        Mockito.verify(operationDAO).createParentOperationWithSubOps(
                 Mockito.argThat(parent -> OperationStatusEnum.KO.toString().equals(parent.getStatus())
-                        && parent.getSubOperationsIds().isEmpty())
+                        && parent.getSubOperationsIds().size() == 2),
+                Mockito.argThat(subOps -> subOps.size() == 2
+                        && subOps.stream().allMatch(s -> OperationStatusEnum.KO.toString().equals(s.getStatus())))
         );
         Mockito.verify(operationDAO, Mockito.never())
                .createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any());

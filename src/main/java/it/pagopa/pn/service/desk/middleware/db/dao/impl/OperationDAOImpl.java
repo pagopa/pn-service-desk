@@ -59,6 +59,15 @@ public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implement
     }
 
     @Override
+    public Mono<PnServiceDeskOperations> createParentOperationWithSubOps(PnServiceDeskOperations parent,
+                                                                         List<PnServiceDeskOperations> subOperations) {
+        TransactWriteItemsEnhancedRequest.Builder builder = TransactWriteItemsEnhancedRequest.builder();
+        this.createTransaction(builder, parent);
+        subOperations.forEach(subOp -> this.createTransaction(builder, subOp));
+        return Mono.fromFuture(super.putWithTransact(builder.build()).thenApply(response -> parent));
+    }
+
+    @Override
     public Flux<PnServiceDeskOperations> searchOperationsFromRecipientInternalId(String taxId) {
         return this.getBySecondaryIndex(PnServiceDeskOperations.RECIPIENT_INTERNAL_INDEX, taxId, null);
     }

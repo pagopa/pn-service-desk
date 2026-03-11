@@ -219,18 +219,18 @@ public class OperationsServiceImpl implements OperationsService {
     private Mono<CreateOperationsResponseV2> persistParentOperation(CreateActOperationRequestV2 request, String recipientId, String parentOperationId, List<IunResult> iunResults) {
         List<OperationItemResponse> responses = iunResults.stream().map(r -> r.response).toList();
         List<PnServiceDeskOperations> subOps = iunResults.stream().filter(r -> r.subOp != null).map(r -> r.subOp).toList();
+        List<String> subOpIds = subOps.stream().map(PnServiceDeskOperations::getOperationId).toList();
         boolean allSubOpsFailed = subOps.stream().allMatch(subOp -> KO.toString().equals(subOp.getStatus()));
 
         if (allSubOpsFailed) {
             log.warn("parentOperationId={}, All IUNs failed validation, creating parent operation with KO status", parentOperationId);
-            PnServiceDeskOperations koParent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, new ArrayList<>());
+            PnServiceDeskOperations koParent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, subOpIds);
             koParent.setStatus(KO.toString());
-            return operationDAO.createOperation(koParent)
+            return operationDAO.createParentOperationWithSubOps(koParent, subOps)
                     .map(saved -> new CreateOperationsResponseV2().operationId(saved.getOperationId()).results(responses));
         }
 
         String denomination = iunResults.stream().map(r -> r.denomination).filter(Objects::nonNull).findFirst().orElse(null);
-        List<String> subOpIds = subOps.stream().map(PnServiceDeskOperations::getOperationId).toList();
         PnServiceDeskOperations parent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, subOpIds);
         PnServiceDeskAddress address = AddressMapper.toActEntity(request.getAddress(), parentOperationId, cfn, denomination);
 
