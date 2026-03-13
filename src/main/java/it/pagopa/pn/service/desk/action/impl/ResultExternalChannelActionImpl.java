@@ -3,10 +3,10 @@ package it.pagopa.pn.service.desk.action.impl;
 
 import it.pagopa.pn.service.desk.action.ResultExternalChannelAction;
 import it.pagopa.pn.service.desk.action.common.CommonAction;
+import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.exception.PnEntityNotFoundException;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.CourtesyMessageProgressEventDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.ProgressEventCategoryDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.service.desk.middleware.db.dao.OperationDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnServiceDeskOperations;
@@ -32,6 +32,7 @@ import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.EXTERNALCHAN
 public class ResultExternalChannelActionImpl extends CommonAction implements ResultExternalChannelAction {
 
     private OperationDAO operationDAO;
+    private PnServiceDeskConfigs cfg;
 
     @Override
     public void execute(SingleStatusUpdateDto singleStatusUpdateDto) {
@@ -47,13 +48,13 @@ public class ResultExternalChannelActionImpl extends CommonAction implements Res
         operationDAO.getByOperationId(operationId)
             .switchIfEmpty(Mono.error(new PnEntityNotFoundException()))
             .flatMap(entityOperation -> {
-                if (StringUtils.isBlank(courtesyMessageProgressEventDto.getStatus().getValue())) {
+                if (StringUtils.isBlank(courtesyMessageProgressEventDto.getEventCode().getValue())) {
                     log.error("entityOperation = {}, operationId = {}, Status code is null or blank", entityOperation, operationId);
                     return Mono.error(new PnGenericException(EXTERNALCHANNEL_STATUS_CODE_EMPTY, EXTERNALCHANNEL_STATUS_CODE_EMPTY.getMessage()));
                 }
-                OperationStatusEnum newStatus = Utility.getEcOperationStatusFrom(courtesyMessageProgressEventDto.getStatus());
+                OperationStatusEnum newStatus = convertExternalChannelStatusToOperationStatus(courtesyMessageProgressEventDto.getEventCode());
                 entityOperation.setStatus(newStatus.name());
-                if ( courtesyMessageProgressEventDto.getStatus().equals(ProgressEventCategoryDto.OK)){
+                if ( newStatus.equals(OperationStatusEnum.OK) ) {
                 log.info("entityOperation = {}, operationId = {}, Status code is OK, updating operation status to {}", entityOperation, operationId, newStatus);
                 } else {
                     log.warn("entityOperation = {}, operationId = {}, Status code is not OK, updating operation status to {}", entityOperation, operationId, newStatus);
@@ -75,6 +76,14 @@ public class ResultExternalChannelActionImpl extends CommonAction implements Res
                         return Mono.empty();
                     }
                 }).block();
+    }
+
+    private OperationStatusEnum convertExternalChannelStatusToOperationStatus(CourtesyMessageProgressEventDto.EventCodeEnum status) {
+        if (cfg.getExternalChannelDigitalCodesSuccess().contains(status.getValue()))
+            return OperationStatusEnum.OK;
+        if (cfg.getExternalChannelDigitalCodesFailure().contains(status.getValue()))
+            return OperationStatusEnum.KO;
+        return OperationStatusEnum.PROGRESS;
     }
 
     private Mono<Void> updateParentAggregateStatus(PnServiceDeskOperations subOp) {

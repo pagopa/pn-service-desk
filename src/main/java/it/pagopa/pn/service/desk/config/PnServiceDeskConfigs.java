@@ -47,6 +47,8 @@ public class PnServiceDeskConfigs {
     private Integer notifyAttempt;
     private Integer maxNumberOfPages;
     private List<String> documentTypeFilter = new ArrayList<>();
+    private List<String> externalChannelDigitalCodesSuccess;
+    private List<String> externalChannelDigitalCodesFailure;
 
     @Data
     public static class Topics {
