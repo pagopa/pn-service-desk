@@ -278,7 +278,7 @@ public class OperationsServiceImpl implements OperationsService {
     private Mono<OperationResponse> enhanceIuns(List<PnServiceDeskAttachments> attachments, OperationResponse operationResponse) {
         return Flux.fromIterable(attachments)
                 .concatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun())
-                        .map(sentNotification -> {
+                        .doOnNext(sentNotification -> {
                             SDNotificationSummary summary = new SDNotificationSummary();
                             summary.setIun(sentNotification.getIun());
                             summary.setSenderPaInternalId(sentNotification.getSenderPaId());
@@ -290,7 +290,6 @@ public class OperationsServiceImpl implements OperationsService {
                             } else {
                                 operationResponse.getUncompletedIuns().add(summary);
                             }
-                            return sentNotification;
                         }))
                 .then(Mono.just(operationResponse));
     }
