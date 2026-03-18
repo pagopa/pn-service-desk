@@ -271,7 +271,7 @@ public class OperationsServiceImpl implements OperationsService {
         return Flux.fromIterable(subOpIds)
                 .flatMap(operationDAO::getByOperationId)
                 .filter(subOp -> StringUtils.isNotBlank(subOp.getIun()))
-                .flatMap(subOp -> enhanceIuns(subOp.getAttachments(), operationResponse))
+                .flatMap(subOp -> enhanceIuns(Objects.requireNonNullElse(subOp.getAttachments(), new ArrayList<>()), operationResponse))
                 .then(Mono.just(operationResponse));
     }
 
