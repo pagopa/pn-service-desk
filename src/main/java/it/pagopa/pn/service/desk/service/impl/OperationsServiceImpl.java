@@ -24,11 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -248,11 +248,16 @@ public class OperationsServiceImpl implements OperationsService {
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
                 .flatMapMany(operationDAO::searchOperationsFromRecipientInternalId)
                 .filter(operation -> !Boolean.TRUE.equals(operation.getIsSubOperation()))
-                .map(pnServiceDeskOperations -> Tuples.of(
-                        Objects.requireNonNullElse(pnServiceDeskOperations.getAttachments(), new ArrayList<PnServiceDeskAttachments>()),
-                        OperationMapper.operationResponseMapper(pnServiceDeskOperations, searchNotificationRequest.getTaxId())
-                ))
-                .flatMap(tuple -> enhanceIuns(tuple.getT1(), tuple.getT2()))
+                .flatMap(pnServiceDeskOperations -> {
+                    OperationResponse operationResponse = OperationMapper.operationResponseMapper(pnServiceDeskOperations, searchNotificationRequest.getTaxId());
+                    List<String> subOpIds = pnServiceDeskOperations.getSubOperationsIds();
+                    if (!CollectionUtils.isEmpty(subOpIds)) {
+                        return enhanceIunsFromSubOperations(subOpIds, operationResponse);
+                    } else {
+                        List<PnServiceDeskAttachments> attachments = Objects.requireNonNullElse(pnServiceDeskOperations.getAttachments(), new ArrayList<>());
+                        return enhanceIuns(attachments, operationResponse);
+                    }
+                })
                 .collectSortedList((op1, op2) ->
                         (op2.getOperationUpdateTimestamp() != null ? op2.getOperationUpdateTimestamp()  : OffsetDateTime.now())
                                 .compareTo((op1.getOperationUpdateTimestamp() != null ? op1.getOperationUpdateTimestamp()  : OffsetDateTime.now())))
@@ -262,23 +267,32 @@ public class OperationsServiceImpl implements OperationsService {
                 });
     }
 
+    private Mono<OperationResponse> enhanceIunsFromSubOperations(List<String> subOpIds, OperationResponse operationResponse) {
+        return Flux.fromIterable(subOpIds)
+                .flatMap(operationDAO::getByOperationId)
+                .filter(subOp -> StringUtils.isNotBlank(subOp.getIun()))
+                .flatMap(subOp -> enhanceIuns(subOp.getAttachments(), operationResponse))
+                .then(Mono.just(operationResponse));
+    }
+
     private Mono<OperationResponse> enhanceIuns(List<PnServiceDeskAttachments> attachments, OperationResponse operationResponse) {
         return Flux.fromIterable(attachments)
-                   .flatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun()))
-                   .doOnNext(att -> {
-                       SDNotificationSummary summary = new SDNotificationSummary();
-                       summary.setIun(att.getIun());
-                       summary.setSenderPaInternalId(att.getSenderPaId());
-                       summary.setSenderPaIpaCode("");
-                       summary.setSenderPaTaxCode(att.getSenderTaxId());
-                       summary.setSenderPaDescription(att.getSenderDenomination());
-                       if (Boolean.TRUE.equals(att.getDocumentsAvailable())) {
-                           operationResponse.getIuns().add(summary);
-                       } else {
-                           operationResponse.getUncompletedIuns().add(summary);
-                       }
-                   })
-                   .then(Mono.just(operationResponse));
+                .flatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun())
+                        .map(sentNotification -> {
+                            SDNotificationSummary summary = new SDNotificationSummary();
+                            summary.setIun(sentNotification.getIun());
+                            summary.setSenderPaInternalId(sentNotification.getSenderPaId());
+                            summary.setSenderPaIpaCode("");
+                            summary.setSenderPaTaxCode(sentNotification.getSenderTaxId());
+                            summary.setSenderPaDescription(sentNotification.getSenderDenomination());
+                            if (Boolean.TRUE.equals(att.getIsAvailable())) {
+                                operationResponse.getIuns().add(summary);
+                            } else {
+                                operationResponse.getUncompletedIuns().add(summary);
+                            }
+                            return sentNotification;
+                        }))
+                .then(Mono.just(operationResponse));
     }
 
     @Override

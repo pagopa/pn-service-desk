@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.service.desk.model.OperationStatusEnum.OK;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OperationsServiceImplTest extends BaseTest {
@@ -410,6 +411,63 @@ class OperationsServiceImplTest extends BaseTest {
         SearchNotificationRequest request = new SearchNotificationRequest();
         request.setTaxId("123");
         return request;
+    }
+
+    @Test
+    void searchOperationsFromRecipientInternalId_SubOperationFiltered_NotIncludedInResult() {
+        pnServiceDeskOperations.setIsSubOperation(true);
+        pnServiceDeskOperations.setAttachments(null);
+
+        Mockito.when(operationDAO.searchOperationsFromRecipientInternalId(Mockito.any()))
+                .thenReturn(Flux.just(pnServiceDeskOperations));
+
+        StepVerifier.create(service.searchOperationsFromRecipientInternalId("1234", getNotificationRequest()))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertNotNull(response.getOperations());
+                    assertEquals(0, response.getOperations().size());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void searchOperationsFromRecipientInternalId_WithSubOperationIds_EnhancesIunsFromSubOps() {
+        PnServiceDeskOperations parentOp = pnServiceDeskOperations;
+        parentOp.setSubOperationsIds(List.of("sub1"));
+
+        PnServiceDeskAttachments attachment = new PnServiceDeskAttachments();
+        attachment.setIun("iun-sub");
+        attachment.setIsAvailable(true);
+
+        PnServiceDeskOperations subOp = new PnServiceDeskOperations();
+        subOp.setOperationId("sub1");
+        subOp.setIun("iun-sub");
+        subOp.setStatus(OK.toString());
+        subOp.setAttachments(new ArrayList<>(List.of(attachment)));
+
+        SentNotificationV25Dto sentNotification = new SentNotificationV25Dto();
+        sentNotification.setIun("iun-sub");
+        sentNotification.setSenderPaId("pa-id");
+        sentNotification.setSenderTaxId("pa-tax");
+        sentNotification.setSenderDenomination("pa-name");
+
+        Mockito.when(operationDAO.searchOperationsFromRecipientInternalId(Mockito.any()))
+                .thenReturn(Flux.just(parentOp));
+        Mockito.when(operationDAO.getByOperationId("sub1"))
+                .thenReturn(Mono.just(subOp));
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate("iun-sub"))
+                .thenReturn(Mono.just(sentNotification));
+
+        StepVerifier.create(service.searchOperationsFromRecipientInternalId("1234", getNotificationRequest()))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertEquals(1, response.getOperations().size());
+                    OperationResponse op = response.getOperations().get(0);
+                    assertNotNull(op.getIuns());
+                    assertEquals(1, op.getIuns().size());
+                    assertEquals("iun-sub", op.getIuns().get(0).getIun());
+                })
+                .verifyComplete();
     }
 
     @Test
