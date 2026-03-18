@@ -269,15 +269,15 @@ public class OperationsServiceImpl implements OperationsService {
 
     private Mono<OperationResponse> enhanceIunsFromSubOperations(List<String> subOpIds, OperationResponse operationResponse) {
         return Flux.fromIterable(subOpIds)
-                .flatMap(operationDAO::getByOperationId)
+                .concatMap(operationDAO::getByOperationId)
                 .filter(subOp -> StringUtils.isNotBlank(subOp.getIun()))
-                .flatMap(subOp -> enhanceIuns(Objects.requireNonNullElse(subOp.getAttachments(), new ArrayList<>()), operationResponse))
+                .concatMap(subOp -> enhanceIuns(Objects.requireNonNullElse(subOp.getAttachments(), new ArrayList<>()), operationResponse))
                 .then(Mono.just(operationResponse));
     }
 
     private Mono<OperationResponse> enhanceIuns(List<PnServiceDeskAttachments> attachments, OperationResponse operationResponse) {
         return Flux.fromIterable(attachments)
-                .flatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun())
+                .concatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun())
                         .map(sentNotification -> {
                             SDNotificationSummary summary = new SDNotificationSummary();
                             summary.setIun(sentNotification.getIun());
