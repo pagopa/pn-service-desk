@@ -265,7 +265,6 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                 .concatWith(getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
                                 // Excluding documents that contains one of the document type in the filter list
                                 .filterWhen(fileKeyOrUrl -> Flux.fromIterable(cfn.getDocumentTypeFilter()).all(dt -> !fileKeyOrUrl.contains(dt)))
-                                //.flatMap(this::attachmentInfo)
                                 .flatMap(x -> this.attachmentInfo(x, EMAIL.equalsIgnoreCase(addressType)))
                                 .map(attachmentInfo -> {
                                     if (StringUtils.isNotEmpty(attachmentInfo.getFileKey())) attachmentInfo.setFileKey(attachmentInfo.getFileKey().contains(Utility.SAFESTORAGE_BASE_URL) ? attachmentInfo.getFileKey() : Utility.SAFESTORAGE_BASE_URL.concat(attachmentInfo.getFileKey()));
