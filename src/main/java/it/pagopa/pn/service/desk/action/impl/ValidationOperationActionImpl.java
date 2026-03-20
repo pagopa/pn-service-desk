@@ -127,7 +127,13 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
 
             return getAttachmentsList(operation, iuns, address.getType())
                     .collectList()
-                    .flatMap(listAttachment -> requestToPrepare(operation, listAttachment, address))
+                    .flatMap(lstAttachments -> {
+                        operation.setAttachments(lstAttachments);
+                        return operationDAO.updateEntity(operation)
+                                           .switchIfEmpty(Mono.defer(() -> Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()))))
+                                           .thenReturn(operation);
+                    })
+                    .flatMap(listAttachment -> requestToPrepare(operation, address))
                     .then();
         }
 
@@ -154,14 +160,14 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                             }))
                             .thenReturn(op);
                 })
-                .flatMap( op-> requestToPrepare(op, null, address)
+                .flatMap( op-> requestToPrepare(op, address)
 )
                 .then()
                 .doOnError(exception -> log.error("errorReason = {}, Error during the validation flow", exception.getMessage()));
     }
 
-    private Mono<Void> requestToPrepare(PnServiceDeskOperations operation, List<PnServiceDeskAttachments> listAttachment, PnServiceDeskAddress address) {
-        return Flux.fromIterable(listAttachment != null ? listAttachment : operation.getAttachments())
+    private Mono<Void> requestToPrepare(PnServiceDeskOperations operation, PnServiceDeskAddress address) {
+        return Flux.fromIterable(operation.getAttachments())
                                 .flatMap(this::getFileKeyFromAttachments)
                                 .map(fileKey -> fileKey)
                                 .collectList()

@@ -353,11 +353,12 @@ class ValidationOperationActionImplTest {
         Mockito.when(operationDAO.getByOperationId("opIdEmail")).thenReturn(Mono.just(operation));
         Mockito.when(addressDAO.getAddress("opIdEmail")).thenReturn(Mono.just(address));
         Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(getDeduplicatesResponse(true)));
+        Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(operation));
         Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
         Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(pnDeliveryClient.getPresignedUrlPaymentDocument(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(notificationAttachmentDownloadMetadataResponseDto));
+               .thenReturn(Mono.just(notificationAttachmentDownloadMetadataResponseDto));
         Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                .thenReturn(Mono.empty());
         Mockito.when(cfn.getExternalChannelCxId()).thenReturn("CXID");
@@ -472,11 +473,12 @@ class ValidationOperationActionImplTest {
         Mockito.when(operationDAO.getByOperationId("SUB#parentId#IUN-123")).thenReturn(Mono.just(subOp));
         Mockito.when(addressDAO.getAddress("parentId")).thenReturn(Mono.just(address));
         Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(getDeduplicatesResponse(true)));
+        Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(subOp));
         Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
         Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(pnDeliveryClient.getPresignedUrlPaymentDocument(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(notificationAttachmentDownloadMetadataResponseDto));
+               .thenReturn(Mono.just(notificationAttachmentDownloadMetadataResponseDto));
         Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                .thenReturn(Mono.empty());
         Mockito.when(cfn.getExternalChannelCxId()).thenReturn("CXID");
@@ -489,6 +491,5 @@ class ValidationOperationActionImplTest {
         Mockito.verify(addressDAO).getAddress("parentId");
         Mockito.verify(externalChannelClient).sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any());
     }
-
 
 }
