@@ -54,6 +54,7 @@ public class OperationsServiceImpl implements OperationsService {
     private final OperationsFileKeyDAO operationsFileKeyDAO;
     private final PnServiceDeskConfigs cfn;
     private record IunResult(OperationItemResponse response, PnServiceDeskOperations subOp, String denomination) {}
+    private static final int MAX_CONCURRENCY = 10;
 
     public OperationsServiceImpl(NotificationService notificationService, PnDataVaultClient dataVaultClient,
                                  PnSafeStorageClient safeStorageClient, PnDeliveryClient pnDeliveryClient, OperationDAO operationDAO,
@@ -269,17 +270,27 @@ public class OperationsServiceImpl implements OperationsService {
 
     private Mono<OperationResponse> enhanceIunsFromSubOperations(List<String> subOpIds, OperationResponse operationResponse) {
         return Flux.fromIterable(subOpIds)
-                .flatMap(operationDAO::getByOperationId)
+                .flatMap(operationDAO::getByOperationId, MAX_CONCURRENCY)
                 .filter(subOp -> StringUtils.isNotBlank(subOp.getIun()))
-                .flatMap(subOp -> buildSummaries(subOp.getAttachments()))
-                .collectList()
-                .map(summaries -> setSummariesInOperationResponse(summaries, operationResponse));
+                .flatMap(subOp -> buildSummaries(subOp.getAttachments()), MAX_CONCURRENCY)
+                .collect(() -> operationResponse, (response, tuple) -> {
+                    if (Boolean.TRUE.equals(tuple.getT2())) {
+                        response.getIuns().add(tuple.getT1());
+                    } else {
+                        response.getUncompletedIuns().add(tuple.getT1());
+                    }
+                });
     }
 
     private Mono<OperationResponse> enhanceIuns(List<PnServiceDeskAttachments> attachments, OperationResponse operationResponse) {
         return buildSummaries(attachments)
-                .collectList()
-                .map(summaries -> setSummariesInOperationResponse(summaries, operationResponse));
+                .collect(() -> operationResponse, (response, tuple) -> {
+                    if (Boolean.TRUE.equals(tuple.getT2())) {
+                        response.getIuns().add(tuple.getT1());
+                    } else {
+                        response.getUncompletedIuns().add(tuple.getT1());
+                    }
+                });
     }
 
     private Flux<Tuple2<SDNotificationSummary, Boolean>> buildSummaries(List<PnServiceDeskAttachments> attachments) {
@@ -293,19 +304,7 @@ public class OperationsServiceImpl implements OperationsService {
                             summary.setSenderPaTaxCode(sentNotification.getSenderTaxId());
                             summary.setSenderPaDescription(sentNotification.getSenderDenomination());
                             return Tuples.of(summary, Boolean.TRUE.equals(att.getIsAvailable()));
-                        }));
-    }
-
-    private OperationResponse setSummariesInOperationResponse(List<Tuple2<SDNotificationSummary, Boolean>> summaries, OperationResponse operationResponse) {
-        summaries.forEach(t -> {
-            Boolean isAvailable = t.getT2();
-            if (Boolean.TRUE.equals(isAvailable)) {
-                operationResponse.getIuns().add(t.getT1());
-            } else {
-                operationResponse.getUncompletedIuns().add(t.getT1());
-            }
-        });
-        return operationResponse;
+                        }), MAX_CONCURRENCY);
     }
 
     @Override
