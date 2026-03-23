@@ -255,8 +255,7 @@ public class OperationsServiceImpl implements OperationsService {
                     if (!CollectionUtils.isEmpty(subOpIds)) {
                         return enhanceIunsFromSubOperations(subOpIds, operationResponse);
                     } else {
-                        List<PnServiceDeskAttachments> attachments = Objects.requireNonNullElse(pnServiceDeskOperations.getAttachments(), new ArrayList<>());
-                        return enhanceIuns(attachments, operationResponse);
+                        return enhanceIuns(pnServiceDeskOperations.getAttachments(), operationResponse);
                     }
                 })
                 .collectSortedList((op1, op2) ->
@@ -278,13 +277,13 @@ public class OperationsServiceImpl implements OperationsService {
     }
 
     private Mono<OperationResponse> enhanceIuns(List<PnServiceDeskAttachments> attachments, OperationResponse operationResponse) {
-        return buildSummaries(Objects.requireNonNullElse(attachments, new ArrayList<>()))
+        return buildSummaries(attachments)
                 .collectList()
                 .map(summaries -> setSummariesInOperationResponse(summaries, operationResponse));
     }
 
     private Flux<Tuple2<SDNotificationSummary, Boolean>> buildSummaries(List<PnServiceDeskAttachments> attachments) {
-        return Flux.fromIterable(attachments)
+        return Flux.fromIterable(Objects.requireNonNullElse(attachments, new ArrayList<>()))
                 .flatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun())
                         .map(sentNotification -> {
                             SDNotificationSummary summary = new SDNotificationSummary();

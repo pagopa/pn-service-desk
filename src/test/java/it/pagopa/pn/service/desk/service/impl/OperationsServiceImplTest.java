@@ -471,6 +471,30 @@ class OperationsServiceImplTest extends BaseTest {
     }
 
     @Test
+    void searchOperationsFromRecipientInternalId_WithSubOperationNullAttachments_CompletesWithoutNPE() {
+        PnServiceDeskOperations parentOp = pnServiceDeskOperations;
+        parentOp.setSubOperationsIds(List.of("sub1"));
+
+        PnServiceDeskOperations subOp = new PnServiceDeskOperations();
+        subOp.setOperationId("sub1");
+        subOp.setIun("iun-sub");
+        subOp.setAttachments(null);
+
+        Mockito.when(operationDAO.searchOperationsFromRecipientInternalId(Mockito.any()))
+                .thenReturn(Flux.just(parentOp));
+        Mockito.when(operationDAO.getByOperationId("sub1"))
+                .thenReturn(Mono.just(subOp));
+
+        StepVerifier.create(service.searchOperationsFromRecipientInternalId("1234", getNotificationRequest()))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertNotNull(response.getOperations());
+                    assertEquals(1, response.getOperations().size());
+                })
+                .verifyComplete();
+    }
+
+    @Test
     void createActOperationV2_AllValid_CreatesParentAndSubOps() {
         SentNotificationV25Dto sentNotificationV25Dto = new SentNotificationV25Dto();
         NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
