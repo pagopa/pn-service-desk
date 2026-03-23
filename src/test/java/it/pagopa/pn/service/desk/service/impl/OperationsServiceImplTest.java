@@ -415,11 +415,8 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void searchOperationsFromRecipientInternalId_SubOperationFiltered_NotIncludedInResult() {
-        pnServiceDeskOperations.setIsSubOperation(true);
-        pnServiceDeskOperations.setAttachments(null);
-
         Mockito.when(operationDAO.searchOperationsFromRecipientInternalId(Mockito.any()))
-                .thenReturn(Flux.just(pnServiceDeskOperations));
+                .thenReturn(Flux.empty());
 
         StepVerifier.create(service.searchOperationsFromRecipientInternalId("1234", getNotificationRequest()))
                 .assertNext(response -> {

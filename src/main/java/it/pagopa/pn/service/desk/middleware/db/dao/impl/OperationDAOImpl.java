@@ -13,11 +13,15 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactPutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implements OperationDAO {
@@ -69,7 +73,12 @@ public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implement
 
     @Override
     public Flux<PnServiceDeskOperations> searchOperationsFromRecipientInternalId(String taxId) {
-        return this.getBySecondaryIndex(PnServiceDeskOperations.RECIPIENT_INTERNAL_INDEX, taxId, null);
+        QueryConditional conditional = QueryConditional.keyEqualTo(Key.builder().partitionValue(taxId).build());
+        Map<String, AttributeValue> filterValues = Map.of(
+                ":isSubOpTrue", AttributeValue.builder().bool(true).build()
+        );
+        String filterExpression = String.format("attribute_not_exists(%s) OR %s <> :isSubOpTrue", PnServiceDeskOperations.COL_IS_SUB_OPERATION, PnServiceDeskOperations.COL_IS_SUB_OPERATION);
+        return this.getByFilter(conditional, PnServiceDeskOperations.RECIPIENT_INTERNAL_INDEX, filterValues, filterExpression);
     }
 
     @Override

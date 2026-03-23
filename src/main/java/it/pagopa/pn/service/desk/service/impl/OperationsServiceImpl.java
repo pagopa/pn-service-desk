@@ -31,12 +31,16 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
+
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.service.desk.model.OperationStatusEnum.CREATING;
@@ -246,17 +250,17 @@ public class OperationsServiceImpl implements OperationsService {
     @Override
     public Mono<SearchResponse> searchOperationsFromRecipientInternalId(String xPagopaPnUid, SearchNotificationRequest searchNotificationRequest) {
         SearchResponse response = new SearchResponse();
+        Map<String, Mono<SentNotificationV25Dto>> notificationCache = new ConcurrentHashMap<>();
 
         return dataVaultClient.anonymized(searchNotificationRequest.getTaxId())
                 .flatMapMany(operationDAO::searchOperationsFromRecipientInternalId)
-                .filter(operation -> !Boolean.TRUE.equals(operation.getIsSubOperation()))
                 .flatMap(pnServiceDeskOperations -> {
                     OperationResponse operationResponse = OperationMapper.operationResponseMapper(pnServiceDeskOperations, searchNotificationRequest.getTaxId());
                     List<String> subOpIds = pnServiceDeskOperations.getSubOperationsIds();
                     if (!CollectionUtils.isEmpty(subOpIds)) {
-                        return enhanceIunsFromSubOperations(subOpIds, operationResponse);
+                        return enhanceIunsFromSubOperations(subOpIds, operationResponse, notificationCache);
                     } else {
-                        return enhanceIuns(pnServiceDeskOperations.getAttachments(), operationResponse);
+                        return enhanceIuns(pnServiceDeskOperations.getAttachments(), operationResponse, notificationCache);
                     }
                 })
                 .collectSortedList((op1, op2) ->
@@ -268,11 +272,11 @@ public class OperationsServiceImpl implements OperationsService {
                 });
     }
 
-    private Mono<OperationResponse> enhanceIunsFromSubOperations(List<String> subOpIds, OperationResponse operationResponse) {
+    private Mono<OperationResponse> enhanceIunsFromSubOperations(List<String> subOpIds, OperationResponse operationResponse, Map<String, Mono<SentNotificationV25Dto>> notificationCache) {
         return Flux.fromIterable(subOpIds)
-                .flatMap(operationDAO::getByOperationId, MAX_CONCURRENCY)
+                .flatMap(operationDAO::getByOperationId)
                 .filter(subOp -> StringUtils.isNotBlank(subOp.getIun()))
-                .flatMap(subOp -> buildSummaries(subOp.getAttachments()), MAX_CONCURRENCY)
+                .flatMap(subOp -> buildSummaries(subOp.getAttachments(), notificationCache))
                 .collect(() -> operationResponse, (response, tuple) -> {
                     if (Boolean.TRUE.equals(tuple.getT2())) {
                         response.getIuns().add(tuple.getT1());
@@ -282,8 +286,8 @@ public class OperationsServiceImpl implements OperationsService {
                 });
     }
 
-    private Mono<OperationResponse> enhanceIuns(List<PnServiceDeskAttachments> attachments, OperationResponse operationResponse) {
-        return buildSummaries(attachments)
+    private Mono<OperationResponse> enhanceIuns(List<PnServiceDeskAttachments> attachments, OperationResponse operationResponse, Map<String, Mono<SentNotificationV25Dto>> notificationCache) {
+        return buildSummaries(attachments, notificationCache)
                 .collect(() -> operationResponse, (response, tuple) -> {
                     if (Boolean.TRUE.equals(tuple.getT2())) {
                         response.getIuns().add(tuple.getT1());
@@ -293,9 +297,9 @@ public class OperationsServiceImpl implements OperationsService {
                 });
     }
 
-    private Flux<Tuple2<SDNotificationSummary, Boolean>> buildSummaries(List<PnServiceDeskAttachments> attachments) {
+    private Flux<Tuple2<SDNotificationSummary, Boolean>> buildSummaries(List<PnServiceDeskAttachments> attachments, Map<String, Mono<SentNotificationV25Dto>> notificationCache) {
         return Flux.fromIterable(Objects.requireNonNullElse(attachments, new ArrayList<>()))
-                .flatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun())
+                .flatMap(att -> notificationCache.computeIfAbsent(att.getIun(), iun -> pnDeliveryClient.getSentNotificationPrivate(iun).cache())
                         .map(sentNotification -> {
                             SDNotificationSummary summary = new SDNotificationSummary();
                             summary.setIun(sentNotification.getIun());
