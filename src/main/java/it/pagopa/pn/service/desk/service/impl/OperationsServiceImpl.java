@@ -29,6 +29,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -53,6 +54,7 @@ public class OperationsServiceImpl implements OperationsService {
     private final OperationsFileKeyDAO operationsFileKeyDAO;
     private final PnServiceDeskConfigs cfn;
     private record IunResult(OperationItemResponse response, PnServiceDeskOperations subOp, String denomination) {}
+    private static final int MAX_CONCURRENCY = 10;
 
     public OperationsServiceImpl(NotificationService notificationService, PnDataVaultClient dataVaultClient,
                                  PnSafeStorageClient safeStorageClient, PnDeliveryClient pnDeliveryClient, OperationDAO operationDAO,
@@ -254,8 +256,7 @@ public class OperationsServiceImpl implements OperationsService {
                     if (!CollectionUtils.isEmpty(subOpIds)) {
                         return enhanceIunsFromSubOperations(subOpIds, operationResponse);
                     } else {
-                        List<PnServiceDeskAttachments> attachments = Objects.requireNonNullElse(pnServiceDeskOperations.getAttachments(), new ArrayList<>());
-                        return enhanceIuns(attachments, operationResponse);
+                        return enhanceIuns(pnServiceDeskOperations.getAttachments(), operationResponse);
                     }
                 })
                 .collectSortedList((op1, op2) ->
@@ -269,29 +270,41 @@ public class OperationsServiceImpl implements OperationsService {
 
     private Mono<OperationResponse> enhanceIunsFromSubOperations(List<String> subOpIds, OperationResponse operationResponse) {
         return Flux.fromIterable(subOpIds)
-                .concatMap(operationDAO::getByOperationId)
+                .flatMap(operationDAO::getByOperationId, MAX_CONCURRENCY)
                 .filter(subOp -> StringUtils.isNotBlank(subOp.getIun()))
-                .concatMap(subOp -> enhanceIuns(Objects.requireNonNullElse(subOp.getAttachments(), new ArrayList<>()), operationResponse))
-                .then(Mono.just(operationResponse));
+                .flatMap(subOp -> buildSummaries(subOp.getAttachments()), MAX_CONCURRENCY)
+                .collect(() -> operationResponse, (response, tuple) -> {
+                    if (Boolean.TRUE.equals(tuple.getT2())) {
+                        response.getIuns().add(tuple.getT1());
+                    } else {
+                        response.getUncompletedIuns().add(tuple.getT1());
+                    }
+                });
     }
 
     private Mono<OperationResponse> enhanceIuns(List<PnServiceDeskAttachments> attachments, OperationResponse operationResponse) {
-        return Flux.fromIterable(attachments)
-                .concatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun())
-                        .doOnNext(sentNotification -> {
+        return buildSummaries(attachments)
+                .collect(() -> operationResponse, (response, tuple) -> {
+                    if (Boolean.TRUE.equals(tuple.getT2())) {
+                        response.getIuns().add(tuple.getT1());
+                    } else {
+                        response.getUncompletedIuns().add(tuple.getT1());
+                    }
+                });
+    }
+
+    private Flux<Tuple2<SDNotificationSummary, Boolean>> buildSummaries(List<PnServiceDeskAttachments> attachments) {
+        return Flux.fromIterable(Objects.requireNonNullElse(attachments, new ArrayList<>()))
+                .flatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun())
+                        .map(sentNotification -> {
                             SDNotificationSummary summary = new SDNotificationSummary();
                             summary.setIun(sentNotification.getIun());
                             summary.setSenderPaInternalId(sentNotification.getSenderPaId());
                             summary.setSenderPaIpaCode("");
                             summary.setSenderPaTaxCode(sentNotification.getSenderTaxId());
                             summary.setSenderPaDescription(sentNotification.getSenderDenomination());
-                            if (Boolean.TRUE.equals(att.getIsAvailable())) {
-                                operationResponse.getIuns().add(summary);
-                            } else {
-                                operationResponse.getUncompletedIuns().add(summary);
-                            }
-                        }))
-                .then(Mono.just(operationResponse));
+                            return Tuples.of(summary, Boolean.TRUE.equals(att.getIsAvailable()));
+                        }), MAX_CONCURRENCY);
     }
 
     @Override
