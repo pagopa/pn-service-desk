@@ -133,8 +133,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                            .switchIfEmpty(Mono.defer(() -> Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()))))
                                            .thenReturn(operation);
                     })
-                    .flatMap(listAttachment -> requestToPrepare(operation, address))
-                    .then();
+                    .then(requestToPrepare(operation, address));
         }
 
         return getIuns(operation.getRecipientInternalId())
@@ -326,7 +325,8 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                             return info;
                         });
                     }
-                    return null;
+                    info.setAvailable(TRUE);
+                    return Mono.just(info);
                 })
                 .onErrorResume(exception -> {
                     log.debug("errorReason = {}, An error occurred while retrieving the file", exception.getMessage());
