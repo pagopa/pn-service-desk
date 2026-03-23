@@ -29,6 +29,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -269,29 +270,43 @@ public class OperationsServiceImpl implements OperationsService {
 
     private Mono<OperationResponse> enhanceIunsFromSubOperations(List<String> subOpIds, OperationResponse operationResponse) {
         return Flux.fromIterable(subOpIds)
-                .concatMap(operationDAO::getByOperationId)
+                .flatMap(operationDAO::getByOperationId)
                 .filter(subOp -> StringUtils.isNotBlank(subOp.getIun()))
-                .concatMap(subOp -> enhanceIuns(Objects.requireNonNullElse(subOp.getAttachments(), new ArrayList<>()), operationResponse))
-                .then(Mono.just(operationResponse));
+                .flatMap(subOp -> buildSummaries(subOp.getAttachments()))
+                .collectList()
+                .map(summaries -> setSummariesInOperationResponse(summaries, operationResponse));
     }
 
     private Mono<OperationResponse> enhanceIuns(List<PnServiceDeskAttachments> attachments, OperationResponse operationResponse) {
+        return buildSummaries(Objects.requireNonNullElse(attachments, new ArrayList<>()))
+                .collectList()
+                .map(summaries -> setSummariesInOperationResponse(summaries, operationResponse));
+    }
+
+    private Flux<Tuple2<SDNotificationSummary, Boolean>> buildSummaries(List<PnServiceDeskAttachments> attachments) {
         return Flux.fromIterable(attachments)
-                .concatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun())
-                        .doOnNext(sentNotification -> {
+                .flatMap(att -> pnDeliveryClient.getSentNotificationPrivate(att.getIun())
+                        .map(sentNotification -> {
                             SDNotificationSummary summary = new SDNotificationSummary();
                             summary.setIun(sentNotification.getIun());
                             summary.setSenderPaInternalId(sentNotification.getSenderPaId());
                             summary.setSenderPaIpaCode("");
                             summary.setSenderPaTaxCode(sentNotification.getSenderTaxId());
                             summary.setSenderPaDescription(sentNotification.getSenderDenomination());
-                            if (Boolean.TRUE.equals(att.getIsAvailable())) {
-                                operationResponse.getIuns().add(summary);
-                            } else {
-                                operationResponse.getUncompletedIuns().add(summary);
-                            }
-                        }))
-                .then(Mono.just(operationResponse));
+                            return Tuples.of(summary, Boolean.TRUE.equals(att.getIsAvailable()));
+                        }));
+    }
+
+    private OperationResponse setSummariesInOperationResponse(List<Tuple2<SDNotificationSummary, Boolean>> summaries, OperationResponse operationResponse) {
+        summaries.forEach(t -> {
+            Boolean isAvailable = t.getT2();
+            if (Boolean.TRUE.equals(isAvailable)) {
+                operationResponse.getIuns().add(t.getT1());
+            } else {
+                operationResponse.getUncompletedIuns().add(t.getT1());
+            }
+        });
+        return operationResponse;
     }
 
     @Override
