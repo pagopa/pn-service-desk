@@ -47,15 +47,15 @@ class UtilityTest {
     @Test
     void testConvertToHttpStatus_Success() {
         HttpStatusCode statusCode = HttpStatus.OK;
-        HttpStatus result = Utility.convertToHttpStatus(statusCode);
+        HttpStatusCode result = Utility.convertToHttpStatus(statusCode);
         Assertions.assertEquals(HttpStatus.OK, result);
     }
 
     @Test
-    void testConvertToHttpStatus_InvalidCode() {
+    void testConvertToHttpStatus_NonStandardCode() {
         HttpStatusCode statusCode = HttpStatusCode.valueOf(999);
-        HttpStatus result = Utility.convertToHttpStatus(statusCode);
-        Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result);
+        HttpStatusCode result = Utility.convertToHttpStatus(statusCode);
+        Assertions.assertEquals(999, result.value());
     }
 
     @Test

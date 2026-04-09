@@ -5,7 +5,6 @@ import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 
 import jakarta.validation.constraints.NotNull;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
 import java.net.URI;
@@ -100,14 +99,8 @@ public class Utility {
         return LocalDate.parse(date).format(formatter);
     }
 
-    public static HttpStatus convertToHttpStatus(HttpStatusCode statusCode) {
-        HttpStatus httpStatus;
-        try {
-            httpStatus = HttpStatus.valueOf(statusCode.value());
-        } catch (IllegalArgumentException ex) {
-            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-        }
-        return httpStatus;
+    public static HttpStatusCode convertToHttpStatus(HttpStatusCode statusCode) {
+        return statusCode;
     }
 
 }
