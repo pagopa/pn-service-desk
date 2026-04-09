@@ -95,6 +95,13 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         operationDAO.getByOperationId(operationId)
                 .switchIfEmpty(Mono.error(new PnEntityNotFoundException()))
                 .doOnNext(operation -> log.debug("operationId = {}, operation = {}, EntityOperation retrieved", operationId, operation))
+                .filter(operation -> {
+                    if (operation.getSubOperationsIds() != null && !operation.getSubOperationsIds().isEmpty()) {
+                        log.info("operationId = {}, Skipping execute for parent v2 operation", operationId);
+                        return false;
+                    }
+                    return true;
+                })
                 .zipWhen(operation -> {
                     log.debug("operationId = {}, operation = {}, Retrieving address from operationId", operationId, operation);
                     return getAddressFromOperationId(operationId);
@@ -198,7 +205,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
         log.debug("operationId: {}, GetAddressFromOperationId received input", operationId);
 
         log.debug("operationId: {}, Retrieving address associated to operationId", operationId);
-        return addressDAO.getAddress(operationId)
+        return addressDAO.getAddress(Utility.resolveAddressOperationId(operationId))
                 .switchIfEmpty(Mono.defer(() -> {
                     log.error("operationId = {}, EntityAddress was not found", operationId);
                     return Mono.error(new PnGenericException(ADDRESS_IS_NOT_PRESENT, ADDRESS_IS_NOT_PRESENT.getMessage()));
@@ -388,7 +395,8 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
 
     private Flux<String> retrievePaymentAttachments(int attachmentId, NotificationPaymentItemDto payment, String iun, String internalId) {
         Flux<String> fileKeys = Flux.empty();
-        if(payment.getPagoPa() != null)
+
+        if(payment.getPagoPa() != null && payment.getPagoPa().getAttachment() != null)
             fileKeys = fileKeys.concatWith(getPaymentAttachmentUrl(iun, PAGOPA, internalId, attachmentId));
 
         if (payment.getF24() != null)

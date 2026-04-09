@@ -58,4 +58,32 @@ class UtilityTest {
         Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result);
     }
 
+    @Test
+    void testResolveAddressOperationId_subOperation_extractsParentId() {
+        // SUB#{parentOperationId}#{iun} → parentOperationId
+        String result = Utility.resolveAddressOperationId("SUB#ticket123op1#ABCD-1234-EFGH-5678");
+        Assertions.assertEquals("ticket123op1", result);
+    }
+
+    @Test
+    void testResolveAddressOperationId_regularOperation_behavesLikeCleanUp() {
+        // V1/V2 parent with -SENT- suffix → stripped just like cleanUpOperationId
+        String result = Utility.resolveAddressOperationId("TEST-new-UN-6test-unre-SENT-1");
+        Assertions.assertEquals("TEST-new-UN-6test-unre", result);
+    }
+
+    @Test
+    void testResolveAddressOperationId_regularOperationNoSuffix_returnedAsIs() {
+        // V1/V2 parent without -SENT- suffix → unchanged
+        String result = Utility.resolveAddressOperationId("ticket123op1");
+        Assertions.assertEquals("ticket123op1", result);
+    }
+
+    @Test
+    void testResolveAddressOperationId_subOperationWithoutIunSeparator_returnsWithoutPrefix() {
+        // Edge case: "SUB#parentId" without second # → returns parentId
+        String result = Utility.resolveAddressOperationId("SUB#ticket123op1");
+        Assertions.assertEquals("ticket123op1", result);
+    }
+
 }

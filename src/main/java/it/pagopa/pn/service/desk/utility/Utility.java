@@ -1,6 +1,5 @@
 package it.pagopa.pn.service.desk.utility;
 
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalchannel.v1.dto.ProgressEventCategoryDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.StatusCodeEnumDto;
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import org.apache.commons.lang3.StringUtils;
@@ -47,24 +46,12 @@ public class Utility {
         return getStatusMapping().get(statusCodePaperChannel);
     }
 
-public static OperationStatusEnum getEcOperationStatusFrom(ProgressEventCategoryDto statusCodeExternalChannel){
-        return getEcStatusMapping().get(statusCodeExternalChannel);
-}
-
     private static Map<StatusCodeEnumDto, OperationStatusEnum> getStatusMapping(){
         Map<StatusCodeEnumDto, OperationStatusEnum> status = new EnumMap<>(StatusCodeEnumDto.class);
         status.put(StatusCodeEnumDto.KO, OperationStatusEnum.KO);
         status.put(StatusCodeEnumDto.KOUNREACHABLE, OperationStatusEnum.KO);
         status.put(StatusCodeEnumDto.OK, OperationStatusEnum.OK);
         status.put(StatusCodeEnumDto.PROGRESS, OperationStatusEnum.PROGRESS);
-        return status;
-    }
-
-    private static Map<ProgressEventCategoryDto, OperationStatusEnum> getEcStatusMapping(){
-        Map<ProgressEventCategoryDto, OperationStatusEnum> status = new EnumMap<>(ProgressEventCategoryDto.class);
-        status.put(ProgressEventCategoryDto.ERROR, OperationStatusEnum.KO);
-        status.put(ProgressEventCategoryDto.OK, OperationStatusEnum.OK);
-        status.put(ProgressEventCategoryDto.PROGRESS, OperationStatusEnum.PROGRESS);
         return status;
     }
 
@@ -81,6 +68,21 @@ public static OperationStatusEnum getEcOperationStatusFrom(ProgressEventCategory
             cleanUpOperationId = operationId;
         }
         return cleanUpOperationId;
+    }
+
+    /**
+     * Resolves the operationId to use for address table lookups.
+     * Sub-operations have format "SUB#{parentOperationId}#{iun}" and share the parent's address,
+     * so the parentOperationId is extracted via string parsing (no extra DynamoDB call needed).
+     * Regular IDs pass through cleanUpOperationId() unchanged.
+     */
+    public static String resolveAddressOperationId(@NotNull String operationId) {
+        if (operationId.startsWith("SUB#")) {
+            String withoutPrefix = operationId.substring("SUB#".length());
+            int iunSeparator = withoutPrefix.indexOf('#');
+            return iunSeparator != -1 ? withoutPrefix.substring(0, iunSeparator) : withoutPrefix;
+        }
+        return cleanUpOperationId(operationId);
     }
 
     public static String extractFileKeyFromUrl(String url) {

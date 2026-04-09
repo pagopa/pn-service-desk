@@ -17,13 +17,16 @@ import software.amazon.awssdk.enhanced.dynamodb.model.TransactPutItemEnhancedReq
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 
+import java.util.List;
+
 @Service
 public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implements OperationDAO {
     private final AddressDAO addressDAO;
 
     protected OperationDAOImpl(DataEncryption kmsEncryption,
                                DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
-                               DynamoDbAsyncClient dynamoDbAsyncClient, AddressDAO addressDAO,
+                               DynamoDbAsyncClient dynamoDbAsyncClient,
+                               AddressDAO addressDAO,
                                AwsConfigsActivation awsPropertiesConfig) {
         super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbOperationsTable(), PnServiceDeskOperations.class);
@@ -37,6 +40,31 @@ public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implement
         this.createTransaction(builder, operations);
         this.addressDAO.createWithTransaction(builder, address);
         return Mono.fromFuture(super.putWithTransact(builder.build()).thenApply(response -> Tuples.of(operations, address)));
+    }
+
+    @Override
+    public Mono<PnServiceDeskOperations> createOperation(PnServiceDeskOperations operations) {
+        return Mono.fromFuture(super.put(operations));
+    }
+
+    @Override
+    public Mono<PnServiceDeskOperations> createParentOperationWithSubOpsAndAddress(PnServiceDeskOperations parent,
+                                                                                    PnServiceDeskAddress address,
+                                                                                    List<PnServiceDeskOperations> subOperations) {
+        TransactWriteItemsEnhancedRequest.Builder builder = TransactWriteItemsEnhancedRequest.builder();
+        this.createTransaction(builder, parent);
+        this.addressDAO.createWithTransaction(builder, address);
+        subOperations.forEach(subOp -> this.createTransaction(builder, subOp));
+        return Mono.fromFuture(super.putWithTransact(builder.build()).thenApply(response -> parent));
+    }
+
+    @Override
+    public Mono<PnServiceDeskOperations> createParentOperationWithSubOps(PnServiceDeskOperations parent,
+                                                                         List<PnServiceDeskOperations> subOperations) {
+        TransactWriteItemsEnhancedRequest.Builder builder = TransactWriteItemsEnhancedRequest.builder();
+        this.createTransaction(builder, parent);
+        subOperations.forEach(subOp -> this.createTransaction(builder, subOp));
+        return Mono.fromFuture(super.putWithTransact(builder.build()).thenApply(response -> parent));
     }
 
     @Override
@@ -59,7 +87,6 @@ public class OperationDAOImpl extends BaseDAO<PnServiceDeskOperations> implement
                 TransactPutItemEnhancedRequest.builder(PnServiceDeskOperations.class)
                         .item(serviceDeskOperations)
                         .build();
-
         builder.addPutItem(this.dynamoTable, requestEntity);
     }
 }
