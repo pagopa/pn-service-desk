@@ -501,6 +501,7 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !Ref ExternalChannelToServiceDeskQueueARN
+                  - !Ref PaperChannelToServiceDeskQueueARN
     
   PnCoreEventBusExternalChannel2ServiceDeskResponseRule:
     Type: AWS::Events::Rule
@@ -552,6 +553,35 @@ Resources:
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
 
+  PnCoreEventBusToPaperChannelToServiceDeskQueueRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Route PaperChannel Events to pn-service-desk
+      RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
+      EventBusName: !Sub '${ProjectName}-CoreEventBus'
+      EventPattern:
+        detail-type: [ "PaperChannelOutcomeEvent" ]
+        detail:
+          clientId: [ !Ref PaperChannelCxId ]
+      Targets:
+        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
+          Id: !Sub ${ProjectName}-Logger-PaperChannel2ServiceDesk
+          InputTransformer:
+            InputPathsMap:
+              "timestamp": "$.time"
+            InputTemplate: |
+              {
+                  "timestamp": <timestamp>,
+                  "ruleArn": <aws.events.rule-arn>,
+                  "ruleName": <aws.events.rule-name>,
+                  "ingestionTime": <aws.events.event.ingestion-time>,
+                  "originalEvent": <aws.events.event.json>
+              }
+        - Id: !Sub '${ProjectName}-CoreEventBus-PaperChannel2ServiceDesk'
+          Arn: !Ref PaperChannelToServiceDeskQueueARN
+          InputPath: $.detail
+          DeadLetterConfig:
+            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
 
   ServiceDeskMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack
