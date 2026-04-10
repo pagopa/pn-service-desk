@@ -46,7 +46,6 @@ public class Utility {
     private static Map<StatusCodeEnumDto, OperationStatusEnum> getStatusMapping(){
         Map<StatusCodeEnumDto, OperationStatusEnum> status = new EnumMap<>(StatusCodeEnumDto.class);
         status.put(StatusCodeEnumDto.KO, OperationStatusEnum.KO);
-        status.put(StatusCodeEnumDto.KOUNREACHABLE, OperationStatusEnum.KO);
         status.put(StatusCodeEnumDto.OK, OperationStatusEnum.OK);
         status.put(StatusCodeEnumDto.PROGRESS, OperationStatusEnum.PROGRESS);
         return status;
