@@ -141,9 +141,9 @@ class ResultPaperChannelActionTest {
     }
 
     @Test
-    void executeCaseExceptionStatusCodeKoUnreachable() {
+    void executeCaseExceptionStatusCodeKo() {
         SendEventDto sendEventDto = getSendEventDto();
-        sendEventDto.setStatusCode(StatusCodeEnumDto.KOUNREACHABLE);
+        sendEventDto.setStatusCode(StatusCodeEnumDto.KO);
 
         PnServiceDeskOperations entity = new PnServiceDeskOperations();
 
