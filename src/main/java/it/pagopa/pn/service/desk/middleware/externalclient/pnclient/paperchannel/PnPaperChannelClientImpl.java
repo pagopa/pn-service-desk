@@ -1,5 +1,6 @@
 package it.pagopa.pn.service.desk.middleware.externalclient.pnclient.paperchannel;
 
+import it.pagopa.pn.service.desk.config.PnServiceDeskConfigs;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.api.PaperMessagesApi;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PaperChannelUpdateDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dto.PrepareRequestDto;
@@ -14,10 +15,11 @@ import reactor.core.publisher.Mono;
 @AllArgsConstructor
 public class PnPaperChannelClientImpl implements PnPaperChannelClient{
     private PaperMessagesApi paperMessagesApi;
+    private PnServiceDeskConfigs pnServiceDeskConfigs;
 
     @Override
     public Mono<PaperChannelUpdateDto> sendPaperPrepareRequest(String requestId, PrepareRequestDto prepareRequestDto) {
-        return paperMessagesApi.sendPaperPrepareRequest(requestId, prepareRequestDto);
+        return paperMessagesApi.sendPaperPrepareRequest(requestId, prepareRequestDto, pnServiceDeskConfigs.getPaperChannelCxId());
     }
 
     @Override
