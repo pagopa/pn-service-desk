@@ -553,16 +553,16 @@ Resources:
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
 
-  PnCoreEventBusToServiceDeskPaperChannelResponseQueue:
+  PnCoreEventBusToPaperChannelToServiceDeskQueueRule:
     Type: AWS::Events::Rule
     Properties:
-      Description: Route PaperChannel Events to pn-servicedesk
+      Description: Route PaperChannel Events to pn-service-desk
       RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
       EventBusName: !Sub '${ProjectName}-CoreEventBus'
       EventPattern:
         detail-type: [ "PaperChannelOutcomeEvent" ]
         detail:
-          clientId: [ !Ref ServiceDeskPaperChannelUser ]
+          clientId: [ !Ref PaperChannelCxId ]
       Targets:
         - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
           Id: !Sub ${ProjectName}-Logger-PaperChannel2ServiceDesk
