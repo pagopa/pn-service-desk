@@ -392,7 +392,7 @@
 							<typeMappings>
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-paper-channel/2a025f5ace1d528030d6dc8eb0a738ad50e5c29b/docs/openapi/api-internal-v1.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-paper-channel/2e75e268974f8773caf96385ea83dba1816383bc/docs/openapi/api-internal-v1.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>

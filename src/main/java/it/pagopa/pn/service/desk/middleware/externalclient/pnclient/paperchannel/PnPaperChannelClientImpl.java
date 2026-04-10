@@ -13,11 +13,12 @@ import reactor.core.publisher.Mono;
 @Component
 @AllArgsConstructor
 public class PnPaperChannelClientImpl implements PnPaperChannelClient{
+    private static final String CLIENT_ID = "pn-service-desk";
     private PaperMessagesApi paperMessagesApi;
 
     @Override
     public Mono<PaperChannelUpdateDto> sendPaperPrepareRequest(String requestId, PrepareRequestDto prepareRequestDto) {
-        return paperMessagesApi.sendPaperPrepareRequest(requestId, prepareRequestDto);
+        return paperMessagesApi.sendPaperPrepareRequest(requestId, prepareRequestDto, CLIENT_ID);
     }
 
     @Override
