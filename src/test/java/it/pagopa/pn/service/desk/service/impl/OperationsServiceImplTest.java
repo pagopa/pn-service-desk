@@ -22,8 +22,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -41,17 +41,17 @@ import static it.pagopa.pn.service.desk.model.OperationStatusEnum.OK;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OperationsServiceImplTest extends BaseTest {
-    @MockBean
+    @MockitoBean
     private NotificationService notificationService;
-    @MockBean
+    @MockitoBean
     private PnDeliveryClient pnDeliveryClient;
-    @MockBean
+    @MockitoBean
     private PnDataVaultClient dataVaultClient;
-    @MockBean
+    @MockitoBean
     private PnSafeStorageClient safeStorageClient;
-    @MockBean
+    @MockitoBean
     private OperationDAO operationDAO;
-    @MockBean
+    @MockitoBean
     private OperationsFileKeyDAO operationsFileKeyDAO;
     @Autowired
     private OperationsServiceImpl service;

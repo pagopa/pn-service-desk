@@ -14,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_KEYS_MANAGER_CLIENT;
+import static it.pagopa.pn.service.desk.utility.Utility.convertToHttpStatus;
 
 @Service
 @CustomLog
@@ -34,7 +35,7 @@ public class ApiKeysServiceImpl implements ApiKeysService {
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, An error occurred while calling the service to obtain api keys", exception.getMessage(), exception);
                     logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain api keys" + exception.getMessage()).log();
-                    return Mono.error(new PnGenericException(ERROR_ON_KEYS_MANAGER_CLIENT, exception.getStatusCode()));
+                    return Mono.error(new PnGenericException(ERROR_ON_KEYS_MANAGER_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                 }).map(responseApiKeysDto -> {
                     ResponseApiKeys responseApiKeys = ApiKeysMapper.responseApiKeys(responseApiKeysDto);
                     logEvent.generateSuccess("getApiKeys responseApiKeys = {}", responseApiKeys).log();

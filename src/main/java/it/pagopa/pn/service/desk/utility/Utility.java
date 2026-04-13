@@ -4,7 +4,9 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pnpaperchannel.v1.dt
 import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.http.HttpStatusCode;
+
 import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -94,6 +96,10 @@ public class Utility {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
                                                        .withLocale(Locale.ITALY);
         return LocalDate.parse(date).format(formatter);
+    }
+
+    public static HttpStatusCode convertToHttpStatus(HttpStatusCode statusCode) {
+        return statusCode;
     }
 
 }

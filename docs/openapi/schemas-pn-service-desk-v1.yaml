@@ -38,7 +38,8 @@ components:
           type: string
           maxLength: 32
           minLength: 11
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
+          format: password # NO EXTERNAL
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
         recipientType:
           $ref: '#/components/schemas/RecipientType'
       additionalProperties: false
@@ -68,7 +69,8 @@ components:
           type: string
           minLength: 11
           maxLength: 32
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
+          format: password # NO EXTERNAL
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
         recipientType:
           $ref: '#/components/schemas/RecipientType'
       additionalProperties: false
@@ -109,7 +111,8 @@ components:
               $ref: '#/components/schemas/CourtesyAddressType'
             courtesyValue:
               type: string
-              x-field-extra-annotation: "@lombok.ToString.Exclude"
+              format: password # NO EXTERNAL
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               example: 'nome.utente@server.it'
             courtesyChannelType:
               $ref: '#/components/schemas/CourtesyChannelType'
@@ -117,7 +120,8 @@ components:
               $ref: '#/components/schemas/LegalAddressType'
             legalValue:
               type: string
-              x-field-extra-annotation: "@lombok.ToString.Exclude"
+              format: password # NO EXTERNAL
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               example: 'nome.utente@server.it'
             legalChannelType:
               $ref: '#/components/schemas/LegalChannelType'
@@ -182,7 +186,8 @@ components:
         taxId:
           description: taxId of delegate in case of delegateMandates array or delegator in case of delegatorMandates array
           type: string
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
+          format: password # NO EXTERNAL
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
         recipientType:
           $ref: '#/components/schemas/RecipientType'
         dateFrom:
@@ -209,7 +214,8 @@ components:
         taxId:
           type: string
           maxLength: 32
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
+          format: password # NO EXTERNAL
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
         recipientType:
           $ref: '#/components/schemas/RecipientType'
       additionalProperties: false
@@ -337,6 +343,7 @@ components:
     Denomination:
       description: Denominazione ente o persona fisica / ragione sociale
       type: string
+      format: password # NO EXTERNAL
       x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
       minLength: 1
       maxLength: 80
@@ -345,6 +352,7 @@ components:
     TaxId:
       description: C.F. persona fisica o persona giuridica (Partita iva)
       type: string
+      format: password # NO EXTERNAL
       x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
       minLength: 11
       maxLength: 16
@@ -359,6 +367,7 @@ components:
       properties:
         at:
           type: string
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           description: Campo "presso" dell'indirizzo
           # wide range of characters
@@ -366,6 +375,7 @@ components:
           maxLength: 256
         address:
           type: string
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           description: Indirizzo del domicilio fisico
           # wide range of characters
@@ -374,6 +384,7 @@ components:
           maxLength: 1024
         addressDetails:
           type: string
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           description: Seconda riga dell'indirizzo fisico
           # wide range of characters
@@ -381,6 +392,7 @@ components:
           maxLength: 1024
         zip:
           type: string
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           description: Codice di avviamento postale. In caso di invio estero diventa facoltativo
           minLength: 0
@@ -388,6 +400,7 @@ components:
           pattern: ^(\w|\ |\-)*$
         municipality:
           type: string
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           description: Comune
           # wide range of characters
@@ -396,6 +409,7 @@ components:
           maxLength: 256
         municipalityDetails:
           type: string
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           description: Frazione o località
           # wide range of characters
@@ -403,6 +417,7 @@ components:
           maxLength: 256
         province:
           type: string
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           description: Provincia
           # wide range of characters
@@ -410,6 +425,7 @@ components:
           maxLength: 256
         foreignState:
           type: string
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           description: Denominazione paese estero
           # wide range of characters
@@ -634,10 +650,12 @@ components:
       type: object
       properties:
         type:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           description: tipo di indirizzo PEC, REM, SERCQ, ...
         address:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           description: account@domain
@@ -804,7 +822,8 @@ components:
         taxId:
           type: string
           maxLength: 32
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
+          format: password # NO EXTERNAL
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
         recipientType:
           $ref: '#/components/schemas/RecipientType'
       additionalProperties: false
@@ -857,6 +876,7 @@ components:
           description: internal identifier of mandate
           type: string
         taxId:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
         recipientType:
@@ -874,6 +894,7 @@ components:
           description: internal identifier of mandate
           type: string
         taxId:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
         recipientType:
@@ -977,34 +998,42 @@ components:
         - municipality
       properties:
         at:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           description: Campo "presso" dell'indirizzo
         address:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           description: Indirizzo del domicilio fisico
         addressDetails:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           description: Seconda riga dell'indirizzo fisico
         zip:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           description: Codice di avviamento postale. In caso di invio estero diventa facoltativo
         municipality:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           description: Comune in cui l'indirizzo si trova
         municipalityDetails:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           description: Frazione o località
         province:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           description: Provincia in cui si trova l'indirizzo
         foreignState:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           description: Denominazione paese estero
@@ -1047,6 +1076,7 @@ components:
         internalId:
           type: string
         taxId:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
         operatorUuid:
@@ -1054,6 +1084,7 @@ components:
         mandateId:
           type: string
         denomination:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
         delegateType:
@@ -1348,7 +1379,6 @@ components:
           type: string
           format: '/[^A-Za-z0-9]+/'
           maxLength: 32
-          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
       additionalProperties: false
 
     NotificationsUnreachableResponse:
@@ -1376,6 +1406,7 @@ components:
         taxId:
           type: string
           maxLength: 32
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
         ticketId:
           type: string
@@ -1395,6 +1426,7 @@ components:
         taxId:
           type: string
           maxLength: 32
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
         ticketId:
           type: string
@@ -1556,6 +1588,7 @@ components:
         taxId:
           type: string
           maxLength: 32
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
       additionalProperties: false
 
@@ -1648,6 +1681,7 @@ components:
         taxId:
           type: string
           maxLength: 32
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
         iuns:
           type: array
@@ -1682,49 +1716,58 @@ components:
         - cap
       properties:
         fullname:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Cognome e nome o ragione sociale del destinatario
         nameRow2:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Seconda riga sulla busta.
         address:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Indirizzo del destinatario.
         addressRow2:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Specifica dell’indirizzo di residenza del destinatario (seconda
             riga indirizzo sulla busta).
         cap:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Cap del destinatario; in caso di invio estero diventa facoltativo.
         city:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Comune del destinatario.
         city2:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Frazione del destinatario. Potrebbe essere utile se il chiamante
             non fornisce il cap.
         pr:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
           description: Provincia del destinatario; in caso di invio estero diventa
             facoltativo.
         country:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 99999
@@ -1743,6 +1786,7 @@ components:
           enum:
             - EMAIL
         address:
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
           maxLength: 256
@@ -1796,6 +1840,7 @@ components:
         id:
           type: string
           description: Id dell'api key
+          format: password # NO EXTERNAL
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
         name:
           type: string
@@ -1825,7 +1870,8 @@ components:
           type: string
           maxLength: 32
           minLength: 11
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
+          format: password # NO EXTERNAL
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
       additionalProperties: false
 
     NotificationRecipientDetailResponse:
@@ -1944,7 +1990,7 @@ components:
               * `GENERIC_ERROR`: generic error.
           example: PAYMENT_UNAVAILABLE
           type: string
-          
+
     Status:
       type: string
       description: >-

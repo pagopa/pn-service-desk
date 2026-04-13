@@ -166,6 +166,7 @@
                         "legalFactsIds": [],
                         "category": "SEND_DIGITAL_DOMICILE",
                         "details": {
+                            "categoryType": "SEND_DIGITAL_DOMICILE",
                             "legalFactId": null,
                             "recIndex": 0,
                             "oldAddress": null,

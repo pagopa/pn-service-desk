@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_MANDATE_CLIENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_USER_ATTRIBUTES_CLIENT;
+import static it.pagopa.pn.service.desk.utility.Utility.convertToHttpStatus;
 
 @Service
 @CustomLog
@@ -60,14 +61,14 @@ public class ProfileServiceImpl implements ProfileService {
                 .collectList()
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, Error during listMandatesByDelegator", exception.getMessage(), exception);
-                    return Mono.error(new PnGenericException(ERROR_ON_MANDATE_CLIENT, exception.getStatusCode()));
+                    return Mono.error(new PnGenericException(ERROR_ON_MANDATE_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                 })
                 .flatMap(internalMandateDelegators ->
                         mandateClient.listMandatesByDelegate(internalId)
                                 .collectList()
                                 .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error("errorReason = {}, Error during listMandatesByDelegate", exception.getMessage(), exception);
-                                    return Mono.error(new PnGenericException(ERROR_ON_MANDATE_CLIENT, exception.getStatusCode()));
+                                    return Mono.error(new PnGenericException(ERROR_ON_MANDATE_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                                 })
                                 .map(internalMandateDelegates -> ProfileMapper.getMandate(internalMandateDelegators, internalMandateDelegates, response))
                 );
@@ -78,7 +79,7 @@ public class ProfileServiceImpl implements ProfileService {
         return userAttributesClient.getLegalAddressBySender(internalId, SENDER_ID_DEFAULT)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, Error during getLegalAddressBySender", exception.getMessage(), exception);
-                    return Mono.error(new PnGenericException(ERROR_ON_USER_ATTRIBUTES_CLIENT, exception.getStatusCode()));
+                    return Mono.error(new PnGenericException(ERROR_ON_USER_ATTRIBUTES_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                 })
                 .collectList()
                 .flatMap(legalDigitalAddressDtos ->
@@ -86,7 +87,7 @@ public class ProfileServiceImpl implements ProfileService {
                                 .collectList()
                                 .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error("errorReason = {}, Error during getCourtesyAddressBySender", exception.getMessage(), exception);
-                                    return Mono.error(new PnGenericException(ERROR_ON_USER_ATTRIBUTES_CLIENT, exception.getStatusCode()));
+                                    return Mono.error(new PnGenericException(ERROR_ON_USER_ATTRIBUTES_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                                 })
                                 .map(courtesyDigitalAddressDtos -> ProfileMapper.getAddress(legalDigitalAddressDtos, courtesyDigitalAddressDtos, response))
                                 .map(profileResponse -> internalId)

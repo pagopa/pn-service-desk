@@ -1,6 +1,6 @@
 package it.pagopa.pn.service.desk.config;
 
-import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
+import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import it.pagopa.pn.service.desk.LocalStackTestConfig;
 import it.pagopa.pn.service.desk.middleware.queue.producer.InternalQueueMomProducer;
 import lombok.extern.slf4j.Slf4j;
@@ -10,11 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @Slf4j
 @SpringBootTest
@@ -26,13 +24,13 @@ public abstract class BaseTest {
 
     @Slf4j
     @SpringBootTest
-    @EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class, ContextFunctionCatalogAutoConfiguration.class})
     @ActiveProfiles("test")
+    @EnableAutoConfiguration(exclude={SqsAutoConfiguration.class})
     public static class WithMockServer {
         @Autowired
         private MockServerBean mockServer;
 
-        @MockBean
+        @MockitoBean
         private InternalQueueMomProducer internalQueueMomProducer;
 
 
