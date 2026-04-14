@@ -83,7 +83,7 @@ public class HttpConnectorTest extends BaseTest.WithMockServer {
         when(responseSpec.bodyToFlux(DataBuffer.class)).thenReturn(dataBufferFlux);
 
 
-        String url = "https://www.example.com/nonexistent.pdf";
+        String url = "http://www.example.com/nonexistent.pdf";
         Mono<PDDocument> document = HttpConnector.downloadFile(url);
 
         StepVerifier.create(document)
