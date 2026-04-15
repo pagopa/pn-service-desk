@@ -27,12 +27,20 @@ public class AwsServicesClientsConfigActivation extends AwsServicesClientsConfig
     public KmsClient kms() {
         KmsClientBuilder builder = KmsClient.builder();
 
-        if (Optional.ofNullable(properties.getKms().getEndpoint()).isPresent()) {
-            builder.endpointOverride(URI.create(properties.getKms().getEndpoint()));
-            builder.region(Region.of(properties.getKms().getRegion()));
-        } else {
-            Optional.ofNullable(properties.getKms().getRegion())
-                    .ifPresent(r -> builder.region(Region.of(r)));
+        String endpoint = properties.getKms().getEndpoint();
+        String region = properties.getKms().getRegion();
+
+        boolean hasEndpoint = endpoint != null && !endpoint.isBlank();
+        boolean hasRegion = region != null && !region.isBlank();
+
+        if (hasEndpoint) {
+            if (!hasRegion) {
+                throw new IllegalStateException("KMS region must be set when using a custom endpoint");
+            }
+            builder.endpointOverride(URI.create(endpoint));
+            builder.region(Region.of(region));
+        } else if (hasRegion) {
+            builder.region(Region.of(region));
         }
 
         return builder.build();

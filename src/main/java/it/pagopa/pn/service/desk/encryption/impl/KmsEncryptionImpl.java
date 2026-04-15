@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.kms.model.EncryptionAlgorithmSpec;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Optional;
@@ -49,21 +50,30 @@ public class KmsEncryptionImpl implements DataEncryption {
     public String decode(String data) {
         if (StringUtils.isNotEmpty(data)) {
             final EncryptedUtils token = EncryptedUtils.parse(data);
-
             final EncryptionModel options = token.getModel();
 
             final String keyId = Optional.ofNullable(options.getKeyId())
-                                   .orElse(awsProperties.getKms().getKeyId());
+                                         .orElse(awsProperties.getKms().getKeyId());
 
-            final String algorithm = Optional.ofNullable(options.getAlgorithm())
-                                       .orElse("SYMMETRIC_DEFAULT");
+            final String rawAlgorithm = Optional.ofNullable(options.getAlgorithm())
+                                                .filter(a -> !a.isBlank())
+                                                .orElse("SYMMETRIC_DEFAULT");
+
+            EncryptionAlgorithmSpec algorithmSpec;
+            try {
+                algorithmSpec = EncryptionAlgorithmSpec.fromValue(rawAlgorithm);
+            } catch (IllegalArgumentException ex) {
+                log.error("Invalid encryption algorithm: {}", ex.getMessage());
+                algorithmSpec = EncryptionAlgorithmSpec.SYMMETRIC_DEFAULT;
+            }
+
+            ByteBuffer cipherBuffer = token.getCipherBytes().asReadOnlyBuffer();
 
             final DecryptRequest.Builder builder = DecryptRequest.builder()
-                                                           .ciphertextBlob(SdkBytes.fromByteArray(token.getCipherBytes().array()))
-                                                           .encryptionContext(token.getEncryptionContext())
-                                                           .keyId(keyId);
-
-            builder.encryptionAlgorithm(EncryptionAlgorithmSpec.fromValue(algorithm));
+                                                                 .ciphertextBlob(SdkBytes.fromByteBuffer(cipherBuffer))
+                                                                 .encryptionContext(token.getEncryptionContext())
+                                                                 .keyId(keyId)
+                                                                 .encryptionAlgorithm(algorithmSpec);
 
             DecryptResponse decryptResponse = kms.decrypt(builder.build());
 
