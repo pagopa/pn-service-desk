@@ -1,15 +1,15 @@
 package it.pagopa.pn.service.desk.config.springbootcfg;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.kms.AWSKMSClient;
-import com.amazonaws.services.kms.AWSKMSClientBuilder;
+import software.amazon.awssdk.services.kms.KmsClient;
+import software.amazon.awssdk.services.kms.KmsClientBuilder;
+import software.amazon.awssdk.regions.Region;
 import it.pagopa.pn.commons.configs.RuntimeMode;
 import it.pagopa.pn.commons.configs.aws.AwsConfigs;
 import it.pagopa.pn.commons.configs.aws.AwsServicesClientsConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.net.URI;
 import java.util.Optional;
 
 @Configuration
@@ -24,13 +24,23 @@ public class AwsServicesClientsConfigActivation extends AwsServicesClientsConfig
 
 
     @Bean
-    public AWSKMS kms() {
-        final AWSKMSClientBuilder builder = AWSKMSClient.builder();
+    public KmsClient kms() {
+        KmsClientBuilder builder = KmsClient.builder();
 
-        if (Optional.ofNullable(properties.getKms().getEndpoint()).isPresent()) {
-            builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(properties.getKms().getEndpoint(), properties.getKms().getRegion()));
-        } else {
-            Optional.ofNullable(properties.getKms().getRegion()).ifPresent(builder::setRegion);
+        String endpoint = properties.getKms().getEndpoint();
+        String region = properties.getKms().getRegion();
+
+        boolean hasEndpoint = endpoint != null && !endpoint.isBlank();
+        boolean hasRegion = region != null && !region.isBlank();
+
+        if (hasEndpoint) {
+            if (!hasRegion) {
+                throw new IllegalStateException("KMS region must be set when using a custom endpoint");
+            }
+            builder.endpointOverride(URI.create(endpoint));
+            builder.region(Region.of(region));
+        } else if (hasRegion) {
+            builder.region(Region.of(region));
         }
 
         return builder.build();

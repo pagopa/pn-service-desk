@@ -66,32 +66,26 @@ public class HttpConnectorTest extends BaseTest.WithMockServer {
 
     @Test
     void testDownloadFile404NotFound() {
-        WebClient webClient = mock(WebClient.class);
-        WebClient.RequestHeadersUriSpec requestHeadersUriSpec = Mockito.mock(WebClient.RequestHeadersUriSpec.class);
-        WebClient.RequestHeadersSpec requestHeadersSpec = Mockito.mock(WebClient.RequestHeadersSpec.class);
-        WebClient.ResponseSpec responseSpec = Mockito.mock(WebClient.ResponseSpec.class);
-        Flux<DataBuffer> dataBufferFlux = Flux.just(
-                createDataBufferWithBytes("testData1".getBytes()),
-                createDataBufferWithBytes("testData2".getBytes()),
-                createDataBufferWithBytes("testData3".getBytes())
-        );
+        mockServer.when(
+                request()
+                        .withMethod("GET")
+                        .withPath("/nonexistent.pdf")
+                       ).respond(
+                response()
+                        .withStatusCode(404)
+                                );
 
-        when(webClient.get()).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.uri(any(URI.class))).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.accept(any(MediaType.class))).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToFlux(DataBuffer.class)).thenReturn(dataBufferFlux);
+        String url = "http://localhost:9998/nonexistent.pdf";
 
-
-        String url = "https://www.example.com/nonexistent.pdf";
         Mono<PDDocument> document = HttpConnector.downloadFile(url);
 
         StepVerifier.create(document)
-                .expectErrorMatches(throwable ->
-                        throwable instanceof WebClientResponseException &&
-                                ((WebClientResponseException) throwable).getStatusCode() == HttpStatus.NOT_FOUND)
-                .verify();
+                    .expectErrorMatches(throwable ->
+                                                throwable instanceof WebClientResponseException &&
+                                                ((WebClientResponseException) throwable).getStatusCode() == HttpStatus.NOT_FOUND)
+                    .verify();
     }
+
     @Test
     void testDownloadFileErrorRetriveFile() throws Exception {
         String path = "/filedownloadError.pdf";
