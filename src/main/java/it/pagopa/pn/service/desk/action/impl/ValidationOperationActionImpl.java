@@ -127,12 +127,13 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
 
             return getAttachmentsList(operation, iuns, address.getType())
                     .collectList()
-                    .flatMapMany(lstAttachments -> new SplittingAttachments(lstAttachments, operation, cfn.getMaxNumberOfPages()).splitAttachment())
-                    .flatMap(op -> operationDAO.updateEntity(op)
-                                               .switchIfEmpty(Mono.defer(() -> Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()))))
-                                               .thenReturn(op))
-                    .flatMap(op -> requestToPrepare(op, address))
-                    .then();
+                    .flatMap(lstAttachments -> {
+                        operation.setAttachments(lstAttachments);
+                        return operationDAO.updateEntity(operation)
+                                           .switchIfEmpty(Mono.defer(() -> Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()))))
+                                           .thenReturn(operation);
+                    })
+                    .then(requestToPrepare(operation, address));
         }
 
         return getIuns(operation.getRecipientInternalId())
@@ -269,7 +270,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                 .concatWith(getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
                                 // Excluding documents that contains one of the document type in the filter list
                                 .filterWhen(fileKeyOrUrl -> Flux.fromIterable(cfn.getDocumentTypeFilter()).all(dt -> !fileKeyOrUrl.contains(dt)))
-                                .flatMap(this::attachmentInfo)
+                                .flatMap(fileKeyOrUrl -> this.attachmentInfo(fileKeyOrUrl, EMAIL.equalsIgnoreCase(addressType)))
                                 .map(attachmentInfo -> {
                                     if (StringUtils.isNotEmpty(attachmentInfo.getFileKey())) attachmentInfo.setFileKey(attachmentInfo.getFileKey().contains(Utility.SAFESTORAGE_BASE_URL) ? attachmentInfo.getFileKey() : Utility.SAFESTORAGE_BASE_URL.concat(attachmentInfo.getFileKey()));
                                     return attachmentInfo;
@@ -293,7 +294,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                                 }));
     }
 
-    private Mono<AttachmentInfo> attachmentInfo(String fileKeyOrUrl) {
+    private Mono<AttachmentInfo> attachmentInfo(String fileKeyOrUrl, Boolean digital) {
         return Mono.defer(() -> {
                     // It's a presigned url. No need to call safe storage
                     if (fileKeyOrUrl.startsWith(HTTPS)) {
@@ -311,18 +312,21 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                         info.setAvailable(FALSE);
                         return Mono.just(info);
                     }
-                    return HttpConnector.downloadFile(info.getUrl())
-                            .map(pdDocument -> {
-                                try {
-                                    info.setAvailable(TRUE);
-                                    info.setNumberOfPage(pdDocument.getNumberOfPages());
-                                    log.info("fileKey {} numberOfPages: {}", info.getFileKey(), info.getNumberOfPage());
-                                    pdDocument.close();
-                                } catch (IOException e) {
-                                    throw new PnGenericException(ERROR_SAFE_STORAGE_BODY_NULL, ERROR_SAFE_STORAGE_BODY_NULL.getMessage());
-                                }
-                                return info;
-                            });
+                    if(Boolean.FALSE.equals(digital)) {
+                        return HttpConnector.downloadFile(info.getUrl()).map(pdDocument -> {
+                            try {
+                                info.setAvailable(TRUE);
+                                info.setNumberOfPage(pdDocument.getNumberOfPages());
+                                log.info("fileKey {} numberOfPages: {}", info.getFileKey(), info.getNumberOfPage());
+                                pdDocument.close();
+                            } catch (IOException e) {
+                                throw new PnGenericException(ERROR_SAFE_STORAGE_BODY_NULL, ERROR_SAFE_STORAGE_BODY_NULL.getMessage());
+                            }
+                            return info;
+                        });
+                    }
+                    info.setAvailable(TRUE);
+                    return Mono.just(info);
                 })
                 .onErrorResume(exception -> {
                     log.debug("errorReason = {}, An error occurred while retrieving the file", exception.getMessage());
