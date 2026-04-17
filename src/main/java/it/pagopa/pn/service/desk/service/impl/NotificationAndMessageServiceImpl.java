@@ -9,6 +9,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.No
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV28Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementDetailsV28Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV28Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoRequestDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.payment.v1.dto.PaymentInfoV21Dto;
@@ -35,6 +36,9 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.pn.service.desk.model.RecIndexDetails;
+
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.service.desk.utility.Utility.convertToHttpStatus;
 
@@ -48,6 +52,8 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     private final PnDeliveryPushClient pnDeliveryPushClient;
     private final ExternalRegistriesClient externalRegistriesClient;
     private final AuditLogService auditLogService;
+    private final ObjectMapper objectMapper;
+
     private static final String ERROR_MESSAGE_NOTIFICATION_HISTORY = "errorReason = {}, An error occurred while call service for obtain notification history";
     private static final String ERROR_MESSAGE_SENT_NOTIFICATIONS = "errorReason = {}, An error occurred while calling the service to obtain sent notifications";
     private static final String ERROR_MESSAGE_SEARCH_NOTIFICATIONS = "errorReason = {}, An error occurred while calling the service to obtain sent notifications";
@@ -101,7 +107,7 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @NotNull
-    private static List<TimelineElementV28Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, TimelineElementCategoryV28Dto category,  Integer indexTaxId) {
+    private List<TimelineElementV28Dto> getFilteredElements(NotificationHistoryResponseDto notificationHistoryResponseDto, TimelineElementCategoryV28Dto category,  Integer indexTaxId) {
         List<TimelineElementV28Dto> filteredElements = new ArrayList<>();
         if (notificationHistoryResponseDto.getTimeline() != null) {
             filteredElements = notificationHistoryResponseDto.getTimeline()
@@ -109,13 +115,14 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
                     .filter(element -> {
                         if(element.getCategory() != null && element.getDetails() != null){
                             if (category == null){
-                                if (element.getDetails().getRecIndex() == null){
+                                Integer recIndex = extractRecIndex(element.getDetails());
+                                if (recIndex == null){
                                     return true;
                                 }
-                                return element.getDetails().getRecIndex().equals(indexTaxId);
+                                return recIndex.equals(indexTaxId);
                             }
                             return element.getCategory().equals(category) &&
-                                    element.getDetails().getRecIndex().equals(indexTaxId);
+                                    Objects.equals(extractRecIndex(element.getDetails()), indexTaxId);
                         }
                         return false;
                     })
@@ -356,6 +363,10 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
             paymentItem.getPagoPa().setDetail(paymentInfoV21Dto.getDetail() != null ? paymentInfoV21Dto.getDetail().getValue() : null);
         }
 
+    }
+
+    private Integer extractRecIndex(TimelineElementDetailsV28Dto details) {
+        return objectMapper.convertValue(details, RecIndexDetails.class).getRecIndex();
     }
 
 }

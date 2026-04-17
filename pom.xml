@@ -311,8 +311,6 @@
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
 							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/c4ddeb8cfb2e566a9400245b266f600fe2452da8/docs/openapi/api-private.yaml</inputSpec>
-							<!-- WORKAROUND: Vedere src/main/resources/templates/7.4.0/client/README.md per dettagli. -->
-							<templateDirectory>${project.basedir}/src/main/resources/templates/7.4.0/client</templateDirectory>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
@@ -320,6 +318,7 @@
 							<generateModelTests>false</generateModelTests>
 							<generateSupportingFiles>true</generateSupportingFiles>
 							<configOptions>
+								<useOneOfInterfaces>true</useOneOfInterfaces>
 								<useJakartaEe>true</useJakartaEe>
 								<swaggerAnnotations>false</swaggerAnnotations>
 								<openApiNullable>false</openApiNullable>

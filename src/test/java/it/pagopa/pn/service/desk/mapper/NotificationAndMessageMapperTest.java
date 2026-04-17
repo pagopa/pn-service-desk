@@ -33,22 +33,17 @@ class NotificationAndMessageMapperTest {
         notificationSearchRowDto.setSubject("comune di Palermo");
         notificationSearchRowDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusV26Dto.ACCEPTED);
         var timelineElementV23Dto = new TimelineElementV28Dto();
-        var detailsV23Dto = new TimelineElementDetailsV28Dto();
-        detailsV23Dto.setSendDate(Instant.now());
+        var detailsV23Dto = new NotificationRequestAcceptedDetailsV28Dto();
         timelineElementV23Dto.setDetails(detailsV23Dto);
         timelineElementV23Dto.setCategory(TimelineElementCategoryV28Dto.REQUEST_ACCEPTED);
         timelineElementV23Dto.setTimestamp(Instant.now());
 
         var refinement = new TimelineElementV28Dto();
-        var refinementDetail = new TimelineElementDetailsV28Dto();
-        detailsV23Dto.setSendDate(Instant.now().plusSeconds(10));
+        var refinementDetail = new RefinementDetailsV23Dto();
         refinement.setDetails(refinementDetail);
         refinement.setCategory(TimelineElementCategoryV28Dto.REFINEMENT);
         refinement.setTimestamp(Instant.now().plusSeconds(10));
 
-        DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
-        digitalAddressDto.setType("PEC");
-        detailsV23Dto.setDigitalAddress(digitalAddressDto);
         filteredElements.add(timelineElementV23Dto);
         var allTimelines = List.of(timelineElementV23Dto, refinement);
         historyResponseDto.setTimeline(allTimelines);
@@ -147,7 +142,7 @@ class NotificationAndMessageMapperTest {
             TimelineElementV28Dto element = new TimelineElementV28Dto();
             element.setCategory(category);
             element.setEventTimestamp(Instant.now());
-            element.setDetails(new TimelineElementDetailsV28Dto());
+            element.setDetails(new SendCourtesyMessageDetailsDto());
             timeline.add(element);
         }
 
@@ -240,7 +235,7 @@ class NotificationAndMessageMapperTest {
 
         // Simula un elemento timeline con canale TPP
         TimelineElementV28Dto tppTimeline = new TimelineElementV28Dto();
-        TimelineElementDetailsV28Dto tppDetails = new TimelineElementDetailsV28Dto();
+        SendCourtesyMessageDetailsDto tppDetails = new SendCourtesyMessageDetailsDto();
         tppDetails.setSendDate(Instant.now());
         DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
         digitalAddressDto.setType("TPP"); // 👈 qui simuliamo la notifica via TPP

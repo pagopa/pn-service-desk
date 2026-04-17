@@ -36,8 +36,7 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
         expectedTimeline.setEventTimestamp(Instant.parse("2023-09-29T14:04:11.354725545Z"));
         expectedTimeline.setCategory(TimelineElementCategoryV28Dto.SEND_DIGITAL_DOMICILE);
 
-        var categoryV23Dto = new TimelineElementDetailsV28Dto();
-        categoryV23Dto.setSendDate(Instant.parse("2023-09-29T14:04:01.033478852Z"));
+        var categoryV23Dto = new SendDigitalDetailsDto();
         categoryV23Dto.setDigitalAddressSource(DigitalAddressSourceDto.PLATFORM);
         DigitalAddressDto digitalAddressDto = new DigitalAddressDto();
         digitalAddressDto.setType("PEC");
@@ -122,9 +121,11 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
         Assertions.assertEquals(expectedTimeline.getElementId(), actualTimeline.getElementId());
         Assertions.assertEquals(expectedTimeline.getEventTimestamp(), actualTimeline.getEventTimestamp());
         Assertions.assertEquals(expectedTimeline.getCategory(), actualTimeline.getCategory());
-        Assertions.assertEquals(expectedTimeline.getDetails().getDigitalAddress().getType(), actualTimeline.getDetails().getDigitalAddress().getType());
-        Assertions.assertEquals(expectedTimeline.getDetails().getDigitalAddressSource(), actualTimeline.getDetails().getDigitalAddressSource());
-        Assertions.assertEquals(expectedTimeline.getDetails().getSendDate(), actualTimeline.getDetails().getSendDate());
+
+        SendDigitalDetailsDto expectedDetails = (SendDigitalDetailsDto) expectedTimeline.getDetails();
+        SendDigitalDetailsDto actualDetails = (SendDigitalDetailsDto) actualTimeline.getDetails();
+        Assertions.assertEquals(expectedDetails.getDigitalAddress().getType(), actualDetails.getDigitalAddress().getType());
+        Assertions.assertEquals(expectedDetails.getDigitalAddressSource(), actualDetails.getDigitalAddressSource());
     }
 
 }
