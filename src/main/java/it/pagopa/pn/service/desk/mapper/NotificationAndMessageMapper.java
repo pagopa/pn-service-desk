@@ -3,6 +3,7 @@ package it.pagopa.pn.service.desk.mapper;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.SendCourtesyMessageDetailsDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV28Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV28Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
@@ -122,9 +123,9 @@ public class NotificationAndMessageMapper {
 
     private static CourtesyMessage getCourtesyMessage(TimelineElementV28Dto timelineElementDto) {
         CourtesyMessage courtesyMessage = new CourtesyMessage();
-        if (timelineElementDto.getDetails() != null) {
-            courtesyMessage.setChannel(CourtesyChannelType.fromValue(timelineElementDto.getDetails().getDigitalAddress().getType()));
-            courtesyMessage.setSentTimestamp(timelineElementDto.getDetails().getSendDate());
+        if (timelineElementDto.getDetails() instanceof SendCourtesyMessageDetailsDto details) {
+            courtesyMessage.setChannel(CourtesyChannelType.fromValue(details.getDigitalAddress().getType()));
+            courtesyMessage.setSentTimestamp(details.getSendDate());
         }
         return courtesyMessage;
     }
