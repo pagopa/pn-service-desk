@@ -362,6 +362,30 @@ class NotificationAndMessageServiceImplTest  {
         return historyResponseDto;
     }
 
+    private NotificationHistoryResponseDto getHistoryWithCourtesyMessageAndRecIndex(int recIndex) {
+        NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
+        historyResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
+        var details = new SendCourtesyMessageDetailsDto();
+        details.setRecIndex(recIndex);
+        var element = new TimelineElementV28Dto();
+        element.setCategory(TimelineElementCategoryV28Dto.SEND_COURTESY_MESSAGE);
+        element.setDetails(details);
+        element.setTimestamp(Instant.now());
+        historyResponseDto.setTimeline(List.of(element));
+        return historyResponseDto;
+    }
+
+    private NotificationHistoryResponseDto getHistoryWithInvalidElements() {
+        NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
+        historyResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
+        var elementNullCategory = new TimelineElementV28Dto();
+        elementNullCategory.setDetails(new SendCourtesyMessageDetailsDto());
+        var elementNullDetails = new TimelineElementV28Dto();
+        elementNullDetails.setCategory(TimelineElementCategoryV28Dto.SEND_COURTESY_MESSAGE);
+        historyResponseDto.setTimeline(List.of(elementNullCategory, elementNullDetails));
+        return historyResponseDto;
+    }
+
     private NotificationHistoryResponseDto getHistoryNotificationCancellation (){
         NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
         historyResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
@@ -375,6 +399,66 @@ class NotificationAndMessageServiceImplTest  {
         return historyResponseDto;
     }
 
+
+    @Test
+    void getTimelineOfIUNWithTaxId_elementWithNullRecIndexIsIncluded() {
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
+                .thenReturn(Mono.just(getSentNotificationV25Dto()));
+        Mockito.when(pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(getHistory()));
+
+        TimelineResponse response = notificationAndMessageService.getTimelineOfIUN(
+                "test", "PRVZ-NZKM-JEDK-202309-A-1",
+                getSearchMessageRequest("DVNLRD52D15M059P", RecipientType.PF)).block();
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(1, response.getTimeline().size());
+    }
+
+    @Test
+    void getTimelineOfIUNWithTaxId_elementWithMatchingRecIndexIsIncluded() {
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
+                .thenReturn(Mono.just(getSentNotificationV25Dto()));
+        Mockito.when(pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(getHistoryWithCourtesyMessageAndRecIndex(0)));
+
+        TimelineResponse response = notificationAndMessageService.getTimelineOfIUN(
+                "test", "PRVZ-NZKM-JEDK-202309-A-1",
+                getSearchMessageRequest("DVNLRD52D15M059P", RecipientType.PF)).block();
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(1, response.getTimeline().size());
+    }
+
+    @Test
+    void getTimelineOfIUNWithTaxId_elementWithNonMatchingRecIndexIsExcluded() {
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
+                .thenReturn(Mono.just(getSentNotificationV25Dto()));
+        Mockito.when(pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(getHistoryWithCourtesyMessageAndRecIndex(1)));
+
+        TimelineResponse response = notificationAndMessageService.getTimelineOfIUN(
+                "test", "PRVZ-NZKM-JEDK-202309-A-1",
+                getSearchMessageRequest("DVNLRD52D15M059P", RecipientType.PF)).block();
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(0, response.getTimeline().size());
+    }
+
+    @Test
+    void getTimelineOfIUNWithTaxId_elementsWithNullCategoryOrDetailsAreExcluded() {
+        Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
+                .thenReturn(Mono.just(getSentNotificationV25Dto()));
+        Mockito.when(pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(getHistoryWithInvalidElements()));
+
+        TimelineResponse response = notificationAndMessageService.getTimelineOfIUN(
+                "test", "PRVZ-NZKM-JEDK-202309-A-1",
+                getSearchMessageRequest("DVNLRD52D15M059P", RecipientType.PF)).block();
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(0, response.getTimeline().size());
+    }
 
     @Test
     void getNotificationRecipientDetailOK(){
