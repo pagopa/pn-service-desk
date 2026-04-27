@@ -130,10 +130,9 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                     .flatMap(lstAttachments -> {
                         operation.setAttachments(lstAttachments);
                         return operationDAO.updateEntity(operation)
-                                           .switchIfEmpty(Mono.defer(() -> Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()))))
-                                           .thenReturn(operation);
+                                           .switchIfEmpty(Mono.defer(() -> Mono.error(new PnGenericException(ERROR_ON_UPDATE_ENTITY, ERROR_ON_UPDATE_ENTITY.getMessage()))));
                     })
-                    .then(requestToPrepare(operation, address));
+                    .flatMap(op -> requestToPrepare(op, address));
         }
 
         return getIuns(operation.getRecipientInternalId())
