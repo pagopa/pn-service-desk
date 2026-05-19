@@ -224,6 +224,21 @@ class NotificationAndMessageMapperTest {
     }
 
     @Test
+    void getTimelineDoesNotThrowOnSendAnalogDomicile() {
+        TimelineElementV28Dto element = new TimelineElementV28Dto();
+        element.setCategory(TimelineElementCategoryV28Dto.SEND_ANALOG_DOMICILE);
+        element.setDetails(new SendAnalogDetailsDto()
+                .prepareRequestId("prep-1")
+                .relatedRequestId("rel-1"));
+
+        NotificationHistoryResponseDto history = new NotificationHistoryResponseDto();
+        history.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
+        history.setTimeline(List.of(element));
+
+        assertDoesNotThrow(() -> NotificationAndMessageMapper.getTimeline(history));
+    }
+
+    @Test
     void getNotificationWithTppChannelTest() {
         // Arrange
         NotificationSearchRowDto searchRowDto = new NotificationSearchRowDto();
