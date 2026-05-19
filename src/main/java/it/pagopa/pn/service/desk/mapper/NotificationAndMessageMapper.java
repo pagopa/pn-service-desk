@@ -8,6 +8,7 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dt
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementV28Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
 
@@ -20,7 +21,13 @@ public class NotificationAndMessageMapper {
 
     private NotificationAndMessageMapper(){}
 
-    private static final ModelMapper modelMapper = new ModelMapper();
+    private static final ModelMapper modelMapper = buildModelMapper();
+
+    private static ModelMapper buildModelMapper() {
+        ModelMapper mapper = new ModelMapper();
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        return mapper;
+    }
 
     public static NotificationResponse getNotification (NotificationSearchRowDto notificationSearchRowDto, List<TimelineElementV28Dto> filteredElements){
         NotificationResponse notification = new NotificationResponse();
