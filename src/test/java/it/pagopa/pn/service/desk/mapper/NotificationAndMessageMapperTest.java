@@ -3,7 +3,6 @@ package it.pagopa.pn.service.desk.mapper;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.*;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationStatusV26Dto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,7 +46,7 @@ class NotificationAndMessageMapperTest {
         filteredElements.add(timelineElementV23Dto);
         var allTimelines = List.of(timelineElementV23Dto, refinement);
         historyResponseDto.setTimeline(allTimelines);
-        historyResponseDto.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
+        historyResponseDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationStatusV26Dto.ACCEPTED);
         notificationAttachmentDownloadMetadataResponseDto.setFilename("document_test");
         notificationAttachmentDownloadMetadataResponseDto.setContentType("test");
         notificationAttachmentDownloadMetadataResponseDto.setContentLength(1200);
@@ -265,17 +264,26 @@ class NotificationAndMessageMapperTest {
 
     @Test
     void getTimelineDoesNotThrowOnSendAnalogDomicile() {
+        Instant eventTimestamp = Instant.now();
+
         TimelineElementV28Dto element = new TimelineElementV28Dto();
         element.setCategory(TimelineElementCategoryV28Dto.SEND_ANALOG_DOMICILE);
+        element.setEventTimestamp(eventTimestamp);
         element.setDetails(new SendAnalogDetailsDto()
                 .prepareRequestId("prep-1")
                 .relatedRequestId("rel-1"));
 
         NotificationHistoryResponseDto history = new NotificationHistoryResponseDto();
-        history.setNotificationStatus(NotificationStatusV26Dto.ACCEPTED);
+        history.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationStatusV26Dto.ACCEPTED);
         history.setTimeline(List.of(element));
 
-        assertDoesNotThrow(() -> NotificationAndMessageMapper.getTimeline(history));
+        TimelineResponse response = assertDoesNotThrow(() -> NotificationAndMessageMapper.getTimeline(history));
+
+        assertThat(response.getTimeline()).hasSize(1);
+        TimelineElementDetail detail = response.getTimeline().get(0).getDetail();
+        assertNotNull(detail);
+        assertEquals("prep-1", detail.getPrepareRequestId());
+        assertEquals("rel-1", detail.getRelatedRequestId());
     }
 
 }
