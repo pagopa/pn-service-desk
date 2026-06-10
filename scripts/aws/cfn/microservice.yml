@@ -201,6 +201,19 @@ Parameters:
     Default: ''
     Description: 'Escaped JSON object containing trusted headers enforced by the private channel proxy; leave empty when enforcement is not required'
 
+  PrivateChannelProxyExternalProtocol:
+    Type: String
+    Default: http
+    AllowedValues:
+      - http
+      - https
+    Description: 'External protocol used to build x-pagopa-pn-base-url for the private channel proxy'
+
+  PrivateChannelProxyExternalPort:
+    Type: String
+    Default: '8080'
+    Description: 'External port used to build x-pagopa-pn-base-url for the private channel proxy'
+
   PrivateChannelProxyTarget4xxAlarmThreshold:
     Type: Number
     Default: 1
@@ -492,6 +505,8 @@ Resources:
         LambdasBasePath: !Ref LambdasBasePath
         TemplateBucketBaseUrl: !Ref TemplateBucketBaseUrl
         ApplicationLoadBalancerDomain: !Ref ApplicationLoadBalancerDomain
+        ExternalProtocol: !Ref PrivateChannelProxyExternalProtocol
+        ExternalPort: !Ref PrivateChannelProxyExternalPort
         LogRetention: !Ref LogRetention
         VpcId: !Ref VpcId
         Subnets: !Ref SubnetsIds
