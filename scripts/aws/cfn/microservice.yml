@@ -167,8 +167,7 @@ Parameters:
 
   AlbSecurityGroup:
     Type: String
-    Default: ''
-    Description: 'Application load balancer security group'
+    Description: "Application load balancer security group"
 
   ApplicationLoadBalancerListenerArn:
     Type: String
@@ -201,6 +200,26 @@ Parameters:
     Type: String
     Default: ''
     Description: 'Escaped JSON object containing trusted headers enforced by the private channel proxy; leave empty when enforcement is not required'
+
+  PrivateChannelProxyTarget4xxAlarmThreshold:
+    Type: Number
+    Default: 1
+    Description: 'Target 4xx threshold for private channel proxy target group alarms'
+
+  PrivateChannelProxyTarget5xxAlarmThreshold:
+    Type: Number
+    Default: 1
+    Description: 'Target 5xx threshold for private channel proxy target group alarms'
+
+  PrivateChannelProxyLambdaInternalErrorAlarmThreshold:
+    Type: Number
+    Default: 1
+    Description: 'Lambda internal error threshold for private channel proxy target group alarms'
+
+  PrivateChannelProxyLambdaUserErrorAlarmThreshold:
+    Type: Number
+    Default: 1
+    Description: 'Lambda user error threshold for private channel proxy target group alarms'
 
   LogRetention:
     Type: Number
@@ -378,6 +397,11 @@ Parameters:
 
 Conditions:
   HasAlbDimensionName: !Not [ !Equals [ !Ref ApplicationLoadBalancerMetricsDimensionName, '' ] ]
+  HasAlarmTopic: !Not [ !Equals [ !Ref AlarmSNSTopicArn, '-' ] ]
+  IsPrivateChannelProxyEnabled: !Equals [ !Ref PrivateChannelProxyEnabled, 'true' ]
+  UsePrivateChannelProxyTargetGroupAlarms: !And
+    - !Condition IsPrivateChannelProxyEnabled
+    - !Condition HasAlarmTopic
 
 Resources:
 
@@ -481,6 +505,24 @@ Resources:
           - TargetGroupName: !GetAtt ServiceDeskMicroservice.Outputs.TargetGroupName
         TrustedHeaders: !Ref PrivateChannelProxyTrustedHeaders
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+
+  ServiceDeskPrivateLinkProxyTargetGroupAlarms:
+    Type: AWS::CloudFormation::Stack
+    Condition: UsePrivateChannelProxyTargetGroupAlarms
+    Properties:
+      TemplateURL: !Sub '${TemplateBucketBaseUrl}/fragments/alb-tg-alarms.yaml'
+      Parameters:
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+        MetricPrefix: !Sub '${ProjectName}-service-desk-private-link-proxy'
+        ApplicationLoadBalancerMetricsDimensionName: !Ref ApplicationLoadBalancerMetricsDimensionName
+        TargetGroupName: !GetAtt ServiceDeskPrivateLinkRouting.Outputs.ProxyTargetGroupFullName
+        TargetType: lambda
+        Target4xxThreshold: !Ref PrivateChannelProxyTarget4xxAlarmThreshold
+        Target5xxThreshold: !Ref PrivateChannelProxyTarget5xxAlarmThreshold
+        HasLambdaInternalErrorAlarm: 'true'
+        LambdaInternalErrorThreshold: !Ref PrivateChannelProxyLambdaInternalErrorAlarmThreshold
+        HasLambdaUserErrorAlarm: 'true'
+        LambdaUserErrorThreshold: !Ref PrivateChannelProxyLambdaUserErrorAlarmThreshold
 
   ServiceDeskMicroserviceTaskPolicy:
     Type: AWS::IAM::ManagedPolicy
