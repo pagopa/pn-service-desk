@@ -283,7 +283,7 @@
 							<typeMappings>
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/aa195a3e4be5c0b58e2e2419645ca14714dc4767/docs/openapi/api-private.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/f3ec44ac6c5178113704e2f87693b4f8cb5aff98/docs/openapi/api-private.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
@@ -310,7 +310,7 @@
 							<typeMappings>
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/c4ddeb8cfb2e566a9400245b266f600fe2452da8/docs/openapi/api-private.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery-push/bbd709ad178a5c5fab4e5ab71d6a71f43e4df9e6/docs/openapi/api-private.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
@@ -527,7 +527,7 @@
 							<typeMappings>
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-mandate/c0f15f2bfd7df51dbac09c0927dff073b3da8e8f/docs/openapi/pn-mandate-internal.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-mandate/c9b96a45df91d86cc3e4ad622b72c6e37d9d5c94/docs/openapi/pn-mandate-internal.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
@@ -554,7 +554,7 @@
 							<typeMappings>
 								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
 							</typeMappings>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-apikey-manager/9fe38c7bd527181ab20ac60727c83e6f81628050/docs/openapi/pn-apikey-manager-bo.yaml</inputSpec>
+							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-apikey-manager/d84062e65e55c711be1f3664cbbd841efb43c0a3/docs/openapi/pn-apikey-manager-bo.yaml</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
