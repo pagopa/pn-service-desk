@@ -1377,8 +1377,9 @@ components:
       properties:
         taxId:
           type: string
-          format: '/[^A-Za-z0-9]+/'
+          format: password
           maxLength: 32
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
       additionalProperties: false
 
     NotificationsUnreachableResponse:
