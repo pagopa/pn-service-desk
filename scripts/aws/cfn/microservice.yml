@@ -201,6 +201,22 @@ Parameters:
     Default: ''
     Description: 'Escaped JSON object containing trusted headers enforced by the private channel proxy; leave empty when enforcement is not required'
 
+  PrivateChannelProxyRequestPayloadLoggingEnabled:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: 'Enable inbound request payload logging for the private channel proxy'
+
+  PrivateChannelProxyResponsePayloadLoggingEnabled:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: 'Enable outbound response payload logging for the private channel proxy'
+
   PrivateChannelProxyExternalProtocol:
     Type: String
     Default: http
@@ -499,7 +515,6 @@ Resources:
     Properties:
       TemplateURL: !Sub '${TemplateBucketBaseUrl}/fragments/private-link-routing.yaml'
       Parameters:
-        ProjectName: !Ref ProjectName
         ChannelId: 'service-desk'
         LambdasBucketName: !Ref LambdasBucketName
         LambdasBasePath: !Ref LambdasBasePath
@@ -507,7 +522,10 @@ Resources:
         ApplicationLoadBalancerDomain: !Ref ApplicationLoadBalancerDomain
         ExternalProtocol: !Ref PrivateChannelProxyExternalProtocol
         ExternalPort: !Ref PrivateChannelProxyExternalPort
+        RequestPayloadLoggingEnabled: !Ref PrivateChannelProxyRequestPayloadLoggingEnabled
+        ResponsePayloadLoggingEnabled: !Ref PrivateChannelProxyResponsePayloadLoggingEnabled
         LogRetention: !Ref LogRetention
+        LogsKinesisSourceStreamArn: !Ref LogsKinesisSourceStreamArn
         VpcId: !Ref VpcId
         Subnets: !Ref SubnetsIds
         AlbSecurityGroup: !Ref AlbSecurityGroup
@@ -528,15 +546,12 @@ Resources:
       TemplateURL: !Sub '${TemplateBucketBaseUrl}/fragments/alb-tg-alarms.yaml'
       Parameters:
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
-        MetricPrefix: !Sub '${ProjectName}-service-desk-private-link-proxy'
+        AlarmPrefix: !Sub '${ProjectName}-service-desk'
         ApplicationLoadBalancerMetricsDimensionName: !Ref ApplicationLoadBalancerMetricsDimensionName
         TargetGroupName: !GetAtt ServiceDeskPrivateLinkRouting.Outputs.ProxyTargetGroupFullName
-        TargetType: lambda
         Target4xxThreshold: !Ref PrivateChannelProxyTarget4xxAlarmThreshold
         Target5xxThreshold: !Ref PrivateChannelProxyTarget5xxAlarmThreshold
-        HasLambdaInternalErrorAlarm: 'true'
         LambdaInternalErrorThreshold: !Ref PrivateChannelProxyLambdaInternalErrorAlarmThreshold
-        HasLambdaUserErrorAlarm: 'true'
         LambdaUserErrorThreshold: !Ref PrivateChannelProxyLambdaUserErrorAlarmThreshold
 
   ServiceDeskMicroserviceTaskPolicy:
