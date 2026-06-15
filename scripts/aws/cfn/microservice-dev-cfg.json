@@ -15,6 +15,7 @@
     "PnCronAnalyzer": "-",
     "WireTapLogActivation": "false",
     "MountEfs": "false",
-    "DocumentTypeFilter": "PN_EXTERNAL_LEGAL_FACTS,PN_PRINTED"
+    "DocumentTypeFilter": "PN_EXTERNAL_LEGAL_FACTS,PN_PRINTED",
+    "PrivateChannelProxyEnabled": "true"
   }
 }
