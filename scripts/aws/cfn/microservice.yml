@@ -178,15 +178,13 @@ Parameters:
     Default: ''
     Description: 'Dedicated load balancer listener for the Service Desk PrivateLink channel'
 
-  LambdasBucketName:
+  MicroserviceBucketName:
     Type: String
-    Default: ''
-    Description: 'Bucket containing shared Lambda artifacts'
+    Description: 'Name of the bucket where the microservice files are copied during deploy'
 
-  LambdasBasePath:
+  MicroserviceBucketBaseKey:
     Type: String
-    Default: ''
-    Description: 'Base path containing shared Lambda artifacts'
+    Description: 'Base key of the microservice in the s3 bucket'
 
   PrivateChannelProxyEnabled:
     Type: String
@@ -516,8 +514,8 @@ Resources:
       TemplateURL: !Sub '${TemplateBucketBaseUrl}/fragments/private-link-routing.yaml'
       Parameters:
         ChannelId: 'service-desk'
-        LambdasBucketName: !Ref LambdasBucketName
-        LambdasBasePath: !Ref LambdasBasePath
+        LambdasBucketName: !Ref MicroserviceBucketName
+        LambdasBasePath: !Sub '${MicroserviceBucketBaseKey}/functions_zip'
         TemplateBucketBaseUrl: !Ref TemplateBucketBaseUrl
         ApplicationLoadBalancerDomain: !Ref ApplicationLoadBalancerDomain
         ExternalProtocol: !Ref PrivateChannelProxyExternalProtocol
