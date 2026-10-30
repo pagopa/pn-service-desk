@@ -87,7 +87,7 @@ class ValidationOperationActionImplTest {
 
     private final PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
     private final ResponsePaperNotificationFailedDtoDto responsePaperNotificationFailedDtoDto = new ResponsePaperNotificationFailedDtoDto();
-    private final SentNotificationV25Dto sentNotificationDto = new SentNotificationV25Dto();
+    private final SentNotificationV26Dto sentNotificationDto = new SentNotificationV26Dto();
     private final NotificationDocumentDto notificationDocumentDto = new NotificationDocumentDto();
     private final List<NotificationDocumentDto> notifications = new ArrayList<>();
     private final NotificationAttachmentBodyRefDto notificationAttachmentBodyRefDto = new NotificationAttachmentBodyRefDto();
@@ -163,9 +163,7 @@ class ValidationOperationActionImplTest {
     @Test
     void executeWithoutOperationId() {
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.empty());
-        Assertions.assertThrows(PnEntityNotFoundException.class, () -> {
-            this.validationOperationAction.execute("opId1234");
-        });
+        Assertions.assertThrows(PnEntityNotFoundException.class, () -> this.validationOperationAction.execute("opId1234"));
     }
 
     @Test
@@ -174,9 +172,7 @@ class ValidationOperationActionImplTest {
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.empty());
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
 
-        Assertions.assertDoesNotThrow(() -> {
-            this.validationOperationAction.execute("opId1234");
-        });
+        Assertions.assertDoesNotThrow(() -> this.validationOperationAction.execute("opId1234"));
 
         ArgumentCaptor<PnServiceDeskOperations> captureOperations = ArgumentCaptor.forClass(PnServiceDeskOperations.class);
         Mockito.verify(operationDAO).updateEntity(captureOperations.capture());

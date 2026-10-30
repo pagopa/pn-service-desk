@@ -14,8 +14,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 @Component
 @CustomLog
@@ -42,7 +40,7 @@ public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
 
     @Override
     public Flux<LegalFactListElementV20Dto> getNotificationLegalFactsPrivate(String recipientInternalId, String iun) {
-        return legalFactsPrivateApi.getNotificationLegalFactsPrivate(recipientInternalId,iun, null,null,null);
+        return legalFactsPrivateApi.getNotificationLegalFactsPrivate(recipientInternalId, iun, null, CxTypeAuthFleetDto.SD, null, null, null);
     }
 
     @Override

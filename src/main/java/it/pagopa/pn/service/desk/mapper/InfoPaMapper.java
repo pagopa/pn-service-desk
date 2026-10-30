@@ -1,6 +1,6 @@
 package it.pagopa.pn.service.desk.mapper;
 
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchResponseDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.LegalNotificationSearchResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.IunStatus;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.NotificationResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
@@ -12,20 +12,20 @@ public class InfoPaMapper {
 
     private InfoPaMapper(){}
 
-    public static SearchNotificationsResponse getSearchNotificationResponse(NotificationSearchResponseDto notificationSearchResponseDto) {
+    public static SearchNotificationsResponse getSearchNotificationResponse(LegalNotificationSearchResponseDto LegalNotificationSearchResponseDto) {
         SearchNotificationsResponse searchNotificationsResponse = new SearchNotificationsResponse();
-        searchNotificationsResponse.setNextPagesKey(notificationSearchResponseDto.getNextPagesKey());
-        searchNotificationsResponse.setMoreResult(notificationSearchResponseDto.getMoreResult());
+        searchNotificationsResponse.setNextPagesKey(LegalNotificationSearchResponseDto.getNextPagesKey());
+        searchNotificationsResponse.setMoreResult(LegalNotificationSearchResponseDto.getMoreResult());
 
         List<NotificationResponse> notificationResponses = new ArrayList<>();
-        notificationSearchResponseDto.getResultsPage().forEach(notificationSearchRowDto -> {
+        LegalNotificationSearchResponseDto.getResultsPage().forEach(LegalNotificationSearchRowDto -> {
             NotificationResponse notificationResponse = new NotificationResponse();
-            notificationResponse.setSubject(notificationSearchRowDto.getSubject());
-            notificationResponse.setSentAt(notificationSearchRowDto.getSentAt());
-            notificationResponse.setIun(notificationSearchRowDto.getIun());
-            notificationResponse.setSender(notificationSearchRowDto.getSender());
-            if (notificationSearchRowDto.getNotificationStatus() != null) {
-                notificationResponse.setIunStatus(IunStatus.fromValue(notificationSearchRowDto.getNotificationStatus().getValue()));
+            notificationResponse.setSubject(LegalNotificationSearchRowDto.getSubject());
+            notificationResponse.setSentAt(LegalNotificationSearchRowDto.getSentAt());
+            notificationResponse.setIun(LegalNotificationSearchRowDto.getIun());
+            notificationResponse.setSender(LegalNotificationSearchRowDto.getSender());
+            if (LegalNotificationSearchRowDto.getNotificationStatus() != null) {
+                notificationResponse.setIunStatus(IunStatus.fromValue(LegalNotificationSearchRowDto.getNotificationStatus().getValue()));
             }
             notificationResponse.setCourtesyMessages(new ArrayList<>());
             notificationResponses.add(notificationResponse);

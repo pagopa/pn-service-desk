@@ -387,7 +387,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
                 });
     }
 
-    private Flux<String> getPaymentsFromNotification(SentNotificationV25Dto sentNotification, String internalId) {
+    private Flux<String> getPaymentsFromNotification(SentNotificationV26Dto sentNotification, String internalId) {
         log.debug("sentNotification: {}, internalId: {}, GetPaymentsFromNotification received input", sentNotification, internalId);
         return Flux.fromIterable(sentNotification.getRecipients())
                 .filter(notRecipient -> StringUtils.equals(notRecipient.getInternalId(), internalId))

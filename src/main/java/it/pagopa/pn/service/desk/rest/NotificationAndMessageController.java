@@ -21,7 +21,7 @@ public class NotificationAndMessageController implements NotificationAndMessageA
     @Override
     public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsFromTaxId(String xPagopaPnUid, Instant startDate, Instant endDate, Integer size, String nextPagesKey, Mono<SearchNotificationsRequest> searchNotificationsRequest, ServerWebExchange exchange) {
         return searchNotificationsRequest
-                .flatMap(searchMessages -> notificationAndMessageService.searchNotificationsFromTaxId(xPagopaPnUid, startDate, endDate, size, nextPagesKey, searchMessages)
+                .flatMap(searchMessages -> notificationAndMessageService.searchNotificationsFromTaxId(xPagopaPnUid, xPagopaPnUid, startDate, endDate, size, nextPagesKey, searchMessages)
                         .map(searchMessagesResponse -> ResponseEntity.status(HttpStatus.OK).body(searchMessagesResponse)));
     }
 
@@ -41,7 +41,7 @@ public class NotificationAndMessageController implements NotificationAndMessageA
     @Override
     public Mono<ResponseEntity<DocumentsResponse>> getDocumentsOfIUN(String xPagopaPnUid, String iun, Mono<DocumentsRequest> documentsRequest, ServerWebExchange exchange) {
         return documentsRequest
-                .flatMap(request -> notificationAndMessageService.getDocumentsOfIun(iun, request)
+                .flatMap(request -> notificationAndMessageService.getDocumentsOfIun(xPagopaPnUid, xPagopaPnUid, iun, request)
                         .map(documentsResponse -> ResponseEntity.status(HttpStatus.OK).body(documentsResponse)));
 
     }
@@ -54,7 +54,7 @@ public class NotificationAndMessageController implements NotificationAndMessageA
 
     @Override
     public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, String recipientType, Instant startDate, Instant endDate, Integer size, String nextPagesKey, ServerWebExchange exchange) {
-        return notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(xPagopaPnUid, mandateId, delegateInternalId, RecipientType.fromValue(recipientType), size, nextPagesKey, startDate, endDate)
+        return notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(xPagopaPnUid, xPagopaPnUid, mandateId, delegateInternalId, RecipientType.fromValue(recipientType), size, nextPagesKey, startDate, endDate)
                 .map(searchNotificationsResponseResponseEntity -> ResponseEntity.status(HttpStatus.OK).body(searchNotificationsResponseResponseEntity));
     }
 

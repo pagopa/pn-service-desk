@@ -53,9 +53,9 @@ public class InfoPaServiceImpl implements InfoPaService {
     }
 
     @Override
-    public Mono<SearchNotificationsResponse> searchNotificationsFromSenderId(String xPagopaPnUid, Integer size, String nextPagesKey, PaNotificationsRequest paNotificationsRequest) {
+    public Mono<SearchNotificationsResponse> searchNotificationsFromSenderId(String xPagopaPnUid, String xPagopaPnCxId, Integer size, String nextPagesKey, PaNotificationsRequest paNotificationsRequest) {
         PnAuditLogEvent logEvent =  auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_SEARCH_NOTIFICATION, "searchNotificationsFromSenderId for senderId = {}", paNotificationsRequest.getId());
-        return this.pnDeliveryClient.searchNotificationsPrivate(paNotificationsRequest.getStartDate(), paNotificationsRequest.getEndDate(), null, paNotificationsRequest.getId(), null, null, size, nextPagesKey)
+        return this.pnDeliveryClient.searchNotificationsPrivate(xPagopaPnUid, xPagopaPnCxId, paNotificationsRequest.getStartDate(), paNotificationsRequest.getEndDate(), null, paNotificationsRequest.getId(), null, null, size, nextPagesKey)
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());
                     logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage()).log();

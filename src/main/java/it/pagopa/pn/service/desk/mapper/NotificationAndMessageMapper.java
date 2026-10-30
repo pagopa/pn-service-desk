@@ -29,13 +29,13 @@ public class NotificationAndMessageMapper {
         return mapper;
     }
 
-    public static NotificationResponse getNotification (NotificationSearchRowDto notificationSearchRowDto, List<TimelineElementV28Dto> filteredElements){
+    public static NotificationResponse getNotification (LegalNotificationSearchRowDto LegalNotificationSearchRowDto, List<TimelineElementV28Dto> filteredElements){
         NotificationResponse notification = new NotificationResponse();
-        notification.setIun(notificationSearchRowDto.getIun());
-        notification.setSender(notificationSearchRowDto.getSender());
-        notification.setSentAt(notificationSearchRowDto.getSentAt());
-        notification.setSubject(notificationSearchRowDto.getSubject());
-        notification.setIunStatus(IunStatus.fromValue(notificationSearchRowDto.getNotificationStatus().getValue()));
+        notification.setIun(LegalNotificationSearchRowDto.getIun());
+        notification.setSender(LegalNotificationSearchRowDto.getSender());
+        notification.setSentAt(LegalNotificationSearchRowDto.getSentAt());
+        notification.setSubject(LegalNotificationSearchRowDto.getSubject());
+        notification.setIunStatus(IunStatus.fromValue(LegalNotificationSearchRowDto.getNotificationStatus().getValue()));
 
             if (!CollectionUtils.isEmpty(filteredElements)){
             List<CourtesyMessage> courtesyMessages = new ArrayList<>();
@@ -71,30 +71,32 @@ public class NotificationAndMessageMapper {
 
         return timelineElementList
                 .stream()
-                .filter(element -> element.getCategory().equals(TimelineElementCategoryV28Dto.REQUEST_ACCEPTED) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_COURTESY_MESSAGE) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.SCHEDULE_DIGITAL_WORKFLOW) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_DIGITAL_DOMICILE) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_DIGITAL_PROGRESS) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_DIGITAL_FEEDBACK) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.DIGITAL_SUCCESS_WORKFLOW) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.DIGITAL_FAILURE_WORKFLOW) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.ANALOG_FAILURE_WORKFLOW) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_SIMPLE_REGISTERED_LETTER) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.NOTIFICATION_VIEWED) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.PREPARE_ANALOG_DOMICILE_FAILURE) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_ANALOG_DOMICILE) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_ANALOG_PROGRESS) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_ANALOG_FEEDBACK) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.NOTIFICATION_RADD_RETRIEVED) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.COMPLETELY_UNREACHABLE) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.AAR_GENERATION) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.NOT_HANDLED) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.REFINEMENT) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.ANALOG_WORKFLOW_RECIPIENT_DECEASED) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.PUBLIC_REGISTRY_VALIDATION_CALL) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.PUBLIC_REGISTRY_VALIDATION_RESPONSE) ||
-                        element.getCategory().equals(TimelineElementCategoryV28Dto.NOTIFICATION_TIMELINE_REWORKED)
+                .filter(element -> {
+                            return element.getCategory().equals(TimelineElementCategoryV28Dto.REQUEST_ACCEPTED) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_COURTESY_MESSAGE) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.SCHEDULE_DIGITAL_WORKFLOW) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_DIGITAL_DOMICILE) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_DIGITAL_PROGRESS) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_DIGITAL_FEEDBACK) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.DIGITAL_SUCCESS_WORKFLOW) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.DIGITAL_FAILURE_WORKFLOW) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.ANALOG_FAILURE_WORKFLOW) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_SIMPLE_REGISTERED_LETTER) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.NOTIFICATION_VIEWED) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.PREPARE_ANALOG_DOMICILE_FAILURE) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_ANALOG_DOMICILE) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_ANALOG_PROGRESS) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.SEND_ANALOG_FEEDBACK) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.NOTIFICATION_RADD_RETRIEVED) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.COMPLETELY_UNREACHABLE) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.AAR_GENERATION) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.NOT_HANDLED) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.REFINEMENT) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.ANALOG_WORKFLOW_RECIPIENT_DECEASED) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.PUBLIC_REGISTRY_VALIDATION_CALL) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.PUBLIC_REGISTRY_VALIDATION_RESPONSE) ||
+                                    element.getCategory().equals(TimelineElementCategoryV28Dto.NOTIFICATION_TIMELINE_REWORKED);
+                        }
                 )
                 .toList();
     }
@@ -107,14 +109,14 @@ public class NotificationAndMessageMapper {
         return document;
     }
 
-    public static NotificationDetailResponse getNotificationDetail(SentNotificationV25Dto sentNotificationV21Dto) {
+    public static NotificationDetailResponse getNotificationDetail(SentNotificationV26Dto sentNotificationV21Dto) {
         NotificationDetailResponse notificationDetailResponse = new NotificationDetailResponse();
         notificationDetailResponse.setPaProtocolNumber(sentNotificationV21Dto.getPaProtocolNumber());
         notificationDetailResponse.setSubject(sentNotificationV21Dto.getSubject());
         notificationDetailResponse.setAbstract(sentNotificationV21Dto.getAbstract());
         notificationDetailResponse.setIsMultiRecipients(sentNotificationV21Dto.getRecipients().size() > 1);
         if(!sentNotificationV21Dto.getRecipients().isEmpty()){
-            notificationDetailResponse.setHasPayments(!sentNotificationV21Dto.getRecipients().get(0).getPayments().isEmpty());
+            notificationDetailResponse.setHasPayments(!sentNotificationV21Dto.getRecipients().getFirst().getPayments().isEmpty());
         }
         notificationDetailResponse.setAmount(sentNotificationV21Dto.getAmount());
         notificationDetailResponse.setHasDocuments(!sentNotificationV21Dto.getDocuments().isEmpty());
@@ -137,14 +139,14 @@ public class NotificationAndMessageMapper {
         return courtesyMessage;
     }
 
-    public static NotificationRecipientDetailResponse getNotificationRecipientDetailResponse(SentNotificationV25Dto sentNotificationV21Dto, String taxId) {
+    public static NotificationRecipientDetailResponse getNotificationRecipientDetailResponse(SentNotificationV26Dto sentNotificationV21Dto, String taxId) {
         var response = new NotificationRecipientDetailResponse();
         response.setPaProtocolNumber(sentNotificationV21Dto.getPaProtocolNumber());
         response.setSubject(sentNotificationV21Dto.getSubject());
         response.setAbstract(sentNotificationV21Dto.getAbstract());
         response.setIsMultiRecipients(sentNotificationV21Dto.getRecipients().size() > 1);
         if(!sentNotificationV21Dto.getRecipients().isEmpty()){
-            response.setHasPayments(!sentNotificationV21Dto.getRecipients().get(0).getPayments().isEmpty());
+            response.setHasPayments(!sentNotificationV21Dto.getRecipients().getFirst().getPayments().isEmpty());
         }
         response.setAmount(sentNotificationV21Dto.getAmount());
         response.setHasDocuments(!sentNotificationV21Dto.getDocuments().isEmpty());
