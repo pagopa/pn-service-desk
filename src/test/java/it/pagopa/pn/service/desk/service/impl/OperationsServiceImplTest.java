@@ -20,6 +20,7 @@ import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -347,6 +348,10 @@ class OperationsServiceImplTest extends BaseTest {
                         assertNotNull(response.getOperationId());
                     })
                     .verifyComplete();
+
+        ArgumentCaptor<PnServiceDeskOperations> operationCaptor = ArgumentCaptor.forClass(PnServiceDeskOperations.class);
+        Mockito.verify(operationDAO).createOperationAndAddress(operationCaptor.capture(), Mockito.any());
+        assertEquals("someUid", operationCaptor.getValue().getCxOperatorId());
     }
 
 
@@ -519,6 +524,12 @@ class OperationsServiceImplTest extends BaseTest {
                         response.getResults().forEach(r -> assertEquals("CREATING", r.getStatus()));
                     })
                     .verifyComplete();
+
+        Mockito.verify(operationDAO).createParentOperationWithSubOpsAndAddress(
+                Mockito.argThat(parent -> "uid".equals(parent.getCxOperatorId())),
+                Mockito.any(),
+                Mockito.argThat(subOperations -> !subOperations.isEmpty()
+                        && subOperations.stream().allMatch(operation -> "uid".equals(operation.getCxOperatorId()))));
     }
 
     @Test

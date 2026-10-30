@@ -39,8 +39,8 @@ public class PnDeliveryPushClientImpl implements PnDeliveryPushClient{
     }
 
     @Override
-    public Flux<LegalFactListElementV20Dto> getNotificationLegalFactsPrivate(String recipientInternalId, String iun) {
-        return legalFactsPrivateApi.getNotificationLegalFactsPrivate(recipientInternalId, iun, null, CxTypeAuthFleetDto.SD, null, null, null);
+    public Flux<LegalFactListElementV20Dto> getNotificationLegalFactsPrivate(String recipientInternalId, String iun, String cxOperatorId) {
+        return legalFactsPrivateApi.getNotificationLegalFactsPrivate(recipientInternalId, iun, null, CxTypeAuthFleetDto.SD, null, cxOperatorId, cxOperatorId);
     }
 
     @Override

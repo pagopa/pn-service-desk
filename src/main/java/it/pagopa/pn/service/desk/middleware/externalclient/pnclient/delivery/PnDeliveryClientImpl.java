@@ -34,8 +34,8 @@ public class PnDeliveryClientImpl implements PnDeliveryClient{
     }
 
     @Override
-    public Mono<NotificationAttachmentDownloadMetadataResponseDto> getPresignedUrlPaymentDocument(String iun, String attachmentName, String recipientInternalId, Integer attachmentIdx) {
-        return this.internalOnlyApi.getReceivedNotificationAttachmentPrivate(iun, attachmentName, recipientInternalId, null, attachmentIdx, null, null, CxTypeAuthFleetDto.SD);
+    public Mono<NotificationAttachmentDownloadMetadataResponseDto> getPresignedUrlPaymentDocument(String iun, String attachmentName, String recipientInternalId, Integer attachmentIdx, String cxOperatorId) {
+        return this.internalOnlyApi.getReceivedNotificationAttachmentPrivate(iun, attachmentName, recipientInternalId, null, attachmentIdx, cxOperatorId, cxOperatorId, CxTypeAuthFleetDto.SD);
     }
 
 }

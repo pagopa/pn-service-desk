@@ -19,5 +19,5 @@ public interface PnDeliveryClient {
     Mono<LegalNotificationSearchResponseDto> searchNotificationsPrivate(SearchNotificationsPrivateHeaders headers,
                                                                          SearchNotificationsPrivateParameters parameters);
     Mono<NotificationAttachmentDownloadMetadataResponseDto> getReceivedNotificationDocumentPrivate(String xPagopaPnUid, String xPagopaPnCxId, String iun, Integer docIdx, String recipientInternalId, String mandateId);
-    Mono<NotificationAttachmentDownloadMetadataResponseDto> getPresignedUrlPaymentDocument(String iun, String attachmentName, String recipientTaxId, Integer attachmentIdx);
+    Mono<NotificationAttachmentDownloadMetadataResponseDto> getPresignedUrlPaymentDocument(String iun, String attachmentName, String recipientTaxId, Integer attachmentIdx, String cxOperatorId);
 }

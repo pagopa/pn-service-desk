@@ -32,7 +32,7 @@ public class OperationMapper {
 
         return pnServiceDeskOperations;    }
 
-    public static PnServiceDeskOperations getInitialActOperation(CreateActOperationRequest operationRequest, String recipientInternalId) {
+    public static PnServiceDeskOperations getInitialActOperation(CreateActOperationRequest operationRequest, String recipientInternalId, String cxOperatorId) {
         PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
         pnServiceDeskOperations.setOperationId(Utility.generateOperationId(operationRequest.getTicketId(), operationRequest.getTicketOperationId()));
         pnServiceDeskOperations.setTicketId(operationRequest.getTicketId());
@@ -43,6 +43,7 @@ public class OperationMapper {
         pnServiceDeskOperations.setTicketDate(operationRequest.getTicketDate());
         pnServiceDeskOperations.setVrDate(operationRequest.getVrDate());
         pnServiceDeskOperations.setIun(operationRequest.getIun());
+        pnServiceDeskOperations.setCxOperatorId(cxOperatorId);
         return pnServiceDeskOperations;
     }
 
@@ -88,7 +89,8 @@ public class OperationMapper {
     public static PnServiceDeskOperations getInitialParentOperation(CreateActOperationRequestV2 request,
                                                                     String recipientInternalId,
                                                                     String operationId,
-                                                                    List<String> subOperationIds) {
+                                                                    List<String> subOperationIds,
+                                                                    String cxOperatorId) {
         PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
         pnServiceDeskOperations.setOperationId(operationId);
         pnServiceDeskOperations.setTicketId(request.getTicketId());
@@ -100,22 +102,25 @@ public class OperationMapper {
         pnServiceDeskOperations.setVrDate(request.getVrDate());
         pnServiceDeskOperations.setIsSubOperation(false);
         pnServiceDeskOperations.setSubOperationsIds(subOperationIds);
+        pnServiceDeskOperations.setCxOperatorId(cxOperatorId);
         return pnServiceDeskOperations;
     }
 
     public static PnServiceDeskOperations getInitialSubOperation(String parentOperationId,
                                                                   String iun,
                                                                   String recipientInternalId,
-                                                                  CreateActOperationRequestV2 request) {
-        return createSubOperation(parentOperationId, iun, recipientInternalId, OperationStatusEnum.CREATING, request);
+                                                                  CreateActOperationRequestV2 request,
+                                                                  String cxOperatorId) {
+        return createSubOperation(parentOperationId, iun, recipientInternalId, OperationStatusEnum.CREATING, request, cxOperatorId);
     }
 
     public static PnServiceDeskOperations getFailedSubOperation(String parentOperationId,
                                                                 String iun,
                                                                 String recipientInternalId,
                                                                 String errorReason,
-                                                                CreateActOperationRequestV2 request) {
-        PnServiceDeskOperations subOperation = createSubOperation(parentOperationId, iun, recipientInternalId, OperationStatusEnum.KO, request);
+                                                                CreateActOperationRequestV2 request,
+                                                                String cxOperatorId) {
+        PnServiceDeskOperations subOperation = createSubOperation(parentOperationId, iun, recipientInternalId, OperationStatusEnum.KO, request, cxOperatorId);
         subOperation.setErrorReason(errorReason);
         return subOperation;
     }
@@ -124,7 +129,8 @@ public class OperationMapper {
                                                              String iun,
                                                              String recipientInternalId,
                                                              OperationStatusEnum status,
-                                                             CreateActOperationRequestV2 request) {
+                                                             CreateActOperationRequestV2 request,
+                                                             String cxOperatorId) {
         PnServiceDeskOperations subOperation = new PnServiceDeskOperations();
         subOperation.setOperationId("SUB#" + parentOperationId + "#" + iun);
         subOperation.setTicketId(request.getTicketId());
@@ -136,6 +142,7 @@ public class OperationMapper {
         subOperation.setVrDate(request.getVrDate());
         subOperation.setIun(iun);
         subOperation.setIsSubOperation(true);
+        subOperation.setCxOperatorId(cxOperatorId);
         return subOperation;
     }
 
