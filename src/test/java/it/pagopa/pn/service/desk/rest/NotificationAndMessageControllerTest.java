@@ -196,16 +196,16 @@ class NotificationAndMessageControllerTest {
                         .queryParam("endDate","2023-09-15T15:49:05.63Z")
                         .build())
                 .header("x-pagopa-pn-uid", "test")
-                .header("x-pagopa-pn-cx-id", "different-cx-id")
+                .header("x-pagopa-pn-cx-id", "test")
                 .header("x-api-key", "test")
                 .exchange()
                 .expectStatus().isOk();
 
         Mockito.verify(notificationAndMessageService).searchNotificationsAsDelegateFromInternalId(
-                Mockito.eq(new DelegateNotificationSearchHeaders("test", "test")),
-                Mockito.eq(new DelegateNotificationSearchParameters("ajhsdfn", "PF-asdafv4345656",
+                new DelegateNotificationSearchHeaders("test", "test"),
+                new DelegateNotificationSearchParameters("ajhsdfn", "PF-asdafv4345656",
                         RecipientType.PF, 1, "1", Instant.parse("2023-08-31T15:49:05.63Z"),
-                        Instant.parse("2023-09-15T15:49:05.63Z"))));
+                        Instant.parse("2023-09-15T15:49:05.63Z")));
     }
 
     @Test
