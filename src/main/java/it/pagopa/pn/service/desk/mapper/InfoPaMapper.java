@@ -12,20 +12,20 @@ public class InfoPaMapper {
 
     private InfoPaMapper(){}
 
-    public static SearchNotificationsResponse getSearchNotificationResponse(LegalNotificationSearchResponseDto LegalNotificationSearchResponseDto) {
+    public static SearchNotificationsResponse getSearchNotificationResponse(LegalNotificationSearchResponseDto legalNotificationSearchResponseDto) {
         SearchNotificationsResponse searchNotificationsResponse = new SearchNotificationsResponse();
-        searchNotificationsResponse.setNextPagesKey(LegalNotificationSearchResponseDto.getNextPagesKey());
-        searchNotificationsResponse.setMoreResult(LegalNotificationSearchResponseDto.getMoreResult());
+        searchNotificationsResponse.setNextPagesKey(legalNotificationSearchResponseDto.getNextPagesKey());
+        searchNotificationsResponse.setMoreResult(legalNotificationSearchResponseDto.getMoreResult());
 
         List<NotificationResponse> notificationResponses = new ArrayList<>();
-        LegalNotificationSearchResponseDto.getResultsPage().forEach(LegalNotificationSearchRowDto -> {
+        legalNotificationSearchResponseDto.getResultsPage().forEach(legalNotificationSearchRowDto -> {
             NotificationResponse notificationResponse = new NotificationResponse();
-            notificationResponse.setSubject(LegalNotificationSearchRowDto.getSubject());
-            notificationResponse.setSentAt(LegalNotificationSearchRowDto.getSentAt());
-            notificationResponse.setIun(LegalNotificationSearchRowDto.getIun());
-            notificationResponse.setSender(LegalNotificationSearchRowDto.getSender());
-            if (LegalNotificationSearchRowDto.getNotificationStatus() != null) {
-                notificationResponse.setIunStatus(IunStatus.fromValue(LegalNotificationSearchRowDto.getNotificationStatus().getValue()));
+            notificationResponse.setSubject(legalNotificationSearchRowDto.getSubject());
+            notificationResponse.setSentAt(legalNotificationSearchRowDto.getSentAt());
+            notificationResponse.setIun(legalNotificationSearchRowDto.getIun());
+            notificationResponse.setSender(legalNotificationSearchRowDto.getSender());
+            if (legalNotificationSearchRowDto.getNotificationStatus() != null) {
+                notificationResponse.setIunStatus(IunStatus.fromValue(legalNotificationSearchRowDto.getNotificationStatus().getValue()));
             }
             notificationResponse.setCourtesyMessages(new ArrayList<>());
             notificationResponses.add(notificationResponse);

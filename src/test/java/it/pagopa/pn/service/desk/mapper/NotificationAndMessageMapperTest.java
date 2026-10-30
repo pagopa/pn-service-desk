@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class NotificationAndMessageMapperTest {
 
-    private final LegalNotificationSearchRowDto LegalNotificationSearchRowDto = new LegalNotificationSearchRowDto();
+    private final LegalNotificationSearchRowDto legalNotificationSearchRowDto = new LegalNotificationSearchRowDto();
     private final List<TimelineElementV28Dto> filteredElements = new ArrayList<>();
     private final NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
     private final NotificationAttachmentDownloadMetadataResponseDto notificationAttachmentDownloadMetadataResponseDto = new NotificationAttachmentDownloadMetadataResponseDto();
@@ -26,11 +26,11 @@ class NotificationAndMessageMapperTest {
 
     @BeforeEach
     void initialize (){
-        LegalNotificationSearchRowDto.setSender("Comune");
-        LegalNotificationSearchRowDto.setIun("PRVZ-NZKM-JEDK-202309-A-1");
-        LegalNotificationSearchRowDto.setSentAt(Instant.now());
-        LegalNotificationSearchRowDto.setSubject("comune di Palermo");
-        LegalNotificationSearchRowDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusV26Dto.ACCEPTED);
+        legalNotificationSearchRowDto.setSender("Comune");
+        legalNotificationSearchRowDto.setIun("PRVZ-NZKM-JEDK-202309-A-1");
+        legalNotificationSearchRowDto.setSentAt(Instant.now());
+        legalNotificationSearchRowDto.setSubject("comune di Palermo");
+        legalNotificationSearchRowDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusV26Dto.ACCEPTED);
         var timelineElementV23Dto = new TimelineElementV28Dto();
         var detailsV23Dto = new NotificationRequestAcceptedDetailsV28Dto();
         timelineElementV23Dto.setDetails(detailsV23Dto);
@@ -73,7 +73,7 @@ class NotificationAndMessageMapperTest {
 
     @Test
     void getNotificationTest (){
-        NotificationResponse notificationResponse = NotificationAndMessageMapper.getNotification(LegalNotificationSearchRowDto, filteredElements);
+        NotificationResponse notificationResponse = NotificationAndMessageMapper.getNotification(legalNotificationSearchRowDto, filteredElements);
         assertNotNull(notificationResponse);
     }
 
@@ -280,7 +280,7 @@ class NotificationAndMessageMapperTest {
         TimelineResponse response = assertDoesNotThrow(() -> NotificationAndMessageMapper.getTimeline(history));
 
         assertThat(response.getTimeline()).hasSize(1);
-        TimelineElementDetail detail = response.getTimeline().get(0).getDetail();
+        TimelineElementDetail detail = response.getTimeline().getFirst().getDetail();
         assertNotNull(detail);
         assertEquals("prep-1", detail.getPrepareRequestId());
         assertEquals("rel-1", detail.getRelatedRequestId());

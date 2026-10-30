@@ -10,6 +10,8 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificat
 import it.pagopa.pn.service.desk.mapper.common.BaseMapper;
 import it.pagopa.pn.service.desk.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient.SearchNotificationsPrivateHeaders;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient.SearchNotificationsPrivateParameters;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregistries.ExternalRegistriesClient;
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.InfoPaService;
@@ -55,7 +57,10 @@ public class InfoPaServiceImpl implements InfoPaService {
     @Override
     public Mono<SearchNotificationsResponse> searchNotificationsFromSenderId(String xPagopaPnUid, String xPagopaPnCxId, Integer size, String nextPagesKey, PaNotificationsRequest paNotificationsRequest) {
         PnAuditLogEvent logEvent =  auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_SEARCH_NOTIFICATION, "searchNotificationsFromSenderId for senderId = {}", paNotificationsRequest.getId());
-        return this.pnDeliveryClient.searchNotificationsPrivate(xPagopaPnUid, xPagopaPnCxId, paNotificationsRequest.getStartDate(), paNotificationsRequest.getEndDate(), null, paNotificationsRequest.getId(), null, null, size, nextPagesKey)
+        return this.pnDeliveryClient.searchNotificationsPrivate(
+                        new SearchNotificationsPrivateHeaders(xPagopaPnUid, xPagopaPnCxId),
+                        new SearchNotificationsPrivateParameters(paNotificationsRequest.getStartDate(), paNotificationsRequest.getEndDate(),
+                                null, paNotificationsRequest.getId(), null, null, size, nextPagesKey))
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage());
                     logEvent.generateFailure("errorReason = {}, An error occurred while calling the service to obtain sent notifications", exception.getMessage()).log();

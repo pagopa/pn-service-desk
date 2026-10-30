@@ -56,16 +56,16 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
     public static final String PAGOPA = "PAGOPA";
     public static final String F_24 = "F24";
     public static final String HTTPS = "https";
-    private AddressDAO addressDAO;
-    private PnAddressManagerClient addressManagerClient;
-    private PnDeliveryPushClient pnDeliveryPushClient;
-    private PnDeliveryClient pnDeliveryClient;
-    private PnPaperChannelClient paperChannelClient;
-    private PnSafeStorageClient safeStorageClient;
-    private PnServiceDeskConfigs cfn;
-    private PnDataVaultClient pnDataVaultClient;
-    private PnExternalChannelClient pnExternalChannelClient;
-    private ExternalChannelMapper externalChannelMapper;
+    private final AddressDAO addressDAO;
+    private final PnAddressManagerClient addressManagerClient;
+    private final PnDeliveryPushClient pnDeliveryPushClient;
+    private final PnDeliveryClient pnDeliveryClient;
+    private final PnPaperChannelClient paperChannelClient;
+    private final PnSafeStorageClient safeStorageClient;
+    private final PnServiceDeskConfigs cfn;
+    private final PnDataVaultClient pnDataVaultClient;
+    private final PnExternalChannelClient pnExternalChannelClient;
+    private final ExternalChannelMapper externalChannelMapper;
 
 
     public ValidationOperationActionImpl(OperationDAO operationDao, AddressDAO addressDAO,

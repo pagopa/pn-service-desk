@@ -8,6 +8,8 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaNotifications
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaSummary;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient.SearchNotificationsPrivateHeaders;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient.SearchNotificationsPrivateParameters;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregistries.ExternalRegistriesClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,17 +48,17 @@ class InfoPaServiceImplTest {
         expectedNotificationSearchResponse.setMoreResult(true);
         expectedNotificationSearchResponse.setNextPagesKey(List.of("eyJlayI6IlBGLWIzY2NhYzMxLTM4ZWEtNDRjZC05NjAxLTlmMmQxOWU4NTNhZiMjMjAyMzA5I"));
 
-        LegalNotificationSearchRowDto LegalNotificationSearchRowDto = new LegalNotificationSearchRowDto();
-        LegalNotificationSearchRowDto.setIun("PRVZ-NZKM-JEDK-202309-A-1");
-        LegalNotificationSearchRowDto.setPaProtocolNumber("202381856591695996128952");
-        LegalNotificationSearchRowDto.setSender("Comune di Palermo");
-        LegalNotificationSearchRowDto.setSentAt(Instant.parse("2023-09-29T14:02:08.670718277Z"));
-        LegalNotificationSearchRowDto.setSubject("Test-di-carico");
-        LegalNotificationSearchRowDto.setNotificationStatus(NotificationStatusV26Dto.VIEWED);
-        LegalNotificationSearchRowDto.setRecipients(List.of("GLLGLL64B15G702I"));
-        LegalNotificationSearchRowDto.setRequestAcceptedAt(Instant.parse("2023-09-29T14:03:02.807361187Z"));
+        LegalNotificationSearchRowDto legalNotificationSearchRowDto = new LegalNotificationSearchRowDto();
+        legalNotificationSearchRowDto.setIun("PRVZ-NZKM-JEDK-202309-A-1");
+        legalNotificationSearchRowDto.setPaProtocolNumber("202381856591695996128952");
+        legalNotificationSearchRowDto.setSender("Comune di Palermo");
+        legalNotificationSearchRowDto.setSentAt(Instant.parse("2023-09-29T14:02:08.670718277Z"));
+        legalNotificationSearchRowDto.setSubject("Test-di-carico");
+        legalNotificationSearchRowDto.setNotificationStatus(NotificationStatusV26Dto.VIEWED);
+        legalNotificationSearchRowDto.setRecipients(List.of("GLLGLL64B15G702I"));
+        legalNotificationSearchRowDto.setRequestAcceptedAt(Instant.parse("2023-09-29T14:03:02.807361187Z"));
 
-        expectedNotificationSearchResponse.setResultsPage(List.of(LegalNotificationSearchRowDto));
+        expectedNotificationSearchResponse.setResultsPage(List.of(legalNotificationSearchRowDto));
     }
 
     @Test
@@ -74,9 +76,11 @@ class InfoPaServiceImplTest {
 
     @Test
     void searchNotificationsFromSenderId(){
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate("operator-uid", null, Instant.parse("2023-08-31T15:49:05.630Z"),
-                        Instant.parse("2023-10-10T15:49:05.630Z"), null,
-                        "PA-oihdsojn120u", null, null, 50, "nextPageKey"))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(
+                        new SearchNotificationsPrivateHeaders("operator-uid", null),
+                        new SearchNotificationsPrivateParameters(Instant.parse("2023-08-31T15:49:05.630Z"),
+                                Instant.parse("2023-10-10T15:49:05.630Z"), null, "PA-oihdsojn120u",
+                                null, null, 50, "nextPageKey")))
                 .thenReturn(Mono.just(expectedNotificationSearchResponse));
 
         SearchNotificationsResponse actual = this.infoPaService.searchNotificationsFromSenderId("operator-uid", null, 50, "nextPageKey", this.getPaNotificationsRequest())

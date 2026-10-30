@@ -3,6 +3,8 @@ package it.pagopa.pn.service.desk.rest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.api.NotificationAndMessageApi;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.service.NotificationAndMessageService;
+import it.pagopa.pn.service.desk.service.NotificationAndMessageService.DelegateNotificationSearchHeaders;
+import it.pagopa.pn.service.desk.service.NotificationAndMessageService.DelegateNotificationSearchParameters;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,7 +56,10 @@ public class NotificationAndMessageController implements NotificationAndMessageA
 
     @Override
     public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, String recipientType, Instant startDate, Instant endDate, Integer size, String nextPagesKey, ServerWebExchange exchange) {
-        return notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(xPagopaPnUid, xPagopaPnUid, mandateId, delegateInternalId, RecipientType.fromValue(recipientType), size, nextPagesKey, startDate, endDate)
+        DelegateNotificationSearchHeaders headers = new DelegateNotificationSearchHeaders(xPagopaPnUid, xPagopaPnUid);
+        DelegateNotificationSearchParameters parameters = new DelegateNotificationSearchParameters(
+                mandateId, delegateInternalId, RecipientType.fromValue(recipientType), size, nextPagesKey, startDate, endDate);
+        return notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(headers, parameters)
                 .map(searchNotificationsResponseResponseEntity -> ResponseEntity.status(HttpStatus.OK).body(searchNotificationsResponseResponseEntity));
     }
 

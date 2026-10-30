@@ -29,13 +29,13 @@ public class NotificationAndMessageMapper {
         return mapper;
     }
 
-    public static NotificationResponse getNotification (LegalNotificationSearchRowDto LegalNotificationSearchRowDto, List<TimelineElementV28Dto> filteredElements){
+    public static NotificationResponse getNotification (LegalNotificationSearchRowDto legalNotificationSearchRowDto, List<TimelineElementV28Dto> filteredElements){
         NotificationResponse notification = new NotificationResponse();
-        notification.setIun(LegalNotificationSearchRowDto.getIun());
-        notification.setSender(LegalNotificationSearchRowDto.getSender());
-        notification.setSentAt(LegalNotificationSearchRowDto.getSentAt());
-        notification.setSubject(LegalNotificationSearchRowDto.getSubject());
-        notification.setIunStatus(IunStatus.fromValue(LegalNotificationSearchRowDto.getNotificationStatus().getValue()));
+        notification.setIun(legalNotificationSearchRowDto.getIun());
+        notification.setSender(legalNotificationSearchRowDto.getSender());
+        notification.setSentAt(legalNotificationSearchRowDto.getSentAt());
+        notification.setSubject(legalNotificationSearchRowDto.getSubject());
+        notification.setIunStatus(IunStatus.fromValue(legalNotificationSearchRowDto.getNotificationStatus().getValue()));
 
             if (!CollectionUtils.isEmpty(filteredElements)){
             List<CourtesyMessage> courtesyMessages = new ArrayList<>();

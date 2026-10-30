@@ -322,18 +322,18 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void createActOperation_Success() {
-        SentNotificationV26Dto SentNotificationV26Dto = new SentNotificationV26Dto();
+        SentNotificationV26Dto sentNotificationV26Dto = new SentNotificationV26Dto();
 
         NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
         recipient.setTaxId(createActOperationRequest.getTaxId());
-        SentNotificationV26Dto.setRecipients(List.of(recipient));
-        SentNotificationV26Dto.setIun(createActOperationRequest.getIun());
-        SentNotificationV26Dto.setDocumentsAvailable(true);
+        sentNotificationV26Dto.setRecipients(List.of(recipient));
+        sentNotificationV26Dto.setIun(createActOperationRequest.getIun());
+        sentNotificationV26Dto.setDocumentsAvailable(true);
 
 
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
                 Mockito.eq(createActOperationRequest.getIun())))
-               .thenReturn(Mono.just(SentNotificationV26Dto));
+               .thenReturn(Mono.just(sentNotificationV26Dto));
 
         Mockito.when(operationDAO.getByOperationId(Mockito.any()))
                .thenReturn(Mono.empty());
@@ -496,15 +496,15 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void createActOperationV2_AllValid_CreatesParentAndSubOps() {
-        SentNotificationV26Dto SentNotificationV26Dto = new SentNotificationV26Dto();
+        SentNotificationV26Dto sentNotificationV26Dto = new SentNotificationV26Dto();
         NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
         recipient.setTaxId("AAAAAA00A00A000A");
-        SentNotificationV26Dto.setRecipients(List.of(recipient));
-        SentNotificationV26Dto.setDocumentsAvailable(true);
+        sentNotificationV26Dto.setRecipients(List.of(recipient));
+        sentNotificationV26Dto.setDocumentsAvailable(true);
 
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
-               .thenReturn(Mono.just(SentNotificationV26Dto));
+               .thenReturn(Mono.just(sentNotificationV26Dto));
         Mockito.when(operationDAO.createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                .thenReturn(Mono.just(pnServiceDeskOperations));
 

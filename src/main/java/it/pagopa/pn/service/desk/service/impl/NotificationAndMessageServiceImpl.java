@@ -1,12 +1,13 @@
 package it.pagopa.pn.service.desk.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationRecipientV24Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.LegalNotificationSearchResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.LegalNotificationSearchRowDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationRecipientV24Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV26Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.NotificationHistoryResponseDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndeliverypush.v1.dto.TimelineElementCategoryV28Dto;
@@ -18,8 +19,11 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.mapper.NotificationAndMessageMapper;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient.SearchNotificationsPrivateHeaders;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient.SearchNotificationsPrivateParameters;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregistries.ExternalRegistriesClient;
+import it.pagopa.pn.service.desk.model.RecIndexDetails;
 import it.pagopa.pn.service.desk.service.AuditLogService;
 import it.pagopa.pn.service.desk.service.NotificationAndMessageService;
 import lombok.CustomLog;
@@ -33,12 +37,12 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import it.pagopa.pn.service.desk.model.RecIndexDetails;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.service.desk.utility.Utility.convertToHttpStatus;
@@ -66,23 +70,25 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
         PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_SEARCH_NOTIFICATION, "searchNotificationsFromTaxId for taxId = {}", LogUtils.maskTaxId(request.getTaxId()));
         return dataVaultClient.anonymized(request.getTaxId(), request.getRecipientType().getValue())
                 .flatMap(internalId ->
-                        pnDeliveryClient.searchNotificationsPrivate(xPagopaPnUid, xPagopaPnCxId, startDate, endDate, internalId, null, null, null, size, nextPagesKey)
+                        pnDeliveryClient.searchNotificationsPrivate(
+                                new SearchNotificationsPrivateHeaders(xPagopaPnUid, xPagopaPnCxId),
+                                new SearchNotificationsPrivateParameters(startDate, endDate, internalId, null, null, null, size, nextPagesKey))
                                 .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage());
                                     logEvent.generateFailure(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage()).log();
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                                 })
                 )
-                .flatMapMany(LegalNotificationSearchResponseDto -> getNotificationSearchRowFlux(LegalNotificationSearchResponseDto, response))
-                .flatMap(LegalNotificationSearchRowDto ->
-                        this.pnDeliveryPushClient.getNotificationHistory(LegalNotificationSearchRowDto.getIun(), LegalNotificationSearchRowDto.getRecipients().size(), LegalNotificationSearchRowDto.getSentAt())
+                .flatMapMany(legalNotificationSearchResponseDto -> getNotificationSearchRowFlux(legalNotificationSearchResponseDto, response))
+                .flatMap(legalNotificationSearchRowDto ->
+                        this.pnDeliveryPushClient.getNotificationHistory(legalNotificationSearchRowDto.getIun(), legalNotificationSearchRowDto.getRecipients().size(), legalNotificationSearchRowDto.getSentAt())
                                 .onErrorResume(WebClientResponseException.class, exception -> {
                                     log.error("An error occurred while call service for obtain notification history: ", exception);
                                     logEvent.generateFailure(ERROR_MESSAGE_NOTIFICATION_HISTORY, exception.getMessage()).log();
                                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                                 })
                                 .map(notificationHistoryResponseDto -> NotificationAndMessageMapper
-                                        .getNotification(LegalNotificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto, TimelineElementCategoryV28Dto.SEND_COURTESY_MESSAGE, getIndexTaxId(request.getTaxId(), LegalNotificationSearchRowDto.getRecipients())))
+                                        .getNotification(legalNotificationSearchRowDto, getFilteredElements(notificationHistoryResponseDto, TimelineElementCategoryV28Dto.SEND_COURTESY_MESSAGE, getIndexTaxId(request.getTaxId(), legalNotificationSearchRowDto.getRecipients())))
                                 )
                 )
                 .collectList()
@@ -98,11 +104,11 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @NotNull
-    private static Flux<LegalNotificationSearchRowDto> getNotificationSearchRowFlux(LegalNotificationSearchResponseDto LegalNotificationSearchResponseDto, SearchNotificationsResponse response) {
-        response.setNextPagesKey(LegalNotificationSearchResponseDto.getNextPagesKey());
-        response.setMoreResult(LegalNotificationSearchResponseDto.getMoreResult());
-        if (LegalNotificationSearchResponseDto.getResultsPage() != null) {
-            return Flux.fromIterable(LegalNotificationSearchResponseDto.getResultsPage());
+    private static Flux<LegalNotificationSearchRowDto> getNotificationSearchRowFlux(LegalNotificationSearchResponseDto legalNotificationSearchResponseDto, SearchNotificationsResponse response) {
+        response.setNextPagesKey(legalNotificationSearchResponseDto.getNextPagesKey());
+        response.setMoreResult(legalNotificationSearchResponseDto.getMoreResult());
+        if (legalNotificationSearchResponseDto.getResultsPage() != null) {
+            return Flux.fromIterable(legalNotificationSearchResponseDto.getResultsPage());
         }
         return Flux.empty();
     }
@@ -255,18 +261,23 @@ public class NotificationAndMessageServiceImpl implements NotificationAndMessage
     }
 
     @Override
-    public Mono<SearchNotificationsResponse> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String xPagopaPnCxId, String mandateId, String delegateInternalId, RecipientType recipientType, Integer size, String nextPagesKey, Instant startDate, Instant endDate) {
-        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_SEARCH_NOTIFICATION, "searchNotificationsAsDelegateFromInternalId for delegateInternalId = {}", delegateInternalId);
+    public Mono<SearchNotificationsResponse> searchNotificationsAsDelegateFromInternalId(
+            DelegateNotificationSearchHeaders headers, DelegateNotificationSearchParameters parameters) {
+        PnAuditLogEvent logEvent = auditLogService.buildAuditLogEvent(PnAuditLogEventType.AUD_CA_SEARCH_NOTIFICATION, "searchNotificationsAsDelegateFromInternalId for delegateInternalId = {}", parameters.delegateInternalId());
         SearchNotificationsResponse searchNotificationsResponse = new SearchNotificationsResponse();
-        return pnDeliveryClient.searchNotificationsPrivate(xPagopaPnUid, xPagopaPnCxId, startDate, endDate, delegateInternalId, null, mandateId, recipientType.getValue(), size, nextPagesKey)
+        return pnDeliveryClient.searchNotificationsPrivate(
+                        new SearchNotificationsPrivateHeaders(headers.xPagopaPnUid(), headers.xPagopaPnCxId()),
+                        new SearchNotificationsPrivateParameters(parameters.startDate(), parameters.endDate(),
+                                parameters.delegateInternalId(), null, parameters.mandateId(),
+                                parameters.recipientType().getValue(), parameters.size(), parameters.nextPagesKey()))
                 .onErrorResume(WebClientResponseException.class, exception -> {
                     log.error(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage());
                     logEvent.generateFailure(ERROR_MESSAGE_SEARCH_NOTIFICATIONS, exception.getMessage()).log();
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_CLIENT, convertToHttpStatus(exception.getStatusCode())));
                 })
-                .flatMapMany(LegalNotificationSearchResponseDto -> getNotificationSearchRowFlux(LegalNotificationSearchResponseDto, searchNotificationsResponse))
-                .map(LegalNotificationSearchResponseDto -> NotificationAndMessageMapper
-                                .getNotification(LegalNotificationSearchResponseDto, null))
+                .flatMapMany(legalNotificationSearchResponseDto -> getNotificationSearchRowFlux(legalNotificationSearchResponseDto, searchNotificationsResponse))
+                .map(legalNotificationSearchRowDto -> NotificationAndMessageMapper
+                                .getNotification(legalNotificationSearchRowDto, null))
                 .collectList()
                 .map(notificationResponses -> {
                     searchNotificationsResponse.setResults(notificationResponses);
