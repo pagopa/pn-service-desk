@@ -118,7 +118,7 @@ public class OperationsServiceImpl implements OperationsService {
                                                                                           .filter(recipient -> StringUtils.equalsIgnoreCase(recipient.getTaxId(), taxId))
                                                                                           .findFirst()
                                                                                           .map(recipient ->
-                                                                                                       Mono.just(OperationMapper.getInitialActOperation(createActOperationRequest, recipientId))
+                                                                                                       Mono.just(OperationMapper.getInitialActOperation(createActOperationRequest, recipientId, xPagopaPnUid))
                                                                                                            .zipWhen(pnServiceDeskOperations -> {
                                                                                                                PnServiceDeskAddress address = AddressMapper.toActEntity(
                                                                                                                        createActOperationRequest.getAddress(),
@@ -174,7 +174,7 @@ public class OperationsServiceImpl implements OperationsService {
         return validateNoDuplicateIuns(request.getIun())
                 .then(ensureOperationNotExists(parentOperationId))
                 .then(dataVaultClient.anonymized(taxId))
-                .flatMap(recipientId -> processAllIuns(request, taxId, recipientId, parentOperationId));
+                .flatMap(recipientId -> processAllIuns(request, taxId, recipientId, parentOperationId, xPagopaPnUid));
     }
 
     private Mono<Void> validateNoDuplicateIuns(List<String> iuns) {
@@ -194,31 +194,31 @@ public class OperationsServiceImpl implements OperationsService {
                 .then();
     }
 
-    private Mono<CreateOperationsResponseV2> processAllIuns(CreateActOperationRequestV2 request, String taxId, String recipientId, String parentOperationId) {
+    private Mono<CreateOperationsResponseV2> processAllIuns(CreateActOperationRequestV2 request, String taxId, String recipientId, String parentOperationId, String cxOperatorId) {
         return Flux.fromIterable(request.getIun())
-                .flatMap(iun -> processIun(iun, taxId, recipientId, parentOperationId, request))
+                .flatMap(iun -> processIun(iun, taxId, recipientId, parentOperationId, request, cxOperatorId))
                 .collectList()
-                .flatMap(iunResults -> persistParentOperation(request, recipientId, parentOperationId, iunResults));
+                .flatMap(iunResults -> persistParentOperation(request, recipientId, parentOperationId, iunResults, cxOperatorId));
     }
 
-    private Mono<IunResult> processIun(String iun, String taxId, String recipientId, String parentOperationId, CreateActOperationRequestV2 request) {
+    private Mono<IunResult> processIun(String iun, String taxId, String recipientId, String parentOperationId, CreateActOperationRequestV2 request, String cxOperatorId) {
         return pnDeliveryClient.getSentNotificationPrivate(iun)
                 .map(sentNotification -> sentNotification.getRecipients().stream()
                         .filter(r -> StringUtils.equalsIgnoreCase(r.getTaxId(), taxId))
                         .findFirst()
                         .map(recipient -> {
-                            PnServiceDeskOperations subOp = OperationMapper.getInitialSubOperation(parentOperationId, iun, recipientId, request);
+                            PnServiceDeskOperations subOp = OperationMapper.getInitialSubOperation(parentOperationId, iun, recipientId, request, cxOperatorId);
                             return new IunResult(new OperationItemResponse().iun(iun).status(CREATING.toString()), subOp, recipient.getDenomination());
                         })
                         .orElseThrow(() -> new PnGenericException(NOT_NOTIFICATION_FOUND, "Tax ID from request does not match the Tax ID from the notification")))
                 .onErrorResume(ex -> {
                     log.error("recipientId={}, iun={}, errorReason={}, Error while creating subOperation", recipientId, iun, ex.getMessage(), ex);
-                    PnServiceDeskOperations subOp = OperationMapper.getFailedSubOperation(parentOperationId, iun, recipientId, ex.getMessage(), request);
+                    PnServiceDeskOperations subOp = OperationMapper.getFailedSubOperation(parentOperationId, iun, recipientId, ex.getMessage(), request, cxOperatorId);
                     return Mono.just(new IunResult(new OperationItemResponse().iun(iun).status(KO.toString()).errorReason(ex.getMessage()), subOp, null));
                 });
     }
 
-    private Mono<CreateOperationsResponseV2> persistParentOperation(CreateActOperationRequestV2 request, String recipientId, String parentOperationId, List<IunResult> iunResults) {
+    private Mono<CreateOperationsResponseV2> persistParentOperation(CreateActOperationRequestV2 request, String recipientId, String parentOperationId, List<IunResult> iunResults, String cxOperatorId) {
         List<OperationItemResponse> responses = iunResults.stream().map(r -> r.response).toList();
         List<PnServiceDeskOperations> subOps = iunResults.stream().filter(r -> r.subOp != null).map(r -> r.subOp).toList();
         List<String> subOpIds = subOps.stream().map(PnServiceDeskOperations::getOperationId).toList();
@@ -226,14 +226,14 @@ public class OperationsServiceImpl implements OperationsService {
 
         if (allSubOpsFailed) {
             log.warn("parentOperationId={}, All IUNs failed validation, creating parent operation with KO status", parentOperationId);
-            PnServiceDeskOperations koParent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, subOpIds);
+            PnServiceDeskOperations koParent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, subOpIds, cxOperatorId);
             koParent.setStatus(KO.toString());
             return operationDAO.createParentOperationWithSubOps(koParent, subOps)
                     .map(saved -> new CreateOperationsResponseV2().operationId(saved.getOperationId()).results(responses));
         }
 
         String denomination = iunResults.stream().map(r -> r.denomination).filter(Objects::nonNull).findFirst().orElse(null);
-        PnServiceDeskOperations parent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, subOpIds);
+        PnServiceDeskOperations parent = OperationMapper.getInitialParentOperation(request, recipientId, parentOperationId, subOpIds, cxOperatorId);
         PnServiceDeskAddress address = AddressMapper.toActEntity(request.getAddress(), parentOperationId, cfn, denomination);
 
         return operationDAO.createParentOperationWithSubOpsAndAddress(parent, address, subOps)
@@ -274,7 +274,7 @@ public class OperationsServiceImpl implements OperationsService {
                 .filter(subOp -> StringUtils.isNotBlank(subOp.getIun()))
                 .flatMap(subOp -> buildSummaries(subOp.getAttachments()), MAX_CONCURRENCY)
                 .collect(() -> operationResponse, (response, tuple) -> {
-                    if (Boolean.TRUE.equals(tuple.getT2())) {
+                    if (tuple.getT2()) {
                         response.getIuns().add(tuple.getT1());
                     } else {
                         response.getUncompletedIuns().add(tuple.getT1());
@@ -285,7 +285,7 @@ public class OperationsServiceImpl implements OperationsService {
     private Mono<OperationResponse> enhanceIuns(List<PnServiceDeskAttachments> attachments, OperationResponse operationResponse) {
         return buildSummaries(attachments)
                 .collect(() -> operationResponse, (response, tuple) -> {
-                    if (Boolean.TRUE.equals(tuple.getT2())) {
+                    if (tuple.getT2()) {
                         response.getIuns().add(tuple.getT1());
                     } else {
                         response.getUncompletedIuns().add(tuple.getT1());

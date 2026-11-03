@@ -11,6 +11,10 @@ import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.datavault.PnDataVaultClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient.SearchNotificationsPrivateHeaders;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient.SearchNotificationsPrivateParameters;
+import it.pagopa.pn.service.desk.service.NotificationAndMessageService.DelegateNotificationSearchHeaders;
+import it.pagopa.pn.service.desk.service.NotificationAndMessageService.DelegateNotificationSearchParameters;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.deliverypush.PnDeliveryPushClient;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregistries.ExternalRegistriesClient;
 import org.junit.jupiter.api.Assertions;
@@ -58,29 +62,32 @@ class NotificationAndMessageServiceImplTest  {
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("PF-4fc75df3-0913-407e-bdaa-e50329708b7d"));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNotificationHistoryResponseDto()));
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Instant.parse("2023-08-15T15:49:05.630Z"),
-                        Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                        null, null, null, 50, "nextPageKey"))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(
+                        new SearchNotificationsPrivateHeaders("fkdokm", null),
+                        new SearchNotificationsPrivateParameters(Instant.parse("2023-08-15T15:49:05.630Z"),
+                                Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                                null, null, null, 50, "nextPageKey")))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
-        SearchNotificationsResponse actualResponse = notificationAndMessageService.searchNotificationsFromTaxId("fkdokm",
+        SearchNotificationsResponse actualResponse = notificationAndMessageService.searchNotificationsFromTaxId("fkdokm", null,
                 Instant.parse("2023-08-15T15:49:05.63Z"),
                 Instant.parse("2023-08-31T15:49:05.63Z"),
                 50,
                 "nextPageKey",
-                getSearchMessageRequest("taxId", RecipientType.PF)).block();
+                getSearchMessageRequest("taxId")).block();
 
         Assertions.assertNotNull(actualResponse);
         Assertions.assertEquals(true, actualResponse.getMoreResult());
-        Assertions.assertEquals("nextPageKey", actualResponse.getNextPagesKey().get(0));
-        Assertions.assertEquals(IunStatus.ACCEPTED, actualResponse.getResults().get(0).getIunStatus());
+        Assertions.assertEquals("nextPageKey", actualResponse.getNextPagesKey().getFirst());
+        Assertions.assertEquals(IunStatus.ACCEPTED, actualResponse.getResults().getFirst().getIunStatus());
     }
 
     @Test
     void searchNotificationsFromTaxIdWhenDataVaultClientEmpty(){
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.empty());
-        SearchNotificationsResponse actualResponse = notificationAndMessageService.searchNotificationsFromTaxId(null,null,null,
-                null,null,getSearchMessageRequest(null, RecipientType.PF)).block();
+        SearchNotificationsResponse actualResponse = notificationAndMessageService.searchNotificationsFromTaxId(null,null,null,null,
+                null,null,getSearchMessageRequest(null)).block();
 
+        Assertions.assertNotNull(actualResponse);
         Assertions.assertNull(actualResponse.getMoreResult());
         Assertions.assertNull(actualResponse.getNextPagesKey());
         Assertions.assertEquals(0, actualResponse.getResults().size());
@@ -90,17 +97,19 @@ class NotificationAndMessageServiceImplTest  {
     void searchNotificationsFromTaxIdWhenPnDeliveryClientError(){
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_CLIENT, ERROR_ON_DELIVERY_CLIENT.getMessage());
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("PF-4fc75df3-0913-407e-bdaa-e50329708b7d"));
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Instant.parse("2023-08-15T15:49:05.630Z"),
-                        Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                        null, null, null, 50, "nextPageKey"))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(
+                        new SearchNotificationsPrivateHeaders("fkdokm", null),
+                        new SearchNotificationsPrivateParameters(Instant.parse("2023-08-15T15:49:05.630Z"),
+                                Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                                null, null, null, 50, "nextPageKey")))
                 .thenReturn(Mono.error(pnGenericException));
 
-        StepVerifier.create(notificationAndMessageService.searchNotificationsFromTaxId("fkdokm",
+        StepVerifier.create(notificationAndMessageService.searchNotificationsFromTaxId("fkdokm", null,
                         Instant.parse("2023-08-15T15:49:05.63Z"),
                         Instant.parse("2023-08-31T15:49:05.63Z"),
                         50,
                         "nextPageKey",
-                        getSearchMessageRequest("taxId", RecipientType.PF)))
+                        getSearchMessageRequest("taxId")))
                 .expectError(PnGenericException.class)
                 .verify();
     }
@@ -111,17 +120,19 @@ class NotificationAndMessageServiceImplTest  {
         Mockito.when(this.dataVaultClient.anonymized(Mockito.any(), Mockito.any())).thenReturn(Mono.just("PF-4fc75df3-0913-407e-bdaa-e50329708b7d"));
         Mockito.when(this.pnDeliveryPushClient.getNotificationHistory(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(pnGenericException));
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Instant.parse("2023-08-15T15:49:05.630Z"),
-                        Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                        null, null, null, 50, "nextPageKey"))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(
+                        new SearchNotificationsPrivateHeaders("fkdokm", null),
+                        new SearchNotificationsPrivateParameters(Instant.parse("2023-08-15T15:49:05.630Z"),
+                                Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                                null, null, null, 50, "nextPageKey")))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
 
-        StepVerifier.create(notificationAndMessageService.searchNotificationsFromTaxId("fkdokm",
+        StepVerifier.create(notificationAndMessageService.searchNotificationsFromTaxId("fkdokm", null,
                         Instant.parse("2023-08-15T15:49:05.63Z"),
                         Instant.parse("2023-08-31T15:49:05.63Z"),
                         50,
                         "nextPageKey",
-                        getSearchMessageRequest("taxId", RecipientType.PF)))
+                        getSearchMessageRequest("taxId")))
                 .expectError(PnGenericException.class)
                 .verify();
     }
@@ -168,7 +179,7 @@ class NotificationAndMessageServiceImplTest  {
         DocumentsRequest request = new DocumentsRequest();
         request.setRecipientType(RecipientType.PF);
         request.setTaxId("FRMTTR76M06B715E");
-        DocumentsResponse response = notificationAndMessageService.getDocumentsOfIun("PRVZ-NZKM-JEDK-202309-A-1", request).block();
+        DocumentsResponse response = notificationAndMessageService.getDocumentsOfIun("operator-uid", null, "PRVZ-NZKM-JEDK-202309-A-1", request).block();
         Assertions.assertNotNull(response);
 
     }
@@ -181,7 +192,7 @@ class NotificationAndMessageServiceImplTest  {
         DocumentsRequest request = new DocumentsRequest();
         request.setRecipientType(RecipientType.PF);
         request.setTaxId("FRMTTR76M06B715E");
-        DocumentsResponse response = notificationAndMessageService.getDocumentsOfIun("PRVZ-NZKM-JEDK-202309-A-1", request).block();
+        DocumentsResponse response = notificationAndMessageService.getDocumentsOfIun("operator-uid", null, "PRVZ-NZKM-JEDK-202309-A-1", request).block();
         Assertions.assertNotNull(response);
 
     }
@@ -195,7 +206,7 @@ class NotificationAndMessageServiceImplTest  {
         request.setRecipientType(RecipientType.PF);
         request.setTaxId("FRMTTR76M06B715E");
 
-        StepVerifier.create(notificationAndMessageService.getDocumentsOfIun("PRVZ-NZKM-JEDK-202309-A-1", request))
+        StepVerifier.create(notificationAndMessageService.getDocumentsOfIun("operator-uid", null, "PRVZ-NZKM-JEDK-202309-A-1", request))
                 .expectError(PnGenericException.class)
                 .verify();
     }
@@ -223,12 +234,18 @@ class NotificationAndMessageServiceImplTest  {
 
     @Test
     void searchNotificationsAsDelegateFromInternalIdTest(){
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Instant.parse("2023-08-15T15:49:05.630Z"),
-                        Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                null, null, RecipientType.PF.getValue(), 50, "nextPageKey"))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(
+                        new SearchNotificationsPrivateHeaders("", null),
+                        new SearchNotificationsPrivateParameters(Instant.parse("2023-08-15T15:49:05.630Z"),
+                                Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                                null, null, RecipientType.PF.getValue(), 50, "nextPageKey")))
                 .thenReturn(Mono.just(getNotificationSearchResponseDto()));
 
-        SearchNotificationsResponse response = notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", RecipientType.PF, 50,"nextPageKey", Instant.parse("2023-08-15T15:49:05.630Z"), Instant.parse("2023-08-31T15:49:05.630Z")).block();
+        SearchNotificationsResponse response = notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(
+                new DelegateNotificationSearchHeaders("", null),
+                new DelegateNotificationSearchParameters(null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                        RecipientType.PF, 50, "nextPageKey", Instant.parse("2023-08-15T15:49:05.630Z"),
+                        Instant.parse("2023-08-31T15:49:05.630Z"))).block();
         Assertions.assertNotNull(response);
         Assertions.assertEquals(1, response.getNextPagesKey().size());
         Assertions.assertEquals(1, response.getResults().size());
@@ -240,54 +257,60 @@ class NotificationAndMessageServiceImplTest  {
     @Test
     void searchNotificationsAsDelegateFromInternalIdDeliveryClientError(){
         PnGenericException pnGenericException = new PnGenericException(ERROR_ON_DELIVERY_CLIENT, ERROR_ON_DELIVERY_CLIENT.getMessage());
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Instant.parse("2023-08-15T15:49:05.630Z"),
-                        Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                null, null, RecipientType.PF.getValue(), 50, "nextPageKey"))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(
+                        new SearchNotificationsPrivateHeaders("", null),
+                        new SearchNotificationsPrivateParameters(Instant.parse("2023-08-15T15:49:05.630Z"),
+                                Instant.parse("2023-08-31T15:49:05.630Z"), "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                                null, null, RecipientType.PF.getValue(), 50, "nextPageKey")))
                 .thenReturn(Mono.error(pnGenericException));
 
-        StepVerifier.create(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId("", null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d", RecipientType.PF, 50, "nextPageKey", Instant.parse("2023-08-15T15:49:05.630Z"), Instant.parse("2023-08-31T15:49:05.630Z")))
+        StepVerifier.create(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(
+                        new DelegateNotificationSearchHeaders("", null),
+                        new DelegateNotificationSearchParameters(null, "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                                RecipientType.PF, 50, "nextPageKey", Instant.parse("2023-08-15T15:49:05.630Z"),
+                                Instant.parse("2023-08-31T15:49:05.630Z"))))
                 .expectError(PnGenericException.class)
                 .verify();
     }
 
 
-    private SearchNotificationsRequest getSearchMessageRequest(String taxId, RecipientType recipientType) {
+    private SearchNotificationsRequest getSearchMessageRequest(String taxId) {
         SearchNotificationsRequest searchMessagesRequest = new SearchNotificationsRequest();
         searchMessagesRequest.setTaxId(taxId);
-        searchMessagesRequest.setRecipientType(recipientType);
+        searchMessagesRequest.setRecipientType(RecipientType.PF);
         return searchMessagesRequest;
     }
 
-    private NotificationSearchResponseDto getNotificationSearchResponseDto() {
-        NotificationSearchResponseDto notificationSearchResponseDto = new NotificationSearchResponseDto();
-        notificationSearchResponseDto.setMoreResult(true);
+    private LegalNotificationSearchResponseDto getNotificationSearchResponseDto() {
+        LegalNotificationSearchResponseDto legalNotificationSearchResponseDto = new LegalNotificationSearchResponseDto();
+        legalNotificationSearchResponseDto.setMoreResult(true);
 
         List<String> nextPageKeyList = new ArrayList<>();
         nextPageKeyList.add("nextPageKey");
-        notificationSearchResponseDto.setNextPagesKey(nextPageKeyList);
+        legalNotificationSearchResponseDto.setNextPagesKey(nextPageKeyList);
 
-        List<NotificationSearchRowDto> notificationSearchRowDtoList = new ArrayList<>();
-        NotificationSearchRowDto notificationSearchRowDto = new NotificationSearchRowDto();
-        notificationSearchRowDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto
+        List<LegalNotificationSearchRowDto> notificationSearchRowDtoList = new ArrayList<>();
+        LegalNotificationSearchRowDto legalNotificationSearchRowDto = new LegalNotificationSearchRowDto();
+        legalNotificationSearchRowDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto
                 .NotificationStatusV26Dto.ACCEPTED);
-        notificationSearchRowDto.setIun("iun123");
-        notificationSearchRowDto.setGroup("group");
-        notificationSearchRowDto.setSender("sender");
-        notificationSearchRowDto.setSubject("subject");
-        notificationSearchRowDto.setSentAt(Instant.now());
-        notificationSearchRowDto.setMandateId("4321");
-        notificationSearchRowDto.setPaProtocolNumber("1234");
+        legalNotificationSearchRowDto.setIun("iun123");
+        legalNotificationSearchRowDto.setGroup("group");
+        legalNotificationSearchRowDto.setSender("sender");
+        legalNotificationSearchRowDto.setSubject("subject");
+        legalNotificationSearchRowDto.setSentAt(Instant.now());
+        legalNotificationSearchRowDto.setMandateId("4321");
+        legalNotificationSearchRowDto.setPaProtocolNumber("1234");
 
         List<String> recipients = new ArrayList<>();
         recipients.add("456");
 
-        notificationSearchRowDto.setRecipients(recipients);
-        notificationSearchRowDto.setRequestAcceptedAt(Instant.now());
-        notificationSearchRowDtoList.add(notificationSearchRowDto);
+        legalNotificationSearchRowDto.setRecipients(recipients);
+        legalNotificationSearchRowDto.setRequestAcceptedAt(Instant.now());
+        notificationSearchRowDtoList.add(legalNotificationSearchRowDto);
 
-        notificationSearchResponseDto.setResultsPage(notificationSearchRowDtoList);
+        legalNotificationSearchResponseDto.setResultsPage(notificationSearchRowDtoList);
 
-        return notificationSearchResponseDto;
+        return legalNotificationSearchResponseDto;
     }
 
     private NotificationHistoryResponseDto getNotificationHistoryResponseDto() {
@@ -325,13 +348,13 @@ class NotificationAndMessageServiceImplTest  {
         return notificationHistoryResponseDto;
     }
 
-    private SentNotificationV25Dto getSentNotificationV25Dto (){
-        SentNotificationV25Dto sentNotificationV21Dto = new SentNotificationV25Dto();
+    private SentNotificationV26Dto getSentNotificationV25Dto (){
+        SentNotificationV26Dto sentNotificationV21Dto = new SentNotificationV26Dto();
         sentNotificationV21Dto.setSentAt(Instant.now());
         NotificationRecipientV24Dto notificationRecipientV21Dto = new NotificationRecipientV24Dto();
         notificationRecipientV21Dto.setRecipientType(NotificationRecipientV24Dto.RecipientTypeEnum.PF);
         notificationRecipientV21Dto.setPayments(new ArrayList<>());
-        sentNotificationV21Dto.setPhysicalCommunicationType(SentNotificationV25Dto.PhysicalCommunicationTypeEnum.AR_REGISTERED_LETTER);
+        sentNotificationV21Dto.setPhysicalCommunicationType(SentNotificationV26Dto.PhysicalCommunicationTypeEnum.AR_REGISTERED_LETTER);
         sentNotificationV21Dto.setSenderDenomination("comune");
         sentNotificationV21Dto.setSenderTaxId("FRMTTR76M06B715E");
         sentNotificationV21Dto.setSentAt(Instant.now());
@@ -409,7 +432,7 @@ class NotificationAndMessageServiceImplTest  {
 
         TimelineResponse response = notificationAndMessageService.getTimelineOfIUN(
                 "test", "PRVZ-NZKM-JEDK-202309-A-1",
-                getSearchMessageRequest("DVNLRD52D15M059P", RecipientType.PF)).block();
+                getSearchMessageRequest("DVNLRD52D15M059P")).block();
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(1, response.getTimeline().size());
@@ -424,7 +447,7 @@ class NotificationAndMessageServiceImplTest  {
 
         TimelineResponse response = notificationAndMessageService.getTimelineOfIUN(
                 "test", "PRVZ-NZKM-JEDK-202309-A-1",
-                getSearchMessageRequest("DVNLRD52D15M059P", RecipientType.PF)).block();
+                getSearchMessageRequest("DVNLRD52D15M059P")).block();
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(1, response.getTimeline().size());
@@ -439,7 +462,7 @@ class NotificationAndMessageServiceImplTest  {
 
         TimelineResponse response = notificationAndMessageService.getTimelineOfIUN(
                 "test", "PRVZ-NZKM-JEDK-202309-A-1",
-                getSearchMessageRequest("DVNLRD52D15M059P", RecipientType.PF)).block();
+                getSearchMessageRequest("DVNLRD52D15M059P")).block();
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(0, response.getTimeline().size());
@@ -454,7 +477,7 @@ class NotificationAndMessageServiceImplTest  {
 
         TimelineResponse response = notificationAndMessageService.getTimelineOfIUN(
                 "test", "PRVZ-NZKM-JEDK-202309-A-1",
-                getSearchMessageRequest("DVNLRD52D15M059P", RecipientType.PF)).block();
+                getSearchMessageRequest("DVNLRD52D15M059P")).block();
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(0, response.getTimeline().size());
@@ -465,7 +488,9 @@ class NotificationAndMessageServiceImplTest  {
         var iun = "PRVZ-NZKM-JEDK-202309-A-1";
         var taxId = "DVNLRD52D15M059P";
         var notification = getSentNotificationV25Dto();
-        var pagoPaPaymentExpected = notification.getRecipients().get(0).getPayments().get(0).getPagoPa();
+        Assertions.assertNotNull(notification.getRecipients().getFirst().getPayments());
+        var pagoPaPaymentExpected = notification.getRecipients().getFirst().getPayments().getFirst().getPagoPa();
+        Assertions.assertNotNull(pagoPaPaymentExpected);
         var creditorTaxIdExpected = pagoPaPaymentExpected.getCreditorTaxId();
         var noticeCodeExpected = pagoPaPaymentExpected.getNoticeCode();
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(iun)).thenReturn(Mono.just(notification));
@@ -480,16 +505,16 @@ class NotificationAndMessageServiceImplTest  {
         Assertions.assertEquals("AR_REGISTERED_LETTER", response.getPhysicalCommunicationType().getValue());
 
         var recipientResponseActual = response.getRecipient();
-        var recipientExpected = notification.getRecipients().get(0);
+        var recipientExpected = notification.getRecipients().getFirst();
         Assertions.assertEquals(recipientExpected.getRecipientType().getValue(), recipientResponseActual.getRecipientType().getValue());
         Assertions.assertEquals(recipientExpected.getDenomination(), recipientResponseActual.getDenomination());
-        Assertions.assertEquals(creditorTaxIdExpected, recipientResponseActual.getPayments().get(0).getPagoPa().getCreditorTaxId());
-        Assertions.assertEquals(noticeCodeExpected, recipientResponseActual.getPayments().get(0).getPagoPa().getNoticeCode());
-        Assertions.assertEquals(paymentInfoExpected.getCausaleVersamento(), recipientResponseActual.getPayments().get(0).getPagoPa().getCausaleVersamento());
-        Assertions.assertEquals(paymentInfoExpected.getDueDate(), recipientResponseActual.getPayments().get(0).getPagoPa().getDueDate());
-        Assertions.assertEquals(paymentInfoExpected.getStatus().getValue(), recipientResponseActual.getPayments().get(0).getPagoPa().getStatus());
-        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getErrorCode());
-        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getDetail());
+        Assertions.assertEquals(creditorTaxIdExpected, recipientResponseActual.getPayments().getFirst().getPagoPa().getCreditorTaxId());
+        Assertions.assertEquals(noticeCodeExpected, recipientResponseActual.getPayments().getFirst().getPagoPa().getNoticeCode());
+        Assertions.assertEquals(paymentInfoExpected.getCausaleVersamento(), recipientResponseActual.getPayments().getFirst().getPagoPa().getCausaleVersamento());
+        Assertions.assertEquals(paymentInfoExpected.getDueDate(), recipientResponseActual.getPayments().getFirst().getPagoPa().getDueDate());
+        Assertions.assertEquals(paymentInfoExpected.getStatus().getValue(), recipientResponseActual.getPayments().getFirst().getPagoPa().getStatus());
+        Assertions.assertNull(recipientResponseActual.getPayments().getFirst().getPagoPa().getErrorCode());
+        Assertions.assertNull(recipientResponseActual.getPayments().getFirst().getPagoPa().getDetail());
     }
 
     @Test
@@ -520,7 +545,9 @@ class NotificationAndMessageServiceImplTest  {
         var iun = "PRVZ-NZKM-JEDK-202309-A-1";
         var taxId = "DVNLRD52D15M059P";
         var notification = getSentNotificationV25Dto();
-        var pagoPaPaymentExpected = notification.getRecipients().get(0).getPayments().get(0).getPagoPa();
+        Assertions.assertNotNull(notification.getRecipients().getFirst().getPayments());
+        var pagoPaPaymentExpected = notification.getRecipients().getFirst().getPayments().getFirst().getPagoPa();
+        Assertions.assertNotNull(pagoPaPaymentExpected);
         var creditorTaxIdExpected = pagoPaPaymentExpected.getCreditorTaxId();
         var noticeCodeExpected = pagoPaPaymentExpected.getNoticeCode();
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(iun)).thenReturn(Mono.just(notification));
@@ -534,15 +561,15 @@ class NotificationAndMessageServiceImplTest  {
         Assertions.assertEquals("AR_REGISTERED_LETTER", response.getPhysicalCommunicationType().getValue());
 
         var recipientResponseActual = response.getRecipient();
-        var recipientExpected = notification.getRecipients().get(0);
+        var recipientExpected = notification.getRecipients().getFirst();
         Assertions.assertEquals(recipientExpected.getRecipientType().getValue(), recipientResponseActual.getRecipientType().getValue());
         Assertions.assertEquals(recipientExpected.getDenomination(), recipientResponseActual.getDenomination());
-        Assertions.assertEquals(creditorTaxIdExpected, recipientResponseActual.getPayments().get(0).getPagoPa().getCreditorTaxId());
-        Assertions.assertEquals(noticeCodeExpected, recipientResponseActual.getPayments().get(0).getPagoPa().getNoticeCode());
-        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getCausaleVersamento());
-        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getDueDate());
-        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getErrorCode());
-        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getDetail());
+        Assertions.assertEquals(creditorTaxIdExpected, recipientResponseActual.getPayments().getFirst().getPagoPa().getCreditorTaxId());
+        Assertions.assertEquals(noticeCodeExpected, recipientResponseActual.getPayments().getFirst().getPagoPa().getNoticeCode());
+        Assertions.assertNull(recipientResponseActual.getPayments().getFirst().getPagoPa().getCausaleVersamento());
+        Assertions.assertNull(recipientResponseActual.getPayments().getFirst().getPagoPa().getDueDate());
+        Assertions.assertNull(recipientResponseActual.getPayments().getFirst().getPagoPa().getErrorCode());
+        Assertions.assertNull(recipientResponseActual.getPayments().getFirst().getPagoPa().getDetail());
     }
 
     @Test
@@ -550,7 +577,9 @@ class NotificationAndMessageServiceImplTest  {
         var iun = "PRVZ-NZKM-JEDK-202309-A-1";
         var taxId = "DVNLRD52D15M059P";
         var notification = getSentNotificationV25Dto();
-        var pagoPaPaymentExpected = notification.getRecipients().get(0).getPayments().get(0).getPagoPa();
+        Assertions.assertNotNull(notification.getRecipients().getFirst().getPayments());
+        var pagoPaPaymentExpected = notification.getRecipients().getFirst().getPayments().getFirst().getPagoPa();
+        Assertions.assertNotNull(pagoPaPaymentExpected);
         var creditorTaxIdExpected = pagoPaPaymentExpected.getCreditorTaxId();
         var noticeCodeExpected = pagoPaPaymentExpected.getNoticeCode();
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(iun)).thenReturn(Mono.just(notification));
@@ -565,16 +594,17 @@ class NotificationAndMessageServiceImplTest  {
         Assertions.assertEquals("AR_REGISTERED_LETTER", response.getPhysicalCommunicationType().getValue());
 
         var recipientResponseActual = response.getRecipient();
-        var recipientExpected = notification.getRecipients().get(0);
+        var recipientExpected = notification.getRecipients().getFirst();
         Assertions.assertEquals(recipientExpected.getRecipientType().getValue(), recipientResponseActual.getRecipientType().getValue());
         Assertions.assertEquals(recipientExpected.getDenomination(), recipientResponseActual.getDenomination());
-        Assertions.assertEquals(creditorTaxIdExpected, recipientResponseActual.getPayments().get(0).getPagoPa().getCreditorTaxId());
-        Assertions.assertEquals(noticeCodeExpected, recipientResponseActual.getPayments().get(0).getPagoPa().getNoticeCode());
-        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getCausaleVersamento());
-        Assertions.assertNull(recipientResponseActual.getPayments().get(0).getPagoPa().getDueDate());
-        Assertions.assertEquals(paymentInfoExpected.getStatus().getValue(), recipientResponseActual.getPayments().get(0).getPagoPa().getStatus());
-        Assertions.assertEquals(paymentInfoExpected.getErrorCode(), recipientResponseActual.getPayments().get(0).getPagoPa().getErrorCode());
-        Assertions.assertEquals(paymentInfoExpected.getDetail().getValue(), recipientResponseActual.getPayments().get(0).getPagoPa().getDetail());
+        Assertions.assertEquals(creditorTaxIdExpected, recipientResponseActual.getPayments().getFirst().getPagoPa().getCreditorTaxId());
+        Assertions.assertEquals(noticeCodeExpected, recipientResponseActual.getPayments().getFirst().getPagoPa().getNoticeCode());
+        Assertions.assertNull(recipientResponseActual.getPayments().getFirst().getPagoPa().getCausaleVersamento());
+        Assertions.assertNull(recipientResponseActual.getPayments().getFirst().getPagoPa().getDueDate());
+        Assertions.assertEquals(paymentInfoExpected.getStatus().getValue(), recipientResponseActual.getPayments().getFirst().getPagoPa().getStatus());
+        Assertions.assertEquals(paymentInfoExpected.getErrorCode(), recipientResponseActual.getPayments().getFirst().getPagoPa().getErrorCode());
+        Assertions.assertNotNull(paymentInfoExpected.getDetail());
+        Assertions.assertEquals(paymentInfoExpected.getDetail().getValue(), recipientResponseActual.getPayments().getFirst().getPagoPa().getDetail());
     }
 
 }

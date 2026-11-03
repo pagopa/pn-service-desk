@@ -47,7 +47,7 @@ public class ClientIdWebFilter implements WebFilter {
 
         String ticket = requestHeaders.getFirst(UID_HEADER);
         if (StringUtils.isNotBlank(ticket)){
-            MDC.put(CX_TYPE_MDC_KEY,"SD");
+            MDC.put(CX_TYPE_MDC_KEY, CX_TYPE_SD);
             MDC.put(CX_ID_MDC_KEY, ticket.replace("SD-",""));
         }
 

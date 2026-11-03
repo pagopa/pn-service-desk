@@ -6,6 +6,8 @@ import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.service.desk.middleware.entities.PnClientID;
 import it.pagopa.pn.service.desk.service.NotificationAndMessageService;
+import it.pagopa.pn.service.desk.service.NotificationAndMessageService.DelegateNotificationSearchHeaders;
+import it.pagopa.pn.service.desk.service.NotificationAndMessageService.DelegateNotificationSearchParameters;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -15,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
+
+import java.time.Instant;
 
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT;
 import static it.pagopa.pn.service.desk.exception.ExceptionTypeEnum.TAX_ID_NOT_FOUND;
@@ -39,7 +43,7 @@ class NotificationAndMessageControllerTest {
     void searchNotificationsFromTaxIdTest(){
         SearchNotificationsResponse response = new SearchNotificationsResponse();
         String path = "/service-desk/notifications";
-        Mockito.when(notificationAndMessageService.searchNotificationsFromTaxId(Mockito.any(), Mockito.any(),Mockito.any(),
+        Mockito.when(notificationAndMessageService.searchNotificationsFromTaxId(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
                 Mockito.any(), Mockito.any(),Mockito.any())).thenReturn(Mono.just(response));
 
         webTestClient.post()
@@ -49,17 +53,21 @@ class NotificationAndMessageControllerTest {
                         .queryParam("endDate","2023-09-15T15:49:05.63Z")
                         .build())
                 .header("x-pagopa-pn-uid", "test")
+                .header("x-pagopa-pn-cx-id", "test-cx-id")
                 .header("x-api-key", "test")
                 .bodyValue(getSearchMessageRequest())
                 .exchange()
                 .expectStatus().isOk();
 
+        Mockito.verify(notificationAndMessageService).searchNotificationsFromTaxId(
+                Mockito.eq("test"), Mockito.eq("test"), Mockito.any(), Mockito.any(), Mockito.any(),
+                Mockito.any(), Mockito.any());
     }
 
     @Test
     void searchNotificationsFromTaxIdKOTest(){
         String path = "/service-desk/notifications";
-        Mockito.when(notificationAndMessageService.searchNotificationsFromTaxId(Mockito.any(), Mockito.any(),Mockito.any(),
+        Mockito.when(notificationAndMessageService.searchNotificationsFromTaxId(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
                 Mockito.any(), Mockito.any(),Mockito.any())).thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT, HttpStatus.BAD_REQUEST)));
 
         webTestClient.post()
@@ -110,22 +118,25 @@ class NotificationAndMessageControllerTest {
     void getDocumentsOfIUNTest(){
         DocumentsResponse response = new DocumentsResponse();
         String path = "/service-desk/notifications/PRVZ-NZKM-JEDK-202309-A-1/documents";
-        Mockito.when(notificationAndMessageService.getDocumentsOfIun(Mockito.any(), Mockito.any())).thenReturn(Mono.just(response));
+        Mockito.when(notificationAndMessageService.getDocumentsOfIun(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(response));
 
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder.path(path).build())
                 .header("x-pagopa-pn-uid", "test")
+                .header("x-pagopa-pn-cx-id", "test-cx-id")
                 .header("x-api-key", "test")
                 .bodyValue(getDocumentRequest())
                 .exchange()
                 .expectStatus().isOk();
 
+        Mockito.verify(notificationAndMessageService).getDocumentsOfIun(
+                Mockito.eq("test"), Mockito.eq("test"), Mockito.any(), Mockito.any());
     }
 
     @Test
     void getDocumentsOfIUNKOTest(){
         String path = "/service-desk/notifications/PRVZ-NZKM-JEDK-202309-A-1/documents";
-        Mockito.when(notificationAndMessageService.getDocumentsOfIun(Mockito.any(), Mockito.any()))
+        Mockito.when(notificationAndMessageService.getDocumentsOfIun(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT, HttpStatus.BAD_REQUEST)));
 
         webTestClient.post()
@@ -169,8 +180,9 @@ class NotificationAndMessageControllerTest {
     void searchNotificationsAsDelegateFromInternalIdTest() {
         SearchNotificationsResponse response = new SearchNotificationsResponse();
         String path = "/service-desk/notifications/delegate";
-        Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(Mockito.anyString(),
-                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(
+                        Mockito.any(DelegateNotificationSearchHeaders.class),
+                        Mockito.any(DelegateNotificationSearchParameters.class)))
                 .thenReturn(Mono.just(response));
 
         webTestClient.get()
@@ -184,16 +196,24 @@ class NotificationAndMessageControllerTest {
                         .queryParam("endDate","2023-09-15T15:49:05.63Z")
                         .build())
                 .header("x-pagopa-pn-uid", "test")
+                .header("x-pagopa-pn-cx-id", "test")
                 .header("x-api-key", "test")
                 .exchange()
                 .expectStatus().isOk();
+
+        Mockito.verify(notificationAndMessageService).searchNotificationsAsDelegateFromInternalId(
+                new DelegateNotificationSearchHeaders("test", "test"),
+                new DelegateNotificationSearchParameters("ajhsdfn", "PF-asdafv4345656",
+                        RecipientType.PF, 1, "1", Instant.parse("2023-08-31T15:49:05.63Z"),
+                        Instant.parse("2023-09-15T15:49:05.63Z")));
     }
 
     @Test
     void searchNotificationsAsDelegateFromInternalIdKOTest() {
         String path = "/service-desk/notifications/delegate";
-        Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(Mockito.anyString(),
-                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(
+                        Mockito.any(DelegateNotificationSearchHeaders.class),
+                        Mockito.any(DelegateNotificationSearchParameters.class)))
                 .thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT, HttpStatus.BAD_REQUEST)));
 
         webTestClient.get()
@@ -215,8 +235,9 @@ class NotificationAndMessageControllerTest {
     void searchNotificationsAsDelegateFromInternalIdRecipientTypeNullTest() {
         SearchNotificationsResponse response = new SearchNotificationsResponse();
         String path = "/service-desk/notifications/delegate";
-        Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(Mockito.anyString(),
-                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(
+                        Mockito.any(DelegateNotificationSearchHeaders.class),
+                        Mockito.any(DelegateNotificationSearchParameters.class)))
                 .thenReturn(Mono.just(response));
 
         webTestClient.get()
@@ -238,8 +259,9 @@ class NotificationAndMessageControllerTest {
     void searchNotificationsAsDelegateFromInternalIdRecipientTypeWrongValueTest() {
         SearchNotificationsResponse response = new SearchNotificationsResponse();
         String path = "/service-desk/notifications/delegate";
-        Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(Mockito.anyString(),
-                        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(notificationAndMessageService.searchNotificationsAsDelegateFromInternalId(
+                        Mockito.any(DelegateNotificationSearchHeaders.class),
+                        Mockito.any(DelegateNotificationSearchParameters.class)))
                 .thenReturn(Mono.just(response));
 
         webTestClient.get()

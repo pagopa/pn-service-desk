@@ -9,6 +9,6 @@ import reactor.core.publisher.Mono;
 public interface InfoPaService {
 
     Flux<PaSummary> getListOfOnboardedPA(String xPagopaPnUid, String paNameFilter);
-    Mono<SearchNotificationsResponse> searchNotificationsFromSenderId(String xPagopaPnUid, Integer size, String nextPagesKey, PaNotificationsRequest paNotificationsRequest);
+    Mono<SearchNotificationsResponse> searchNotificationsFromSenderId(String xPagopaPnUid, String xPagopaPnCxId, Integer size, String nextPagesKey, PaNotificationsRequest paNotificationsRequest);
 
 }

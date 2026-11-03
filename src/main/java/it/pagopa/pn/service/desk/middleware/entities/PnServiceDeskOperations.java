@@ -34,6 +34,7 @@ public class PnServiceDeskOperations {
     public static final String COL_IUN = "iun";
     public static final String COL_SUB_OPERATIONS_IDS = "subOperationsIds";
     public static final String COL_IS_SUB_OPERATION = "isSubOperation";
+    public static final String COL_CX_OPERATOR_ID = "cxOperatorId";
 
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_OPERATION_ID)}))
@@ -77,5 +78,8 @@ public class PnServiceDeskOperations {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_IS_SUB_OPERATION)}))
     private Boolean isSubOperation;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_CX_OPERATOR_ID)}))
+    private String cxOperatorId;
 
 }

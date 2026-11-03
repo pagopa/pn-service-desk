@@ -27,7 +27,7 @@ public class InfoPaController implements PaApi {
     @Override
     public Mono<ResponseEntity<SearchNotificationsResponse>> searchNotificationsFromSenderId(String xPagopaPnUid, Integer size, String nextPagesKey, Mono<PaNotificationsRequest> paNotificationsRequest, final ServerWebExchange exchange){
         return paNotificationsRequest
-                .flatMap(notificationsRequest -> this.infoPaService.searchNotificationsFromSenderId(xPagopaPnUid, size, nextPagesKey, notificationsRequest)
+                .flatMap(notificationsRequest -> this.infoPaService.searchNotificationsFromSenderId(xPagopaPnUid, xPagopaPnUid, size, nextPagesKey, notificationsRequest)
                         .map(searchNotificationsResponse -> ResponseEntity.status(HttpStatus.OK).body(searchNotificationsResponse)));
     }
 

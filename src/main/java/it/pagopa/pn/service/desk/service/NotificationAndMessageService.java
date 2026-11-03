@@ -8,10 +8,17 @@ import java.time.Instant;
 
 public interface NotificationAndMessageService {
 
-    Mono<SearchNotificationsResponse> searchNotificationsFromTaxId(String xPagopaPnUid, Instant startDate, Instant endDate, Integer size, String nextPagesKey, SearchNotificationsRequest searchMessagesRequest);
+    record DelegateNotificationSearchHeaders(String xPagopaPnUid, String xPagopaPnCxId) {}
+
+    record DelegateNotificationSearchParameters(String mandateId, String delegateInternalId,
+                                                RecipientType recipientType, Integer size,
+                                                String nextPagesKey, Instant startDate, Instant endDate) {}
+
+    Mono<SearchNotificationsResponse> searchNotificationsFromTaxId(String xPagopaPnUid, String xPagopaPnCxId, Instant startDate, Instant endDate, Integer size, String nextPagesKey, SearchNotificationsRequest searchMessagesRequest);
     Mono<TimelineResponse> getTimelineOfIUN(String xPagopaPnUid, String iun, SearchNotificationsRequest searchNotificationsRequest);
-    Mono<DocumentsResponse> getDocumentsOfIun(String iun, DocumentsRequest request);
+    Mono<DocumentsResponse> getDocumentsOfIun(String xPagopaPnUid, String xPagopaPnCxId, String iun, DocumentsRequest request);
     Mono<NotificationDetailResponse> getNotificationFromIUN(String iun);
-    Mono<SearchNotificationsResponse> searchNotificationsAsDelegateFromInternalId(String xPagopaPnUid, String mandateId, String delegateInternalId, RecipientType recipientType, Integer size, String nextPagesKey, Instant startDate, Instant endDate);
+    Mono<SearchNotificationsResponse> searchNotificationsAsDelegateFromInternalId(
+            DelegateNotificationSearchHeaders headers, DelegateNotificationSearchParameters parameters);
     Mono<NotificationRecipientDetailResponse> getNotificationRecipientDetail(String iun, String recipientTaxId);
 }

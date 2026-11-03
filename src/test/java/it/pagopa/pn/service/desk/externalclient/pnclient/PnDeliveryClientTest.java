@@ -3,6 +3,8 @@ package it.pagopa.pn.service.desk.externalclient.pnclient;
 import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.*;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient.SearchNotificationsPrivateHeaders;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient.SearchNotificationsPrivateParameters;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,8 +20,8 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
     @Autowired
     private PnDeliveryClient pnDeliveryClient;
     
-    private final SentNotificationV25Dto expectedNotification = new SentNotificationV25Dto();
-    private final NotificationSearchResponseDto expectedNotificationSearchResponse = new NotificationSearchResponseDto();
+    private final SentNotificationV26Dto expectedNotification = new SentNotificationV26Dto();
+    private final LegalNotificationSearchResponseDto expectedNotificationSearchResponse = new LegalNotificationSearchResponseDto();
     private final NotificationAttachmentDownloadMetadataResponseDto expectedNotificationAttachment = new NotificationAttachmentDownloadMetadataResponseDto();
 
     @BeforeEach
@@ -33,29 +35,20 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
         List<NotificationDocumentDto> notificationDocumentDtoList = new ArrayList<>();
         notificationDocumentDtoList.add(
                 this.getNotificationDocument(
-                "ContentType",
-                "1234567",
-                "versionToken6",
-                "title34",
-                "docIdx98"
+                        "1234567",
+                "versionToken6"
                 )
         );
         notificationDocumentDtoList.add(
                 this.getNotificationDocument(
-                        "ContentType",
                         "7654321",
-                        "versionToken1",
-                        "title34",
-                        "docIdx98"
+                        "versionToken1"
                 )
         );
         notificationDocumentDtoList.add(
                 this.getNotificationDocument(
-                        "ContentType",
                         "981234",
-                        "versionToken2",
-                        "title34",
-                        "docIdx98"
+                        "versionToken2"
                 )
         );
         expectedNotification.setDocuments(notificationDocumentDtoList);
@@ -66,24 +59,18 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
                 "udElkIjoiWllXVC1HQVhELVhVR1YtMjAyMzA5LUgtMSMjUEYtYjNjY2FjMzEtMzhlYS00NGNkLTk2MDEtOWYyZDE5ZTg1M2FmIiwicmVjaXBpZW50SWRfY3JlYXRpb25Nb250aCI6IlBG" +
                 "LWIzY2NhYzMxLTM4ZWEtNDRjZC05NjAxLTlmMmQxOWU4NTNhZiMjMjAyMzA5Iiwic2VudEF0IjoiMjAyMy0wOS0yOVQxNDowMjowNC4yNTU1NTQwODBaIn19"));
 
-        List<NotificationSearchRowDto> notificationSearchRowDtoList = new ArrayList<>();
+        List<LegalNotificationSearchRowDto> notificationSearchRowDtoList = new ArrayList<>();
         notificationSearchRowDtoList.add(this.getNotificationSearchRow(
                 "PRVZ-NZKM-JEDK-202309-A-1",
                 "202381856591695996128952",
-                "Comune di Palermo",
                 Instant.parse("2023-09-29T14:02:08.670718277Z"),
-                "Test-di-carico",
-                NotificationStatusV26Dto.VIEWED,
                 List.of("GLLGLL64B15G702I"),
                 Instant.parse("2023-09-29T14:03:02.807361187Z")
         ));
         notificationSearchRowDtoList.add(this.getNotificationSearchRow(
                 "ENEZ-VXZU-JDJQ-202309-L-1",
                 "202380813111695996128483",
-                "Comune di Palermo",
                 Instant.parse("2023-09-29T14:02:08.203039228Z"),
-                "Test-di-carico",
-                NotificationStatusV26Dto.VIEWED,
                 List.of("GLLGLL64B15G702I"),
                 Instant.parse("2023-09-29T14:03:10.91919327Z")
         ));
@@ -110,7 +97,7 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
 
     @Test
     void getSentNotificationPrivate(){
-        SentNotificationV25Dto actual = this.pnDeliveryClient
+        SentNotificationV26Dto actual = this.pnDeliveryClient
                 .getSentNotificationPrivate("1234").block();
 
         Assertions.assertNotNull(actual);
@@ -125,17 +112,14 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
 
     @Test
     void searchNotificationsPrivate(){
-        NotificationSearchResponseDto actual = this.pnDeliveryClient
+        LegalNotificationSearchResponseDto actual = this.pnDeliveryClient
                 .searchNotificationsPrivate(
-                        Instant.parse("2023-08-31T15:49:05.630Z"),
-                        Instant.parse("2023-10-10T15:49:05.630Z"),
-                        "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
-                        null,
-                        null,
-                        null,
-                        1,
-                        null
-                        ).block();
+                        new SearchNotificationsPrivateHeaders("operator-uid", "operator-cx-id"),
+                        new SearchNotificationsPrivateParameters(
+                                Instant.parse("2023-08-31T15:49:05.630Z"),
+                                Instant.parse("2023-10-10T15:49:05.630Z"),
+                                "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
+                                null, null, null, 1, null)).block();
 
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(expectedNotificationSearchResponse.getResultsPage(), actual.getResultsPage());
@@ -147,6 +131,8 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
     void getReceivedNotificationDocumentPrivate(){
         NotificationAttachmentDownloadMetadataResponseDto actual = this.pnDeliveryClient
                 .getReceivedNotificationDocumentPrivate(
+                        "operator-uid",
+                        "operator-cx-id",
                         "PRVZ-NZKM-JEDK-202309-A-1",
                         0,
                         "PF-4fc75df3-0913-407e-bdaa-e50329708b7d",
@@ -161,29 +147,29 @@ class PnDeliveryClientTest extends BaseTest.WithMockServer {
         Assertions.assertEquals(expectedNotificationAttachment.getUrl(), actual.getUrl());
     }
 
-    private NotificationDocumentDto getNotificationDocument(String contentType, String refKey, String refVersionToken, String title, String docIdx){
+    private NotificationDocumentDto getNotificationDocument(String refKey, String refVersionToken){
         NotificationDocumentDto document = new NotificationDocumentDto();
-        document.setContentType(contentType);
+        document.setContentType("ContentType");
         NotificationAttachmentBodyRefDto notificationAttachmentBodyRefDto1 = new NotificationAttachmentBodyRefDto();
         notificationAttachmentBodyRefDto1.setKey(refKey);
         notificationAttachmentBodyRefDto1.setVersionToken(refVersionToken);
         document.setRef(notificationAttachmentBodyRefDto1);
-        document.setTitle(title);
-        document.setDocIdx(docIdx);
+        document.setTitle("title34");
+        document.setDocIdx("docIdx98");
         return document;
     }
 
-    private NotificationSearchRowDto getNotificationSearchRow(String iun, String paProtocolNumber, String sender, Instant sentAt, String subject, NotificationStatusV26Dto notificationStatus, List<String> recipients, Instant requestAcceptedAt) {
-        NotificationSearchRowDto notificationSearchRowDto = new NotificationSearchRowDto();
-        notificationSearchRowDto.setIun(iun);
-        notificationSearchRowDto.setPaProtocolNumber(paProtocolNumber);
-        notificationSearchRowDto.setSender(sender);
-        notificationSearchRowDto.setSentAt(sentAt);
-        notificationSearchRowDto.setSubject(subject);
-        notificationSearchRowDto.setNotificationStatus(notificationStatus);
-        notificationSearchRowDto.setRecipients(recipients);
-        notificationSearchRowDto.setRequestAcceptedAt(requestAcceptedAt);
-        return  notificationSearchRowDto;
+    private LegalNotificationSearchRowDto getNotificationSearchRow(String iun, String paProtocolNumber, Instant sentAt, List<String> recipients, Instant requestAcceptedAt) {
+        LegalNotificationSearchRowDto legalNotificationSearchRowDto = new LegalNotificationSearchRowDto();
+        legalNotificationSearchRowDto.setIun(iun);
+        legalNotificationSearchRowDto.setPaProtocolNumber(paProtocolNumber);
+        legalNotificationSearchRowDto.setSender("Comune di Palermo");
+        legalNotificationSearchRowDto.setSentAt(sentAt);
+        legalNotificationSearchRowDto.setSubject("Test-di-carico");
+        legalNotificationSearchRowDto.setNotificationStatus(NotificationStatusV26Dto.VIEWED);
+        legalNotificationSearchRowDto.setRecipients(recipients);
+        legalNotificationSearchRowDto.setRequestAcceptedAt(requestAcceptedAt);
+        return legalNotificationSearchRowDto;
     }
     
 }

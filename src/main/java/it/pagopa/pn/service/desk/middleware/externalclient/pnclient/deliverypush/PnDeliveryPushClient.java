@@ -12,7 +12,7 @@ import java.time.Instant;
 public interface PnDeliveryPushClient {
 
     Flux<ResponsePaperNotificationFailedDtoDto> paperNotificationFailed(String recipientInternalId);
-    Flux<LegalFactListElementV20Dto> getNotificationLegalFactsPrivate(String recipientInternalId, String iun);
+    Flux<LegalFactListElementV20Dto> getNotificationLegalFactsPrivate(String recipientInternalId, String iun, String cxOperatorId);
     Mono<ResponseNotificationViewedDtoDto> notifyNotificationViewed(String iun, String operationId, String internalRecipientId);
     Mono<NotificationHistoryResponseDto> getNotificationHistory(String iun, Integer numberOfRecipients, Instant createdAt);
 

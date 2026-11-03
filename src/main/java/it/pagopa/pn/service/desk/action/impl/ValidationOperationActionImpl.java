@@ -56,16 +56,16 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
     public static final String PAGOPA = "PAGOPA";
     public static final String F_24 = "F24";
     public static final String HTTPS = "https";
-    private AddressDAO addressDAO;
-    private PnAddressManagerClient addressManagerClient;
-    private PnDeliveryPushClient pnDeliveryPushClient;
-    private PnDeliveryClient pnDeliveryClient;
-    private PnPaperChannelClient paperChannelClient;
-    private PnSafeStorageClient safeStorageClient;
-    private PnServiceDeskConfigs cfn;
-    private PnDataVaultClient pnDataVaultClient;
-    private PnExternalChannelClient pnExternalChannelClient;
-    private ExternalChannelMapper externalChannelMapper;
+    private final AddressDAO addressDAO;
+    private final PnAddressManagerClient addressManagerClient;
+    private final PnDeliveryPushClient pnDeliveryPushClient;
+    private final PnDeliveryClient pnDeliveryClient;
+    private final PnPaperChannelClient paperChannelClient;
+    private final PnSafeStorageClient safeStorageClient;
+    private final PnServiceDeskConfigs cfn;
+    private final PnDataVaultClient pnDataVaultClient;
+    private final PnExternalChannelClient pnExternalChannelClient;
+    private final ExternalChannelMapper externalChannelMapper;
 
 
     public ValidationOperationActionImpl(OperationDAO operationDao, AddressDAO addressDAO,
@@ -265,8 +265,8 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
 
         return Mono.just(AttachmentMapper.initAttachment(iun))
                 .flatMap(entity ->
-                        this.getAttachmentsFromDelivery(iun, entityOperation.getRecipientInternalId(), addressType)
-                                .concatWith(getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun))
+                        this.getAttachmentsFromDelivery(iun, entityOperation.getRecipientInternalId(), addressType, entityOperation.getCxOperatorId())
+                                .concatWith(getAttachmentsFromDeliveryPush(entityOperation.getRecipientInternalId(), iun, entityOperation.getCxOperatorId()))
                                 // Excluding documents that contains one of the document type in the filter list
                                 .filterWhen(fileKeyOrUrl -> Flux.fromIterable(cfn.getDocumentTypeFilter()).all(dt -> !fileKeyOrUrl.contains(dt)))
                                 .flatMap(fileKeyOrUrl -> this.attachmentInfo(fileKeyOrUrl, EMAIL.equalsIgnoreCase(addressType)))
@@ -341,11 +341,11 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
      * @param iun
      * @return only fileKeys
      */
-    private Flux<String> getAttachmentsFromDeliveryPush(String recipientInternalId, String iun) {
+    private Flux<String> getAttachmentsFromDeliveryPush(String recipientInternalId, String iun, String cxOperatorId) {
         log.debug("recipientInternalId: {}, iun: {}, GetAttachmentsFromDeliveryPush received input", recipientInternalId, iun);
 
         log.debug("iun = {}, recipientInternalId = {}, Calling DeliveryPush's legalFacts service", iun, recipientInternalId);
-        return  pnDeliveryPushClient.getNotificationLegalFactsPrivate(recipientInternalId, iun)
+        return  pnDeliveryPushClient.getNotificationLegalFactsPrivate(recipientInternalId, iun, cxOperatorId)
                 .onErrorResume(exception -> {
                     log.error("errorReason = {}, An error occurred while call service legalFacts", exception.getMessage());
                     return Mono.error(new PnGenericException(ERROR_ON_DELIVERY_PUSH_CLIENT, exception.getMessage()));
@@ -366,7 +366,7 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
      * @param addressType
      * @return only fileKeys
      */
-    private Flux<String> getAttachmentsFromDelivery(String iun, String recipientId, String addressType) {
+    private Flux<String> getAttachmentsFromDelivery(String iun, String recipientId, String addressType, String cxOperatorId) {
         log.debug("iun: {}, recipientId: {}, addressType: {}, GetAttachmentsFromDelivery received input", iun, recipientId, addressType);
         log.debug("iun = {}, Calling service to obtain notification sent", iun);
         return pnDeliveryClient.getSentNotificationPrivate(iun)
@@ -381,35 +381,35 @@ public class ValidationOperationActionImpl extends BaseService implements Valida
 
                     // Retrieve also payment attachments in case of email notification
                     if (EMAIL.equalsIgnoreCase(addressType))
-                        documentsFlux = documentsFlux.concatWith(getPaymentsFromNotification(sentNotification, recipientId));
+                        documentsFlux = documentsFlux.concatWith(getPaymentsFromNotification(sentNotification, recipientId, cxOperatorId));
 
                     return documentsFlux;
                 });
     }
 
-    private Flux<String> getPaymentsFromNotification(SentNotificationV25Dto sentNotification, String internalId) {
+    private Flux<String> getPaymentsFromNotification(SentNotificationV26Dto sentNotification, String internalId, String cxOperatorId) {
         log.debug("sentNotification: {}, internalId: {}, GetPaymentsFromNotification received input", sentNotification, internalId);
         return Flux.fromIterable(sentNotification.getRecipients())
                 .filter(notRecipient -> StringUtils.equals(notRecipient.getInternalId(), internalId))
                 .flatMapIterable(NotificationRecipientV24Dto::getPayments)
                 .index()
-                .flatMap(tuple -> retrievePaymentAttachments(Math.toIntExact(tuple.getT1()), tuple.getT2(), sentNotification.getIun(), internalId));
+                .flatMap(tuple -> retrievePaymentAttachments(Math.toIntExact(tuple.getT1()), tuple.getT2(), sentNotification.getIun(), internalId, cxOperatorId));
     }
 
-    private Flux<String> retrievePaymentAttachments(int attachmentId, NotificationPaymentItemDto payment, String iun, String internalId) {
+    private Flux<String> retrievePaymentAttachments(int attachmentId, NotificationPaymentItemDto payment, String iun, String internalId, String cxOperatorId) {
         Flux<String> fileKeys = Flux.empty();
 
         if(payment.getPagoPa() != null && payment.getPagoPa().getAttachment() != null)
-            fileKeys = fileKeys.concatWith(getPaymentAttachmentUrl(iun, PAGOPA, internalId, attachmentId));
+            fileKeys = fileKeys.concatWith(getPaymentAttachmentUrl(iun, PAGOPA, internalId, attachmentId, cxOperatorId));
 
         if (payment.getF24() != null)
-            fileKeys = fileKeys.concatWith(getPaymentAttachmentUrl(iun, F_24, internalId, attachmentId));
+            fileKeys = fileKeys.concatWith(getPaymentAttachmentUrl(iun, F_24, internalId, attachmentId, cxOperatorId));
 
         return fileKeys;
     }
 
-    Mono<String> getPaymentAttachmentUrl(String iun, String attachmentName, String internalId, int attachmentId) {
-        return pnDeliveryClient.getPresignedUrlPaymentDocument(iun, attachmentName, internalId, attachmentId)
+    Mono<String> getPaymentAttachmentUrl(String iun, String attachmentName, String internalId, int attachmentId, String cxOperatorId) {
+        return pnDeliveryClient.getPresignedUrlPaymentDocument(iun, attachmentName, internalId, attachmentId, cxOperatorId)
                 .map(NotificationAttachmentDownloadMetadataResponseDto::getUrl);
     }
 

@@ -57,6 +57,7 @@
     {
         "httpRequest":{
             "path":"/delivery-private/search",
+            "headers":{"x-pagopa-pn-uid":["operator-uid"],"x-pagopa-pn-cx-id":["operator-cx-id"],"x-pagopa-pn-cx-type":["SD"]},
             "queryStringParameters":{
                 "recipientId":["PF-4fc75df3-0913-407e-bdaa-e50329708b7d"],
                 "startDate":["2023-08-31T15:49:05.630Z"],
@@ -109,6 +110,7 @@
     {
         "httpRequest": {
             "path": "/delivery-private/notifications/received/PRVZ-NZKM-JEDK-202309-A-1/attachments/documents/0",
+            "headers":{"x-pagopa-pn-uid":["operator-uid"],"x-pagopa-pn-cx-id":["operator-cx-id"],"x-pagopa-pn-cx-type":["SD"]},
             "queryStringParameters": {
                 "recipientInternalId": [
                     "PF-4fc75df3-0913-407e-bdaa-e50329708b7d"

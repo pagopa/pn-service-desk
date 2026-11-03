@@ -75,7 +75,7 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
     void getNotificationLegalFactsPrivate(){
         List<LegalFactListElementV20Dto> legalFactListElementDtos =
                 this.pnDeliveryPushClient
-                        .getNotificationLegalFactsPrivate(RECIPIENT_INTERNAL_ID, IUN).collectList().block();
+                        .getNotificationLegalFactsPrivate(RECIPIENT_INTERNAL_ID, IUN, "operator-uid").collectList().block();
 
         Assertions.assertNotNull(legalFactListElementDtos);
         Assertions.assertEquals(3, legalFactListElementDtos.size());
@@ -115,9 +115,9 @@ class PnDeliveryPushClientTest extends BaseTest.WithMockServer {
 
         Assertions.assertNotNull(actual);
         Assertions.assertNotNull(actual.getTimeline());
-        Assertions.assertNotNull(actual.getTimeline().get(0));
+        Assertions.assertNotNull(actual.getTimeline().getFirst());
 
-        var actualTimeline = actual.getTimeline().get(0);
+        var actualTimeline = actual.getTimeline().getFirst();
         Assertions.assertEquals(expectedTimeline.getElementId(), actualTimeline.getElementId());
         Assertions.assertEquals(expectedTimeline.getEventTimestamp(), actualTimeline.getEventTimestamp());
         Assertions.assertEquals(expectedTimeline.getCategory(), actualTimeline.getCategory());
