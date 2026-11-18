@@ -422,6 +422,11 @@ Parameters:
     Default: '-'
     Description: Cron for which you send the metric to CloudWatch
 
+  JavaToolOptions:
+    Type: String
+    Default: ''
+    Description: Java tool options for the Fargate tasks
+
 Conditions:
   HasAlbDimensionName: !Not [ !Equals [ !Ref ApplicationLoadBalancerMetricsDimensionName, '' ] ]
   HasAlarmTopic: !Not [ !Equals [ !Ref AlarmSNSTopicArn, '-' ] ]
@@ -508,7 +513,8 @@ Resources:
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
         EcsLogGroup: !Ref EcsLogGroup
         LogAlarmStrategyV1: !Ref LogAlarmStrategy
-
+        JavaToolOptions: !Ref JavaToolOptions
+        
   ServiceDeskPrivateLinkRouting:
     Type: AWS::CloudFormation::Stack
     Properties:
