@@ -91,23 +91,27 @@ class InfoPaControllerTest {
     void searchNotificationsFromSenderId(){
         SearchNotificationsResponse response = new SearchNotificationsResponse();
         String path = "/service-desk/pa/notifications";
-        Mockito.when(infoPaService.searchNotificationsFromSenderId(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(infoPaService.searchNotificationsFromSenderId(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(response));
 
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder.path(path)
                         .build())
                 .header("x-pagopa-pn-uid", "test")
+                .header("x-pagopa-pn-cx-id", "test-cx-id")
                 .header("x-api-key", "test")
                 .bodyValue(getPaNotificationRequest())
                 .exchange()
                 .expectStatus().isOk();
+
+        Mockito.verify(infoPaService).searchNotificationsFromSenderId(
+                Mockito.eq("test"), Mockito.eq("test"), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
     void searchNotificationsFromSenderIdKO(){
         String path = "/service-desk/pa/notifications";
-        Mockito.when(infoPaService.searchNotificationsFromSenderId(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(infoPaService.searchNotificationsFromSenderId(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.ERROR_ON_DELIVERY_CLIENT, HttpStatus.BAD_REQUEST)));
 
         webTestClient.post()

@@ -18,19 +18,19 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class NotificationAndMessageMapperTest {
 
-    private final NotificationSearchRowDto notificationSearchRowDto = new NotificationSearchRowDto();
+    private final LegalNotificationSearchRowDto legalNotificationSearchRowDto = new LegalNotificationSearchRowDto();
     private final List<TimelineElementV28Dto> filteredElements = new ArrayList<>();
     private final NotificationHistoryResponseDto historyResponseDto = new NotificationHistoryResponseDto();
     private final NotificationAttachmentDownloadMetadataResponseDto notificationAttachmentDownloadMetadataResponseDto = new NotificationAttachmentDownloadMetadataResponseDto();
-    private final SentNotificationV25Dto sentNotificationV21Dto = new SentNotificationV25Dto();
+    private final SentNotificationV26Dto sentNotificationV21Dto = new SentNotificationV26Dto();
 
     @BeforeEach
     void initialize (){
-        notificationSearchRowDto.setSender("Comune");
-        notificationSearchRowDto.setIun("PRVZ-NZKM-JEDK-202309-A-1");
-        notificationSearchRowDto.setSentAt(Instant.now());
-        notificationSearchRowDto.setSubject("comune di Palermo");
-        notificationSearchRowDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusV26Dto.ACCEPTED);
+        legalNotificationSearchRowDto.setSender("Comune");
+        legalNotificationSearchRowDto.setIun("PRVZ-NZKM-JEDK-202309-A-1");
+        legalNotificationSearchRowDto.setSentAt(Instant.now());
+        legalNotificationSearchRowDto.setSubject("comune di Palermo");
+        legalNotificationSearchRowDto.setNotificationStatus(it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusV26Dto.ACCEPTED);
         var timelineElementV23Dto = new TimelineElementV28Dto();
         var detailsV23Dto = new NotificationRequestAcceptedDetailsV28Dto();
         timelineElementV23Dto.setDetails(detailsV23Dto);
@@ -64,7 +64,7 @@ class NotificationAndMessageMapperTest {
         NotificationDocumentDto documentDto = new NotificationDocumentDto();
         documentDtoList.add(documentDto);
         sentNotificationV21Dto.setDocuments(documentDtoList);
-        sentNotificationV21Dto.setPhysicalCommunicationType(SentNotificationV25Dto.PhysicalCommunicationTypeEnum.REGISTERED_LETTER_890);
+        sentNotificationV21Dto.setPhysicalCommunicationType(SentNotificationV26Dto.PhysicalCommunicationTypeEnum.REGISTERED_LETTER_890);
         sentNotificationV21Dto.setSenderDenomination("Fieramosca");
         sentNotificationV21Dto.setSenderTaxId("FRMTTR76M06B715E");
         sentNotificationV21Dto.setSentAt(Instant.now());
@@ -73,7 +73,7 @@ class NotificationAndMessageMapperTest {
 
     @Test
     void getNotificationTest (){
-        NotificationResponse notificationResponse = NotificationAndMessageMapper.getNotification(notificationSearchRowDto, filteredElements);
+        NotificationResponse notificationResponse = NotificationAndMessageMapper.getNotification(legalNotificationSearchRowDto, filteredElements);
         assertNotNull(notificationResponse);
     }
 
@@ -106,7 +106,7 @@ class NotificationAndMessageMapperTest {
 
     @Test
     void getNotificationRecipientDetailResponseTest() {
-        SentNotificationV25Dto sentNotification = getSentNotificationDto();
+        SentNotificationV26Dto sentNotification = getSentNotificationDto();
 
         String taxId = "TAX123";
 
@@ -124,7 +124,7 @@ class NotificationAndMessageMapperTest {
 
     @Test
     void getNotificationRecipientDetailResponseThrowsExceptionWhenTaxIdNotFound() {
-        SentNotificationV25Dto sentNotification = getSentNotificationDto();
+        SentNotificationV26Dto sentNotification = getSentNotificationDto();
         sentNotification.setRecipients(getNotificationRecipientList());
 
         PnGenericException exception = assertThrows(PnGenericException.class, () ->
@@ -206,8 +206,8 @@ class NotificationAndMessageMapperTest {
         return recipients;
     }
 
-    private SentNotificationV25Dto getSentNotificationDto() {
-        SentNotificationV25Dto sentNotification = new SentNotificationV25Dto();
+    private SentNotificationV26Dto getSentNotificationDto() {
+        SentNotificationV26Dto sentNotification = new SentNotificationV26Dto();
         sentNotification.setPaProtocolNumber("PA123");
         sentNotification.setSubject("Test Subject");
         sentNotification.setAbstract("Test Abstract");
@@ -216,7 +216,7 @@ class NotificationAndMessageMapperTest {
         sentNotification.setRecipients(getNotificationRecipientList());
 
         sentNotification.setDocuments(new ArrayList<>());
-        sentNotification.setPhysicalCommunicationType(SentNotificationV25Dto.PhysicalCommunicationTypeEnum.REGISTERED_LETTER_890);
+        sentNotification.setPhysicalCommunicationType(SentNotificationV26Dto.PhysicalCommunicationTypeEnum.REGISTERED_LETTER_890);
         sentNotification.setSenderDenomination("Sender Name");
         sentNotification.setSenderTaxId("SENDER123");
         return sentNotification;
@@ -225,7 +225,7 @@ class NotificationAndMessageMapperTest {
     @Test
     void getNotificationWithTppChannelTest() {
         // Arrange
-        NotificationSearchRowDto searchRowDto = new NotificationSearchRowDto();
+        LegalNotificationSearchRowDto searchRowDto = new LegalNotificationSearchRowDto();
         searchRowDto.setSender("Comune di Roma");
         searchRowDto.setIun("TPP-TEST-IUN");
         searchRowDto.setSentAt(Instant.now());
@@ -280,7 +280,7 @@ class NotificationAndMessageMapperTest {
         TimelineResponse response = assertDoesNotThrow(() -> NotificationAndMessageMapper.getTimeline(history));
 
         assertThat(response.getTimeline()).hasSize(1);
-        TimelineElementDetail detail = response.getTimeline().get(0).getDetail();
+        TimelineElementDetail detail = response.getTimeline().getFirst().getDetail();
         assertNotNull(detail);
         assertEquals("prep-1", detail.getPrepareRequestId());
         assertEquals("rel-1", detail.getRelatedRequestId());

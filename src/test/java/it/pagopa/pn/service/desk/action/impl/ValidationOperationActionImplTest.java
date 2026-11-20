@@ -87,7 +87,7 @@ class ValidationOperationActionImplTest {
 
     private final PnServiceDeskOperations pnServiceDeskOperations = new PnServiceDeskOperations();
     private final ResponsePaperNotificationFailedDtoDto responsePaperNotificationFailedDtoDto = new ResponsePaperNotificationFailedDtoDto();
-    private final SentNotificationV25Dto sentNotificationDto = new SentNotificationV25Dto();
+    private final SentNotificationV26Dto sentNotificationDto = new SentNotificationV26Dto();
     private final NotificationDocumentDto notificationDocumentDto = new NotificationDocumentDto();
     private final List<NotificationDocumentDto> notifications = new ArrayList<>();
     private final NotificationAttachmentBodyRefDto notificationAttachmentBodyRefDto = new NotificationAttachmentBodyRefDto();
@@ -163,9 +163,7 @@ class ValidationOperationActionImplTest {
     @Test
     void executeWithoutOperationId() {
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.empty());
-        Assertions.assertThrows(PnEntityNotFoundException.class, () -> {
-            this.validationOperationAction.execute("opId1234");
-        });
+        Assertions.assertThrows(PnEntityNotFoundException.class, () -> this.validationOperationAction.execute("opId1234"));
     }
 
     @Test
@@ -174,9 +172,7 @@ class ValidationOperationActionImplTest {
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.empty());
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
 
-        Assertions.assertDoesNotThrow(() -> {
-            this.validationOperationAction.execute("opId1234");
-        });
+        Assertions.assertDoesNotThrow(() -> this.validationOperationAction.execute("opId1234"));
 
         ArgumentCaptor<PnServiceDeskOperations> captureOperations = ArgumentCaptor.forClass(PnServiceDeskOperations.class);
         Mockito.verify(operationDAO).updateEntity(captureOperations.capture());
@@ -281,7 +277,7 @@ class ValidationOperationActionImplTest {
         Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
-        Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenThrow(exception);
+        Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any(), Mockito.nullable(String.class))).thenThrow(exception);
         Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.anyString())).thenReturn(Flux.empty());
 
         Assertions.assertDoesNotThrow(() -> {
@@ -291,7 +287,7 @@ class ValidationOperationActionImplTest {
 
     @Test
     void executeGetNotificationLegalFactsPrivateEmptyAndIsAvailableFalse() {
-        pnServiceDeskOperations.getAttachments().get(0).setIsAvailable(Boolean.FALSE);
+        pnServiceDeskOperations.getAttachments().getFirst().setIsAvailable(Boolean.FALSE);
         PnGenericException exception = new PnGenericException(null, "");
         Mockito.when(this.operationDAO.getByOperationId("opId1234")).thenReturn(Mono.just(pnServiceDeskOperations));
         Mockito.when(this.addressDAO.getAddress("opId1234")).thenReturn(Mono.just(new PnServiceDeskAddress()));
@@ -299,7 +295,7 @@ class ValidationOperationActionImplTest {
         Mockito.when(this.pnDeliveryPushClient.paperNotificationFailed(Mockito.any())).thenReturn(Flux.just(responsePaperNotificationFailedDtoDto));
         Mockito.when(this.pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(this.operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(pnServiceDeskOperations));
-        Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenThrow(exception);
+        Mockito.when(this.pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any(), Mockito.nullable(String.class))).thenThrow(exception);
         Mockito.when(this.operationDAO.searchOperationsFromRecipientInternalId(Mockito.anyString())).thenReturn(Flux.empty());
 
         Assertions.assertDoesNotThrow(() -> {
@@ -342,8 +338,10 @@ class ValidationOperationActionImplTest {
 
         operation.setOperationId("opIdEmail");
         operation.setRecipientInternalId(RECIPIENT_INTERNAL_ID);
+        operation.setCxOperatorId("operator-uid");
         operation.setAttachments(pnServiceDeskAttachmentsList);
         operation.setIun("IUN");
+        sentNotificationDto.setIun("IUN");
 
         PnServiceDeskAddress address = new PnServiceDeskAddress();
         address.setType("EMAIL");
@@ -355,9 +353,9 @@ class ValidationOperationActionImplTest {
         Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(getDeduplicatesResponse(true)));
         Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(operation));
         Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
-        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
+        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any(), Mockito.nullable(String.class))).thenReturn(Flux.just(legalFactListElementDto));
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
-        Mockito.when(pnDeliveryClient.getPresignedUrlPaymentDocument(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(pnDeliveryClient.getPresignedUrlPaymentDocument(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.nullable(String.class)))
                .thenReturn(Mono.just(notificationAttachmentDownloadMetadataResponseDto));
         Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                .thenReturn(Mono.empty());
@@ -370,6 +368,11 @@ class ValidationOperationActionImplTest {
 
         // Verifica che sia stato chiamato il metodo email
         Mockito.verify(externalChannelClient).sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any());
+        Mockito.verify(pnDeliveryPushClient).getNotificationLegalFactsPrivate(RECIPIENT_INTERNAL_ID, "IUN", "operator-uid");
+        Mockito.verify(pnDeliveryClient, Mockito.atLeastOnce())
+                .getPresignedUrlPaymentDocument("IUN", ValidationOperationActionImpl.PAGOPA, RECIPIENT_INTERNAL_ID, 0, "operator-uid");
+        Mockito.verify(pnDeliveryClient).getPresignedUrlPaymentDocument(
+                "IUN", ValidationOperationActionImpl.F_24, RECIPIENT_INTERNAL_ID, 0, "operator-uid");
     }
 
     @Test
@@ -392,7 +395,7 @@ class ValidationOperationActionImplTest {
         Mockito.when(addressManagerClient.deduplicates(Mockito.any()))
                .thenReturn(Mono.just(getDeduplicatesResponse(true)));
         Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(operation));
-        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
+        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any(), Mockito.nullable(String.class))).thenReturn(Flux.just(legalFactListElementDto));
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
         Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
         Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
@@ -475,9 +478,9 @@ class ValidationOperationActionImplTest {
         Mockito.when(addressManagerClient.deduplicates(Mockito.any())).thenReturn(Mono.just(getDeduplicatesResponse(true)));
         Mockito.when(operationDAO.updateEntity(Mockito.any())).thenReturn(Mono.just(subOp));
         Mockito.when(pnDataVaultClient.deAnonymized(Mockito.any())).thenReturn(Mono.just("FAKE_FISCAL_CODE"));
-        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any())).thenReturn(Flux.just(legalFactListElementDto));
+        Mockito.when(pnDeliveryPushClient.getNotificationLegalFactsPrivate(Mockito.any(), Mockito.any(), Mockito.nullable(String.class))).thenReturn(Flux.just(legalFactListElementDto));
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any())).thenReturn(Mono.just(sentNotificationDto));
-        Mockito.when(pnDeliveryClient.getPresignedUrlPaymentDocument(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(pnDeliveryClient.getPresignedUrlPaymentDocument(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.nullable(String.class)))
                .thenReturn(Mono.just(notificationAttachmentDownloadMetadataResponseDto));
         Mockito.when(externalChannelClient.sendCourtesyMail(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                .thenReturn(Mono.empty());

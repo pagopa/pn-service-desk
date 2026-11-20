@@ -4,7 +4,7 @@ import it.pagopa.pn.service.desk.config.BaseTest;
 import it.pagopa.pn.service.desk.exception.PnGenericException;
 import it.pagopa.pn.service.desk.exception.PnRetryStorageException;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationRecipientV24Dto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV25Dto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.SentNotificationV26Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileCreationResponse;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.safestorage.model.FileDownloadResponse;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.*;
@@ -20,6 +20,7 @@ import it.pagopa.pn.service.desk.model.OperationStatusEnum;
 import it.pagopa.pn.service.desk.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -167,7 +168,7 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void searchOperationsFromRecipientInternalId_WithAttachments_EnhancesIuns() {
-        SentNotificationV25Dto sentNotification = new SentNotificationV25Dto();
+        SentNotificationV26Dto sentNotification = new SentNotificationV26Dto();
         sentNotification.setIun("iun-test");
         sentNotification.setSenderPaId("pa-id");
         sentNotification.setSenderTaxId("pa-tax");
@@ -322,18 +323,18 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void createActOperation_Success() {
-        SentNotificationV25Dto sentNotificationV25Dto = new SentNotificationV25Dto();
+        SentNotificationV26Dto sentNotificationV26Dto = new SentNotificationV26Dto();
 
         NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
         recipient.setTaxId(createActOperationRequest.getTaxId());
-        sentNotificationV25Dto.setRecipients(List.of(recipient));
-        sentNotificationV25Dto.setIun(createActOperationRequest.getIun());
-        sentNotificationV25Dto.setDocumentsAvailable(true);
+        sentNotificationV26Dto.setRecipients(List.of(recipient));
+        sentNotificationV26Dto.setIun(createActOperationRequest.getIun());
+        sentNotificationV26Dto.setDocumentsAvailable(true);
 
 
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(
                 Mockito.eq(createActOperationRequest.getIun())))
-               .thenReturn(Mono.just(sentNotificationV25Dto));
+               .thenReturn(Mono.just(sentNotificationV26Dto));
 
         Mockito.when(operationDAO.getByOperationId(Mockito.any()))
                .thenReturn(Mono.empty());
@@ -347,6 +348,10 @@ class OperationsServiceImplTest extends BaseTest {
                         assertNotNull(response.getOperationId());
                     })
                     .verifyComplete();
+
+        ArgumentCaptor<PnServiceDeskOperations> operationCaptor = ArgumentCaptor.forClass(PnServiceDeskOperations.class);
+        Mockito.verify(operationDAO).createOperationAndAddress(operationCaptor.capture(), Mockito.any());
+        assertEquals("someUid", operationCaptor.getValue().getCxOperatorId());
     }
 
 
@@ -363,7 +368,7 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void createActOperation_TaxIdMismatch_ReturnsError() {
-        SentNotificationV25Dto sentNotification = new SentNotificationV25Dto();
+        SentNotificationV26Dto sentNotification = new SentNotificationV26Dto();
 
         NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
         // Simuliamo mismatch
@@ -445,7 +450,7 @@ class OperationsServiceImplTest extends BaseTest {
         subOp.setStatus(OK.toString());
         subOp.setAttachments(new ArrayList<>(List.of(attachment)));
 
-        SentNotificationV25Dto sentNotification = new SentNotificationV25Dto();
+        SentNotificationV26Dto sentNotification = new SentNotificationV26Dto();
         sentNotification.setIun("iun-sub");
         sentNotification.setSenderPaId("pa-id");
         sentNotification.setSenderTaxId("pa-tax");
@@ -462,10 +467,10 @@ class OperationsServiceImplTest extends BaseTest {
                 .assertNext(response -> {
                     assertNotNull(response);
                     assertEquals(1, response.getOperations().size());
-                    OperationResponse op = response.getOperations().get(0);
+                    OperationResponse op = response.getOperations().getFirst();
                     assertNotNull(op.getIuns());
                     assertEquals(1, op.getIuns().size());
-                    assertEquals("iun-sub", op.getIuns().get(0).getIun());
+                    assertEquals("iun-sub", op.getIuns().getFirst().getIun());
                 })
                 .verifyComplete();
     }
@@ -496,15 +501,15 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void createActOperationV2_AllValid_CreatesParentAndSubOps() {
-        SentNotificationV25Dto sentNotificationV25Dto = new SentNotificationV25Dto();
+        SentNotificationV26Dto sentNotificationV26Dto = new SentNotificationV26Dto();
         NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
         recipient.setTaxId("AAAAAA00A00A000A");
-        sentNotificationV25Dto.setRecipients(List.of(recipient));
-        sentNotificationV25Dto.setDocumentsAvailable(true);
+        sentNotificationV26Dto.setRecipients(List.of(recipient));
+        sentNotificationV26Dto.setDocumentsAvailable(true);
 
         Mockito.when(operationDAO.getByOperationId(Mockito.any())).thenReturn(Mono.empty());
         Mockito.when(pnDeliveryClient.getSentNotificationPrivate(Mockito.any()))
-               .thenReturn(Mono.just(sentNotificationV25Dto));
+               .thenReturn(Mono.just(sentNotificationV26Dto));
         Mockito.when(operationDAO.createParentOperationWithSubOpsAndAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                .thenReturn(Mono.just(pnServiceDeskOperations));
 
@@ -519,6 +524,12 @@ class OperationsServiceImplTest extends BaseTest {
                         response.getResults().forEach(r -> assertEquals("CREATING", r.getStatus()));
                     })
                     .verifyComplete();
+
+        Mockito.verify(operationDAO).createParentOperationWithSubOpsAndAddress(
+                Mockito.argThat(parent -> "uid".equals(parent.getCxOperatorId())),
+                Mockito.any(),
+                Mockito.argThat(subOperations -> !subOperations.isEmpty()
+                        && subOperations.stream().allMatch(operation -> "uid".equals(operation.getCxOperatorId()))));
     }
 
     @Test
@@ -558,13 +569,13 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void createActOperationV2_PartialValid_CreatesWithValidSubOpsOnly() {
-        SentNotificationV25Dto validNotification = new SentNotificationV25Dto();
+        SentNotificationV26Dto validNotification = new SentNotificationV26Dto();
         NotificationRecipientV24Dto recipient = new NotificationRecipientV24Dto();
         recipient.setTaxId("AAAAAA00A00A000A");
         validNotification.setRecipients(List.of(recipient));
         validNotification.setDocumentsAvailable(true);
 
-        SentNotificationV25Dto mismatchNotification = new SentNotificationV25Dto();
+        SentNotificationV26Dto mismatchNotification = new SentNotificationV26Dto();
         NotificationRecipientV24Dto mismatchRecipient = new NotificationRecipientV24Dto();
         mismatchRecipient.setTaxId("DIFFERENT_TAX_ID");
         mismatchNotification.setRecipients(List.of(mismatchRecipient));
@@ -595,7 +606,7 @@ class OperationsServiceImplTest extends BaseTest {
 
     @Test
     void createActOperationV2_AllFail_CreatesParentWithKoStatus() {
-        SentNotificationV25Dto mismatchNotification = new SentNotificationV25Dto();
+        SentNotificationV26Dto mismatchNotification = new SentNotificationV26Dto();
         NotificationRecipientV24Dto mismatchRecipient = new NotificationRecipientV24Dto();
         mismatchRecipient.setTaxId("DIFFERENT_TAX_ID");
         mismatchNotification.setRecipients(List.of(mismatchRecipient));
@@ -706,7 +717,7 @@ class OperationsServiceImplTest extends BaseTest {
                 .assertNext(response -> {
                     assertEquals(2, response.getSubOperations().size());
 
-                    OperationDetail first = response.getSubOperations().get(0);
+                    OperationDetail first = response.getSubOperations().getFirst();
                     assertEquals("OK", first.getStatus());
                 })
                 .verifyComplete();
@@ -720,7 +731,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.getOperationV2("op123"))
                 .expectErrorMatches(ex -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(OPERATION_IS_NOT_PRESENT,
                             ((PnGenericException) ex).getExceptionType());
                     assertEquals(HttpStatus.NOT_FOUND,
@@ -758,7 +769,7 @@ class OperationsServiceImplTest extends BaseTest {
 
         StepVerifier.create(service.getOperationV2("op123"))
                 .expectErrorMatches(ex -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(ERROR_DURING_GET_OPERATION_V2,
                             ((PnGenericException) ex).getExceptionType());
                     assertEquals(HttpStatus.BAD_REQUEST,

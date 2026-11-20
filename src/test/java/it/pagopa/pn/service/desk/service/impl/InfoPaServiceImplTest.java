@@ -1,13 +1,15 @@
 package it.pagopa.pn.service.desk.service.impl;
 
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchResponseDto;
-import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationSearchRowDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.LegalNotificationSearchResponseDto;
+import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.LegalNotificationSearchRowDto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pndelivery.v1.dto.NotificationStatusV26Dto;
 import it.pagopa.pn.service.desk.generated.openapi.msclient.pnexternalregistries.v1.dto.PaSummaryDto;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaNotificationsRequest;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.PaSummary;
 import it.pagopa.pn.service.desk.generated.openapi.server.v1.dto.SearchNotificationsResponse;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient.SearchNotificationsPrivateHeaders;
+import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.delivery.PnDeliveryClient.SearchNotificationsPrivateParameters;
 import it.pagopa.pn.service.desk.middleware.externalclient.pnclient.externalregistries.ExternalRegistriesClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +38,7 @@ class InfoPaServiceImplTest {
     private AuditLogServiceImpl auditLogService;
 
     private final PaSummaryDto expectedPaSummary = new PaSummaryDto();
-    private final NotificationSearchResponseDto expectedNotificationSearchResponse = new NotificationSearchResponseDto();
+    private final LegalNotificationSearchResponseDto expectedNotificationSearchResponse = new LegalNotificationSearchResponseDto();
 
     @BeforeEach
     public void setUp(){
@@ -46,17 +48,17 @@ class InfoPaServiceImplTest {
         expectedNotificationSearchResponse.setMoreResult(true);
         expectedNotificationSearchResponse.setNextPagesKey(List.of("eyJlayI6IlBGLWIzY2NhYzMxLTM4ZWEtNDRjZC05NjAxLTlmMmQxOWU4NTNhZiMjMjAyMzA5I"));
 
-        NotificationSearchRowDto notificationSearchRowDto = new NotificationSearchRowDto();
-        notificationSearchRowDto.setIun("PRVZ-NZKM-JEDK-202309-A-1");
-        notificationSearchRowDto.setPaProtocolNumber("202381856591695996128952");
-        notificationSearchRowDto.setSender("Comune di Palermo");
-        notificationSearchRowDto.setSentAt(Instant.parse("2023-09-29T14:02:08.670718277Z"));
-        notificationSearchRowDto.setSubject("Test-di-carico");
-        notificationSearchRowDto.setNotificationStatus(NotificationStatusV26Dto.VIEWED);
-        notificationSearchRowDto.setRecipients(List.of("GLLGLL64B15G702I"));
-        notificationSearchRowDto.setRequestAcceptedAt(Instant.parse("2023-09-29T14:03:02.807361187Z"));
+        LegalNotificationSearchRowDto legalNotificationSearchRowDto = new LegalNotificationSearchRowDto();
+        legalNotificationSearchRowDto.setIun("PRVZ-NZKM-JEDK-202309-A-1");
+        legalNotificationSearchRowDto.setPaProtocolNumber("202381856591695996128952");
+        legalNotificationSearchRowDto.setSender("Comune di Palermo");
+        legalNotificationSearchRowDto.setSentAt(Instant.parse("2023-09-29T14:02:08.670718277Z"));
+        legalNotificationSearchRowDto.setSubject("Test-di-carico");
+        legalNotificationSearchRowDto.setNotificationStatus(NotificationStatusV26Dto.VIEWED);
+        legalNotificationSearchRowDto.setRecipients(List.of("GLLGLL64B15G702I"));
+        legalNotificationSearchRowDto.setRequestAcceptedAt(Instant.parse("2023-09-29T14:03:02.807361187Z"));
 
-        expectedNotificationSearchResponse.setResultsPage(List.of(notificationSearchRowDto));
+        expectedNotificationSearchResponse.setResultsPage(List.of(legalNotificationSearchRowDto));
     }
 
     @Test
@@ -74,22 +76,26 @@ class InfoPaServiceImplTest {
 
     @Test
     void searchNotificationsFromSenderId(){
-        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(Instant.parse("2023-08-31T15:49:05.630Z"),
-                        Instant.parse("2023-10-10T15:49:05.630Z"), null,
-                        "PA-oihdsojn120u", null, null, 50, "nextPageKey"))
+        Mockito.when(this.pnDeliveryClient.searchNotificationsPrivate(
+                        new SearchNotificationsPrivateHeaders("operator-uid", null),
+                        new SearchNotificationsPrivateParameters(Instant.parse("2023-08-31T15:49:05.630Z"),
+                                Instant.parse("2023-10-10T15:49:05.630Z"), null, "PA-oihdsojn120u",
+                                null, null, 50, "nextPageKey")))
                 .thenReturn(Mono.just(expectedNotificationSearchResponse));
 
-        SearchNotificationsResponse actual = this.infoPaService.searchNotificationsFromSenderId(null, 50, "nextPageKey", this.getPaNotificationsRequest())
+        SearchNotificationsResponse actual = this.infoPaService.searchNotificationsFromSenderId("operator-uid", null, 50, "nextPageKey", this.getPaNotificationsRequest())
                 .block();
 
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(expectedNotificationSearchResponse.getMoreResult(), actual.getMoreResult());
         Assertions.assertEquals(expectedNotificationSearchResponse.getNextPagesKey(), actual.getNextPagesKey());
-        Assertions.assertEquals(expectedNotificationSearchResponse.getResultsPage().get(0).getIun(), actual.getResults().get(0).getIun());
-        Assertions.assertEquals(expectedNotificationSearchResponse.getResultsPage().get(0).getSender(), actual.getResults().get(0).getSender());
-        Assertions.assertEquals(expectedNotificationSearchResponse.getResultsPage().get(0).getSentAt(), actual.getResults().get(0).getSentAt());
-        Assertions.assertEquals(expectedNotificationSearchResponse.getResultsPage().get(0).getSubject(), actual.getResults().get(0).getSubject());
-        Assertions.assertEquals(expectedNotificationSearchResponse.getResultsPage().get(0).getNotificationStatus().getValue(), actual.getResults().get(0).getIunStatus().getValue());
+        Assertions.assertNotNull(expectedNotificationSearchResponse.getResultsPage());
+        Assertions.assertEquals(expectedNotificationSearchResponse.getResultsPage().getFirst().getIun(), actual.getResults().getFirst().getIun());
+        Assertions.assertEquals(expectedNotificationSearchResponse.getResultsPage().getFirst().getSender(), actual.getResults().getFirst().getSender());
+        Assertions.assertEquals(expectedNotificationSearchResponse.getResultsPage().getFirst().getSentAt(), actual.getResults().getFirst().getSentAt());
+        Assertions.assertEquals(expectedNotificationSearchResponse.getResultsPage().getFirst().getSubject(), actual.getResults().getFirst().getSubject());
+        Assertions.assertNotNull(expectedNotificationSearchResponse.getResultsPage().getFirst().getNotificationStatus());
+        Assertions.assertEquals(expectedNotificationSearchResponse.getResultsPage().getFirst().getNotificationStatus().getValue(), actual.getResults().getFirst().getIunStatus().getValue());
     }
 
     private PaNotificationsRequest getPaNotificationsRequest() {
