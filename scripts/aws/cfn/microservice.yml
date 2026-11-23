@@ -422,15 +422,18 @@ Parameters:
     Default: '-'
     Description: Cron for which you send the metric to CloudWatch
 
-  CpuArchitecture:
-    Type: String
-    Default: 'ARM'
-    Description: CPU architecture for the Fargate tasks
-
   JavaToolOptions:
     Type: String
     Default: ''
     Description: Java tool options for the Fargate tasks
+
+  CpuArchitecture:
+    Type: String
+    Default: 'ARM'
+    Description: CPU architecture for the Fargate tasks
+    AllowedValues:
+      - 'ARM'
+      - 'AMD'
 
 Conditions:
   HasAlbDimensionName: !Not [ !Equals [ !Ref ApplicationLoadBalancerMetricsDimensionName, '' ] ]
@@ -466,6 +469,7 @@ Resources:
         EfsFilesystem: !Ref FargateEFSFileSystemID
         MountEfs: !Ref MountEfs
         ContainerImageURI: !Sub '${ContainerImageUri}'
+        CpuArchitecture: !Ref CpuArchitecture
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
         ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}, http://localhost:3000, https://portale-pa.dev.pn.pagopa.it'
         ContainerEnvEntry3: !Sub 'AWS_DYNAMODBOPERATIONSTABLE=${ServiceDeskOperationsDynamoTableName}'
@@ -518,7 +522,6 @@ Resources:
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
         EcsLogGroup: !Ref EcsLogGroup
         LogAlarmStrategyV1: !Ref LogAlarmStrategy
-        CpuArchitecture: !Ref CpuArchitecture
         JavaToolOptions: !Ref JavaToolOptions
 
   ServiceDeskPrivateLinkRouting:
